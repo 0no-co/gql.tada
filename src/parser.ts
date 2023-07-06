@@ -18,14 +18,18 @@ type skipIgnored<In> =
     ? In
     : never;
 
-type _RestNameContinue<In extends string> =
-  In extends `${letter | digit | '_'}${infer In}`
-    ? _RestNameContinue<In>
-    : In;
-type _RestName<In extends string> =
-  In extends `${letter | '_'}${infer In}`
-    ? _RestNameContinue<In>
-    : never;
+type _TakeNameContinue<PrevMatch extends string, In extends string> =
+  In extends `${infer Match}${infer Out}`
+    ? Match extends letter | digit | '_'
+    ? _TakeNameContinue<`${PrevMatch}${Match}`, Out>
+    : [PrevMatch, In]
+    : [PrevMatch, In];
+type _TakeName<In extends string> =
+  In extends `${infer Match}${infer In}`
+    ? Match extends letter | '_'
+    ? _TakeNameContinue<Match, In>
+    : void
+    : void;
 
 type _RestDigits<In extends string> =
   In extends `${digit}${infer In}`
@@ -73,31 +77,25 @@ type _RestString<In extends string> =
     : never;
 
 type TakeName<In extends string> =
-  In extends `${infer Out}${_RestName<In>}`
-    ? In extends `${Out}${infer In}`
+  _TakeName<In> extends [infer Out, infer In]
     ? [{ kind: Kind.NAME, value: Out }, In]
-    : void
     : void;
 
 type TakeOptionalName<In extends string> =
-  In extends `${infer Out}${_RestName<In>}`
-    ? In extends `${Out}${infer In}`
+  _TakeName<In> extends [infer Out, infer In]
     ? [{ kind: Kind.NAME, value: Out }, In]
-    : [undefined, In]
     : [undefined, In];
 
 type TakeEnum<In extends string> =
-  In extends `${infer Out}${_RestName<In>}`
-    ? In extends `${Out}${infer In}`
+  _TakeName<In> extends [infer Out, infer In]
     ? [{ kind: Kind.ENUM, value: Out }, In]
-    : void
     : void;
 
 type TakeVariable<In extends string, Const extends boolean> =
   Const extends false
     ? In extends `${'$'}${infer In}`
-    ? TakeName<In> extends [infer NameNode, infer Rest]
-    ? [{ kind: Kind.VARIABLE, name: NameNode }, Rest]
+    ? _TakeName<In> extends [infer Out, infer In]
+    ? [{ kind: Kind.VARIABLE, name: { kind: Kind.NAME, value: Out }}, In]
     : void
     : void
     : void;
@@ -256,11 +254,6 @@ export type TakeType<In extends string> =
     : [{ kind: Kind.NAMED_TYPE, name: Name }, In]
     : void;
 
-type TakeOn<In extends string> =
-  In extends `${infer Out}${_RestName<In>}`
-    ? ([Out, In] extends ['on', `${Out}${infer In}`] ? [In] : void)
-    : void;
-
 type TakeTypeCondition<In extends string> =
   In extends `${'on'}${infer In}`
     ? TakeName<skipIgnored<In>> extends [infer Name, infer In]
@@ -270,7 +263,7 @@ type TakeTypeCondition<In extends string> =
 
 export type TakeFragmentSpread<In extends string> =
   In extends `${'...'}${infer In}` ? (
-    TakeOn<skipIgnored<In>> extends [infer In] ? (
+    skipIgnored<In> extends `${'on'}${infer In}` ? (
       TakeName<skipIgnored<In>> extends [infer Name, infer In]
         ? TakeDirectives<skipIgnored<In>, false> extends [infer Directives, infer In]
           ? TakeSelectionSetContinue<skipIgnored<In>> extends [infer SelectionSet, infer In]
