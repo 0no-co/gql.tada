@@ -40,7 +40,7 @@ type _RestInt<In extends string> =
     ? _RestDigits<In>
     : In extends `${digit}${infer In}`
     ? _RestDigits<In>
-    : never;
+    : void;
 
 type _RestExponent<In extends string> =
   In extends `${'e' | 'E'}${'+' | '-'}${infer In}`
@@ -52,10 +52,10 @@ type _RestFloat<In extends string> =
   In extends `${'.'}${infer In}`
     ? In extends `${digit}${infer In}`
     ? _RestExponent<_RestDigits<In>>
-    : never
+    : void
     : In extends `${'e' | 'E'}${infer _}`
     ? _RestExponent<In>
-    : never;
+    : void;
 
 type _RestBlockStringContinue<In extends string> =
   In extends `${infer Hd}${'"""'}${infer In}`
@@ -101,15 +101,10 @@ type TakeVariable<In extends string, Const extends boolean> =
     : void;
 
 type TakeNumber<In extends string> =
-  In extends `${infer Out}${_RestInt<In>}`
-    ? In extends `${Out}${infer In}`
-    ? In extends `${infer Out}${_RestFloat<In>}`
-    ? (
-      In extends `${Out}${infer In}`
-        ? [{ kind: Kind.FLOAT, value: string }, In]
-        : never
-    ) : [{ kind: Kind.INT, value: string }, In]
-    : void
+  _RestInt<In> extends `${infer In}`
+    ? _RestFloat<In> extends `${infer In}`
+    ? [{ kind: Kind.FLOAT, value: string }, In]
+    : [{ kind: Kind.INT, value: string }, In]
     : void;
 
 type TakeString<In extends string> =
