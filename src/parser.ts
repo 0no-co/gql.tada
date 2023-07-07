@@ -62,19 +62,13 @@ type _RestBlockStringContinue<In extends string> =
     ? Hd extends `${infer _}${'\\'}`
     ? _RestBlockStringContinue<skipIgnored<In>>
     : In
-    : never;
+    : void;
 type _RestStringContinue<In extends string> =
   In extends `${infer Hd}${'"'}${infer In}`
     ? Hd extends `${infer _}${'\\'}`
     ? _RestStringContinue<In>
     : In
-    : never;
-type _RestString<In extends string> =
-  In extends `${'"""'}${infer In}`
-    ? _RestBlockStringContinue<In>
-    : In extends `${'"'}${infer In}`
-    ? _RestStringContinue<In>
-    : never;
+    : void;
 
 type TakeName<In extends string> =
   _TakeName<In> extends [infer Out, infer In]
@@ -108,9 +102,13 @@ type TakeNumber<In extends string> =
     : void;
 
 type TakeString<In extends string> =
-  In extends `${infer Out}${_RestString<In>}`
-    ? In extends `${Out}${infer In}`
-    ? [{ kind: Kind.STRING, value: string, block?: boolean }, In]
+  In extends `${'"""'}${infer In}`
+    ? _RestBlockStringContinue<In> extends `${infer In}`
+    ? [{ kind: Kind.STRING, value: string, block: true }, In]
+    : void
+    : In extends `${'"'}${infer In}`
+    ? _RestStringContinue<In> extends `${infer In}`
+    ? [{ kind: Kind.STRING, value: string, block: false }, In]
     : void
     : void;
  

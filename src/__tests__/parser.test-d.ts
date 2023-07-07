@@ -159,6 +159,7 @@ test('parses constant default values', () => {
         defaultValue: {
           kind: 'StringValue';
           value: string;
+          block: false;
         };
         directives: [];
       },
@@ -555,6 +556,7 @@ test('parses list values', () => {
           {
             kind: 'StringValue';
             value: string;
+            block: false;
           }
         ];
       },
@@ -590,10 +592,10 @@ test('parses block strings', () => {
     \\"""
   """` as const;
 
-  assertType<[{ kind: 'StringValue' }, '']>(any as TakeValue<'""""""', false>);
-  assertType<[{ kind: 'StringValue' }, '']>(any as TakeValue<'"""\n"""', false>);
-  assertType<[{ kind: 'StringValue' }, '']>(any as TakeValue<'""" \\""" """', false>);
-  assertType<[{ kind: 'StringValue' }, '']>(any as TakeValue<typeof x, false>);
+  assertType<[{ kind: 'StringValue', block: true }, '']>(any as TakeValue<'""""""', false>);
+  assertType<[{ kind: 'StringValue', block: true }, '']>(any as TakeValue<'"""\n"""', false>);
+  assertType<[{ kind: 'StringValue', block: true }, '']>(any as TakeValue<'""" \\""" """', false>);
+  assertType<[{ kind: 'StringValue', block: true }, '']>(any as TakeValue<typeof x, false>);
 });
 
 test('parses objects', () => {
