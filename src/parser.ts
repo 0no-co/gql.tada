@@ -18,6 +18,45 @@ type skipIgnored<In> =
     ? In
     : never;
 
+type skipDigits<In extends string> =
+  In extends `${digit}${infer In}`
+    ? skipDigits<In>
+    : In;
+type skipInt<In extends string> =
+  In extends `${'-'}${digit}${infer In}`
+    ? skipDigits<In>
+    : In extends `${digit}${infer In}`
+    ? skipDigits<In>
+    : void;
+
+type skipExponent<In extends string> =
+  In extends `${'e' | 'E'}${'+' | '-'}${infer In}`
+    ? skipDigits<In>
+    : In extends `${'e' | 'E'}${infer In}`
+    ? skipDigits<In>
+    : In;
+type skipFloat<In extends string> =
+  In extends `${'.'}${infer In}`
+    ? In extends `${digit}${infer In}`
+    ? skipExponent<skipDigits<In>>
+    : void
+    : In extends `${'e' | 'E'}${infer _}`
+    ? skipExponent<In>
+    : void;
+
+type skipBlockString<In extends string> =
+  In extends `${infer Hd}${'"""'}${infer In}`
+    ? Hd extends `${infer _}${'\\'}`
+    ? skipBlockString<skipIgnored<In>>
+    : In
+    : void;
+type skipString<In extends string> =
+  In extends `${infer Hd}${'"'}${infer In}`
+    ? Hd extends `${infer _}${'\\'}`
+    ? skipString<In>
+    : In
+    : void;
+
 type _TakeNameContinue<PrevMatch extends string, In extends string> =
   In extends `${infer Match}${infer Out}`
     ? Match extends letter | digit | '_'
@@ -29,45 +68,6 @@ type _TakeName<In extends string> =
     ? Match extends letter | '_'
     ? _TakeNameContinue<Match, In>
     : void
-    : void;
-
-type _RestDigits<In extends string> =
-  In extends `${digit}${infer In}`
-    ? _RestDigits<In>
-    : In;
-type _RestInt<In extends string> =
-  In extends `${'-'}${digit}${infer In}`
-    ? _RestDigits<In>
-    : In extends `${digit}${infer In}`
-    ? _RestDigits<In>
-    : void;
-
-type _RestExponent<In extends string> =
-  In extends `${'e' | 'E'}${'+' | '-'}${infer In}`
-    ? _RestDigits<In>
-    : In extends `${'e' | 'E'}${infer In}`
-    ? _RestDigits<In>
-    : In;
-type _RestFloat<In extends string> =
-  In extends `${'.'}${infer In}`
-    ? In extends `${digit}${infer In}`
-    ? _RestExponent<_RestDigits<In>>
-    : void
-    : In extends `${'e' | 'E'}${infer _}`
-    ? _RestExponent<In>
-    : void;
-
-type _RestBlockStringContinue<In extends string> =
-  In extends `${infer Hd}${'"""'}${infer In}`
-    ? Hd extends `${infer _}${'\\'}`
-    ? _RestBlockStringContinue<skipIgnored<In>>
-    : In
-    : void;
-type _RestStringContinue<In extends string> =
-  In extends `${infer Hd}${'"'}${infer In}`
-    ? Hd extends `${infer _}${'\\'}`
-    ? _RestStringContinue<In>
-    : In
     : void;
 
 type TakeName<In extends string> =
@@ -95,19 +95,19 @@ type TakeVariable<In extends string, Const extends boolean> =
     : void;
 
 type TakeNumber<In extends string> =
-  _RestInt<In> extends `${infer In}`
-    ? _RestFloat<In> extends `${infer In}`
+  skipInt<In> extends `${infer In}`
+    ? skipFloat<In> extends `${infer In}`
     ? [{ kind: Kind.FLOAT, value: string }, In]
     : [{ kind: Kind.INT, value: string }, In]
     : void;
 
 type TakeString<In extends string> =
   In extends `${'"""'}${infer In}`
-    ? _RestBlockStringContinue<In> extends `${infer In}`
+    ? skipBlockString<In> extends `${infer In}`
     ? [{ kind: Kind.STRING, value: string, block: true }, In]
     : void
     : In extends `${'"'}${infer In}`
-    ? _RestStringContinue<In> extends `${infer In}`
+    ? skipString<In> extends `${infer In}`
     ? [{ kind: Kind.STRING, value: string, block: false }, In]
     : void
     : void;
