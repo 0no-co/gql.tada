@@ -592,10 +592,10 @@ test('parses block strings', () => {
     \\"""
   """` as const;
 
-  assertType<[{ kind: 'StringValue', block: true }, '']>(any as TakeValue<'""""""', false>);
-  assertType<[{ kind: 'StringValue', block: true }, '']>(any as TakeValue<'"""\n"""', false>);
-  assertType<[{ kind: 'StringValue', block: true }, '']>(any as TakeValue<'""" \\""" """', false>);
-  assertType<[{ kind: 'StringValue', block: true }, '']>(any as TakeValue<typeof x, false>);
+  assertType<[{ kind: 'StringValue'; block: true }, '']>(any as TakeValue<'""""""', false>);
+  assertType<[{ kind: 'StringValue'; block: true }, '']>(any as TakeValue<'"""\n"""', false>);
+  assertType<[{ kind: 'StringValue'; block: true }, '']>(any as TakeValue<'""" \\""" """', false>);
+  assertType<[{ kind: 'StringValue'; block: true }, '']>(any as TakeValue<typeof x, false>);
 });
 
 test('parses objects', () => {

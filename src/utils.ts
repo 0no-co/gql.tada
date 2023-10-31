@@ -18,8 +18,6 @@ export type ObjValues<T> = T[keyof T] extends infer U
   : never;
 
 /** Turns a union type into an overload/intersection type. */
-export type Overload<U> = (U extends any ? (k: U) => void : never) extends (
-  k: infer I
-) => void
+export type Overload<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
   ? I
   : never;
