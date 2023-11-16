@@ -11,7 +11,7 @@ interface IntrospectionSchema {
   readonly types: readonly IntrospectionType[];
 }
 
-type IntrospectionType =
+export type IntrospectionType =
   | IntrospectionScalarType
   | IntrospectionObjectType
   | IntrospectionInterfaceType
@@ -29,7 +29,7 @@ export interface IntrospectionObjectType {
   readonly kind: 'OBJECT';
   readonly name: string;
   readonly fields: readonly IntrospectionField[];
-  readonly interfaces: readonly IntrospectionNamedTypeRef[];
+  readonly interfaces: readonly IntrospectionNamedTypeRef[] | never;
 }
 
 interface IntrospectionInterfaceType {
@@ -62,26 +62,26 @@ interface IntrospectionInputObjectType {
   readonly inputFields: readonly IntrospectionInputValue[];
 }
 
-interface IntrospectionListTypeRef {
+export interface IntrospectionListTypeRef {
   readonly kind: 'LIST';
   readonly ofType: IntrospectionTypeRef;
 }
 
-interface IntrospectionNonNullTypeRef {
+export interface IntrospectionNonNullTypeRef {
   readonly kind: 'NON_NULL';
   readonly ofType: IntrospectionTypeRef;
 }
 
-type IntrospectionTypeRef =
+export type IntrospectionTypeRef =
   | IntrospectionNamedTypeRef
   | IntrospectionListTypeRef
   | IntrospectionNonNullTypeRef;
 
-interface IntrospectionNamedTypeRef {
+export interface IntrospectionNamedTypeRef {
   readonly name: string;
 }
 
-interface IntrospectionField {
+export interface IntrospectionField {
   readonly name: string;
   readonly args: readonly IntrospectionInputValue[];
   readonly type: IntrospectionTypeRef;
@@ -134,6 +134,7 @@ type _enumMap<T extends IntrospectionEnumType> = {
 
 export type _objectMap<T extends IntrospectionObjectType> = {
   kind: 'OBJECT';
+  name: T['name'];
   interfaces: _nameValuesContinue<T['interfaces']>;
   fields: Obj<_nameMapContinue<T['fields']>>;
 };
