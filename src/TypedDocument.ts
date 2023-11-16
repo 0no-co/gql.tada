@@ -4,6 +4,7 @@ import type {
   FragmentDefinitionNode,
   FragmentSpreadNode,
   InlineFragmentNode,
+  Kind,
   NamedTypeNode,
   OperationDefinitionNode,
   SelectionNode,
@@ -21,15 +22,54 @@ import { schema } from './__tests__/introspection.test-d';
 
 type Intro = Introspection<typeof schema>;
 const query = `
-  query { todos { ...TodoFields } }
+  query {
+    todos { id ...TodoFields }
+  }
   
   fragment TodoFields on Todo {
     text
-    id
     complete
   }
 `;
 type doc = ParseDocument<typeof query>;
+
+const unionQuery = `
+  query {
+    latestTodo {
+      ... on NoTodosError { message }
+      ...TodoFields
+    }
+  }
+  
+  fragment TodoFields on Todo {
+    id
+    text
+    complete
+  }
+`;
+type unionDoc = ParseDocument<typeof unionQuery>;
+
+// TODO: this should somehow merge fragmetns on the same union member
+type ExpandUnion<
+  Selections extends readonly any[],
+  Type extends { kind: 'UNION' },
+  I extends Introspection<typeof schema>,
+  Fragments extends Record<string, unknown>
+> =
+  | (Selections[0] extends SelectionNode
+      ? Selections[0] extends FragmentSpreadNode
+        ? Selections[0]['name']['value'] extends keyof Fragments
+          ? Fragments[Selections[0]['name']['value']]
+          : { notFound: true }
+        : Selections[0] extends InlineFragmentNode
+        ? { inlineFragment: true }
+        : { noMatch: true }
+      : { noNode: true })
+  | (Selections extends readonly []
+      ? {}
+      : Selection extends [Headers, ...infer Tail]
+      ? ExpandUnion<Tail, Type, I, Fragments>
+      : {});
 
 type UnwrapType<
   Type extends IntrospectionTypeRef,
@@ -39,7 +79,7 @@ type UnwrapType<
 > = Type extends IntrospectionListTypeRef
   ? Array<UnwrapType<Type['ofType'], SelectionSet, I, Fragments>>
   : Type extends IntrospectionNonNullTypeRef
-  ? UnwrapType<Type['ofType'], SelectionSet, I, Fragments>
+  ? UnwrapType<Type['ofType'], SelectionSet, I, Fragments> // TODO: non-null and null aren't there yet
   : Type extends IntrospectionNamedTypeRef
   ? Type['name'] extends keyof I['types']
     ? SelectionSet extends SelectionSetNode
@@ -51,13 +91,13 @@ type UnwrapType<
         : I['types'][Type['name']] extends {
             kind: 'UNION';
           }
-        ? never // TODO
+        ? ExpandUnion<SelectionSet['selections'], I['types'][Type['name']], I, Fragments> // TODO
         : I['types'][Type['name']] extends {
             kind: 'INTERFACE';
             possibleTypes: readonly string[];
           }
-        ? never // TODO
-        : never
+        ? { interface: true } // TODO
+        : { scalar: true }
       : I['types'][Type['name']] extends {
           kind: 'SCALAR';
           type: any;
@@ -107,8 +147,6 @@ type SelectionContinue<
     ? SelectionContinue<Rest, Type, I, Fragments>
     : {});
 
-// TODO: this currently only goes over the first node but seeing whether we can now make
-// nested selections work
 type DefinitionContinue<
   T extends any[],
   I extends Introspection<typeof schema>,
@@ -128,14 +166,14 @@ type DefinitionContinue<
     : {});
 
 type TypedDocument<
-  D extends ParseDocument<typeof query>,
+  D extends { kind: Kind.DOCUMENT; definitions: any[] },
   I extends Introspection<typeof schema>,
   Fragments extends Record<string, unknown> = FragmentMap<D, I>
 > = DefinitionContinue<D['definitions'], I, Fragments>;
 
 // TODO: go over the operatioon definitions and get all required variables
-type Variables<
-  _D extends ParseDocument<typeof query>,
+type _Variables<
+  _D extends { kind: Kind.DOCUMENT; definitions: any[] },
   _I extends Introspection<typeof schema>
 > = never;
 
@@ -163,13 +201,14 @@ type FragmentMapContinue<
     : {});
 
 type FragmentMap<
-  D extends ParseDocument<typeof query>,
+  D extends { kind: Kind.DOCUMENT; definitions: any[] },
   I extends Introspection<typeof schema>
 > = FragmentMapContinue<D['definitions'], I>;
 
-let unionExample: Introspection<typeof schema>['types']['LatestTodoResult']['possibleTypes'][0];
-let interfaceExample: Introspection<typeof schema>['types']['ITodo'];
-
-let x: doc['definitions'][1];
+// let interfaceExample: Introspection<typeof schema>['types']['ITodo'];
 const result: TypedDocument<doc, Intro> = {} as TypedDocument<doc, Intro>;
 result.todos[0].complete;
+result.todos[0].id;
+
+const unionResult: TypedDocument<unionDoc, Intro> = {} as TypedDocument<unionDoc, Intro>;
+unionResult.latestTodo;
