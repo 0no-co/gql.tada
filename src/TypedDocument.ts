@@ -93,11 +93,19 @@ type SelectionContinue<
 
 // TODO: this currently only goes over the first node but seeing whether we can now make
 // nested selections work
-type DefinitionContinue<T extends any[], I extends Introspection<typeof schema>> =
-  | (T[0] extends OperationDefinitionNode
-      ? SelectionContinue<T[0]['selectionSet']['selections'], I['types'][I[T[0]['operation']]], I>
-      : never)
-  | (T[0] extends FragmentDefinitionNode ? I[T[0]['typeCondition']['name']['value']] : never);
+type DefinitionContinue<
+  T extends any[],
+  I extends Introspection<typeof schema>
+> = (T[0] extends OperationDefinitionNode
+  ? SelectionContinue<T[0]['selectionSet']['selections'], I['types'][I[T[0]['operation']]], I>
+  : T[0] extends FragmentDefinitionNode
+  ? I[T[0]['typeCondition']['name']['value']]
+  : {}) &
+  (T extends readonly []
+    ? {}
+    : T extends readonly [any, ...infer Rest]
+    ? DefinitionContinue<Rest, I>
+    : {});
 
 type TypedDocument<
   D extends ParseDocument<typeof query>,
@@ -110,5 +118,7 @@ type Variables<
   _I extends Introspection<typeof schema>
 > = never;
 
-let union: Introspection<typeof schema>['types']['LatestTodoResult']['possibleTypes'][0];
-let result: TypedDocument<doc, Intro>;
+let unionExample: Introspection<typeof schema>['types']['LatestTodoResult']['possibleTypes'][0];
+let interfaceExample: Introspection<typeof schema>['types']['ITodo'];
+const result: TypedDocument<doc, Intro> = {} as TypedDocument<doc, Intro>;
+result.todos[0].complete;
