@@ -37,7 +37,6 @@ const unionQuery = `
   query {
     latestTodo {
       ... on NoTodosError { message  __typename }
-      ...TodoFields
     }
   }
   
@@ -56,24 +55,30 @@ type ExpandUnion<
   Selections extends readonly any[],
   I extends Introspection<typeof schema>,
   Fragments extends Record<string, unknown>
-> = Selections[0] extends SelectionNode
-  ? Selections[0] extends FragmentSpreadNode
-    ? Selections[0]['name']['value'] extends keyof Fragments
-      ? Fragments[Selections[0]['name']['value']]
-      : {}
-    : Selections[0] extends InlineFragmentNode
-    ? Selections[0]['typeCondition'] extends NamedTypeNode
-      ? Selections[0]['typeCondition']['name']['value'] extends keyof I['types']
-        ? SelectionContinue<
-            Selections[0]['selectionSet']['selections'],
-            I['types'][Selections[0]['typeCondition']['name']['value']],
-            I,
-            Fragments
-          >
-        : {}
-      : {}
-    : {}
-  : {};
+> =
+  | (Selections[0] extends SelectionNode
+      ? Selections[0] extends FragmentSpreadNode
+        ? Selections[0]['name']['value'] extends keyof Fragments
+          ? Fragments[Selections[0]['name']['value']]
+          : never
+        : Selections[0] extends InlineFragmentNode
+        ? Selections[0]['typeCondition'] extends NamedTypeNode
+          ? Selections[0]['typeCondition']['name']['value'] extends keyof I['types']
+            ? SelectionContinue<
+                Selections[0]['selectionSet']['selections'],
+                I['types'][Selections[0]['typeCondition']['name']['value']],
+                I,
+                Fragments
+              >
+            : never
+          : never
+        : never
+      : never)
+  | (Selections extends readonly []
+      ? never
+      : Selections extends readonly [any, ...infer Rest]
+      ? ExpandUnion<Rest, I, Fragments>
+      : never);
 
 type UnwrapType<
   Type extends IntrospectionTypeRef,
@@ -222,4 +227,4 @@ if (unionResult.latestTodo.__typename === 'NoTodosError') {
   unionResult.latestTodo.message;
 } else if (unionResult.latestTodo.__typename === 'Todo') {
   unionResult.latestTodo.id;
-};
+}
