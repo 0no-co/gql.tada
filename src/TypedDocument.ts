@@ -36,7 +36,7 @@ type doc = ParseDocument<typeof query>;
 const unionQuery = `
   query {
     latestTodo {
-      ... on NoTodosError { message }
+      ... on NoTodosError { message  __typename }
       ...TodoFields
     }
   }
@@ -45,31 +45,35 @@ const unionQuery = `
     id
     text
     complete
+    __typename
   }
 `;
 type unionDoc = ParseDocument<typeof unionQuery>;
 
 // TODO: this should somehow merge fragmetns on the same union member
+// TODO: this should iterate
 type ExpandUnion<
   Selections extends readonly any[],
-  Type extends { kind: 'UNION' },
   I extends Introspection<typeof schema>,
   Fragments extends Record<string, unknown>
-> =
-  | (Selections[0] extends SelectionNode
-      ? Selections[0] extends FragmentSpreadNode
-        ? Selections[0]['name']['value'] extends keyof Fragments
-          ? Fragments[Selections[0]['name']['value']]
-          : { notFound: true }
-        : Selections[0] extends InlineFragmentNode
-        ? { inlineFragment: true }
-        : { noMatch: true }
-      : { noNode: true })
-  | (Selections extends readonly []
-      ? {}
-      : Selection extends [Headers, ...infer Tail]
-      ? ExpandUnion<Tail, Type, I, Fragments>
-      : {});
+> = Selections[0] extends SelectionNode
+  ? Selections[0] extends FragmentSpreadNode
+    ? Selections[0]['name']['value'] extends keyof Fragments
+      ? Fragments[Selections[0]['name']['value']]
+      : {}
+    : Selections[0] extends InlineFragmentNode
+    ? Selections[0]['typeCondition'] extends NamedTypeNode
+      ? Selections[0]['typeCondition']['name']['value'] extends keyof I['types']
+        ? SelectionContinue<
+            Selections[0]['selectionSet']['selections'],
+            I['types'][Selections[0]['typeCondition']['name']['value']],
+            I,
+            Fragments
+          >
+        : {}
+      : {}
+    : {}
+  : {};
 
 type UnwrapType<
   Type extends IntrospectionTypeRef,
@@ -85,13 +89,14 @@ type UnwrapType<
     ? SelectionSet extends SelectionSetNode
       ? I['types'][Type['name']] extends {
           kind: 'OBJECT';
+          name: string;
           fields: { [key: string]: IntrospectionField };
         }
         ? SelectionContinue<SelectionSet['selections'], I['types'][Type['name']], I, Fragments>
         : I['types'][Type['name']] extends {
             kind: 'UNION';
           }
-        ? ExpandUnion<SelectionSet['selections'], I['types'][Type['name']], I, Fragments> // TODO
+        ? ExpandUnion<SelectionSet['selections'], I, Fragments>
         : I['types'][Type['name']] extends {
             kind: 'INTERFACE';
             possibleTypes: readonly string[];
@@ -109,19 +114,21 @@ type UnwrapType<
 
 type SelectionContinue<
   Selections extends readonly any[],
-  Type extends { kind: 'OBJECT'; fields: { [key: string]: IntrospectionField } },
+  Type extends { kind: 'OBJECT'; name: string; fields: { [key: string]: IntrospectionField } },
   I extends Introspection<typeof schema>,
   Fragments extends Record<string, unknown>
 > = (Selections[0] extends SelectionNode
   ? Selections[0] extends FieldNode
     ? Selections[0]['name']['value'] extends string
       ? {
-          [Prop in Selections[0]['name']['value']]: UnwrapType<
-            Type['fields'][Selections[0]['name']['value']]['type'],
-            Selections[0]['selectionSet'],
-            I,
-            Fragments
-          >;
+          [Prop in Selections[0]['name']['value']]: Selections[0]['name']['value'] extends '__typename'
+            ? Type['name']
+            : UnwrapType<
+                Type['fields'][Selections[0]['name']['value']]['type'],
+                Selections[0]['selectionSet'],
+                I,
+                Fragments
+              >;
         }
       : {}
     : Selections[0] extends FragmentSpreadNode
@@ -211,4 +218,8 @@ result.todos[0].complete;
 result.todos[0].id;
 
 const unionResult: TypedDocument<unionDoc, Intro> = {} as TypedDocument<unionDoc, Intro>;
-unionResult.latestTodo;
+if (unionResult.latestTodo.__typename === 'NoTodosError') {
+  unionResult.latestTodo.message;
+} else if (unionResult.latestTodo.__typename === 'Todo') {
+  unionResult.latestTodo.id;
+};
