@@ -33,15 +33,21 @@ const query = `
 `;
 type doc = ParseDocument<typeof query>;
 
+// TODO: enabling TodoFields2 here maeks it fail miserably...
 const unionQuery = `
   query {
     latestTodo {
       ... on NoTodosError { message  __typename }
+      ...TodoFields
     }
   }
   
   fragment TodoFields on Todo {
     id
+    __typename
+  }
+
+  fragment TodoFields2 on Todo {
     text
     complete
     __typename
@@ -49,8 +55,6 @@ const unionQuery = `
 `;
 type unionDoc = ParseDocument<typeof unionQuery>;
 
-// TODO: this should somehow merge fragmetns on the same union member
-// TODO: this should iterate
 type ExpandUnion<
   Selections extends readonly any[],
   I extends Introspection<typeof schema>,
