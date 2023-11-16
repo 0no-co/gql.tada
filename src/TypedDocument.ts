@@ -19,7 +19,7 @@ import {
 import { schema } from './__tests__/introspection.test-d';
 
 type Intro = Introspection<typeof schema>;
-const query = 'query { todos { ... on Todo { id text } } };';
+const query = 'query { todos { text id complete } };';
 type doc = ParseDocument<typeof query>;
 
 type UnwrapType<
@@ -38,8 +38,16 @@ type UnwrapType<
           fields: { [key: string]: IntrospectionField };
         }
         ? SelectionContinue<SelectionSet['selections'], I['types'][Type['name']], I>
-        : // TODO: interfaces and unions
-          never
+        : I['types'][Type['name']] extends {
+            kind: 'UNION';
+          }
+        ? never // TODO
+        : I['types'][Type['name']] extends {
+            kind: 'INTERFACE';
+            possibleTypes: readonly string[];
+          }
+        ? never // TODO
+        : never
       : I['types'][Type['name']] extends {
           kind: 'SCALAR';
           type: any;
@@ -53,7 +61,7 @@ type SelectionContinue<
   Selections extends readonly any[],
   Type extends { kind: 'OBJECT'; fields: { [key: string]: IntrospectionField } },
   I extends Introspection<typeof schema>
-> = Selections[0] extends SelectionNode
+> = (Selections[0] extends SelectionNode
   ? Selections[0] extends FieldNode
     ? Selections[0]['name']['value'] extends string
       ? {
@@ -63,7 +71,7 @@ type SelectionContinue<
             I
           >;
         }
-      : never
+      : {}
     : Selections[0] extends InlineFragmentNode
     ? // TODO: how to support fragment-spread
       Selections[0]['typeCondition'] extends NamedTypeNode
@@ -75,8 +83,13 @@ type SelectionContinue<
           >
         : never
       : SelectionContinue<Selections[0]['selectionSet']['selections'], Type, I>
-    : never
-  : never;
+    : {}
+  : {}) &
+  (Selections extends readonly []
+    ? {}
+    : Selections extends readonly [any, ...infer Rest]
+    ? SelectionContinue<Rest, Type, I>
+    : {});
 
 // TODO: this currently only goes over the first node but seeing whether we can now make
 // nested selections work
@@ -86,9 +99,16 @@ type DefinitionContinue<T extends any[], I extends Introspection<typeof schema>>
       : never)
   | (T[0] extends FragmentDefinitionNode ? I[T[0]['typeCondition']['name']['value']] : never);
 
-type TypedNode<
+type TypedDocument<
   D extends ParseDocument<typeof query>,
   I extends Introspection<typeof schema>
 > = DefinitionContinue<D['definitions'], I>;
 
-const result: TypedNode<doc, Intro> = {} as TypedNode<doc, Intro>;
+// TODO: go over the operatioon definitions and get all required variables
+type Variables<
+  _D extends ParseDocument<typeof query>,
+  _I extends Introspection<typeof schema>
+> = never;
+
+let union: Introspection<typeof schema>['types']['LatestTodoResult']['possibleTypes'][0];
+let result: TypedDocument<doc, Intro>;
