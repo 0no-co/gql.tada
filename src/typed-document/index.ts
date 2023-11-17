@@ -1,4 +1,3 @@
-import { Document as ParseDocument } from './parser';
 import type {
   FieldNode,
   FragmentDefinitionNode,
@@ -10,15 +9,16 @@ import type {
   SelectionNode,
   SelectionSetNode,
 } from '@0no-co/graphql.web';
-import {
+import type { Document as ParseDocument } from '../parser';
+import type {
   Introspection,
   IntrospectionField,
   IntrospectionListTypeRef,
   IntrospectionNamedTypeRef,
   IntrospectionNonNullTypeRef,
   IntrospectionTypeRef,
-} from './introspection';
-import { schema } from './__tests__/introspection.test-d';
+} from '../introspection';
+import type { schema } from '../__tests__/introspection.test-d';
 
 type Intro = Introspection<typeof schema>;
 const query = `
@@ -33,7 +33,7 @@ const query = `
 `;
 type doc = ParseDocument<typeof query>;
 
-// TODO: enabling TodoFields2 here maeks it fail miserably...
+// TODO: enabling TodoFields2 here makes it fail miserably...
 const unionQuery = `
   query {
     latestTodo {
@@ -55,9 +55,9 @@ const unionQuery = `
 `;
 type unionDoc = ParseDocument<typeof unionQuery>;
 
-type ExpandUnion<
+type ExpandAbstractType<
   Selections extends readonly any[],
-  I extends Introspection<typeof schema>,
+  I extends Introspection<any>,
   Fragments extends Record<string, unknown>
 > =
   | (Selections[0] extends SelectionNode
@@ -81,18 +81,18 @@ type ExpandUnion<
   | (Selections extends readonly []
       ? never
       : Selections extends readonly [any, ...infer Rest]
-      ? ExpandUnion<Rest, I, Fragments>
+      ? ExpandAbstractType<Rest, I, Fragments>
       : never);
 
 type UnwrapType<
   Type extends IntrospectionTypeRef,
   SelectionSet extends SelectionSetNode | undefined,
-  I extends Introspection<typeof schema>,
+  I extends Introspection<any>,
   Fragments extends Record<string, unknown>
 > = Type extends IntrospectionListTypeRef
   ? Array<UnwrapType<Type['ofType'], SelectionSet, I, Fragments>> | null
   : Type extends IntrospectionNonNullTypeRef
-  ? NonNullable<UnwrapType<Type['ofType'], SelectionSet, I, Fragments>> 
+  ? NonNullable<UnwrapType<Type['ofType'], SelectionSet, I, Fragments>>
   : Type extends IntrospectionNamedTypeRef
   ? Type['name'] extends keyof I['types']
     ? SelectionSet extends SelectionSetNode
@@ -101,22 +101,36 @@ type UnwrapType<
           name: string;
           fields: { [key: string]: IntrospectionField };
         }
-        ? SelectionContinue<SelectionSet['selections'], I['types'][Type['name']], I, Fragments> | null
+        ? SelectionContinue<
+            SelectionSet['selections'],
+            I['types'][Type['name']],
+            I,
+            Fragments
+          > | null
         : I['types'][Type['name']] extends {
             kind: 'UNION';
           }
-        ? ExpandUnion<SelectionSet['selections'], I, Fragments>
+        ? ExpandAbstractType<SelectionSet['selections'], I, Fragments>
         : I['types'][Type['name']] extends {
             kind: 'INTERFACE';
-            possibleTypes: readonly string[];
           }
-        ? { interface: true } // TODO
-        : { scalar: true }
+        ? ExpandAbstractType<SelectionSet['selections'], I, Fragments>
+        : never
       : I['types'][Type['name']] extends {
           kind: 'SCALAR';
           type: any;
         }
-      ? I['types'][Type['name']]['type'] | null
+      ? I['types'][Type['name']]['type'] extends string
+        ? string | null
+        : I['types'][Type['name']]['type'] extends boolean
+        ? boolean | null
+        : I['types'][Type['name']]['type'] extends number
+        ? number | null
+        : I['types'][Type['name']]['type'] extends string | number
+        ? string | number | null
+        : I['types'][Type['name']]['type'] extends bigint
+        ? bigint | null
+        : never
       : never
     : never
   : never;
@@ -124,7 +138,7 @@ type UnwrapType<
 type SelectionContinue<
   Selections extends readonly any[],
   Type extends { kind: 'OBJECT'; name: string; fields: { [key: string]: IntrospectionField } },
-  I extends Introspection<typeof schema>,
+  I extends Introspection<any>,
   Fragments extends Record<string, unknown>
 > = (Selections[0] extends SelectionNode
   ? Selections[0] extends FieldNode
@@ -165,7 +179,7 @@ type SelectionContinue<
 
 type DefinitionContinue<
   T extends any[],
-  I extends Introspection<typeof schema>,
+  I extends Introspection<any>,
   Fragments extends Record<string, unknown>
 > = (T[0] extends OperationDefinitionNode
   ? SelectionContinue<
@@ -183,19 +197,13 @@ type DefinitionContinue<
 
 type TypedDocument<
   D extends { kind: Kind.DOCUMENT; definitions: any[] },
-  I extends Introspection<typeof schema>,
+  I extends Introspection<any>,
   Fragments extends Record<string, unknown> = FragmentMap<D, I>
 > = DefinitionContinue<D['definitions'], I, Fragments>;
 
-// TODO: go over the operatioon definitions and get all required variables
-type _Variables<
-  _D extends { kind: Kind.DOCUMENT; definitions: any[] },
-  _I extends Introspection<typeof schema>
-> = never;
-
 type FragmentMapContinue<
   D extends any[],
-  I extends Introspection<typeof schema>
+  I extends Introspection<any>
 > = (D[0] extends FragmentDefinitionNode
   ? D[0]['typeCondition']['name']['value'] extends keyof I['types']
     ? D[0]['name']['value'] extends string
@@ -218,10 +226,9 @@ type FragmentMapContinue<
 
 type FragmentMap<
   D extends { kind: Kind.DOCUMENT; definitions: any[] },
-  I extends Introspection<typeof schema>
+  I extends Introspection<any>
 > = FragmentMapContinue<D['definitions'], I>;
 
-// let interfaceExample: Introspection<typeof schema>['types']['ITodo'];
 const result: TypedDocument<doc, Intro> = {} as TypedDocument<doc, Intro>;
 if (result.todos && result.todos[0]) {
   result.todos[0].complete;

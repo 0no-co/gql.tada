@@ -14,3 +14,11 @@
 </div>
 
 **Work in Progress**
+
+## Shortcomings
+
+- [ ] adjacent fragment merging when coming of union/interface types (same union types)
+- [ ] not sure if interfaces are done completely right
+- [ ] support `@include`/`@skip`/`@defer`
+- [ ] Enum support
+- [ ] tests
