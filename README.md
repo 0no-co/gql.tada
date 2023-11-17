@@ -20,5 +20,6 @@
 - [ ] adjacent fragment merging when coming of union/interface types (same union types)
 - [ ] not sure if interfaces are done completely right
 - [ ] support `@include`/`@skip`/`@defer`
-- [ ] Enum support
+- [ ] Enum support (we could get this for free by using `Introspection<typeof query>` rather than `any`)
+- [ ] InputObject support
 - [ ] tests
