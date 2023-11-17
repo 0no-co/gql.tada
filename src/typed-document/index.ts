@@ -17,6 +17,7 @@ import type {
   IntrospectionNonNullTypeRef,
   IntrospectionTypeRef,
 } from '../introspection';
+import { DirectiveNode } from '@0no-co/graphql.web';
 
 type ExpandAbstractType<
   Selections extends readonly any[],
@@ -114,6 +115,15 @@ type UnwrapType<
     : never
   : never;
 
+type ShouldInclude<
+  Directives extends ReadonlyArray<DirectiveNode> | undefined,
+  Type
+> = Directives extends readonly DirectiveNode[]
+  ? Directives[0]['name']['value'] extends 'include' | 'skip' | 'defer'
+    ? Type | null
+    : Type
+  : Type;
+
 type SelectionContinue<
   Selections extends readonly any[],
   Type extends { kind: 'OBJECT'; name: string; fields: { [key: string]: IntrospectionField } },
@@ -124,22 +134,28 @@ type SelectionContinue<
     ? Selections[0]['alias']['value'] extends string
       ? {
           [Prop in Selections[0]['alias']['value']]: Selections[0]['name']['value'] extends '__typename'
-            ? Type['name']
-            : UnwrapType<
-                Type['fields'][Selections[0]['name']['value']]['type'],
-                Selections[0]['selectionSet'],
-                Introspection,
-                Fragments
+            ? ShouldInclude<Selections[0]['directives'], Type['name']>
+            : ShouldInclude<
+                Selections[0]['directives'],
+                UnwrapType<
+                  Type['fields'][Selections[0]['name']['value']]['type'],
+                  Selections[0]['selectionSet'],
+                  Introspection,
+                  Fragments
+                >
               >;
         }
       : {
           [Prop in Selections[0]['name']['value']]: Selections[0]['name']['value'] extends '__typename'
-            ? Type['name']
-            : UnwrapType<
-                Type['fields'][Selections[0]['name']['value']]['type'],
-                Selections[0]['selectionSet'],
-                Introspection,
-                Fragments
+            ? ShouldInclude<Selections[0]['directives'], Type['name']>
+            : ShouldInclude<
+                Selections[0]['directives'],
+                UnwrapType<
+                  Type['fields'][Selections[0]['name']['value']]['type'],
+                  Selections[0]['selectionSet'],
+                  Introspection,
+                  Fragments
+                >
               >;
         }
     : Selections[0] extends FragmentSpreadNode

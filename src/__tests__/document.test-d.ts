@@ -31,6 +31,20 @@ test('parses simple documents with aliases correctly', () => {
   assertType<{ todos: Array<{ myIdIsGreat: string | number } | null> | null }>(actual);
 });
 
+test('nulls when we have a skip directive', () => {
+  const query = `
+    query { todos { id @skip(if: false) __typename @skip(if: false) } }
+  `;
+  type doc = Document<typeof query>;
+  type typedDoc = TypedDocument<doc, Intro>;
+
+  const actual = any as typedDoc;
+
+  assertType<{
+    todos: Array<{ id: string | number | null; __typename: 'Todo' | null } | null> | null;
+  }>(actual);
+});
+
 test('parses enum values', () => {
   const query = `
     query { todos { id test } }
