@@ -21,4 +21,3 @@
 - [ ] not sure if interfaces are done completely right
 - [ ] support `@include`/`@skip`/`@defer`
 - [ ] support custom scalars
-- [ ] Enum support (we could get this for free by using `Introspection<typeof query>` rather than `any`)

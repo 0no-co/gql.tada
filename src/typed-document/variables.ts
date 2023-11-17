@@ -31,6 +31,11 @@ type ScalarType<
         : Introspection['types'][Type['name']['value']]['type'] extends bigint
         ? bigint | null
         : unknown
+      : Introspection['types'][Type['name']] extends {
+          kind: 'ENUM';
+          type: infer Type;
+        }
+      ? Type
       : Introspection['types'][Type['name']['value']] extends {
           kind: 'INPUT_OBJECT';
         }

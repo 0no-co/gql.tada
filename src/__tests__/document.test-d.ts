@@ -27,11 +27,6 @@ test('parses enum values', () => {
   type typedDoc = TypedDocument<doc, Intro>;
 
   const actual = any as typedDoc;
-  let x: Intro['types']['test']['type'][0];
-  if (actual.todos && actual.todos[0]) {
-    actual.todos[0].test;
-  }
-
   assertType<{ todos: Array<{ id: string | number; test: 'value' | 'more' } | null> | null }>(
     actual
   );
