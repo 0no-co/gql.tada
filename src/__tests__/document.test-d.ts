@@ -19,6 +19,24 @@ test('parses simple documents correctly', () => {
   assertType<{ todos: Array<{ id: string | number } | null> | null }>(actual);
 });
 
+test('parses adjacent fragments correctly', () => {
+  const query = `
+    query { todos { ... on Todo { id } ... on Todo { text } ... on Todo { complete } } }
+  `;
+  type doc = Document<typeof query>;
+  type typedDoc = TypedDocument<doc, Intro>;
+
+  const actual = any as typedDoc;
+
+  assertType<{
+    todos: Array<{
+      id: string | number;
+      text: string | null;
+      complete: boolean | null;
+    } | null> | null;
+  }>(actual);
+});
+
 test('parses simple documents with aliases correctly', () => {
   const query = `
     query { todos { myIdIsGreat: id } }
@@ -122,8 +140,9 @@ test('parses unions correctly', () => {
   const unionQuery = `
   query {
     latestTodo {
-      ... on NoTodosError { message  __typename }
       ...TodoFields
+      ... on NoTodosError { message  __typename }
+      ...TodoFields2
     }
   }
   
@@ -147,6 +166,11 @@ test('parses unions correctly', () => {
   assertType<{
     latestTodo:
       | { message: String; __typename: 'NoTodosError' }
-      | { id: string | Number; __typename: 'Todo' };
+      | {
+          id: string | Number;
+          text: string | null;
+          complete: boolean | null;
+          __typename: 'Todo';
+        };
   }>(actual);
 });

@@ -19,5 +19,7 @@
 
 - [ ] support having parsed parts in a document, like a fragment reference
 - [ ] support defining custom scalars
-- [ ] not sure if interfaces are done completely right
-- [ ] adjacent fragment merging when coming of union/interface types (same union types)
+- [ ] support `defer`/... on FragmentSpread to make it `| undefined`
+- [ ] merge union handling in SelectionContinue
+- [ ] handle interfaces that are always implemented
+- [ ] add tests for interfaces
