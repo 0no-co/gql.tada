@@ -17,7 +17,6 @@
 
 ## Shortcomings
 
-- [ ] support searching all directives for `@include`/`@skip`/`@defer`
 - [ ] support having parsed parts in a document, like a fragment reference
 - [ ] support defining custom scalars
 - [ ] not sure if interfaces are done completely right

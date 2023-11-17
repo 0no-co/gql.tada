@@ -115,13 +115,15 @@ type UnwrapType<
     : never
   : never;
 
-type ShouldInclude<
-  Directives extends ReadonlyArray<DirectiveNode> | undefined,
-  Type
-> = Directives extends readonly DirectiveNode[]
-  ? Directives[0]['name']['value'] extends 'include' | 'skip' | 'defer'
-    ? Type | null
-    : Type
+type ShouldInclude<Directives extends unknown[] | undefined, Type> = Directives extends readonly [
+  infer Directive,
+  ...infer Rest
+]
+  ? Directive extends DirectiveNode
+    ? Directive['name']['value'] extends 'include' | 'skip' | 'defer'
+      ? Type | undefined
+      : ShouldInclude<Rest, Type>
+    : ShouldInclude<Rest, Type>
   : Type;
 
 type SelectionContinue<

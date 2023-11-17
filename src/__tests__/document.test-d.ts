@@ -33,7 +33,7 @@ test('parses simple documents with aliases correctly', () => {
 
 test('nulls when we have a skip directive', () => {
   const query = `
-    query { todos { id @skip(if: false) __typename @skip(if: false) } }
+    query { todos { id @skip(if: false) __typename @test @skip(if: false) } }
   `;
   type doc = Document<typeof query>;
   type typedDoc = TypedDocument<doc, Intro>;
@@ -41,7 +41,7 @@ test('nulls when we have a skip directive', () => {
   const actual = any as typedDoc;
 
   assertType<{
-    todos: Array<{ id: string | number | null; __typename: 'Todo' | null } | null> | null;
+    todos: Array<{ id: string | number | undefined; __typename: 'Todo' | undefined } | null> | null;
   }>(actual);
 });
 
