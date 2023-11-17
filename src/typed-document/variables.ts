@@ -1,6 +1,19 @@
 import type { Kind, TypeNode } from '@0no-co/graphql.web';
 import type { Introspection as IntrospectionType } from '../introspection';
 
+type InputValues<
+  InputFields extends any[],
+  Introspection extends IntrospectionType<any>
+> = (InputFields[0] extends { name: string; type: string }
+  ? { [Name in InputFields[0]['name']]: UnwrapType<InputFields[0]['type'], Introspection> }
+  : never) &
+  InputFields[0] &
+  (InputFields extends readonly [any, ...infer Rest]
+    ? Rest extends readonly []
+      ? {}
+      : InputValues<Rest, Introspection>
+    : never);
+
 type ScalarType<
   Type extends { kind: 'NamedType'; name: any },
   Introspection extends IntrospectionType<any>
@@ -17,12 +30,15 @@ type ScalarType<
         ? string | number | null
         : Introspection['types'][Type['name']['value']]['type'] extends bigint
         ? bigint | null
-        : never
+        : unknown
+      : Introspection['types'][Type['name']['value']] extends {
+          kind: 'INPUT_OBJECT';
+        }
+      ? InputValues<Introspection['types'][Type['name']['value']]['inputFields'], Introspection>
       : never
     : never
   : never;
 
-// TODO: input objects
 type UnwrapType<
   Type extends TypeNode,
   Introspection extends IntrospectionType<any>
@@ -45,11 +61,9 @@ type VariablesContinue<
     Variables[0]['type'],
     Introspection
   >;
-} & (Variables extends readonly []
-  ? never
-  : Variables extends readonly [any, ...infer Rest]
+} & (Variables extends readonly [any, ...infer Rest]
   ? Rest extends readonly []
-    ? never
+    ? {}
     : VariablesContinue<Rest, Introspection>
   : never);
 
@@ -64,11 +78,9 @@ type DefinitionContinue<
     ? VariablesContinue<Definitions[0]['variableDefinitions'], Introspection>
     : never
   : never) &
-  (Definitions extends readonly []
-    ? never
-    : Definitions extends readonly [any, ...infer Rest]
+  (Definitions extends readonly [any, ...infer Rest]
     ? Rest extends readonly []
-      ? never
+      ? {}
       : DefinitionContinue<Rest, Introspection>
     : never);
 

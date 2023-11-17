@@ -16,6 +16,45 @@ export const schema = {
     },
     types: [
       {
+        kind: 'INPUT_OBJECT',
+        name: 'TodoPayload',
+        description: null,
+        fields: null,
+        inputFields: [
+          {
+            name: 'title',
+            description: null,
+            type: {
+              kind: 'NON_NULL',
+              name: null,
+              ofType: {
+                kind: 'SCALAR',
+                name: 'String',
+                ofType: null,
+              },
+            },
+            defaultValue: null,
+            isDeprecated: false,
+            deprecationReason: null,
+          },
+          {
+            name: 'complete',
+            description: null,
+            type: {
+              kind: 'SCALAR',
+              name: 'Boolean',
+              ofType: null,
+            },
+            defaultValue: null,
+            isDeprecated: false,
+            deprecationReason: null,
+          },
+        ],
+        interfaces: null,
+        enumValues: null,
+        possibleTypes: null,
+      },
+      {
         kind: 'OBJECT',
         name: 'Query',
         fields: [
@@ -220,6 +259,51 @@ export const schema = {
         kind: 'OBJECT',
         name: 'Mutation',
         fields: [
+          {
+            name: 'updateTodo',
+            description: null,
+            args: [
+              {
+                name: 'id',
+                description: null,
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'ID',
+                    ofType: null,
+                  },
+                },
+                defaultValue: null,
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'input',
+                description: null,
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'INPUT_OBJECT',
+                    name: 'TodoPayload',
+                    ofType: null,
+                  },
+                },
+                defaultValue: null,
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            type: {
+              kind: 'SCALAR',
+              name: 'Boolean',
+              ofType: null,
+            },
+            isDeprecated: false,
+            deprecationReason: null,
+          },
           {
             name: 'toggleTodo',
             args: [
