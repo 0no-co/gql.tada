@@ -14,3 +14,10 @@
 </div>
 
 **Work in Progress**
+
+## Shortcomings
+
+- [ ] support `@include`/`@skip`/`@defer`
+- [ ] support custom scalars
+- [ ] not sure if interfaces are done completely right
+- [ ] adjacent fragment merging when coming of union/interface types (same union types)
