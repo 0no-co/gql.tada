@@ -20,41 +20,6 @@ import type {
 } from '../introspection';
 import type { schema } from '../__tests__/introspection.test-d';
 
-type Intro = Introspection<typeof schema>;
-const query = `
-  query {
-    todos { id ...TodoFields }
-  }
-  
-  fragment TodoFields on Todo {
-    text
-    complete
-  }
-`;
-type doc = ParseDocument<typeof query>;
-
-// TODO: enabling TodoFields2 here makes it fail miserably...
-const unionQuery = `
-  query {
-    latestTodo {
-      ... on NoTodosError { message  __typename }
-      ...TodoFields
-    }
-  }
-  
-  fragment TodoFields on Todo {
-    id
-    __typename
-  }
-
-  fragment TodoFields2 on Todo {
-    text
-    complete
-    __typename
-  }
-`;
-type unionDoc = ParseDocument<typeof unionQuery>;
-
 type ExpandAbstractType<
   Selections extends readonly any[],
   I extends Introspection<any>,
@@ -228,6 +193,42 @@ type FragmentMap<
   D extends { kind: Kind.DOCUMENT; definitions: any[] },
   I extends Introspection<any>
 > = FragmentMapContinue<D['definitions'], I>;
+
+// Testing field
+type Intro = Introspection<typeof schema>;
+const query = `
+  query {
+    todos { id ...TodoFields }
+  }
+  
+  fragment TodoFields on Todo {
+    text
+    complete
+  }
+`;
+type doc = ParseDocument<typeof query>;
+
+// TODO: enabling TodoFields2 here makes it fail miserably...
+const unionQuery = `
+  query {
+    latestTodo {
+      ... on NoTodosError { message  __typename }
+      ...TodoFields
+    }
+  }
+  
+  fragment TodoFields on Todo {
+    id
+    __typename
+  }
+
+  fragment TodoFields2 on Todo {
+    text
+    complete
+    __typename
+  }
+`;
+type unionDoc = ParseDocument<typeof unionQuery>;
 
 const result: TypedDocument<doc, Intro> = {} as TypedDocument<doc, Intro>;
 if (result.todos && result.todos[0]) {
