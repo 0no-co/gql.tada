@@ -17,7 +17,7 @@
 
 ## Shortcomings
 
-- [ ] adjacent fragment merging when coming of union/interface types (same union types)
-- [ ] not sure if interfaces are done completely right
 - [ ] support `@include`/`@skip`/`@defer`
 - [ ] support custom scalars
+- [ ] not sure if interfaces are done completely right
+- [ ] adjacent fragment merging when coming of union/interface types (same union types)

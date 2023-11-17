@@ -19,6 +19,18 @@ test('parses simple documents correctly', () => {
   assertType<{ todos: Array<{ id: string | number } | null> | null }>(actual);
 });
 
+test('parses simple documents with aliases correctly', () => {
+  const query = `
+    query { todos { myIdIsGreat: id } }
+  `;
+  type doc = Document<typeof query>;
+  type typedDoc = TypedDocument<doc, Intro>;
+
+  const actual = any as typedDoc;
+
+  assertType<{ todos: Array<{ myIdIsGreat: string | number } | null> | null }>(actual);
+});
+
 test('parses enum values', () => {
   const query = `
     query { todos { id test } }
@@ -93,7 +105,6 @@ test('mixes inline fragments and fragments correctly', () => {
 });
 
 test('parses unions correctly', () => {
-  // TODO: spreading TodoFields2 here makes it fail miserably...
   const unionQuery = `
   query {
     latestTodo {

@@ -121,8 +121,18 @@ type SelectionContinue<
   Fragments extends Record<string, unknown>
 > = (Selections[0] extends SelectionNode
   ? Selections[0] extends FieldNode
-    ? Selections[0]['name']['value'] extends string
+    ? Selections[0]['alias']['value'] extends string
       ? {
+          [Prop in Selections[0]['alias']['value']]: Selections[0]['name']['value'] extends '__typename'
+            ? Type['name']
+            : UnwrapType<
+                Type['fields'][Selections[0]['name']['value']]['type'],
+                Selections[0]['selectionSet'],
+                Introspection,
+                Fragments
+              >;
+        }
+      : {
           [Prop in Selections[0]['name']['value']]: Selections[0]['name']['value'] extends '__typename'
             ? Type['name']
             : UnwrapType<
@@ -132,7 +142,6 @@ type SelectionContinue<
                 Fragments
               >;
         }
-      : {}
     : Selections[0] extends FragmentSpreadNode
     ? Selections[0]['name']['value'] extends keyof Fragments
       ? Fragments[Selections[0]['name']['value']]
@@ -159,7 +168,7 @@ type SelectionContinue<
     ? {}
     : Selections extends readonly [any, ...infer Rest]
     ? SelectionContinue<Rest, Type, Introspection, Fragments>
-    : {});
+    : never);
 
 type DefinitionContinue<
   Definitions extends any[],
@@ -177,7 +186,7 @@ type DefinitionContinue<
     ? {}
     : Definitions extends readonly [any, ...infer Rest]
     ? DefinitionContinue<Rest, Introspection, Fragments>
-    : {});
+    : never);
 
 export type TypedDocument<
   Document extends { kind: Kind.DOCUMENT; definitions: any[] },
@@ -202,11 +211,11 @@ type FragmentMapContinue<
       : {}
     : {}
   : {}) &
-  (Definitions extends readonly []
-    ? {}
-    : Definitions extends readonly [any, ...infer Rest]
-    ? FragmentMapContinue<Rest, Introspection>
-    : {});
+  (Definitions extends readonly [any, ...infer Rest]
+    ? Rest extends readonly []
+      ? {}
+      : FragmentMapContinue<Rest, Introspection>
+    : never);
 
 export type FragmentMap<
   Document extends { kind: Kind.DOCUMENT; definitions: any[] },
