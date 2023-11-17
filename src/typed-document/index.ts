@@ -10,7 +10,7 @@ import type {
   SelectionSetNode,
 } from '@0no-co/graphql.web';
 import type {
-  Introspection,
+  Introspection as IntrospectionType,
   IntrospectionField,
   IntrospectionListTypeRef,
   IntrospectionNamedTypeRef,
@@ -20,7 +20,7 @@ import type {
 
 type ExpandAbstractType<
   Selections extends readonly any[],
-  I extends Introspection<any>,
+  Introspection extends IntrospectionType<any>,
   Fragments extends Record<string, unknown>
 > =
   | (Selections[0] extends SelectionNode
@@ -30,11 +30,11 @@ type ExpandAbstractType<
           : never
         : Selections[0] extends InlineFragmentNode
         ? Selections[0]['typeCondition'] extends NamedTypeNode
-          ? Selections[0]['typeCondition']['name']['value'] extends keyof I['types']
+          ? Selections[0]['typeCondition']['name']['value'] extends keyof Introspection['types']
             ? SelectionContinue<
                 Selections[0]['selectionSet']['selections'],
-                I['types'][Selections[0]['typeCondition']['name']['value']],
-                I,
+                Introspection['types'][Selections[0]['typeCondition']['name']['value']],
+                Introspection,
                 Fragments
               >
             : never
@@ -44,64 +44,71 @@ type ExpandAbstractType<
   | (Selections extends readonly []
       ? never
       : Selections extends readonly [any, ...infer Rest]
-      ? ExpandAbstractType<Rest, I, Fragments>
+      ? ExpandAbstractType<Rest, Introspection, Fragments>
       : never);
+
+type ScalarValue<
+  Type extends IntrospectionNamedTypeRef,
+  Introspection extends IntrospectionType<any>
+> = Type['name'] extends keyof Introspection['types']
+  ? Introspection['types'][Type['name']] extends {
+      kind: 'SCALAR';
+      type: any;
+    }
+    ? Introspection['types'][Type['name']]['type'] extends string
+      ? string | null
+      : Introspection['types'][Type['name']]['type'] extends boolean
+      ? boolean | null
+      : Introspection['types'][Type['name']]['type'] extends number
+      ? number | null
+      : Introspection['types'][Type['name']]['type'] extends string | number
+      ? string | number | null
+      : Introspection['types'][Type['name']]['type'] extends bigint
+      ? bigint | null
+      : never
+    : never
+  : never;
 
 type UnwrapType<
   Type extends IntrospectionTypeRef,
   SelectionSet extends SelectionSetNode | undefined,
-  I extends Introspection<any>,
+  Introspection extends IntrospectionType<any>,
   Fragments extends Record<string, unknown>
 > = Type extends IntrospectionListTypeRef
-  ? Array<UnwrapType<Type['ofType'], SelectionSet, I, Fragments>> | null
+  ? Array<UnwrapType<Type['ofType'], SelectionSet, Introspection, Fragments>> | null
   : Type extends IntrospectionNonNullTypeRef
-  ? NonNullable<UnwrapType<Type['ofType'], SelectionSet, I, Fragments>>
+  ? NonNullable<UnwrapType<Type['ofType'], SelectionSet, Introspection, Fragments>>
   : Type extends IntrospectionNamedTypeRef
-  ? Type['name'] extends keyof I['types']
+  ? Type['name'] extends keyof Introspection['types']
     ? SelectionSet extends SelectionSetNode
-      ? I['types'][Type['name']] extends {
+      ? Introspection['types'][Type['name']] extends {
           kind: 'OBJECT';
           name: string;
           fields: { [key: string]: IntrospectionField };
         }
         ? SelectionContinue<
             SelectionSet['selections'],
-            I['types'][Type['name']],
-            I,
+            Introspection['types'][Type['name']],
+            Introspection,
             Fragments
           > | null
-        : I['types'][Type['name']] extends {
+        : Introspection['types'][Type['name']] extends {
             kind: 'UNION';
           }
-        ? ExpandAbstractType<SelectionSet['selections'], I, Fragments>
-        : I['types'][Type['name']] extends {
+        ? ExpandAbstractType<SelectionSet['selections'], Introspection, Fragments>
+        : Introspection['types'][Type['name']] extends {
             kind: 'INTERFACE';
           }
-        ? ExpandAbstractType<SelectionSet['selections'], I, Fragments>
+        ? ExpandAbstractType<SelectionSet['selections'], Introspection, Fragments>
         : never
-      : I['types'][Type['name']] extends {
-          kind: 'SCALAR';
-          type: any;
-        }
-      ? I['types'][Type['name']]['type'] extends string
-        ? string | null
-        : I['types'][Type['name']]['type'] extends boolean
-        ? boolean | null
-        : I['types'][Type['name']]['type'] extends number
-        ? number | null
-        : I['types'][Type['name']]['type'] extends string | number
-        ? string | number | null
-        : I['types'][Type['name']]['type'] extends bigint
-        ? bigint | null
-        : never
-      : never
+      : ScalarValue<Type, Introspection>
     : never
   : never;
 
 type SelectionContinue<
   Selections extends readonly any[],
   Type extends { kind: 'OBJECT'; name: string; fields: { [key: string]: IntrospectionField } },
-  I extends Introspection<any>,
+  Introspection extends IntrospectionType<any>,
   Fragments extends Record<string, unknown>
 > = (Selections[0] extends SelectionNode
   ? Selections[0] extends FieldNode
@@ -112,7 +119,7 @@ type SelectionContinue<
             : UnwrapType<
                 Type['fields'][Selections[0]['name']['value']]['type'],
                 Selections[0]['selectionSet'],
-                I,
+                Introspection,
                 Fragments
               >;
         }
@@ -123,71 +130,76 @@ type SelectionContinue<
       : never
     : Selections[0] extends InlineFragmentNode
     ? Selections[0]['typeCondition'] extends NamedTypeNode
-      ? Selections[0]['typeCondition']['name']['value'] extends keyof I['types']
+      ? Selections[0]['typeCondition']['name']['value'] extends keyof Introspection['types']
         ? SelectionContinue<
             Selections[0]['selectionSet']['selections'],
-            I['types'][Selections[0]['typeCondition']['name']['value']],
-            I,
+            Introspection['types'][Selections[0]['typeCondition']['name']['value']],
+            Introspection,
             Fragments
           >
         : never
-      : SelectionContinue<Selections[0]['selectionSet']['selections'], Type, I, Fragments>
+      : SelectionContinue<
+          Selections[0]['selectionSet']['selections'],
+          Type,
+          Introspection,
+          Fragments
+        >
     : {}
   : {}) &
   (Selections extends readonly []
     ? {}
     : Selections extends readonly [any, ...infer Rest]
-    ? SelectionContinue<Rest, Type, I, Fragments>
+    ? SelectionContinue<Rest, Type, Introspection, Fragments>
     : {});
 
 type DefinitionContinue<
-  T extends any[],
-  I extends Introspection<any>,
+  Definitions extends any[],
+  Introspection extends IntrospectionType<any>,
   Fragments extends Record<string, unknown>
-> = (T[0] extends OperationDefinitionNode
+> = (Definitions[0] extends OperationDefinitionNode
   ? SelectionContinue<
-      T[0]['selectionSet']['selections'],
-      I['types'][I[T[0]['operation']]],
-      I,
+      Definitions[0]['selectionSet']['selections'],
+      Introspection['types'][Introspection[Definitions[0]['operation']]],
+      Introspection,
       Fragments
     >
   : {}) &
-  (T extends readonly []
+  (Definitions extends readonly []
     ? {}
-    : T extends readonly [any, ...infer Rest]
-    ? DefinitionContinue<Rest, I, Fragments>
+    : Definitions extends readonly [any, ...infer Rest]
+    ? DefinitionContinue<Rest, Introspection, Fragments>
     : {});
 
 export type TypedDocument<
-  D extends { kind: Kind.DOCUMENT; definitions: any[] },
-  I extends Introspection<any>,
-  Fragments extends Record<string, unknown> = FragmentMap<D, I>
-> = DefinitionContinue<D['definitions'], I, Fragments>;
+  Document extends { kind: Kind.DOCUMENT; definitions: any[] },
+  Introspection extends IntrospectionType<any>,
+  Fragments extends Record<string, unknown> = FragmentMap<Document, Introspection>
+> = DefinitionContinue<Document['definitions'], Introspection, Fragments>;
 
 type FragmentMapContinue<
-  D extends any[],
-  I extends Introspection<any>
-> = (D[0] extends FragmentDefinitionNode
-  ? D[0]['typeCondition']['name']['value'] extends keyof I['types']
-    ? D[0]['name']['value'] extends string
+  Definitions extends any[],
+  Introspection extends IntrospectionType<any>
+> = (Definitions[0] extends FragmentDefinitionNode
+  ? Definitions[0]['typeCondition']['name']['value'] extends keyof Introspection['types']
+    ? Definitions[0]['name']['value'] extends string
       ? {
-          [Prop in D[0]['name']['value']]: SelectionContinue<
-            D[0]['selectionSet']['selections'],
-            I['types'][D[0]['typeCondition']['name']['value']],
-            I,
+          [Prop in Definitions[0]['name']['value']]: SelectionContinue<
+            Definitions[0]['selectionSet']['selections'],
+            Introspection['types'][Definitions[0]['typeCondition']['name']['value']],
+            Introspection,
             {}
           >;
         }
       : {}
     : {}
   : {}) &
-  (D extends readonly []
+  (Definitions extends readonly []
     ? {}
-    : D extends readonly [any, ...infer Rest]
-    ? FragmentMapContinue<Rest, I>
+    : Definitions extends readonly [any, ...infer Rest]
+    ? FragmentMapContinue<Rest, Introspection>
     : {});
 
-type FragmentMap<
-  D extends { kind: Kind.DOCUMENT; definitions: any[] },
-  I extends Introspection<any>
-> = FragmentMapContinue<D['definitions'], I>;
+export type FragmentMap<
+  Document extends { kind: Kind.DOCUMENT; definitions: any[] },
+  Introspection extends IntrospectionType<any>
+> = FragmentMapContinue<Document['definitions'], Introspection>;
