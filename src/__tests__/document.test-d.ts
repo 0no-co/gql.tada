@@ -19,6 +19,24 @@ test('parses simple documents correctly', () => {
   assertType<{ todos: Array<{ id: string | number } | null> | null }>(actual);
 });
 
+test('parses enum values', () => {
+  const query = `
+    query { todos { id test } }
+  `;
+  type doc = Document<typeof query>;
+  type typedDoc = TypedDocument<doc, Intro>;
+
+  const actual = any as typedDoc;
+  let x: Intro['types']['test']['type'][0];
+  if (actual.todos && actual.todos[0]) {
+    actual.todos[0].test;
+  }
+
+  assertType<{ todos: Array<{ id: string | number; test: 'value' | 'more' } | null> | null }>(
+    actual
+  );
+});
+
 test('parses inline fragments correctly', () => {
   const query = `
     query { todos { ... on Todo { id text } complete } }

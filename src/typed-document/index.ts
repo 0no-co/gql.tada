@@ -69,6 +69,14 @@ type ScalarValue<
     : never
   : never;
 
+type ConvertEnum<EnumValues extends readonly any[]> =
+  | EnumValues[0]
+  | (EnumValues extends readonly [any, ...infer Rest]
+      ? Rest extends readonly []
+        ? {}
+        : ConvertEnum<Rest>
+      : { rest: EnumValues });
+
 type UnwrapType<
   Type extends IntrospectionTypeRef,
   SelectionSet extends SelectionSetNode | undefined,
@@ -100,6 +108,15 @@ type UnwrapType<
             kind: 'INTERFACE';
           }
         ? ExpandAbstractType<SelectionSet['selections'], Introspection, Fragments>
+        : never
+      : Type extends { kind: 'ENUM' }
+      ? Type['name'] extends keyof Introspection['types']
+        ? Introspection['types'][Type['name']] extends {
+            kind: 'ENUM';
+            type: any;
+          }
+          ? ConvertEnum<Introspection['types'][Type['name']]['type']>
+          : { found: Introspection['types'][Type['name']] }
         : never
       : ScalarValue<Type, Introspection>
     : never

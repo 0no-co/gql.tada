@@ -110,6 +110,14 @@ type _nameValuesContinue<T extends readonly any[]> =
       ? _nameValuesContinue<Tail>
       : never);
 
+type _literalValueContinue<T extends readonly any[]> =
+  | (T[0] extends { name: string } ? T[0]['name'] : never)
+  | (T extends readonly []
+      ? never
+      : T extends readonly [infer _Head, ...infer Tail]
+      ? _literalValueContinue<Tail>
+      : never);
+
 type _scalarMap<T extends IntrospectionScalarType> = {
   kind: 'SCALAR';
   type: T['name'] extends infer Name
@@ -128,8 +136,8 @@ type _scalarMap<T extends IntrospectionScalarType> = {
 };
 
 type _enumMap<T extends IntrospectionEnumType> = {
-  kind: 'SCALAR';
-  type: _nameValuesContinue<T['enumValues']>;
+  kind: 'ENUM';
+  type: _literalValueContinue<T['enumValues']>;
 };
 
 export type _objectMap<T extends IntrospectionObjectType> = {

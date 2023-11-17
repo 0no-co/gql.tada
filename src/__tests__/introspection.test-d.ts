@@ -169,6 +169,15 @@ export const schema = {
             },
           },
           {
+            name: 'test',
+            args: [],
+            type: {
+              kind: 'ENUM',
+              name: 'test',
+              ofType: null,
+            },
+          },
+          {
             name: 'author',
             args: [],
             type: {
@@ -588,6 +597,14 @@ export const schema = {
         interfaces: [],
         enumValues: null,
         possibleTypes: null,
+      },
+      {
+        kind: 'ENUM',
+        name: 'test',
+        fields: null,
+        inputFields: null,
+        interfaces: null,
+        enumValues: [{ name: 'value' }, { name: 'more' }],
       },
       {
         kind: 'ENUM',
@@ -1262,6 +1279,7 @@ test('prepares sample schema', () => {
         id: { name: 'id' };
         text: { name: 'text' };
         complete: { name: 'complete' };
+        test: { name: 'test' };
         author: { name: 'author' };
       };
     };
