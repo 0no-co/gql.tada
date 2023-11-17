@@ -35,7 +35,7 @@ type ScalarType<
           kind: 'ENUM';
           type: infer Type;
         }
-      ? Type
+      ? Type | null
       : Introspection['types'][Value] extends {
           kind: 'INPUT_OBJECT';
         }

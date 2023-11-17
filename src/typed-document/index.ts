@@ -54,17 +54,17 @@ type ScalarValue<
 > = Type['name'] extends keyof Introspection['types']
   ? Introspection['types'][Type['name']] extends {
       kind: 'SCALAR';
-      type: any;
+      type: infer Type;
     }
-    ? Introspection['types'][Type['name']]['type'] extends string
+    ? Type extends string
       ? string | null
-      : Introspection['types'][Type['name']]['type'] extends boolean
+      : Type extends boolean
       ? boolean | null
-      : Introspection['types'][Type['name']]['type'] extends number
+      : Type extends number
       ? number | null
-      : Introspection['types'][Type['name']]['type'] extends string | number
+      : Type extends string | number
       ? string | number | null
-      : Introspection['types'][Type['name']]['type'] extends bigint
+      : Type extends bigint
       ? bigint | null
       : never
     : never
