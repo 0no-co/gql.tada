@@ -90,9 +90,9 @@ type UnwrapType<
   I extends Introspection<typeof schema>,
   Fragments extends Record<string, unknown>
 > = Type extends IntrospectionListTypeRef
-  ? Array<UnwrapType<Type['ofType'], SelectionSet, I, Fragments>>
+  ? Array<UnwrapType<Type['ofType'], SelectionSet, I, Fragments>> | null
   : Type extends IntrospectionNonNullTypeRef
-  ? UnwrapType<Type['ofType'], SelectionSet, I, Fragments> // TODO: non-null and null aren't there yet
+  ? NonNullable<UnwrapType<Type['ofType'], SelectionSet, I, Fragments>> 
   : Type extends IntrospectionNamedTypeRef
   ? Type['name'] extends keyof I['types']
     ? SelectionSet extends SelectionSetNode
@@ -101,7 +101,7 @@ type UnwrapType<
           name: string;
           fields: { [key: string]: IntrospectionField };
         }
-        ? SelectionContinue<SelectionSet['selections'], I['types'][Type['name']], I, Fragments>
+        ? SelectionContinue<SelectionSet['selections'], I['types'][Type['name']], I, Fragments> | null
         : I['types'][Type['name']] extends {
             kind: 'UNION';
           }
@@ -116,7 +116,7 @@ type UnwrapType<
           kind: 'SCALAR';
           type: any;
         }
-      ? I['types'][Type['name']]['type']
+      ? I['types'][Type['name']]['type'] | null
       : never
     : never
   : never;
@@ -223,8 +223,10 @@ type FragmentMap<
 
 // let interfaceExample: Introspection<typeof schema>['types']['ITodo'];
 const result: TypedDocument<doc, Intro> = {} as TypedDocument<doc, Intro>;
-result.todos[0].complete;
-result.todos[0].id;
+if (result.todos && result.todos[0]) {
+  result.todos[0].complete;
+  result.todos[0].id;
+}
 
 const unionResult: TypedDocument<unionDoc, Intro> = {} as TypedDocument<unionDoc, Intro>;
 if (unionResult.latestTodo.__typename === 'NoTodosError') {
