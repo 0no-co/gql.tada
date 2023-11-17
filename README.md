@@ -22,4 +22,3 @@
 - [ ] support `@include`/`@skip`/`@defer`
 - [ ] Enum support (we could get this for free by using `Introspection<typeof query>` rather than `any`)
 - [ ] InputObject support
-- [ ] tests

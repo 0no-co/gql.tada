@@ -1,7 +1,6 @@
-import { Kind, TypeNode } from '@0no-co/graphql.web';
-import { schema } from '../__tests__/introspection.test-d';
-import { Introspection } from '../introspection';
-import { Document } from '../parser';
+import type { Kind, TypeNode } from '@0no-co/graphql.web';
+import type { schema } from '../__tests__/introspection.test-d';
+import type { Introspection } from '../introspection';
 
 // TODO: input objects
 type UnwrapType<Type extends TypeNode, I extends Introspection<any>> = Type extends {
@@ -61,14 +60,3 @@ export type Variables<
   D extends { kind: Kind.DOCUMENT; definitions: any[] },
   I extends Introspection<typeof schema>
 > = DefinitionContinue<D['definitions'], I>;
-
-type Intro = Introspection<typeof schema>;
-const query = `
-  mutation ($id: ID!) {
-    toggleTodo { id }
-  }
-`;
-type doc = Document<typeof query>;
-type variables = doc['definitions'][0]['variableDefinitions'][0];
-const variables: Variables<doc, Intro> = {} as Variables<doc, Intro>;
-variables.id;
