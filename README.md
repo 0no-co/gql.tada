@@ -20,6 +20,6 @@
 - [ ] support having parsed parts in a document, like a fragment reference
 - [ ] support defining custom scalars
 - [ ] support `defer`/... on FragmentSpread to make it `| undefined`
-- [ ] merge union handling in SelectionContinue
 - [ ] handle interfaces that are always implemented
+- [ ] always add system-fields
 - [ ] add tests for interfaces

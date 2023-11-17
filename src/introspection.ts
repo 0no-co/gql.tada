@@ -162,6 +162,7 @@ type _interfaceMap<T extends IntrospectionInterfaceType> = {
 
 type _unionMap<T extends IntrospectionUnionType> = {
   kind: 'UNION';
+  fields: {};
   possibleTypes: _nameValuesContinue<T['possibleTypes']>;
 };
 

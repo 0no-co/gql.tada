@@ -19,38 +19,6 @@ import type {
 } from '../introspection';
 import { DirectiveNode } from '@0no-co/graphql.web';
 
-// TODO: merge union handling in SelectionContinue
-// we should add fields everywhere in introspection.
-type ExpandAbstractType<
-  Selections extends readonly any[],
-  Introspection extends IntrospectionType<any>,
-  Fragments extends Record<string, unknown>
-> = (Selections[0] extends SelectionNode
-  ? Selections[0] extends FragmentSpreadNode
-    ? Selections[0]['name']['value'] extends keyof Fragments
-      ? Fragments[Selections[0]['name']['value']] | {}
-      : never
-    : Selections[0] extends InlineFragmentNode
-    ? Selections[0]['typeCondition'] extends NamedTypeNode
-      ? Selections[0]['typeCondition']['name']['value'] extends keyof Introspection['types']
-        ?
-            | SelectionContinue<
-                Selections[0]['selectionSet']['selections'],
-                Introspection['types'][Selections[0]['typeCondition']['name']['value']],
-                Introspection,
-                Fragments
-              >
-            | {}
-        : never
-      : never
-    : never
-  : never) &
-  (Selections extends readonly []
-    ? never
-    : Selections extends readonly [any, ...infer Rest]
-    ? ExpandAbstractType<Rest, Introspection, Fragments>
-    : never);
-
 type ScalarValue<
   Type extends IntrospectionNamedTypeRef,
   Introspection extends IntrospectionType<any>
@@ -98,8 +66,15 @@ type UnwrapType<
           > | null
         : Introspection['types'][Type['name']] extends {
             kind: 'UNION';
+            name: string;
+            fields: { [key: string]: IntrospectionField };
           }
-        ? ExpandAbstractType<SelectionSet['selections'], Introspection, Fragments>
+        ? SelectionContinue<
+            SelectionSet['selections'],
+            Introspection['types'][Type['name']],
+            Introspection,
+            Fragments
+          >
         : Introspection['types'][Type['name']] extends {
             kind: 'INTERFACE';
             name: string;
@@ -141,7 +116,7 @@ type ShouldInclude<Directives extends unknown[] | undefined, Type> = Directives 
 type SelectionContinue<
   Selections extends readonly any[],
   Type extends {
-    kind: 'OBJECT' | 'INTERFACE';
+    kind: 'OBJECT' | 'INTERFACE' | 'UNION';
     name: string;
     fields: { [key: string]: IntrospectionField };
   },
