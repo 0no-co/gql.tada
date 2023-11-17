@@ -17,18 +17,18 @@ type InputValues<
 type ScalarType<
   Type extends { kind: 'NamedType'; name: any },
   Introspection extends IntrospectionType<any>
-> = Type['name'] extends { kind: Kind.NAME; value: string }
-  ? Type['name']['value'] extends keyof Introspection['types']
-    ? Introspection['types'][Type['name']['value']] extends { kind: 'SCALAR'; type: any }
-      ? Introspection['types'][Type['name']['value']]['type'] extends string
+> = Type['name'] extends { kind: Kind.NAME; value: infer Value }
+  ? Value extends keyof Introspection['types']
+    ? Introspection['types'][Value] extends { kind: 'SCALAR'; type: infer IntrospectionValueType }
+      ? IntrospectionValueType extends string
         ? string | null
-        : Introspection['types'][Type['name']['value']]['type'] extends boolean
+        : IntrospectionValueType extends boolean
         ? boolean | null
-        : Introspection['types'][Type['name']['value']]['type'] extends number
+        : IntrospectionValueType extends number
         ? number | null
-        : Introspection['types'][Type['name']['value']]['type'] extends string | number
+        : IntrospectionValueType extends string | number
         ? string | number | null
-        : Introspection['types'][Type['name']['value']]['type'] extends bigint
+        : IntrospectionValueType extends bigint
         ? bigint | null
         : unknown
       : Introspection['types'][Type['name']] extends {
@@ -36,7 +36,7 @@ type ScalarType<
           type: infer Type;
         }
       ? Type
-      : Introspection['types'][Type['name']['value']] extends {
+      : Introspection['types'][Value] extends {
           kind: 'INPUT_OBJECT';
         }
       ? InputValues<Introspection['types'][Type['name']['value']]['inputFields'], Introspection>
@@ -77,10 +77,10 @@ type DefinitionContinue<
   Introspection extends IntrospectionType<any>
 > = (Definitions[0] extends {
   kind: Kind.OPERATION_DEFINITION;
-  variableDefinitions: any[];
+  variableDefinitions: infer VarDefs;
 }
-  ? Definitions[0]['variableDefinitions'] extends Array<{ kind: Kind.VARIABLE_DEFINITION }>
-    ? VariablesContinue<Definitions[0]['variableDefinitions'], Introspection>
+  ? VarDefs extends Array<{ kind: Kind.VARIABLE_DEFINITION }>
+    ? VariablesContinue<VarDefs, Introspection>
     : never
   : never) &
   (Definitions extends readonly [any, ...infer Rest]
