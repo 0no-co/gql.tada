@@ -28,17 +28,7 @@ type ScalarValue<
       kind: 'SCALAR';
       type: infer Type;
     }
-    ? Type extends string
-      ? string | null
-      : Type extends boolean
-      ? boolean | null
-      : Type extends number
-      ? number | null
-      : Type extends string | number
-      ? string | number | null
-      : Type extends bigint
-      ? bigint | null
-      : never
+    ? Type | null
     : never
   : never;
 

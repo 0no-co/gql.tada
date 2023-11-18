@@ -20,17 +20,7 @@ type ScalarType<
 > = Type['name'] extends { kind: Kind.NAME; value: infer Value }
   ? Value extends keyof Introspection['types']
     ? Introspection['types'][Value] extends { kind: 'SCALAR'; type: infer IntrospectionValueType }
-      ? IntrospectionValueType extends string
-        ? string | null
-        : IntrospectionValueType extends boolean
-        ? boolean | null
-        : IntrospectionValueType extends number
-        ? number | null
-        : IntrospectionValueType extends string | number
-        ? string | number | null
-        : IntrospectionValueType extends bigint
-        ? bigint | null
-        : unknown
+      ? IntrospectionValueType | null
       : Introspection['types'][Type['name']] extends {
           kind: 'ENUM';
           type: infer Type;
