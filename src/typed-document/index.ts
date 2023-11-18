@@ -1,4 +1,5 @@
 import type {
+  DirectiveNode,
   FieldNode,
   FragmentDefinitionNode,
   FragmentSpreadNode,
@@ -18,8 +19,8 @@ import type {
   IntrospectionNonNullTypeRef,
   IntrospectionTypeRef,
 } from '../introspection';
-import { DirectiveNode } from '@0no-co/graphql.web';
 
+// TODO: figure out when we need to call `Obj<>`
 type ScalarValue<
   Type extends IntrospectionNamedTypeRef,
   Introspection extends IntrospectionType<any>
@@ -127,7 +128,7 @@ type SelectionContinue<
             >;
       }
     : Selections[0] extends FragmentSpreadNode
-    ? Selections[0]['name']['value'] extends keyof Fragments
+    ? Selections[0]['name']['value'] extends keyof Fragments // TODO: handle nullable fields coming from @defer here
       ? Fragments[Selections[0]['name']['value']]
       : never
     : Selections[0] extends InlineFragmentNode
