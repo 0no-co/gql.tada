@@ -118,6 +118,20 @@ type FieldAlias<Field extends FieldNode> = Field['alias'] extends NameNode
   ? Field['alias']['value']
   : Field['name']['value'];
 
+type FragmentType<
+  Spread extends InlineFragmentNode,
+  BaseType extends {
+    kind: 'OBJECT' | 'INTERFACE' | 'UNION';
+    name: string;
+    fields: { [key: string]: IntrospectionField };
+  },
+  Introspection extends IntrospectionType<any>
+> = Spread['typeCondition'] extends NamedTypeNode
+  ? Spread['typeCondition']['name']['value'] extends keyof Introspection['types']
+    ? Introspection['types'][Spread['typeCondition']['name']['value']]
+    : never
+  : BaseType;
+
 type SelectionContinue<
   Selections extends readonly any[],
   Type extends {
@@ -147,21 +161,12 @@ type SelectionContinue<
       ? Fragments[Selections[0]['name']['value']]
       : never
     : Selections[0] extends InlineFragmentNode
-    ? Selections[0]['typeCondition'] extends NamedTypeNode
-      ? Selections[0]['typeCondition']['name']['value'] extends keyof Introspection['types']
-        ? SelectionContinue<
-            Selections[0]['selectionSet']['selections'],
-            Introspection['types'][Selections[0]['typeCondition']['name']['value']],
-            Introspection,
-            Fragments
-          >
-        : never
-      : SelectionContinue<
-          Selections[0]['selectionSet']['selections'],
-          Type,
-          Introspection,
-          Fragments
-        >
+    ? SelectionContinue<
+        Selections[0]['selectionSet']['selections'],
+        FragmentType<Selections[0], Type, Introspection>,
+        Introspection,
+        Fragments
+      >
     : {}
   : {}) &
   (Selections extends readonly []
