@@ -4,6 +4,7 @@ import type {
   FragmentSpreadNode,
   InlineFragmentNode,
   Kind,
+  NameNode,
   NamedTypeNode,
   OperationDefinitionNode,
   SelectionNode,
@@ -113,6 +114,10 @@ type ShouldInclude<Directives extends unknown[] | undefined, Type> = Directives 
     : ShouldInclude<Rest, Type>
   : Type;
 
+type FieldAlias<Field extends FieldNode> = Field['alias'] extends NameNode
+  ? Field['alias']['value']
+  : Field['name']['value'];
+
 type SelectionContinue<
   Selections extends readonly any[],
   Type extends {
@@ -124,33 +129,19 @@ type SelectionContinue<
   Fragments extends Record<string, unknown>
 > = (Selections[0] extends SelectionNode
   ? Selections[0] extends FieldNode
-    ? Selections[0]['alias']['value'] extends string
-      ? {
-          [Prop in Selections[0]['alias']['value']]: Selections[0]['name']['value'] extends '__typename'
-            ? ShouldInclude<Selections[0]['directives'], Type['name']>
-            : ShouldInclude<
-                Selections[0]['directives'],
-                UnwrapType<
-                  Type['fields'][Selections[0]['name']['value']]['type'],
-                  Selections[0]['selectionSet'],
-                  Introspection,
-                  Fragments
-                >
-              >;
-        }
-      : {
-          [Prop in Selections[0]['name']['value']]: Selections[0]['name']['value'] extends '__typename'
-            ? ShouldInclude<Selections[0]['directives'], Type['name']>
-            : ShouldInclude<
-                Selections[0]['directives'],
-                UnwrapType<
-                  Type['fields'][Selections[0]['name']['value']]['type'],
-                  Selections[0]['selectionSet'],
-                  Introspection,
-                  Fragments
-                >
-              >;
-        }
+    ? {
+        [Prop in FieldAlias<Selections[0]>]: Selections[0]['name']['value'] extends '__typename'
+          ? ShouldInclude<Selections[0]['directives'], Type['name']>
+          : ShouldInclude<
+              Selections[0]['directives'],
+              UnwrapType<
+                Type['fields'][Selections[0]['name']['value']]['type'],
+                Selections[0]['selectionSet'],
+                Introspection,
+                Fragments
+              >
+            >;
+      }
     : Selections[0] extends FragmentSpreadNode
     ? Selections[0]['name']['value'] extends keyof Fragments
       ? Fragments[Selections[0]['name']['value']]
