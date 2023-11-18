@@ -25,7 +25,7 @@ type ScalarValue<
   Introspection extends IntrospectionType<any>
 > = Type['name'] extends keyof Introspection['types']
   ? Introspection['types'][Type['name']] extends {
-      kind: 'SCALAR';
+      kind: 'SCALAR' | 'ENUM';
       type: infer Type;
     }
     ? Type | null
@@ -56,18 +56,7 @@ type UnwrapType<
             Fragments
           > | null
         : Introspection['types'][Type['name']] extends {
-            kind: 'UNION';
-            name: string;
-            fields: { [key: string]: IntrospectionField };
-          }
-        ? SelectionContinue<
-            SelectionSet['selections'],
-            Introspection['types'][Type['name']],
-            Introspection,
-            Fragments
-          >
-        : Introspection['types'][Type['name']] extends {
-            kind: 'INTERFACE';
+            kind: 'INTERFACE' | 'UNION';
             name: string;
             fields: { [key: string]: IntrospectionField };
           }
@@ -79,15 +68,6 @@ type UnwrapType<
                 Fragments
               >
             | {} // TODO: handle interfaces that are always implemented
-        : never
-      : Type extends { kind: 'ENUM' }
-      ? Type['name'] extends keyof Introspection['types']
-        ? Introspection['types'][Type['name']] extends {
-            kind: 'ENUM';
-            type: infer Type;
-          }
-          ? Type
-          : never
         : never
       : ScalarValue<Type, Introspection>
     : never

@@ -71,9 +71,9 @@ test('parses enum values', () => {
   type typedDoc = TypedDocument<doc, Intro>;
 
   const actual = any as typedDoc;
-  assertType<{ todos: Array<{ id: string | number; test: 'value' | 'more' } | null> | null }>(
-    actual
-  );
+  assertType<{
+    todos: Array<{ id: string | number; test: 'value' | 'more' | null } | null> | null;
+  }>(actual);
 });
 
 test('parses inline fragments correctly', () => {
