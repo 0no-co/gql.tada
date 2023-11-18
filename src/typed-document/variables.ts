@@ -19,13 +19,11 @@ type ScalarType<
   Introspection extends IntrospectionType<any>
 > = Type['name'] extends { kind: Kind.NAME; value: infer Value }
   ? Value extends keyof Introspection['types']
-    ? Introspection['types'][Value] extends { kind: 'SCALAR'; type: infer IntrospectionValueType }
+    ? Introspection['types'][Value] extends {
+        kind: 'SCALAR' | 'ENUM';
+        type: infer IntrospectionValueType;
+      }
       ? IntrospectionValueType | null
-      : Introspection['types'][Type['name']] extends {
-          kind: 'ENUM';
-          type: infer Type;
-        }
-      ? Type | null
       : Introspection['types'][Value] extends {
           kind: 'INPUT_OBJECT';
         }
