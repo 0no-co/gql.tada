@@ -174,3 +174,17 @@ test('parses unions correctly', () => {
         };
   }>(actual);
 });
+
+test('works with mutations', () => {
+  const query = `
+      mutation X ($id: ID!) {
+        toggleTodo { id }
+      }
+    `;
+  type doc = Document<typeof query>;
+  type typedDoc = TypedDocument<doc, Intro>;
+
+  const actual = any as typedDoc;
+
+  assertType<{ toggleTodo: { id: string | number } | null }>(actual);
+});

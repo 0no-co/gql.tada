@@ -21,7 +21,7 @@ test('parses document-variables correctly', () => {
   assertType<{ id: string | number }>(actual);
 });
 
-test('works for input-bojects', () => {
+test('works for input-objects', () => {
   const query = `
   mutation ($id: ID!, $input: TodoPayload!) {
     toggleTodo (id: $id input: $input) { id }

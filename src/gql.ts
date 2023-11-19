@@ -24,7 +24,7 @@ export const createGql = <Q extends IntrospectionQuery, Intro = Introspection<Q>
     Parsed extends Document<Doc>,
     // TODO: how to handle void here
     Result extends TypedDocument<Parsed, Intro>,
-    Vars extends Variables<Parsed, Intro> // TODO: how  to return this
+    Vars extends Variables<Parsed, Intro>
   >(
     document: Doc
   ): TypedDocumentNode<Result, Vars> => {
@@ -34,12 +34,14 @@ export const createGql = <Q extends IntrospectionQuery, Intro = Introspection<Q>
 
 const gql = createGql<typeof schema>();
 
-const fragment = `
+// TODO: fragment type
+const fragment = gql(`
   fragment X on Todo {
     id
     text
+    completed
   }
-`;
+`);
 
 // TODO: find way to flatten the fragment in here
 const result = gql(`

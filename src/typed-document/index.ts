@@ -7,7 +7,6 @@ import type {
   Kind,
   NameNode,
   NamedTypeNode,
-  OperationDefinitionNode,
   SelectionNode,
   SelectionSetNode,
 } from '@0no-co/graphql.web';
@@ -150,7 +149,7 @@ type DefinitionContinue<
   Definitions extends any[],
   Introspection extends IntrospectionType<any>,
   Fragments extends Record<string, unknown>
-> = (Definitions[0] extends OperationDefinitionNode
+> = (Definitions[0] extends { kind: 'OperationDefinition' }
   ? SelectionContinue<
       Definitions[0]['selectionSet']['selections'],
       Introspection['types'][Introspection[Definitions[0]['operation']]],
