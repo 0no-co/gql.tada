@@ -481,7 +481,8 @@ type _TakeDocumentContinue<
   : TakeOperationDefinition<In> extends [infer Definition, infer In]
   ? _TakeDocumentContinue<[...Definitions, Definition], skipIgnored<In>>
   : [Definitions, In];
-type ParseDocument<In extends string> = _TakeDocumentContinue<[], skipIgnored<In>> extends [
+
+type ParseDocument<In extends string | {}> = _TakeDocumentContinue<[], skipIgnored<In>> extends [
   [...infer Definitions],
   infer _
 ]
