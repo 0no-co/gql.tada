@@ -27,18 +27,6 @@ type ObjectLikeType = {
   fields: { [key: string]: IntrospectionField };
 };
 
-type ScalarValue<
-  Type extends IntrospectionNamedTypeRef,
-  Introspection extends IntrospectionType<any>
-> = Type['name'] extends keyof Introspection['types']
-  ? Introspection['types'][Type['name']] extends {
-      kind: 'SCALAR' | 'ENUM';
-      type: infer Type;
-    }
-    ? Type
-    : never
-  : never;
-
 type UnwrapTypeInner<
   Type extends IntrospectionTypeRef,
   SelectionSet extends SelectionSetNode | undefined,
@@ -51,8 +39,8 @@ type UnwrapTypeInner<
     ? Array<UnwrapType<Type['ofType'], SelectionSet, Introspection, Fragments>>
     : Type extends IntrospectionNamedTypeRef
     ? Type['name'] extends keyof Introspection['types']
-      ? SelectionSet extends SelectionSetNode
-        ? Introspection['types'][Type['name']] extends ObjectLikeType
+      ? Introspection['types'][Type['name']] extends ObjectLikeType
+        ? SelectionSet extends SelectionSetNode
           ? Selection<
               SelectionSet['selections'],
               Introspection['types'][Type['name']],
@@ -60,7 +48,9 @@ type UnwrapTypeInner<
               Fragments
             >
           : {}
-        : ScalarValue<Type, Introspection>
+        : Introspection['types'][Type['name']] extends { kind: 'SCALAR' | 'ENUM', type: infer Type }
+        ? Type
+        : never
       : never
     : never;
 

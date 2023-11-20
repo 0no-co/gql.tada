@@ -19,7 +19,4 @@
 
 - [ ] support having parsed parts in a document, like a fragment reference
 - [ ] support defining custom scalars
-- [ ] support `defer`/... on FragmentSpread to make it `| undefined`
-- [ ] handle interfaces that are always implemented, remove the `| {}`
-- [ ] `__typename` should be an object-type for interfaces
 - [ ] add tests for interfaces
