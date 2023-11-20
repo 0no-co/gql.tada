@@ -118,6 +118,10 @@ type TypenameOfType<X extends ObjectLikeType> = X extends {
   ? PossibleTypes
   : X['name'];
 
+// TODO: Do we need to handle `__typename` in `FieldSelectionContinue` to only output remaining possible values,
+// i.e. excluding `PossibleFragmentsSelection<...>['__typename']` when we're on a GraphQL union or interface?
+// TODO: For the interface case, do we need to type-union `FieldSelectionContinue<...>` into each possible
+// intersection type of `PossibleFragmentsSelection<...>`?
 type Selection<
   Selections extends readonly any[],
   Type extends ObjectLikeType,
