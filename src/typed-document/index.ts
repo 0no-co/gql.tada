@@ -35,33 +35,44 @@ type ScalarValue<
       kind: 'SCALAR' | 'ENUM';
       type: infer Type;
     }
-    ? Type | null
+    ? Type
     : never
   : never;
+
+type UnwrapTypeInner<
+  Type extends IntrospectionTypeRef,
+  SelectionSet extends SelectionSetNode | undefined,
+  Introspection extends IntrospectionType<any>,
+  Fragments extends Record<string, FragmentDefinitionNode>
+> = 
+  Type extends IntrospectionNonNullTypeRef
+    ? UnwrapTypeInner<Type['ofType'], SelectionSet, Introspection, Fragments>
+    : Type extends IntrospectionListTypeRef
+    ? Array<UnwrapType<Type['ofType'], SelectionSet, Introspection, Fragments>>
+    : Type extends IntrospectionNamedTypeRef
+    ? Type['name'] extends keyof Introspection['types']
+      ? SelectionSet extends SelectionSetNode
+        ? Introspection['types'][Type['name']] extends ObjectLikeType
+          ? Selection<
+              SelectionSet['selections'],
+              Introspection['types'][Type['name']],
+              Introspection,
+              Fragments
+            >
+          : {}
+        : ScalarValue<Type, Introspection>
+      : never
+    : never;
 
 type UnwrapType<
   Type extends IntrospectionTypeRef,
   SelectionSet extends SelectionSetNode | undefined,
   Introspection extends IntrospectionType<any>,
   Fragments extends Record<string, FragmentDefinitionNode>
-> = Type extends IntrospectionListTypeRef
-  ? Array<UnwrapType<Type['ofType'], SelectionSet, Introspection, Fragments>> | null
-  : Type extends IntrospectionNonNullTypeRef
-  ? NonNullable<UnwrapType<Type['ofType'], SelectionSet, Introspection, Fragments>>
-  : Type extends IntrospectionNamedTypeRef
-  ? Type['name'] extends keyof Introspection['types']
-    ? SelectionSet extends SelectionSetNode
-      ? Introspection['types'][Type['name']] extends ObjectLikeType
-        ? Selection<
-            SelectionSet['selections'],
-            Introspection['types'][Type['name']],
-            Introspection,
-            Fragments
-          > | null
-        : {}
-      : ScalarValue<Type, Introspection>
-    : never
-  : never;
+> =
+  Type extends IntrospectionNonNullTypeRef
+    ? UnwrapTypeInner<Type['ofType'], SelectionSet, Introspection, Fragments>
+    : null | UnwrapTypeInner<Type, SelectionSet, Introspection, Fragments>;
 
 type ShouldInclude<Directives extends unknown[] | undefined> = Directives extends readonly [
   infer Directive,
