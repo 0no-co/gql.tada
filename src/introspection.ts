@@ -155,6 +155,7 @@ export type _inputObjectMap<T extends IntrospectionInputObjectType> = {
 
 type _interfaceMap<T extends IntrospectionInterfaceType> = {
   kind: 'INTERFACE';
+  name: T['name'];
   interfaces: T['interfaces'] extends readonly any[] ? _nameValuesContinue<T['interfaces']> : never;
   possibleTypes: _nameValuesContinue<T['possibleTypes']>;
   fields: Obj<_nameMapContinue<T['fields']>>;
@@ -162,6 +163,7 @@ type _interfaceMap<T extends IntrospectionInterfaceType> = {
 
 type _unionMap<T extends IntrospectionUnionType> = {
   kind: 'UNION';
+  name: T['name'];
   fields: {};
   possibleTypes: _nameValuesContinue<T['possibleTypes']>;
 };

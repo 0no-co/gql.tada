@@ -142,8 +142,8 @@ test('parses unions correctly', () => {
     latestTodo {
       __typename
       ...TodoFields
-      ... on NoTodosError { message  __typename }
       ...TodoFields2
+      ... on NoTodosError { message  __typename }
     }
   }
   
@@ -174,4 +174,10 @@ test('parses unions correctly', () => {
           __typename: 'Todo';
         };
   }>(actual);
+
+  if (actual.latestTodo.__typename === 'NoTodosError') {
+    actual.latestTodo.
+  } else if (actual.latestTodo.__typename === 'Todo') {
+    
+  }
 });
