@@ -111,7 +111,7 @@ type FragmentType<
     : never
   : never;
 
-type UnionStuffz<X extends ObjectLikeType> = X extends {
+type TypenameOfType<X extends ObjectLikeType> = X extends {
   kind: 'UNION' | 'INTERFACE';
   possibleTypes: infer PossibleTypes;
 }
@@ -139,7 +139,7 @@ type FieldSelectionContinue<
       ? ShouldInclude<Selections[0]['directives']> extends true
         ? {
             [Prop in FieldAlias<Selections[0]>]: Selections[0]['name']['value'] extends '__typename'
-              ? UnionStuffz<Type>
+              ? TypenameOfType<Type>
               : UnwrapType<
                   Type['fields'][Selections[0]['name']['value']]['type'],
                   Selections[0]['selectionSet'],
@@ -150,7 +150,7 @@ type FieldSelectionContinue<
         : {
             [Prop in FieldAlias<Selections[0]>]?:
               | (Selections[0]['name']['value'] extends '__typename'
-                  ? Type['name']
+                  ? TypenameOfType<Type>
                   : UnwrapType<
                       Type['fields'][Selections[0]['name']['value']]['type'],
                       Selections[0]['selectionSet'],
