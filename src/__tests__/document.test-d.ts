@@ -21,7 +21,7 @@ test('parses simple documents correctly', () => {
 
 test('parses adjacent fragments correctly', () => {
   const query = `
-    query { todos { ... on Todo { id } ... on Todo { text } ... on Todo { complete } } }
+    query { todos { id ... on Todo { text } ... on Todo { complete } } }
   `;
   type doc = Document<typeof query>;
   type typedDoc = TypedDocument<doc, Intro>;
@@ -31,8 +31,8 @@ test('parses adjacent fragments correctly', () => {
   assertType<{
     todos: Array<{
       id: string | number;
-      text: string | null;
-      complete: boolean | null;
+      text?: string | null;
+      complete?: boolean | null;
     } | null> | null;
   }>(actual);
 });
@@ -59,7 +59,7 @@ test('nulls when we have a skip directive', () => {
   const actual = any as typedDoc;
 
   assertType<{
-    todos: Array<{ id: string | number | undefined; __typename: 'Todo' | undefined } | null> | null;
+    todos: Array<{ id?: string | number; __typename?: 'Todo' } | null> | null;
   }>(actual);
 });
 
@@ -107,10 +107,10 @@ test('parses fragments correctly', () => {
 
   assertType<{
     todos: Array<{
-      id: string | number;
-      text: string | null;
+      id?: string | number;
+      text?: string | null;
       complete: boolean | null;
-      __typename: 'Todo';
+      __typename?: 'Todo';
     } | null> | null;
   }>(actual);
 });
@@ -140,6 +140,7 @@ test('parses unions correctly', () => {
   const unionQuery = `
   query {
     latestTodo {
+      __typename
       ...TodoFields
       ... on NoTodosError { message  __typename }
       ...TodoFields2

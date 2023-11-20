@@ -19,6 +19,13 @@ import type {
   IntrospectionNonNullTypeRef,
   IntrospectionTypeRef,
 } from '../introspection';
+import type { Obj } from '../utils';
+
+type ObjectLikeType = {
+  kind: 'OBJECT' | 'INTERFACE' | 'UNION';
+  name: string;
+  fields: { [key: string]: IntrospectionField };
+};
 
 // TODO: figure out when we need to call `Obj<>`
 type ScalarValue<
@@ -45,57 +52,48 @@ type UnwrapType<
   : Type extends IntrospectionNamedTypeRef
   ? Type['name'] extends keyof Introspection['types']
     ? SelectionSet extends SelectionSetNode
-      ? Introspection['types'][Type['name']] extends {
-          kind: 'OBJECT';
-          name: string;
-          fields: { [key: string]: IntrospectionField };
-        }
-        ? SelectionContinue<
+      ? Introspection['types'][Type['name']] extends ObjectLikeType
+          ? SelectionContinue<
             SelectionSet['selections'],
             Introspection['types'][Type['name']],
             Introspection,
             Fragments
           > | null
-        : Introspection['types'][Type['name']] extends {
-            kind: 'INTERFACE' | 'UNION';
-            name: string;
-            fields: { [key: string]: IntrospectionField };
-          }
-        ?
-            | SelectionContinue<
-                SelectionSet['selections'],
-                Introspection['types'][Type['name']],
-                Introspection,
-                Fragments
-              >
-            | {} // TODO: handle interfaces that are always implemented
-        : never
+          : never
       : ScalarValue<Type, Introspection>
     : never
   : never;
 
-type ShouldInclude<Directives extends unknown[] | undefined, Type> = Directives extends readonly [
+type ShouldInclude<Directives extends unknown[] | undefined> = Directives extends readonly [
   infer Directive,
   ...infer Rest
 ]
   ? Directive extends DirectiveNode
     ? Directive['name']['value'] extends 'include' | 'skip' | 'defer'
-      ? Type | undefined
-      : ShouldInclude<Rest, Type>
-    : ShouldInclude<Rest, Type>
-  : Type;
+      ? false 
+      : ShouldInclude<Rest>
+    : ShouldInclude<Rest>
+  : true;
 
 type FieldAlias<Field extends FieldNode> = Field['alias'] extends NameNode
   ? Field['alias']['value']
   : Field['name']['value'];
 
+type FragmentSelection<
+  Selection extends FragmentSpreadNode | InlineFragmentNode,
+  Fragments extends Record<string, FragmentDefinitionNode>
+> =
+  Selection extends { kind: Kind.INLINE_FRAGMENT }
+    ? Selection['selectionSet']['selections']
+    : Selection extends { kind: Kind.FRAGMENT_SPREAD }
+    ? Selection['name']['value'] extends keyof Fragments
+    ? Fragments[Selection['name']['value']]['selectionSet']['selections']
+    : readonly []
+    : readonly [];
+
 type FragmentType<
   Spread extends InlineFragmentNode,
-  BaseType extends {
-    kind: 'OBJECT' | 'INTERFACE' | 'UNION';
-    name: string;
-    fields: { [key: string]: IntrospectionField };
-  },
+  BaseType extends ObjectLikeType,
   Introspection extends IntrospectionType<any>
 > = Spread['typeCondition'] extends NamedTypeNode
   ? Spread['typeCondition']['name']['value'] extends keyof Introspection['types']
@@ -105,51 +103,54 @@ type FragmentType<
 
 type SelectionContinue<
   Selections extends readonly any[],
-  Type extends {
-    kind: 'OBJECT' | 'INTERFACE' | 'UNION';
-    name: string;
-    fields: { [key: string]: IntrospectionField };
-  },
+  Type extends ObjectLikeType,
   Introspection extends IntrospectionType<any>,
   Fragments extends Record<string, FragmentDefinitionNode>
-> = (Selections[0] extends SelectionNode
-  ? Selections[0] extends FieldNode
-    ? {
-        [Prop in FieldAlias<Selections[0]>]: Selections[0]['name']['value'] extends '__typename'
-          ? ShouldInclude<Selections[0]['directives'], Type['name']>
-          : ShouldInclude<
-              Selections[0]['directives'],
-              UnwrapType<
+> = Obj<
+  (Selections[0] extends SelectionNode
+    ? Selections[0] extends FieldNode
+      ? ShouldInclude<Selections[0]['directives']> extends true
+      ? {
+          [Prop in FieldAlias<Selections[0]>]: Selections[0]['name']['value'] extends '__typename'
+            ? Type['name']
+            : UnwrapType<
                 Type['fields'][Selections[0]['name']['value']]['type'],
                 Selections[0]['selectionSet'],
                 Introspection,
                 Fragments
-              >
-            >;
-      }
-    : Selections[0] extends FragmentSpreadNode
-    ? Selections[0]['name']['value'] extends keyof Fragments // TODO: handle nullable fields coming from @defer here
-      ? SelectionContinue<
-          Fragments[Selections[0]['name']['value']]['selectionSet']['selections'],
+              >;
+        }
+        : {
+          [Prop in FieldAlias<Selections[0]>]?: (Selections[0]['name']['value'] extends '__typename'
+            ? Type['name']
+            : UnwrapType<
+                Type['fields'][Selections[0]['name']['value']]['type'],
+                Selections[0]['selectionSet'],
+                Introspection,
+                Fragments
+              >) | undefined;
+        }
+      : SelectionContinue<
+          FragmentSelection<Selections[0], Fragments>,
           FragmentType<Selections[0], Type, Introspection>,
           Introspection,
           Fragments
-        >
-      : never
-    : Selections[0] extends InlineFragmentNode
-    ? SelectionContinue<
-        Selections[0]['selectionSet']['selections'],
-        FragmentType<Selections[0], Type, Introspection>,
-        Introspection,
-        Fragments
-      >
-    : {}
-  : {}) &
-  (Selections extends readonly []
-    ? {}
-    : Selections extends readonly [any, ...infer Rest]
-    ? SelectionContinue<Rest, Type, Introspection, Fragments>
-    : never);
+        >/* extends infer Selection
+          ? ShouldInclude<Selections[0]['directives']> extends true
+          ? Type extends { possibleTypes: infer PossibleTypes }
+          ? FragmentType<Selections[0], Type, Introspection>['name'] extends PossibleTypes
+          ? Selection | {}
+          : Selection
+          : Selection
+          : Selection | {}
+        : never*/
+    : {}) &
+    (Selections extends readonly []
+      ? {}
+      : Selections extends readonly [any, ...infer Rest]
+      ? SelectionContinue<Rest, Type, Introspection, Fragments>
+      : {})
+>;
 
 type DefinitionContinue<
   Definitions extends any[],
@@ -172,26 +173,16 @@ type DefinitionContinue<
 export type TypedDocument<
   Document extends { kind: Kind.DOCUMENT; definitions: any[] },
   Introspection extends IntrospectionType<any>,
-  Fragments extends Record<string, FragmentDefinitionNode> = FragmentMap<Document, Introspection>
+  Fragments extends Record<string, FragmentDefinitionNode> = FragmentMap<Document>
 > = DefinitionContinue<Document['definitions'], Introspection, Fragments>;
 
-type FragmentMapContinue<
-  Definitions extends any[],
-  Introspection extends IntrospectionType<any>
-> = (Definitions[0] extends FragmentDefinitionNode
-  ? Definitions[0]['typeCondition']['name']['value'] extends keyof Introspection['types']
-    ? Definitions[0]['name']['value'] extends string
-      ? FragmentDefinitionNode
-      : {}
-    : {}
-  : {}) &
-  (Definitions extends readonly [any, ...infer Rest]
-    ? Rest extends readonly []
-      ? {}
-      : FragmentMapContinue<Rest, Introspection>
-    : never);
+type _FragmentMapContinue<Definitions> =
+  Definitions extends readonly [infer Definition, ...infer Rest]
+    ? (Definition extends FragmentDefinitionNode
+      ? { [Prop in Definition['name']['value']]: Definitions[0] }
+      : {}) & _FragmentMapContinue<Rest>
+    : {};
 
 export type FragmentMap<
-  Document extends { kind: Kind.DOCUMENT; definitions: any[] },
-  Introspection extends IntrospectionType<any>
-> = FragmentMapContinue<Document['definitions'], Introspection>;
+  Document extends { kind: Kind.DOCUMENT; definitions: any[] }
+> = _FragmentMapContinue<Document['definitions']>;
