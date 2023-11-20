@@ -176,8 +176,8 @@ test('parses unions correctly', () => {
   }>(actual);
 
   if (actual.latestTodo.__typename === 'NoTodosError') {
-    actual.latestTodo.
+    actual.latestTodo.message
   } else if (actual.latestTodo.__typename === 'Todo') {
-    
+    actual.latestTodo.id
   }
 });
