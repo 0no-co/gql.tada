@@ -37,7 +37,7 @@ type UnwrapType<
   Type extends IntrospectionTypeRef,
   SelectionSet extends SelectionSetNode | undefined,
   Introspection extends IntrospectionType<any>,
-  Fragments extends Record<string, unknown>
+  Fragments extends Record<string, FragmentDefinitionNode>
 > = Type extends IntrospectionListTypeRef
   ? Array<UnwrapType<Type['ofType'], SelectionSet, Introspection, Fragments>> | null
   : Type extends IntrospectionNonNullTypeRef
@@ -111,7 +111,7 @@ type SelectionContinue<
     fields: { [key: string]: IntrospectionField };
   },
   Introspection extends IntrospectionType<any>,
-  Fragments extends Record<string, unknown>
+  Fragments extends Record<string, FragmentDefinitionNode>
 > = (Selections[0] extends SelectionNode
   ? Selections[0] extends FieldNode
     ? {
@@ -129,7 +129,12 @@ type SelectionContinue<
       }
     : Selections[0] extends FragmentSpreadNode
     ? Selections[0]['name']['value'] extends keyof Fragments // TODO: handle nullable fields coming from @defer here
-      ? Fragments[Selections[0]['name']['value']]
+      ? SelectionContinue<
+          Fragments[Selections[0]['name']['value']]['selectionSet']['selections'],
+          FragmentType<Selections[0], Type, Introspection>,
+          Introspection,
+          Fragments
+        >
       : never
     : Selections[0] extends InlineFragmentNode
     ? SelectionContinue<
@@ -149,7 +154,7 @@ type SelectionContinue<
 type DefinitionContinue<
   Definitions extends any[],
   Introspection extends IntrospectionType<any>,
-  Fragments extends Record<string, unknown>
+  Fragments extends Record<string, FragmentDefinitionNode>
 > = (Definitions[0] extends OperationDefinitionNode
   ? SelectionContinue<
       Definitions[0]['selectionSet']['selections'],
@@ -167,7 +172,7 @@ type DefinitionContinue<
 export type TypedDocument<
   Document extends { kind: Kind.DOCUMENT; definitions: any[] },
   Introspection extends IntrospectionType<any>,
-  Fragments extends Record<string, unknown> = FragmentMap<Document, Introspection>
+  Fragments extends Record<string, FragmentDefinitionNode> = FragmentMap<Document, Introspection>
 > = DefinitionContinue<Document['definitions'], Introspection, Fragments>;
 
 type FragmentMapContinue<
@@ -176,14 +181,7 @@ type FragmentMapContinue<
 > = (Definitions[0] extends FragmentDefinitionNode
   ? Definitions[0]['typeCondition']['name']['value'] extends keyof Introspection['types']
     ? Definitions[0]['name']['value'] extends string
-      ? {
-          [Prop in Definitions[0]['name']['value']]: SelectionContinue<
-            Definitions[0]['selectionSet']['selections'],
-            Introspection['types'][Definitions[0]['typeCondition']['name']['value']],
-            Introspection,
-            {}
-          >;
-        }
+      ? FragmentDefinitionNode
       : {}
     : {}
   : {}) &
