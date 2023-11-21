@@ -1,4 +1,4 @@
-import type { Obj, Keys } from './utils';
+import type { Obj } from './utils';
 
 interface IntrospectionQuery {
   readonly __schema: IntrospectionSchema;
