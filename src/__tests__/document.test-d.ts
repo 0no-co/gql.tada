@@ -176,8 +176,25 @@ test('parses unions correctly', () => {
   }>(actual);
 
   if (actual.latestTodo.__typename === 'NoTodosError') {
-    actual.latestTodo.message
+    actual.latestTodo.message;
   } else if (actual.latestTodo.__typename === 'Todo') {
-    actual.latestTodo.id
+    actual.latestTodo.id;
   }
+});
+
+test('parses mutations correctly', () => {
+  const query = `
+    mutation ($id: ID!, $input: TodoPayload!) {
+      toggleTodo (id: $id input: $input) { id }
+    }
+  `;
+
+  type doc = Document<typeof query>;
+  type typedDoc = TypedDocument<doc, Intro>;
+
+  const actual = any as typedDoc;
+
+  assertType<{
+    toggleTodo: { id: string | number } | null;
+  }>(actual);
 });
