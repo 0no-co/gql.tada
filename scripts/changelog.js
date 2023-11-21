@@ -3,7 +3,7 @@ const { getInfo } = require('@changesets/get-github-info');
 
 config();
 
-const REPO = '0no-co/graphql.web';
+const REPO = '0no-co/gql.tada';
 const SEE_LINE = /^See:\s*(.*)/i;
 const TRAILING_CHAR = /[.;:]$/g;
 const listFormatter = new Intl.ListFormat('en-US');

@@ -1,12 +1,12 @@
 {
-  "name": "@0no-co/graphql.ts",
+  "name": "gql.tada",
   "description": "The spec-compliant & magical GraphQL query language engine in the TypeScript type system",
   "version": "0.0.0",
   "author": "0no.co <hi@0no.co>",
   "source": "./src/index.ts",
-  "main": "./dist/graphql.ts",
-  "module": "./dist/graphql.ts.mjs",
-  "types": "./dist/graphql.ts.d.ts",
+  "main": "./dist/gql-tada",
+  "module": "./dist/gql-tada.mjs",
+  "types": "./dist/gql-tada.d.ts",
   "sideEffects": false,
   "files": [
     "LICENSE.md",
@@ -15,9 +15,9 @@
   ],
   "exports": {
     ".": {
-      "types": "./dist/graphql.ts.d.ts",
-      "import": "./dist/graphql.ts.mjs",
-      "require": "./dist/graphql.ts.js",
+      "types": "./dist/gql-tada.d.ts",
+      "import": "./dist/gql-tada.mjs",
+      "require": "./dist/gql-tada.js",
       "source": "./src/index.ts"
     },
     "./package.json": "./package.json"
@@ -42,9 +42,9 @@
     "changeset:version": "changeset version && pnpm install --lockfile-only",
     "changeset:publish": "changeset publish"
   },
-  "repository": "https://github.com/0no-co/graphql.ts",
+  "repository": "https://github.com/0no-co/gql.tada",
   "bugs": {
-    "url": "https://github.com/0no-co/graphql.ts/issues"
+    "url": "https://github.com/0no-co/gql.tada/issues"
   },
   "license": "MIT",
   "prettier": {

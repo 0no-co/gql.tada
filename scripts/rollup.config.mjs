@@ -114,7 +114,7 @@ const output = format => {
 
 const commonConfig = {
   input: {
-    'graphql.web': './src/index.ts',
+    'gql-tada': './src/index.ts',
   },
   onwarn: () => {},
   external: () => false,
@@ -137,7 +137,7 @@ const jsConfig = {
 const dtsConfig = {
   ...commonConfig,
   input: {
-    'graphql.web': './src/index.ts',
+    'gql-tada': './src/index.ts',
   },
   onwarn: () => {},
   external: () => false,

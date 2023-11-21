@@ -1,0 +1,16 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@0.3.0/schema.json",
+  "changelog": "../scripts/changelog.js",
+  "commit": false,
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "minor",
+  "snapshot": {
+    "prereleaseTemplate": "{tag}-{commit}",
+    "useCalculatedVersion": true
+  },
+  "___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH": {
+    "onlyUpdatePeerDependentsWhenOutOfRange": true,
+    "updateInternalDependents": "out-of-range"
+  }
+}
