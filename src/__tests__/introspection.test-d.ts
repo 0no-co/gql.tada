@@ -72,6 +72,15 @@ export const schema = {
             },
           },
           {
+            name: 'test',
+            args: [],
+            type: {
+              kind: 'UNION',
+              name: 'Search',
+              ofType: null,
+            },
+          },
+          {
             name: 'latestTodo',
             args: [],
             type: {
@@ -1045,6 +1054,7 @@ export const schema = {
       {
         kind: 'OBJECT',
         name: 'BigTodo',
+        inerfaces: ['Node'],
         fields: [
           {
             name: 'id',
@@ -1261,6 +1271,7 @@ test('prepares sample schema', () => {
       fields: {
         todos: { name: 'todos' };
         latestTodo: { name: 'latestTodo' };
+        test: { name: 'test' };
       };
     };
     LatestTodoResult: {

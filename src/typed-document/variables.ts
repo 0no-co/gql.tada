@@ -35,8 +35,7 @@ type ScalarType<
 type UnwrapTypeInner<
   Type extends TypeNode,
   Introspection extends IntrospectionType<any>
-> =
-  Type extends { kind: 'NonNullType' }
+> = Type extends { kind: 'NonNullType' }
   ? UnwrapTypeInner<Type['type'], Introspection>
   : Type extends { kind: 'ListType' }
   ? Array<UnwrapType<Type['type'], Introspection>>
@@ -54,25 +53,24 @@ type UnwrapType<
 type VariablesContinue<
   Variables extends readonly any[],
   Introspection extends IntrospectionType<any>
-> = (
-  Variables[0]['defaultValue'] extends { kind: any }
-    ? {
+> = (Variables[0]['defaultValue'] extends { kind: any }
+  ? {
       [Name in Variables[0]['variable']['name']['value']]?: UnwrapType<
         Variables[0]['type'],
         Introspection
       >;
     }
-    : {
+  : {
       [Name in Variables[0]['variable']['name']['value']]: UnwrapType<
         Variables[0]['type'],
         Introspection
       >;
-    }
-) & (Variables extends readonly [any, ...infer Rest]
-  ? Rest extends readonly []
-    ? {}
-    : VariablesContinue<Rest, Introspection>
-  : never);
+    }) &
+  (Variables extends readonly [any, ...infer Rest]
+    ? Rest extends readonly []
+      ? {}
+      : VariablesContinue<Rest, Introspection>
+    : never);
 
 type DefinitionContinue<
   Definitions extends any[],
