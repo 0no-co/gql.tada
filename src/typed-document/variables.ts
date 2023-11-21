@@ -23,7 +23,7 @@ type ScalarType<
         kind: 'SCALAR' | 'ENUM';
         type: infer IntrospectionValueType;
       }
-      ? IntrospectionValueType | null
+      ? IntrospectionValueType
       : Introspection['types'][Value] extends {
           kind: 'INPUT_OBJECT';
         }
@@ -32,19 +32,24 @@ type ScalarType<
     : never
   : never;
 
+type UnwrapTypeInner<
+  Type extends TypeNode,
+  Introspection extends IntrospectionType<any>
+> =
+  Type extends { kind: 'NonNullType' }
+  ? UnwrapTypeInner<Type['type'], Introspection>
+  : Type extends { kind: 'ListType' }
+  ? Array<UnwrapType<Type['type'], Introspection>>
+  : Type extends { kind: 'NamedType' }
+  ? ScalarType<Type, Introspection>
+  : never;
+
 type UnwrapType<
   Type extends TypeNode,
   Introspection extends IntrospectionType<any>
-> = Type extends {
-  kind: Kind.LIST_TYPE;
-  type: any;
-}
-  ? Array<UnwrapType<Type['type'], Introspection>> | null
-  : Type extends { kind: Kind.NON_NULL_TYPE; type: any }
-  ? NonNullable<UnwrapType<Type['type'], Introspection>>
-  : Type extends { kind: 'NamedType'; name: any }
-  ? ScalarType<Type, Introspection>
-  : never;
+> = Type extends { kind: 'NonNullType' }
+  ? UnwrapTypeInner<Type['type'], Introspection>
+  : null | UnwrapTypeInner<Type, Introspection>;
 
 type VariablesContinue<
   Variables extends readonly any[],
