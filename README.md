@@ -19,4 +19,3 @@
 
 - [ ] support having parsed parts in a document, like a fragment reference
 - [ ] support defining custom scalars
-- [ ] add tests for interfaces
