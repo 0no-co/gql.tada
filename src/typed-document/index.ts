@@ -251,7 +251,7 @@ type DefinitionContinue<
   Definitions extends any[],
   Introspection extends IntrospectionType<any>,
   Fragments extends Record<string, FragmentDefinitionNode>
-> = (Definitions[0] extends OperationDefinitionNode
+> = (Definitions[0] extends { kind: Kind.OPERATION_DEFINITION }
   ? Selection<
       Definitions[0]['selectionSet']['selections'],
       Introspection['types'][Introspection[Definitions[0]['operation']]],
