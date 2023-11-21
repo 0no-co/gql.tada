@@ -75,8 +75,8 @@ export const schema = {
             name: 'test',
             args: [],
             type: {
-              kind: 'OBJECT',
-              name: 'Todos',
+              kind: 'UNION',
+              name: 'Search',
               ofType: null,
             },
           },

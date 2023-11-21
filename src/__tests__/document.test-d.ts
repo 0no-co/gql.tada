@@ -203,6 +203,7 @@ test('parses unions with interfaces correctly', () => {
   const unionQuery = `
   query {
     test {
+      __typename
       ...InterfaceFields
       ... on SmallTodo { text maxLength __typename }
       ... on BigTodo { wallOfText __typename }
@@ -228,6 +229,7 @@ test('parses unions with interfaces correctly', () => {
           maxLength: number | null;
           __typename: 'SmallTodo';
         }
-      | { id: string | Number; wallOfText: string | null; __typename: 'BigTodo' };
+      | { id: string | Number; wallOfText: string | null; __typename: 'BigTodo' }
+      | null;
   }>(actual);
 });
