@@ -198,3 +198,36 @@ test('parses mutations correctly', () => {
     toggleTodo: { id: string | number } | null;
   }>(actual);
 });
+
+test('parses unions with interfaces correctly', () => {
+  const unionQuery = `
+  query {
+    test {
+      ...InterfaceFields
+      ... on SmallTodo { text maxLength __typename }
+      ... on BigTodo { wallOfText __typename }
+    }
+  }
+  
+  fragment InterfaceFields on ITodo {
+    id
+    __typename
+  }
+`;
+
+  type doc = Document<typeof unionQuery>;
+  type typedDoc = TypedDocument<doc, Intro>;
+
+  const actual = any as typedDoc;
+
+  assertType<{
+    test:
+      | {
+          id: string | Number;
+          text: string | null;
+          maxLength: number | null;
+          __typename: 'SmallTodo';
+        }
+      | { id: string | Number; wallOfText: string | null; __typename: 'BigTodo' };
+  }>(actual);
+});
