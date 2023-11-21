@@ -1,4 +1,4 @@
-import { assertType, test } from 'vitest';
+import { expectTypeOf, assertType, test } from 'vitest';
 import { Introspection } from '../introspection';
 import { Document } from '../parser';
 import { Variables } from '../typed-document/variables';
@@ -34,4 +34,18 @@ test('works for input-bojects', () => {
   actual.input;
 
   assertType<{ id: string | number; input: { text: string; complete: boolean } }>(actual);
+});
+
+test('allows optionals for default values', () => {
+  const query = `
+    mutation ($id: ID! = "default") {
+      toggleTodo (id: $id) { id }
+    }
+  `;
+
+  type doc = Document<typeof query>;
+  type variables = Variables<doc, Intro>;
+
+  expectTypeOf<variables>().toEqualTypeOf<{ id?: string | number | undefined }>();
+  expectTypeOf<variables['id']>().toEqualTypeOf<string | number | undefined>();
 });

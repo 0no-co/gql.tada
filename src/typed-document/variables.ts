@@ -54,12 +54,21 @@ type UnwrapType<
 type VariablesContinue<
   Variables extends readonly any[],
   Introspection extends IntrospectionType<any>
-> = {
-  [Name in Variables[0]['variable']['name']['value']]: UnwrapType<
-    Variables[0]['type'],
-    Introspection
-  >;
-} & (Variables extends readonly [any, ...infer Rest]
+> = (
+  Variables[0]['defaultValue'] extends { kind: any }
+    ? {
+      [Name in Variables[0]['variable']['name']['value']]?: UnwrapType<
+        Variables[0]['type'],
+        Introspection
+      >;
+    }
+    : {
+      [Name in Variables[0]['variable']['name']['value']]: UnwrapType<
+        Variables[0]['type'],
+        Introspection
+      >;
+    }
+) & (Variables extends readonly [any, ...infer Rest]
   ? Rest extends readonly []
     ? {}
     : VariablesContinue<Rest, Introspection>
