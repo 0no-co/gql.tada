@@ -57,11 +57,6 @@
     "*.json": "prettier --write",
     "*.md": "prettier --write"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged --quiet --relative"
-    }
-  },
   "eslintConfig": {
     "root": true,
     "extends": [
@@ -85,7 +80,6 @@
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-tsdoc": "^0.2.17",
     "graphql": "^16.6.0",
-    "husky-v4": "^4.3.8",
     "lint-staged": "^13.2.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.8.4",
