@@ -20,7 +20,7 @@ import type {
 } from '../introspection';
 import type { Obj, ObjValues } from '../utils';
 
-type ObjectLikeType = {
+export type ObjectLikeType = {
   kind: 'OBJECT' | 'INTERFACE' | 'UNION';
   name: string;
   fields: { [key: string]: IntrospectionField };
@@ -119,7 +119,7 @@ type TypenameOfType<X extends ObjectLikeType> = X extends {
 // i.e. excluding `PossibleFragmentsSelection<...>['__typename']` when we're on a GraphQL union or interface?
 // TODO: For the interface case, do we need to type-union `FieldSelectionContinue<...>` into each possible
 // intersection type of `PossibleFragmentsSelection<...>`?
-type Selection<
+export type Selection<
   Selections extends readonly any[],
   Type extends ObjectLikeType,
   Introspection extends IntrospectionType<any>,
