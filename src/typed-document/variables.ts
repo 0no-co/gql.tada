@@ -26,8 +26,9 @@ type ScalarType<
       ? IntrospectionValueType
       : Introspection['types'][Value] extends {
           kind: 'INPUT_OBJECT';
+          inputFields: [...infer InputFields];
         }
-      ? InputValues<Introspection['types'][Type['name']['value']]['inputFields'], Introspection>
+      ? InputValues<InputFields, Introspection>
       : never
     : never
   : never;
