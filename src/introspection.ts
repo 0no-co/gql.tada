@@ -166,13 +166,13 @@ type _typeMap<T> = T extends IntrospectionScalarType
   ? _inputObjectMap<T>
   : never;
 
-type _introspectionTypesMap<T extends IntrospectionQuery> = _nameMapContinue<
-  T['__schema']['types']
-> extends infer TypeMap
-  ? Obj<{
-      [P in keyof TypeMap]: Obj<_typeMap<TypeMap[P]>>;
-    }>
-  : {};
+type _introspectionTypesMap<T extends IntrospectionQuery> = Obj<{
+  [P in T['__schema']['types'][number]['name']]: T['__schema']['types'][number] extends infer Type
+    ? Type extends { name: P }
+      ? Obj<_typeMap<Type>>
+      : never
+    : never;
+}>;
 
 type _introspectionMap<T extends IntrospectionQuery> = {
   query: T['__schema']['queryType']['name'];
