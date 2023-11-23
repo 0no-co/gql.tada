@@ -1,4 +1,4 @@
-lockfileVersion: '6.1'
+lockfileVersion: '6.0'
 
 settings:
   autoInstallPeers: true
@@ -10,6 +10,9 @@ dependencies:
     version: 1.0.4(graphql@16.6.0)
 
 devDependencies:
+  '@0no-co/typescript.js':
+    specifier: 5.3.2-2
+    version: 5.3.2-2
   '@changesets/cli':
     specifier: ^2.26.2
     version: 2.26.2
@@ -102,6 +105,10 @@ packages:
       graphql: 16.6.0
     dev: false
 
+  /@0no-co/typescript.js@5.3.2-2:
+    resolution: {integrity: sha512-IGQZZ7vcVD/GOUKLJckpQiq8F5raQZLR7kOVhxN5nHOywl1dB9EFMA7FJkyNoCEig7EkCb291X8FswMwwrz9yg==}
+    dev: true
+
   /@aashutoshrathi/word-wrap@1.2.6:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
@@ -117,11 +124,13 @@ packages:
   /@babel/helper-validator-identifier@7.22.5:
     resolution: {integrity: sha512-aJXu+6lErq8ltp+JhkJUfk1MTGyuA4v7f3pA+BJ5HLfNC6nAQ0Cpi9uOquUj8Hehg0aUiHzWQbOVJGao6ztBAQ==}
     engines: {node: '>=6.9.0'}
+    requiresBuild: true
     dev: true
 
   /@babel/highlight@7.22.5:
     resolution: {integrity: sha512-BSKlD1hgnedS5XRnGOljZawtag7H1yPfQp0tdNJCHoH6AZ+Pcm9VvkrK59/Yy593Ypg0zMxH2BxD1VPYUQ7UIw==}
     engines: {node: '>=6.9.0'}
+    requiresBuild: true
     dependencies:
       '@babel/helper-validator-identifier': 7.22.5
       chalk: 2.4.2
@@ -2500,6 +2509,7 @@ packages:
 
   /js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
+    requiresBuild: true
     dev: true
 
   /js-yaml@3.14.1:
