@@ -30,7 +30,7 @@ export const compilerOptions: CompilerOptions = {
   target: 99 satisfies ScriptTarget.Latest,
   checkJs: false,
   allowJs: true,
-  strict: false,
+  strict: true,
   noEmit: true,
   noLib: false,
   disableReferencedProjectLoad: true,
