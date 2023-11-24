@@ -53,5 +53,8 @@ jobs:
       - name: Unit Tests
         run: pnpm run test --run
 
+      - name: benchmarks
+        run: pnpm run bench --run
+
       - name: Build
         run: pnpm run build
