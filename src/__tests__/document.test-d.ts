@@ -1,4 +1,4 @@
-import { assertType, test } from 'vitest';
+import { assertType, expectTypeOf, test } from 'vitest';
 import { Introspection } from '../introspection';
 import { Document } from '../parser';
 import { TypedDocument } from '../typed-document';
@@ -232,4 +232,26 @@ test('parses unions with interfaces correctly', () => {
       | { id: string | Number; wallOfText: string | null; __typename: 'BigTodo' }
       | null;
   }>(actual);
+});
+
+test('parses GitHub queries correctly', () => {
+  const repositories = /* GraphQL */ `
+    query ($org: String!, $repo: String!) {
+      repository(owner: $org, name: $repo) {
+        id
+      }
+    }
+  `;
+
+  type githubIntrospection = import('./fixtures/githubIntrospection').GitHubIntrospection;
+  type doc = Document<typeof repositories>;
+  type actual = TypedDocument<doc, githubIntrospection>;
+
+  type expected = {
+    repository: {
+      id: string | number;
+    } | null;
+  };
+
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
 });
