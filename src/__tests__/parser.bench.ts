@@ -12,7 +12,10 @@ describe('Document', () => {
     `,
   });
 
-  const typeHost = ts.createTypeHost(['index.ts'], virtualHost);
+  const typeHost = ts.createTypeHost({
+    rootNames: ['index.ts'],
+    host: virtualHost,
+  });
 
   bench('parse document', () => {
     ts.runDiagnostics(typeHost);

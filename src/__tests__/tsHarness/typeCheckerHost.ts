@@ -15,7 +15,7 @@ import {
   createTypeChecker,
 } from '@0no-co/typescript.js';
 
-import { compilerOptions } from './virtualHost';
+import { compilerOptions as baseCompilerOptions } from './virtualHost';
 
 import {
   findSourceFile,
@@ -28,7 +28,17 @@ export interface TypeHost extends TypeCheckerHost {
   getRootSourceFiles(): readonly SourceFile[];
 }
 
-export function createTypeHost(rootFileNames: readonly string[], host: CompilerHost): TypeHost {
+export interface TypeHostOptions {
+  rootNames: readonly string[];
+  host: CompilerHost;
+  strict?: boolean;
+  strictNullChecks?: boolean;
+}
+
+export function createTypeHost(options: TypeHostOptions): TypeHost {
+  const { host, rootNames, ...rest } = options;
+  const compilerOptions = { ...baseCompilerOptions, ...rest };
+
   const fileIncludeReasons = arrayToMultiMap<any, any>([], () => FileIncludeKind.Import);
   const resolvedTypeReferenceDirectives = createModeAwareCache<any>();
   const resolvedModules = new Map<Path, ModeAwareCache<ResolvedModuleWithFailedLookupLocations>>();
@@ -101,7 +111,7 @@ export function createTypeHost(rootFileNames: readonly string[], host: CompilerH
     if (libFile) rootFiles.push(libFile);
   }
 
-  for (const rootFileName of rootFileNames) {
+  for (const rootFileName of rootNames) {
     const rootFile = getSourceFile(rootFileName);
     if (rootFile) rootFiles.push(rootFile);
   }

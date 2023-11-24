@@ -32,7 +32,10 @@ describe('TypedDocument', () => {
     `,
   });
 
-  const typeHost = ts.createTypeHost(['index.ts'], virtualHost);
+  const typeHost = ts.createTypeHost({
+    rootNames: ['index.ts'],
+    host: virtualHost,
+  });
 
   bench('derives typed document', () => {
     ts.runDiagnostics(typeHost);
