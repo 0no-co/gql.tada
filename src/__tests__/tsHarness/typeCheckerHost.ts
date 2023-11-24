@@ -12,6 +12,7 @@ import {
   getNormalizedAbsolutePath,
   createModeAwareCache,
   arrayToMultiMap,
+  createTypeChecker,
 } from '@0no-co/typescript.js';
 
 import { compilerOptions } from './compilerOptions';
@@ -107,7 +108,7 @@ export function createTypeHost(rootFileNames: readonly string[], host: CompilerH
 
   const files = [...importedFiles, ...rootFiles];
 
-  return {
+  const typeHost: TypeHost = {
     useCaseSensitiveFileNames: host.useCaseSensitiveFileNames,
     getCurrentDirectory: host.getCurrentDirectory,
     directoryExists: host.directoryExists,
@@ -149,4 +150,12 @@ export function createTypeHost(rootFileNames: readonly string[], host: CompilerH
     },
     redirectTargetsMap: new Map() as RedirectTargetsMap,
   };
+
+  const checker = createTypeChecker(typeHost);
+  const diagnostics = checker.getGlobalDiagnostics();
+  if (diagnostics.length) {
+    throw new Error(diagnostics.map(x => x.messageText).join('\n'));
+  }
+
+  return typeHost;
 }

@@ -246,6 +246,7 @@ test('parses GitHub queries correctly', () => {
   type githubIntrospection = import('./fixtures/githubIntrospection').GitHubIntrospection;
   type doc = Document<typeof repositories>;
   type actual = TypedDocument<doc, githubIntrospection>;
+  const x: actual['repository'] = null;
 
   type expected = {
     repository: {
