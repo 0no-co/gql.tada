@@ -1,18 +1,17 @@
 import type { Kind, TypeNode } from '@0no-co/graphql.web';
 import type { Introspection as IntrospectionType } from '../introspection';
+import type { Obj } from '../utils';
 
 type InputValues<
-  InputFields extends any[],
+  InputFields extends readonly unknown[],
   Introspection extends IntrospectionType<any>
-> = (InputFields[0] extends { name: string; type: string }
-  ? { [Name in InputFields[0]['name']]: UnwrapType<InputFields[0]['type'], Introspection> }
-  : never) &
-  InputFields[0] &
-  (InputFields extends readonly [any, ...infer Rest]
-    ? Rest extends readonly []
-      ? {}
-      : InputValues<Rest, Introspection>
-    : never);
+> = InputFields extends [infer InputField, ...infer Rest]
+  ? (InputField extends { name: any; type: any }
+      ? // TODO: This is unwrapping with an incorrect reference mapper:
+        { [Name in InputField['name']]: UnwrapType<InputField['type'], Introspection> }
+      : {}) &
+      InputValues<Rest, Introspection>
+  : {};
 
 type ScalarType<
   Type extends { kind: 'NamedType'; name: any },
@@ -28,7 +27,7 @@ type ScalarType<
           kind: 'INPUT_OBJECT';
           inputFields: [...infer InputFields];
         }
-      ? InputValues<InputFields, Introspection>
+      ? Obj<InputValues<InputFields, Introspection>>
       : never
     : never
   : never;
@@ -52,29 +51,29 @@ type UnwrapType<
   : null | UnwrapTypeInner<Type, Introspection>;
 
 type VariablesContinue<
-  Variables extends readonly any[],
+  Variables extends readonly unknown[],
   Introspection extends IntrospectionType<any>
-> = (Variables[0]['defaultValue'] extends { kind: any }
-  ? {
-      [Name in Variables[0]['variable']['name']['value']]?: UnwrapType<
-        Variables[0]['type'],
-        Introspection
-      >;
-    }
-  : {
-      [Name in Variables[0]['variable']['name']['value']]: UnwrapType<
-        Variables[0]['type'],
-        Introspection
-      >;
-    }) &
-  (Variables extends readonly [any, ...infer Rest]
-    ? Rest extends readonly []
-      ? {}
-      : VariablesContinue<Rest, Introspection>
-    : never);
+> = Variables extends [infer Variable, ...infer Rest]
+  ? (Variable extends { kind: Kind.VARIABLE_DEFINITION; variable: any; type: any }
+      ? Variable extends { defaultValue: undefined }
+        ? {
+            [Name in Variable['variable']['name']['value']]: UnwrapType<
+              Variable['type'],
+              Introspection
+            >;
+          }
+        : {
+            [Name in Variable['variable']['name']['value']]?: UnwrapType<
+              Variable['type'],
+              Introspection
+            >;
+          }
+      : {}) &
+      VariablesContinue<Rest, Introspection>
+  : {};
 
 type DefinitionContinue<
-  Definitions extends any[],
+  Definitions extends readonly unknown[],
   Introspection extends IntrospectionType<any>
 > = (Definitions[0] extends {
   kind: Kind.OPERATION_DEFINITION;
@@ -93,4 +92,4 @@ type DefinitionContinue<
 export type Variables<
   D extends { kind: Kind.DOCUMENT; definitions: any[] },
   I extends IntrospectionType<any>
-> = DefinitionContinue<D['definitions'], I>;
+> = Obj<DefinitionContinue<D['definitions'], I>>;

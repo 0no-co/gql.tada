@@ -131,7 +131,7 @@ export type _objectMap<T extends IntrospectionObjectType> = {
 export type _inputObjectMap<T extends IntrospectionInputObjectType> = {
   kind: 'INPUT_OBJECT';
   name: T['name'];
-  inputFields: _mapNames<T['inputFields']>;
+  inputFields: [...T['inputFields']];
 };
 
 type _interfaceMap<T extends IntrospectionInterfaceType> = {

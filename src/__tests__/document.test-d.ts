@@ -52,7 +52,7 @@ test('infers optional properties for @skip/', () => {
     query {
       todos {
         id @skip(if: false)
-        __typename @test (if: false)
+        __typename @test @include(if: false)
       }
     }
   `>;
@@ -61,7 +61,7 @@ test('infers optional properties for @skip/', () => {
   type expected = {
     todos: Array<{
       id?: string | number | undefined;
-      __typename: 'Todo';
+      __typename?: 'Todo';
     } | null> | null;
   };
 
