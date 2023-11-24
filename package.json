@@ -33,6 +33,7 @@
   ],
   "scripts": {
     "test": "vitest typecheck",
+    "bench": "vitest bench",
     "check": "tsc",
     "lint": "eslint --ext=js,ts .",
     "build": "rollup -c scripts/rollup.config.mjs",

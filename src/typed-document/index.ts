@@ -95,7 +95,9 @@ type FragmentType<
 > = Spread extends InlineFragmentNode
   ? Spread['typeCondition'] extends NamedTypeNode
     ? Spread['typeCondition']['name']['value'] extends keyof Introspection['types']
-      ? Introspection['types'][Spread['typeCondition']['name']['value']]
+      ? Introspection['types'][Spread['typeCondition']['name']['value']] extends ObjectLikeType
+        ? Introspection['types'][Spread['typeCondition']['name']['value']]
+        : never
       : never
     : BaseType
   : Spread extends FragmentSpreadNode
@@ -245,12 +247,14 @@ type DefinitionContinue<
   Introspection extends IntrospectionType<any>,
   Fragments extends Record<string, FragmentDefinitionNode>
 > = (Definitions[0] extends { kind: Kind.OPERATION_DEFINITION }
-  ? Selection<
-      Definitions[0]['selectionSet']['selections'],
-      Introspection['types'][Introspection[Definitions[0]['operation']]],
-      Introspection,
-      Fragments
-    >
+  ? Introspection['types'][Introspection[Definitions[0]['operation']]] extends ObjectLikeType
+    ? Selection<
+        Definitions[0]['selectionSet']['selections'],
+        Introspection['types'][Introspection[Definitions[0]['operation']]],
+        Introspection,
+        Fragments
+      >
+    : never
   : {}) &
   (Definitions extends readonly []
     ? {}

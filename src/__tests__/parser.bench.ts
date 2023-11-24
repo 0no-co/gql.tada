@@ -15,6 +15,6 @@ describe('Document', () => {
   const typeHost = ts.createTypeHost(['index.ts'], virtualHost);
 
   bench('parse document', () => {
-    ts.createTypeChecker(typeHost).getDiagnostics();
+    ts.runDiagnostics(typeHost);
   });
 });
