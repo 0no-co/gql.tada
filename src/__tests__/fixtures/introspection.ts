@@ -1,1 +1,1 @@
-export { Introspection } from '../../introspection';
+export type { Introspection } from '../../introspection';

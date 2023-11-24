@@ -29,7 +29,6 @@ describe('TypedDocument', () => {
 
       type Result = TypedDocument<document, GitHubIntrospection>;
       type Input = Variables<document, GitHubIntrospection>;
-      const x: Result['repository'] = null;
     `,
   });
 
