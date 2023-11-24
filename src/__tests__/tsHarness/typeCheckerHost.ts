@@ -96,14 +96,14 @@ export function createTypeHost(rootFileNames: readonly string[], host: CompilerH
     }
   }
 
-  for (const rootFileName of rootFileNames) {
-    const rootFile = getSourceFile(rootFileName);
-    if (rootFile) rootFiles.push(rootFile);
-  }
-
   if (!compilerOptions.noLib) {
     const libFile = getSourceFile(host.getDefaultLibFileName(compilerOptions));
     if (libFile) rootFiles.push(libFile);
+  }
+
+  for (const rootFileName of rootFileNames) {
+    const rootFile = getSourceFile(rootFileName);
+    if (rootFile) rootFiles.push(rootFile);
   }
 
   const files = [...importedFiles, ...rootFiles];

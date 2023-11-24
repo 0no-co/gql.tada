@@ -4,6 +4,7 @@ import {
   ResolvedModule,
   CompilerHost,
   ScriptTarget,
+  CreateSourceFileOptions,
   SourceFile,
   JsxEmit,
   createModuleResolutionCache,
@@ -32,6 +33,8 @@ export const compilerOptions: CompilerOptions = {
   strict: false,
   noEmit: true,
   noLib: false,
+  disableReferencedProjectLoad: true,
+  disableSourceOfProjectReferenceRedirect: true,
   disableSizeLimit: true,
   disableSolutionSearching: true,
 };
@@ -56,10 +59,14 @@ class File {
     }
   }
 
-  toSourceFile(target: ScriptTarget) {
+  toSourceFile(languageVersionOrOptions: ScriptTarget | CreateSourceFileOptions) {
+    const target =
+      typeof languageVersionOrOptions === 'object'
+        ? languageVersionOrOptions.languageVersion
+        : languageVersionOrOptions;
     return (
       this.cache[target] ||
-      (this.cache[target] = createSourceFile(this.name, this.toString(), target))
+      (this.cache[target] = createSourceFile(this.name, this.toString(), languageVersionOrOptions))
     );
   }
 
@@ -132,14 +139,18 @@ export function createVirtualHost(files: Files) {
   }
 
   function split(filename: string): string[] {
-    return filename.split(path.sep).slice(1);
+    return filename !== path.sep ? filename.split(path.sep).slice(1) : [];
   }
 
   function lookup(filename: string): File | Directory | undefined {
     const parts = split(normalize(filename));
     let directory = root;
-    for (let i = 0; i < parts.length - 1; i++) directory = directory.dir(parts[i]);
-    return directory.get(parts[parts.length - 1]);
+    if (parts.length) {
+      for (let i = 0; i < parts.length - 1; i++) directory = directory.dir(parts[i]);
+      return directory.get(parts[parts.length - 1]);
+    } else {
+      return directory;
+    }
   }
 
   for (const key in files) {
@@ -155,7 +166,7 @@ export function createVirtualHost(files: Files) {
     getCanonicalFileName: normalize,
     getDefaultLibFileName() {
       // TODO: When another lib with references is selected, the resolution mode doesn't adapt
-      return '/node_modules/@0no-co/typescript.js/lib/lib.es5.d.ts';
+      return normalize('/node_modules/@0no-co/typescript.js/lib/lib.es5.d.ts');
     },
     getCurrentDirectory() {
       return path.sep;
@@ -163,11 +174,20 @@ export function createVirtualHost(files: Files) {
     getNewLine() {
       return '\n';
     },
+    getModuleResolutionCache() {
+      return cache;
+    },
     useCaseSensitiveFileNames() {
       return true;
     },
+    useSourceOfProjectReferenceRedirect() {
+      return false;
+    },
     fileExists(filename: string) {
       return lookup(filename) instanceof File;
+    },
+    directoryExists(directoryName: string) {
+      return lookup(directoryName) instanceof Directory;
     },
 
     writeFile(filename: string, content: Uint8Array | string) {
@@ -196,10 +216,13 @@ export function createVirtualHost(files: Files) {
       }
     },
 
-    getSourceFile(filename: string, target: ScriptTarget) {
+    getSourceFile(
+      filename: string,
+      languageVersionOrOptions: ScriptTarget | CreateSourceFileOptions
+    ) {
       const entry = lookup(filename);
       if (entry instanceof File) {
-        return entry.toSourceFile(target);
+        return entry.toSourceFile(languageVersionOrOptions);
       }
     },
 
@@ -211,10 +234,5 @@ export function createVirtualHost(files: Files) {
       }
       return resolvedModules;
     },
-
-    resolveRootModule(moduleName: string) {
-      return resolveModuleName(moduleName, '/', compilerOptions, this)?.resolvedModule
-        ?.resolvedFileName;
-    },
-  };
+  } satisfies CompilerHost;
 }

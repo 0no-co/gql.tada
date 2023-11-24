@@ -2,7 +2,6 @@ import {
   CompilerHost,
   StringLiteralLike,
   StringLiteral,
-  ScriptTarget,
   Identifier,
   SourceFile,
   Statement,
@@ -15,6 +14,8 @@ import {
   Mutable,
   Node,
   ResolutionMode,
+  JSDocParsingMode,
+  CreateSourceFileOptions,
   walkUpParenthesizedExpressions,
   isImportEqualsDeclaration,
   toPath,
@@ -41,7 +42,11 @@ import {
   isAmbientModule,
   getTextOfIdentifierOrLiteral,
   hasSyntacticModifier,
+  getEmitScriptTarget,
+  getSetExternalModuleIndicator,
 } from '@0no-co/typescript.js';
+
+import { compilerOptions } from './virtualHost';
 
 export function getModuleNames({ imports, moduleAugmentations }: SourceFile): StringLiteralLike[] {
   const res = [...imports];
@@ -50,8 +55,20 @@ export function getModuleNames({ imports, moduleAugmentations }: SourceFile): St
   return res;
 }
 
+function getCreateSourceFileOptions(): CreateSourceFileOptions {
+  const languageVersion = getEmitScriptTarget(compilerOptions);
+  const setExternalModuleIndicator = getSetExternalModuleIndicator(compilerOptions);
+  const jsDocParsingMode = 0 satisfies JSDocParsingMode.ParseAll;
+  return {
+    impliedNodeFormat: 99 satisfies ModuleKind.ESNext,
+    languageVersion,
+    setExternalModuleIndicator,
+    jsDocParsingMode,
+  };
+}
+
 export function findSourceFile(fileName: string, host: CompilerHost): SourceFile | undefined {
-  const file = host.getSourceFile(fileName, 99 satisfies ScriptTarget.ESNext);
+  const file = host.getSourceFile(fileName, getCreateSourceFileOptions());
   if (file) {
     const path = toPath(fileName, host.getCurrentDirectory(), host.getCanonicalFileName);
     file.fileName = file.originalFileName = fileName;
