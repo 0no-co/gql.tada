@@ -15,7 +15,7 @@ import {
   createTypeChecker,
 } from '@0no-co/typescript.js';
 
-import { compilerOptions } from './compilerOptions';
+import { compilerOptions } from './virtualHost';
 
 import {
   findSourceFile,

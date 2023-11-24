@@ -1,16 +1,40 @@
 import {
+  ModuleResolutionKind,
+  CompilerOptions,
   ResolvedModule,
   CompilerHost,
   ScriptTarget,
   SourceFile,
+  JsxEmit,
   createModuleResolutionCache,
   resolveModuleName,
   createSourceFile,
 } from '@0no-co/typescript.js';
 
+import fs from 'node:fs';
 import path from 'node:path/posix';
-import { compilerOptions } from './compilerOptions';
-import { readVirtualModule } from './virtualModules';
+
+export const compilerOptions: CompilerOptions = {
+  rootDir: '/',
+  moduleResolution: ModuleResolutionKind.Bundler,
+  skipLibCheck: true,
+  skipDefaultLibCheck: true,
+  allowImportingTsExtensions: true,
+  allowSyntheticDefaultImports: true,
+  resolvePackageJsonExports: true,
+  resolvePackageJsonImports: true,
+  resolveJsonModule: true,
+  esModuleInterop: true,
+  jsx: 1 satisfies JsxEmit.Preserve,
+  target: 99 satisfies ScriptTarget.Latest,
+  checkJs: false,
+  allowJs: true,
+  strict: false,
+  noEmit: true,
+  noLib: false,
+  disableSizeLimit: true,
+  disableSolutionSearching: true,
+};
 
 export type FileData = Uint8Array | string;
 export type Files = Record<string, FileData>;
@@ -63,6 +87,32 @@ class Directory {
   set(name: string, file: File) {
     this.children[name] = file;
   }
+}
+
+const virtualRoot = path.resolve(__dirname, '../../../');
+
+export function readFileFromRoot(name: string): FileData {
+  return fs.readFileSync(path.join(virtualRoot, name));
+}
+
+export function readVirtualModule(moduleName: string): Files {
+  const files: Files = {};
+
+  function walk(directory: string) {
+    for (const entry of fs.readdirSync(path.resolve(virtualRoot, directory))) {
+      const file = path.join(directory, entry);
+      const target = path.resolve(virtualRoot, file);
+      const stat = fs.statSync(target);
+      if (stat.isDirectory()) {
+        walk(file);
+      } else {
+        files[file] = fs.readFileSync(target).toString();
+      }
+    }
+  }
+
+  walk(path.join('node_modules', moduleName));
+  return files;
 }
 
 export type VirtualHost = ReturnType<typeof createVirtualHost> extends infer U
