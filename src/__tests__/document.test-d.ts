@@ -1,251 +1,233 @@
-import { assertType, expectTypeOf, test } from 'vitest';
+import { expectTypeOf, test } from 'vitest';
 import { Introspection } from '../introspection';
 import { Document } from '../parser';
 import { TypedDocument } from '../typed-document';
 import { schema } from './introspection.test-d';
 
 type Intro = Introspection<typeof schema>;
-const any = {} as any;
 
-test('parses simple documents correctly', () => {
-  const query = `
+test('infers simple fields', () => {
+  type query = Document</* GraphQL */ `
     query { todos { id } }
-  `;
-  type doc = Document<typeof query>;
-  type typedDoc = TypedDocument<doc, Intro>;
+  `>;
 
-  const actual = any as typedDoc;
+  type actual = TypedDocument<query, Intro>;
+  type expected = { todos: Array<{ id: string | number } | null> | null };
 
-  assertType<{ todos: Array<{ id: string | number } | null> | null }>(actual);
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
 });
 
-test('parses adjacent fragments correctly', () => {
-  const query = `
+test('infers adjacent inline fragments', () => {
+  type query = Document</* GraphQL */ `
     query { todos { id ... on Todo { text } ... on Todo { complete } } }
-  `;
-  type doc = Document<typeof query>;
-  type typedDoc = TypedDocument<doc, Intro>;
+  `>;
 
-  const actual = any as typedDoc;
-
-  assertType<{
+  type actual = TypedDocument<query, Intro>;
+  type expected = {
     todos: Array<{
       id: string | number;
-      text?: string | null;
-      complete?: boolean | null;
+      text: string;
+      complete: boolean | null;
     } | null> | null;
-  }>(actual);
+  };
+
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
 });
 
-test('parses simple documents with aliases correctly', () => {
-  const query = `
+test('infers aliased fields', () => {
+  type query = Document</* GraphQL */ `
     query { todos { myIdIsGreat: id } }
-  `;
-  type doc = Document<typeof query>;
-  type typedDoc = TypedDocument<doc, Intro>;
+  `>;
 
-  const actual = any as typedDoc;
+  type actual = TypedDocument<query, Intro>;
+  type expected = {
+    todos: Array<{ myIdIsGreat: string | number } | null> | null;
+  };
 
-  assertType<{ todos: Array<{ myIdIsGreat: string | number } | null> | null }>(actual);
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
 });
 
-test('nulls when we have a skip directive', () => {
-  const query = `
-    query { todos { id @skip(if: false) __typename @test @skip(if: false) } }
-  `;
-  type doc = Document<typeof query>;
-  type typedDoc = TypedDocument<doc, Intro>;
+test('infers optional properties for @skip/', () => {
+  type query = Document</* GraphQL */ `
+    query {
+      todos {
+        id @skip(if: false)
+        __typename @test (if: false)
+      }
+    }
+  `>;
 
-  const actual = any as typedDoc;
-
-  assertType<{
-    todos: Array<{ id?: string | number; __typename?: 'Todo' } | null> | null;
-  }>(actual);
-});
-
-test('parses enum values', () => {
-  const query = `
-    query { todos { id test } }
-  `;
-  type doc = Document<typeof query>;
-  type typedDoc = TypedDocument<doc, Intro>;
-
-  const actual = any as typedDoc;
-  assertType<{
-    todos: Array<{ id: string | number; test: 'value' | 'more' | null } | null> | null;
-  }>(actual);
-});
-
-test('parses inline fragments correctly', () => {
-  const query = `
-    query { todos { ... on Todo { id text } complete } }
-  `;
-  type doc = Document<typeof query>;
-  type typedDoc = TypedDocument<doc, Intro>;
-
-  const actual = any as typedDoc;
-
-  assertType<{
+  type actual = TypedDocument<query, Intro>;
+  type expected = {
     todos: Array<{
-      id: string | number;
-      text: string | null;
-      complete: boolean | null;
-    } | null> | null;
-  }>(actual);
-});
-
-test('parses fragments correctly', () => {
-  const query = `
-    query { todos { ...Fields complete } }
-
-    fragment Fields on Todo { id text __typename }
-  `;
-  type doc = Document<typeof query>;
-  type typedDoc = TypedDocument<doc, Intro>;
-
-  const actual = any as typedDoc;
-
-  assertType<{
-    todos: Array<{
-      id?: string | number;
-      text?: string | null;
-      complete: boolean | null;
-      __typename?: 'Todo';
-    } | null> | null;
-  }>(actual);
-});
-
-test('mixes inline fragments and fragments correctly', () => {
-  const query = `
-    query { todos { ...Fields ... on Todo { text } complete } }
-
-    fragment Fields on Todo { id  __typename }
-  `;
-  type doc = Document<typeof query>;
-  type typedDoc = TypedDocument<doc, Intro>;
-
-  const actual = any as typedDoc;
-
-  assertType<{
-    todos: Array<{
-      id: string | number;
-      text: string | null;
-      complete: boolean | null;
+      id?: string | number | undefined;
       __typename: 'Todo';
     } | null> | null;
-  }>(actual);
+  };
+
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
 });
 
-test('parses unions correctly', () => {
-  const unionQuery = `
-  query {
-    latestTodo {
-      __typename
-      ...TodoFields
-      ...TodoFields2
-      ... on NoTodosError { message  __typename }
+test('infers enum values', () => {
+  type query = Document</* GraphQL */ `
+    query { todos { id test } }
+  `>;
+
+  type actual = TypedDocument<query, Intro>;
+  type expected = {
+    todos: Array<{ id: string | number; test: 'value' | 'more' | null } | null> | null;
+  };
+
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
+});
+
+test('infers fragment spreads', () => {
+  type query = Document</* GraphQL */ `
+    query { todos { ...Fields complete } }
+    fragment Fields on Todo { id text __typename }
+  `>;
+
+  type actual = TypedDocument<query, Intro>;
+  type expected = {
+    todos: Array<{
+      __typename: 'Todo';
+      id: string | number;
+      text: string;
+      complete: boolean | null;
+    } | null> | null;
+  };
+
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
+});
+
+test('infers inline fragments and fragment spreads', () => {
+  type query = Document</* GraphQL */ `
+    query { todos { ...Fields ... on Todo { text } complete } }
+    fragment Fields on Todo { id  __typename }
+  `>;
+
+  type actual = TypedDocument<query, Intro>;
+  type expected = {
+    todos: Array<{
+      __typename: 'Todo';
+      id: string | number;
+      text: string;
+      complete: boolean | null;
+    } | null> | null;
+  };
+
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
+});
+
+test('infers fragment spreads on unions', () => {
+  type query = Document</* GraphQL */ `
+    query {
+      latestTodo {
+        __typename
+        ...TodoFields
+        ...TodoFields2
+        ... on NoTodosError { message  __typename }
+      }
     }
-  }
-  
-  fragment TodoFields on Todo {
-    id
-    __typename
-  }
+    
+    fragment TodoFields on Todo {
+      id
+      __typename
+    }
 
-  fragment TodoFields2 on Todo {
-    text
-    complete
-    __typename
-  }
-`;
+    fragment TodoFields2 on Todo {
+      text
+      complete
+      __typename
+    }
+  `>;
 
-  type doc = Document<typeof unionQuery>;
-  type typedDoc = TypedDocument<doc, Intro>;
-
-  const actual = any as typedDoc;
-
-  assertType<{
+  type actual = TypedDocument<query, Intro>;
+  type expected = {
     latestTodo:
-      | { message: String; __typename: 'NoTodosError' }
+      | { message: string; __typename: 'NoTodosError' }
       | {
-          id: string | Number;
-          text: string | null;
-          complete: boolean | null;
           __typename: 'Todo';
+          id: string | number;
+          text: string;
+          complete: boolean | null;
         };
-  }>(actual);
+  };
 
-  if (actual.latestTodo.__typename === 'NoTodosError') {
-    actual.latestTodo.message;
-  } else if (actual.latestTodo.__typename === 'Todo') {
-    actual.latestTodo.id;
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
+
+  const data: actual = {} as any;
+  if (data.latestTodo.__typename === 'NoTodosError') {
+    data.latestTodo.message satisfies string;
+  } else if (data.latestTodo.__typename === 'Todo') {
+    data.latestTodo.id satisfies string | number;
   }
 });
 
-test('parses mutations correctly', () => {
-  const query = `
+test('infers mutations', () => {
+  type query = Document</* GraphQL */ `
     mutation ($id: ID!, $input: TodoPayload!) {
       toggleTodo (id: $id input: $input) { id }
     }
-  `;
+  `>;
 
-  type doc = Document<typeof query>;
-  type typedDoc = TypedDocument<doc, Intro>;
-
-  const actual = any as typedDoc;
-
-  assertType<{
+  type actual = TypedDocument<query, Intro>;
+  type expected = {
     toggleTodo: { id: string | number } | null;
-  }>(actual);
+  };
+
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
 });
 
-test('parses unions with interfaces correctly', () => {
-  const unionQuery = `
-  query {
-    test {
-      __typename
-      ...InterfaceFields
-      ... on SmallTodo { text maxLength __typename }
-      ... on BigTodo { wallOfText __typename }
+test('infers unions and interfaces correctly', () => {
+  type query = Document</* GraphQL */ `
+    query {
+      test {
+        __typename
+        ...InterfaceFields
+        ... on SmallTodo { text maxLength __typename }
+        ... on BigTodo { wallOfText __typename }
+      }
     }
-  }
-  
-  fragment InterfaceFields on ITodo {
-    id
-    __typename
-  }
-`;
+    
+    fragment InterfaceFields on ITodo {
+      id
+      __typename
+    }
+  `>;
 
-  type doc = Document<typeof unionQuery>;
-  type typedDoc = TypedDocument<doc, Intro>;
-
-  const actual = any as typedDoc;
-
-  assertType<{
+  type actual = TypedDocument<query, Intro>;
+  type expected = {
     test:
       | {
-          id: string | Number;
-          text: string | null;
-          maxLength: number | null;
           __typename: 'SmallTodo';
+          id: string | number;
+          text: string;
+          maxLength: number | null;
         }
-      | { id: string | Number; wallOfText: string | null; __typename: 'BigTodo' }
+      | {
+          __typename: 'BigTodo';
+          id: string | number;
+          wallOfText: string | null;
+        }
       | null;
-  }>(actual);
+  };
+
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
 });
 
-test('parses GitHub queries correctly', () => {
-  const repositories = /* GraphQL */ `
+test('infers queries from GitHub Introspection schema', () => {
+  type githubIntrospection = import('./fixtures/githubIntrospection').GitHubIntrospection;
+
+  type repositories = Document</* GraphQL */ `
     query ($org: String!, $repo: String!) {
       repository(owner: $org, name: $repo) {
         id
       }
     }
-  `;
+  `>;
 
-  type githubIntrospection = import('./fixtures/githubIntrospection').GitHubIntrospection;
-  type doc = Document<typeof repositories>;
-  type actual = TypedDocument<doc, githubIntrospection>;
+  type actual = TypedDocument<repositories, githubIntrospection>;
 
   type expected = {
     repository: {
