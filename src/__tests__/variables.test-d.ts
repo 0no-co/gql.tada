@@ -1,10 +1,10 @@
 import { expectTypeOf, assertType, test } from 'vitest';
+import { simpleIntrospection } from './fixtures/simpleIntrospection';
 import { Introspection } from '../introspection';
 import { Document } from '../parser';
 import { Variables } from '../typed-document/variables';
-import { schema } from './introspection.test-d';
 
-type Intro = Introspection<typeof schema>;
+type Intro = Introspection<typeof simpleIntrospection>;
 const any = {} as any;
 
 test('parses document-variables correctly', () => {

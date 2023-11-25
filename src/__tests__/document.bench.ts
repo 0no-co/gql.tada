@@ -14,10 +14,13 @@ describe('TypedDocument', () => {
     'typed-document/fragments.ts': ts.readFileFromRoot('src/typed-document/fragments.ts'),
 
     'index.ts': `
-      import type { GitHubIntrospection } from './githubIntrospection';
+      import { githubIntrospection } from './githubIntrospection';
+      import type { Introspection } from './introspection';
       import type { Document } from './parser';
       import type { TypedDocument } from './typed-document';
       import type { Variables } from './typed-document/variables';
+
+      type schema = Introspection<typeof githubIntrospection>;
 
       type document = Document<\`
         query ($org: String!, $repo: String!) {
@@ -27,8 +30,8 @@ describe('TypedDocument', () => {
         }
       \`>;
 
-      type Result = TypedDocument<document, GitHubIntrospection>;
-      type Input = Variables<document, GitHubIntrospection>;
+      type Result = TypedDocument<document, schema>;
+      type Input = Variables<document, schema>;
     `,
   });
 

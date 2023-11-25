@@ -1,10 +1,11 @@
 import { assertType, test } from 'vitest';
+import { simpleIntrospection } from './fixtures/simpleIntrospection';
 import { Introspection } from '../introspection';
 import { Document } from '../parser';
 import { FragmentType } from '../typed-document/fragments';
-import { schema } from './introspection.test-d';
 
-type Intro = Introspection<typeof schema>;
+type Intro = Introspection<typeof simpleIntrospection>;
+
 const any = {} as any;
 
 test('creates a type for a given fragment', () => {

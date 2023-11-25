@@ -7,7 +7,7 @@ describe('Document', () => {
     'parser.ts': ts.readFileFromRoot('src/parser.ts'),
     'index.ts': `
       import type { Document } from './parser';
-      type document  = Document<'{ test }'>;
+      type document = Document<'{ test }'>;
       type operation = document['definitions'][0]['operation'];
     `,
   });

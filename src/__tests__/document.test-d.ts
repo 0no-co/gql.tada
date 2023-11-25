@@ -1,10 +1,10 @@
 import { expectTypeOf, test } from 'vitest';
+import { simpleIntrospection } from './fixtures/simpleIntrospection';
 import { Introspection } from '../introspection';
 import { Document } from '../parser';
 import { TypedDocument } from '../typed-document';
-import { schema } from './introspection.test-d';
 
-type Intro = Introspection<typeof schema>;
+type Intro = Introspection<typeof simpleIntrospection>;
 
 test('infers simple fields', () => {
   type query = Document</* GraphQL */ `
@@ -217,7 +217,7 @@ test('infers unions and interfaces correctly', () => {
 });
 
 test('infers queries from GitHub Introspection schema', () => {
-  type githubIntrospection = import('./fixtures/githubIntrospection').GitHubIntrospection;
+  type schema = Introspection<typeof import('./fixtures/githubIntrospection').githubIntrospection>;
 
   type repositories = Document</* GraphQL */ `
     query ($org: String!, $repo: String!) {
@@ -227,7 +227,7 @@ test('infers queries from GitHub Introspection schema', () => {
     }
   `>;
 
-  type actual = TypedDocument<repositories, githubIntrospection>;
+  type actual = TypedDocument<repositories, schema>;
 
   type expected = {
     repository: {
