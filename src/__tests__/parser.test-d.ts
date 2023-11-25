@@ -1,5 +1,5 @@
-import { test, assertType } from 'vitest';
-import type { DocumentNode } from '@0no-co/graphql.web';
+import { describe, it, expectTypeOf } from 'vitest';
+import { Kind, OperationTypeNode, DocumentNode } from '@0no-co/graphql.web';
 
 import {
   Document,
@@ -15,37 +15,34 @@ import {
   TakeField,
 } from '../parser';
 
-const any = {} as any;
-
-test('parses variable inline values', () => {
-  const actual = any as TakeValue<'{ a: { b: [ $var ] } }', false>;
-  assertType<
-    [
+describe('TakeValue', () => {
+  it('parses variable inline values', () => {
+    type expected = [
       {
-        kind: 'ObjectValue';
+        kind: Kind.OBJECT;
         fields: [
           {
-            kind: 'ObjectField';
+            kind: Kind.OBJECT_FIELD;
             name: {
-              kind: 'Name';
+              kind: Kind.NAME;
               value: 'a';
             };
             value: {
-              kind: 'ObjectValue';
+              kind: Kind.OBJECT;
               fields: [
                 {
-                  kind: 'ObjectField';
+                  kind: Kind.OBJECT_FIELD;
                   name: {
-                    kind: 'Name';
+                    kind: Kind.NAME;
                     value: 'b';
                   };
                   value: {
-                    kind: 'ListValue';
+                    kind: Kind.LIST;
                     values: [
                       {
-                        kind: 'Variable';
+                        kind: Kind.VARIABLE;
                         name: {
-                          kind: 'Name';
+                          kind: Kind.NAME;
                           value: 'var';
                         };
                       }
@@ -58,148 +55,149 @@ test('parses variable inline values', () => {
         ];
       },
       ''
-    ]
-  >(actual);
+    ];
+
+    expectTypeOf<TakeValue<'{ a: { b: [ $var ] } }', false>>().toEqualTypeOf<expected>();
+  });
 });
 
-test('parses variable definitions', () => {
-  assertType<
-    [
+describe('TakeVarDefinitions', () => {
+  it('parses single variable definition', () => {
+    type expected = [
       [
         {
-          kind: 'VariableDefinition';
+          kind: Kind.VARIABLE_DEFINITION;
           variable: {
-            kind: 'Variable';
+            kind: Kind.VARIABLE;
             name: {
-              kind: 'Name';
+              kind: Kind.NAME;
               value: 'x';
             };
           };
           type: {
-            kind: 'NamedType';
+            kind: Kind.NAMED_TYPE;
             name: {
-              kind: 'Name';
+              kind: Kind.NAME;
               value: 'A';
             };
           };
           defaultValue: undefined;
+          directives: [];
         }
       ],
       ''
-    ]
-  >(any as TakeVarDefinitions<'($x: A)'>);
+    ];
 
-  assertType<
-    [
+    expectTypeOf<TakeVarDefinitions<'($x: A)'>>().toEqualTypeOf<expected>();
+  });
+
+  it('parses multiple variable definitions', () => {
+    type expected = [
       [
         {
-          kind: 'VariableDefinition';
+          kind: Kind.VARIABLE_DEFINITION;
           variable: {
-            kind: 'Variable';
+            kind: Kind.VARIABLE;
             name: {
-              kind: 'Name';
+              kind: Kind.NAME;
               value: 'x';
             };
           };
           type: {
-            kind: 'NamedType';
+            kind: Kind.NAMED_TYPE;
             name: {
-              kind: 'Name';
+              kind: Kind.NAME;
               value: 'A';
             };
           };
           defaultValue: undefined;
+          directives: [];
         },
         {
-          kind: 'VariableDefinition';
+          kind: Kind.VARIABLE_DEFINITION;
           variable: {
-            kind: 'Variable';
+            kind: Kind.VARIABLE;
             name: {
-              kind: 'Name';
+              kind: Kind.NAME;
               value: 'y';
             };
           };
           type: {
-            kind: 'NamedType';
+            kind: Kind.NAMED_TYPE;
             name: {
-              kind: 'Name';
+              kind: Kind.NAME;
               value: 'B';
             };
           };
           defaultValue: undefined;
+          directives: [];
         }
       ],
       ''
-    ]
-  >(any as TakeVarDefinitions<'($x: A, $y: B)'>);
-});
+    ];
 
-test('parses constant default values', () => {
-  const actualPass = any as TakeVarDefinition<'$x: Complex = "42"'>;
-  const actualFail = any as TakeVarDefinition<'$x: Complex = $var'>;
+    expectTypeOf<TakeVarDefinitions<'($x: A, $y: B)'>>().toEqualTypeOf<expected>();
+  });
 
-  assertType<
-    [
+  it('parses constant default values', () => {
+    type expected = [
       {
-        kind: 'VariableDefinition';
+        kind: Kind.VARIABLE_DEFINITION;
         variable: {
-          kind: 'Variable';
+          kind: Kind.VARIABLE;
           name: {
-            kind: 'Name';
+            kind: Kind.NAME;
             value: 'x';
           };
         };
         type: {
-          kind: 'NamedType';
+          kind: Kind.NAMED_TYPE;
           name: {
-            kind: 'Name';
+            kind: Kind.NAME;
             value: 'Complex';
           };
         };
         defaultValue: {
-          kind: 'StringValue';
+          kind: Kind.STRING;
           value: string;
           block: false;
         };
         directives: [];
       },
       ''
-    ]
-  >(actualPass);
+    ];
 
-  assertType<void>(actualFail);
-});
+    expectTypeOf<TakeVarDefinition<'$x: Complex = "42"'>>().toEqualTypeOf<expected>();
+    expectTypeOf<TakeVarDefinition<'$x: Complex = $var'>>().toEqualTypeOf<void>();
+  });
 
-test('parses variable definition directives', () => {
-  const actual = any as TakeVarDefinition<'$x: Boolean = false @bar'>;
-
-  assertType<
-    [
+  it('parses variable definition directives', () => {
+    type expected = [
       {
-        kind: 'VariableDefinition';
+        kind: Kind.VARIABLE_DEFINITION;
         variable: {
-          kind: 'Variable';
+          kind: Kind.VARIABLE;
           name: {
-            kind: 'Name';
+            kind: Kind.NAME;
             value: 'x';
           };
         };
         type: {
-          kind: 'NamedType';
+          kind: Kind.NAMED_TYPE;
           name: {
-            kind: 'Name';
+            kind: Kind.NAME;
             value: 'Boolean';
           };
         };
         defaultValue: {
-          kind: 'BooleanValue';
+          kind: Kind.BOOLEAN;
           value: boolean;
         };
         directives: [
           {
-            kind: 'Directive';
+            kind: Kind.DIRECTIVE;
             name: {
-              kind: 'Name';
+              kind: Kind.NAME;
               value: 'bar';
             };
             arguments: [];
@@ -207,225 +205,239 @@ test('parses variable definition directives', () => {
         ];
       },
       ''
-    ]
-  >(actual);
+    ];
+
+    expectTypeOf<TakeVarDefinition<'$x: Boolean = false @bar'>>().toEqualTypeOf<expected>();
+  });
 });
 
-test('does not accept fragment spread of "on"', () => {
-  const actualPass = any as TakeSelectionSetContinue<'{ ...On }'>;
-  const actualFail = any as TakeSelectionSetContinue<'{ ...on }'>;
-
-  assertType<
-    [
+describe('TakeSelectionSetContinue', () => {
+  it('does not accept fragment spread of "on"', () => {
+    type expected = [
       {
-        kind: 'SelectionSet';
+        kind: Kind.SELECTION_SET;
         selections: [
           {
-            kind: 'FragmentSpread';
+            kind: Kind.FRAGMENT_SPREAD;
             directives: [];
             name: {
-              kind: 'Name';
+              kind: Kind.NAME;
               value: 'On';
             };
           }
         ];
       },
       ''
-    ]
-  >(actualPass);
+    ];
 
-  assertType<void>(actualFail);
+    expectTypeOf<TakeSelectionSetContinue<'{ ...On }'>>().toEqualTypeOf<expected>();
+    expectTypeOf<TakeSelectionSetContinue<'{ ...on }'>>().toEqualTypeOf<void>();
+  });
 });
 
-test('parses anonymous mutation operations', () => {
-  const actual = any as TakeOperationDefinition<'mutation { mutationField }'>;
-
-  assertType<
-    [
+describe('TakeOperationDefinition', () => {
+  it('parses anonymous mutation operations', () => {
+    type expected = [
       {
-        kind: 'OperationDefinition';
-        operation: 'mutation';
+        kind: Kind.OPERATION_DEFINITION;
+        operation: OperationTypeNode.MUTATION;
         name: undefined;
+        variableDefinitions: [];
+        directives: [];
         selectionSet: {
-          kind: 'SelectionSet';
+          kind: Kind.SELECTION_SET;
           selections: [
             {
-              kind: 'Field';
+              kind: Kind.FIELD;
               name: {
-                kind: 'Name';
+                kind: Kind.NAME;
                 value: 'mutationField';
               };
+              arguments: [];
+              alias: undefined;
+              selectionSet: undefined;
+              directives: [];
             }
           ];
         };
       },
       ''
-    ]
-  >(actual);
-});
+    ];
 
-test('parses named mutation operations', () => {
-  const actual = any as TakeOperationDefinition<'mutation Foo { mutationField }'>;
+    expectTypeOf<TakeOperationDefinition<'mutation { mutationField }'>>().toEqualTypeOf<expected>();
+  });
 
-  assertType<
-    [
+  it('parses named mutation operations', () => {
+    type expected = [
       {
-        kind: 'OperationDefinition';
-        operation: 'mutation';
+        kind: Kind.OPERATION_DEFINITION;
+        operation: OperationTypeNode.MUTATION;
         name: {
-          kind: 'Name';
+          kind: Kind.NAME;
           value: 'Foo';
         };
+        variableDefinitions: [];
+        directives: [];
         selectionSet: {
-          kind: 'SelectionSet';
+          kind: Kind.SELECTION_SET;
           selections: [
             {
-              kind: 'Field';
+              kind: Kind.FIELD;
               name: {
-                kind: 'Name';
+                kind: Kind.NAME;
                 value: 'mutationField';
               };
+              arguments: [];
+              alias: undefined;
+              selectionSet: undefined;
+              directives: [];
             }
           ];
         };
       },
       ''
-    ]
-  >(actual);
-});
+    ];
 
-test('parses fragment definitions', () => {
-  assertType<void>(any as TakeFragmentDefinition<'fragment { test }'>);
-  assertType<void>(any as TakeFragmentDefinition<'fragment name { test }'>);
-  assertType<void>(any as TakeFragmentDefinition<'fragment name on name'>);
+    expectTypeOf<
+      TakeOperationDefinition<'mutation Foo { mutationField }'>
+    >().toEqualTypeOf<expected>();
+  });
 
-  const actual = any as TakeFragmentDefinition<'fragment name on Type { field }'>;
-
-  assertType<
-    [
+  it('parses fragment definitions', () => {
+    type expected = [
       {
-        kind: 'FragmentDefinition';
+        kind: Kind.FRAGMENT_DEFINITION;
         name: {
-          kind: 'Name';
+          kind: Kind.NAME;
           value: 'name';
         };
         typeCondition: {
-          kind: 'NamedType';
+          kind: Kind.NAMED_TYPE;
           name: {
-            kind: 'Name';
+            kind: Kind.NAME;
             value: 'Type';
           };
         };
         directives: [];
         selectionSet: {
-          kind: 'SelectionSet';
+          kind: Kind.SELECTION_SET;
           selections: [
             {
-              kind: 'Field';
+              kind: Kind.FIELD;
               name: {
-                kind: 'Name';
+                kind: Kind.NAME;
                 value: 'field';
               };
+              arguments: [];
+              alias: undefined;
+              selectionSet: undefined;
+              directives: [];
             }
           ];
         };
       },
       ''
-    ]
-  >(actual);
+    ];
+
+    expectTypeOf<TakeFragmentDefinition<'fragment { test }'>>().toEqualTypeOf<void>();
+    expectTypeOf<TakeFragmentDefinition<'fragment name { test }'>>().toEqualTypeOf<void>();
+    expectTypeOf<TakeFragmentDefinition<'fragment name on name'>>().toEqualTypeOf<void>();
+
+    expectTypeOf<
+      TakeFragmentDefinition<'fragment name on Type { field }'>
+    >().toEqualTypeOf<expected>();
+  });
 });
 
-test('parses fields', () => {
-  assertType<void>(any as TakeField<'field: '>);
-  assertType<void>(any as TakeField<'alias: field()'>);
-
-  const actual = any as TakeField<'alias: field @test(arg: null) { child }'>;
-
-  assertType<
-    [
+describe('TakeField', () => {
+  it('parses fields', () => {
+    type expected = [
       {
-        kind: 'Field';
+        kind: Kind.FIELD;
+        arguments: [];
         alias: {
-          kind: 'Name';
+          kind: Kind.NAME;
           value: 'alias';
         };
         name: {
-          kind: 'Name';
+          kind: Kind.NAME;
           value: 'field';
         };
         directives: [
           {
-            kind: 'Directive';
+            kind: Kind.DIRECTIVE;
             name: {
-              kind: 'Name';
+              kind: Kind.NAME;
               value: 'test';
             };
             arguments: [
               {
-                kind: 'Argument';
+                kind: Kind.ARGUMENT;
                 name: {
-                  kind: 'Name';
+                  kind: Kind.NAME;
                   value: 'arg';
                 };
                 value: {
-                  kind: 'NullValue';
+                  kind: Kind.NULL;
                 };
               }
             ];
           }
         ];
         selectionSet: {
-          kind: 'SelectionSet';
+          kind: Kind.SELECTION_SET;
           selections: [
             {
-              kind: 'Field';
+              kind: Kind.FIELD;
               name: {
-                kind: 'Name';
+                kind: Kind.NAME;
                 value: 'child';
               };
+              arguments: [];
+              alias: undefined;
+              selectionSet: undefined;
+              directives: [];
             }
           ];
         };
       },
       ''
-    ]
-  >(actual);
-});
+    ];
 
-test('parses arguments', () => {
-  assertType<void>(any as TakeField<'field()'>);
-  assertType<void>(any as TakeField<'field(name)'>);
-  assertType<void>(any as TakeField<'field(name:)'>);
-  assertType<void>(any as TakeField<'field(name: null'>);
+    expectTypeOf<TakeField<'field: '>>().toEqualTypeOf<void>();
+    expectTypeOf<TakeField<'alias: field()'>>().toEqualTypeOf<void>();
 
-  const actual = any as TakeField<'field(a: null, b: null)'>;
+    expectTypeOf<TakeField<'alias: field @test(arg: null) { child }'>>().toEqualTypeOf<expected>();
+  });
 
-  assertType<
-    [
+  it('parses arguments', () => {
+    type expected = [
       {
-        kind: 'Field';
+        kind: Kind.FIELD;
         alias: undefined;
         name: {
-          kind: 'Name';
+          kind: Kind.NAME;
           value: 'field';
         };
         arguments: [
           {
+            kind: Kind.ARGUMENT;
             name: {
-              kind: 'Name';
+              kind: Kind.NAME;
               value: 'a';
             };
             value: {
-              kind: 'NullValue';
+              kind: Kind.NULL;
             };
           },
           {
+            kind: Kind.ARGUMENT;
             name: {
-              kind: 'Name';
+              kind: Kind.NAME;
               value: 'b';
             };
             value: {
-              kind: 'NullValue';
+              kind: Kind.NULL;
             };
           }
         ];
@@ -433,1202 +445,411 @@ test('parses arguments', () => {
         selectionSet: undefined;
       },
       ''
-    ]
-  >(actual);
+    ];
+
+    expectTypeOf<TakeField<'field()'>>().toEqualTypeOf<void>();
+    expectTypeOf<TakeField<'field(name)'>>().toEqualTypeOf<void>();
+    expectTypeOf<TakeField<'field(name:)'>>().toEqualTypeOf<void>();
+    expectTypeOf<TakeField<'field(name: null'>>().toEqualTypeOf<void>();
+
+    expectTypeOf<TakeField<'field(a: null, b: null)'>>().toEqualTypeOf<expected>();
+  });
 });
 
-test('parses directives', () => {
-  assertType<void>(any as TakeDirective<'@', false>);
-  assertType<void>(any as TakeDirective<'@(test: null)', false>);
-
-  const actual = any as TakeDirective<'@test(name: null)', false>;
-
-  assertType<
-    [
+describe('TakeDirective', () => {
+  it('parses directives', () => {
+    type expected = [
       {
-        kind: 'Directive';
+        kind: Kind.DIRECTIVE;
         name: {
-          kind: 'Name';
+          kind: Kind.NAME;
           value: 'test';
         };
         arguments: [
           {
-            kind: 'Argument';
+            kind: Kind.ARGUMENT;
             name: {
-              kind: 'Name';
+              kind: Kind.NAME;
               value: 'name';
             };
             value: {
-              kind: 'NullValue';
+              kind: Kind.NULL;
             };
           }
         ];
       },
       ''
-    ]
-  >(actual);
+    ];
+
+    expectTypeOf<TakeDirective<'@', false>>().toEqualTypeOf<void>();
+    expectTypeOf<TakeDirective<'@(test: null)', false>>().toEqualTypeOf<void>();
+
+    expectTypeOf<TakeDirective<'@test(name: null)', false>>().toEqualTypeOf<expected>();
+  });
 });
 
-test('parses inline fragments', () => {
-  assertType<void>(any as TakeFragmentSpread<'... on Test'>);
-  assertType<void>(any as TakeFragmentSpread<'...'>);
-
-  const actual = any as TakeFragmentSpread<'... on Test { field }'>;
-
-  assertType<
-    [
+describe('TakeFragmentSpread', () => {
+  it('parses inline fragments', () => {
+    type expected = [
       {
-        kind: 'InlineFragment';
+        kind: Kind.INLINE_FRAGMENT;
         typeCondition: {
-          kind: 'NamedType';
+          kind: Kind.NAMED_TYPE;
           name: {
-            kind: 'Name';
+            kind: Kind.NAME;
             value: 'Test';
           };
         };
+        directives: [];
         selectionSet: {
-          kind: 'SelectionSet';
+          kind: Kind.SELECTION_SET;
           selections: [
             {
-              kind: 'Field';
+              kind: Kind.FIELD;
               name: {
-                kind: 'Name';
+                kind: Kind.NAME;
                 value: 'field';
               };
+              arguments: [];
+              alias: undefined;
+              selectionSet: undefined;
+              directives: [];
             }
           ];
         };
       },
       ''
-    ]
-  >(actual);
-});
+    ];
 
-test('parses conditionless inline fragments', () => {
-  assertType<void>(any as TakeFragmentSpread<'... on Test'>);
-  assertType<void>(any as TakeFragmentSpread<'...'>);
+    expectTypeOf<TakeFragmentSpread<'... on Test'>>().toEqualTypeOf<void>();
+    expectTypeOf<TakeFragmentSpread<'...'>>().toEqualTypeOf<void>();
 
-  const actual = any as TakeFragmentSpread<'... { field }'>;
+    expectTypeOf<TakeFragmentSpread<'... on Test { field }'>>().toEqualTypeOf<expected>();
+  });
 
-  assertType<
-    [
+  it('parses conditionless inline fragments', () => {
+    type expected = [
       {
-        kind: 'InlineFragment';
+        kind: Kind.INLINE_FRAGMENT;
         typeCondition: undefined;
+        directives: [];
         selectionSet: {
-          kind: 'SelectionSet';
+          kind: Kind.SELECTION_SET;
           selections: [
             {
-              kind: 'Field';
+              kind: Kind.FIELD;
               name: {
-                kind: 'Name';
+                kind: Kind.NAME;
                 value: 'field';
               };
+              arguments: [];
+              alias: undefined;
+              selectionSet: undefined;
+              directives: [];
             }
           ];
         };
       },
       ''
-    ]
-  >(actual);
+    ];
+
+    expectTypeOf<TakeFragmentSpread<'... on Test'>>().toEqualTypeOf<void>();
+    expectTypeOf<TakeFragmentSpread<'...'>>().toEqualTypeOf<void>();
+
+    expectTypeOf<TakeFragmentSpread<'... { field }'>>().toEqualTypeOf<expected>();
+  });
 });
 
-test('parses basic values', () => {
-  assertType<void>(any as TakeValue<'', false>);
-  assertType<void>(any as TakeValue<'$', false>);
-  assertType<void>(any as TakeValue<':', false>);
-  assertType<[{ kind: 'NullValue' }, '']>(any as TakeValue<'null', false>);
-  assertType<[{ kind: 'BooleanValue' }, '']>(any as TakeValue<'true', false>);
-  assertType<[{ kind: 'BooleanValue' }, '']>(any as TakeValue<'false', false>);
-  assertType<[{ kind: 'EnumValue' }, '']>(any as TakeValue<'SOME_CONST', false>);
-});
+describe('TakeValue', () => {
+  it('parses basic values', () => {
+    expectTypeOf<TakeValue<'', false>>().toEqualTypeOf<void>();
+    expectTypeOf<TakeValue<'$', false>>().toEqualTypeOf<void>();
+    expectTypeOf<TakeValue<':', false>>().toEqualTypeOf<void>();
 
-test('parses list values', () => {
-  assertType<
-    [
+    expectTypeOf<TakeValue<'null', false>>().toEqualTypeOf<[{ kind: Kind.NULL }, '']>();
+    expectTypeOf<TakeValue<'true', false>>().toEqualTypeOf<
+      [{ kind: Kind.BOOLEAN; value: boolean }, '']
+    >();
+    expectTypeOf<TakeValue<'false', false>>().toEqualTypeOf<
+      [{ kind: Kind.BOOLEAN; value: boolean }, '']
+    >();
+    expectTypeOf<TakeValue<'VAL', false>>().toEqualTypeOf<
+      [{ kind: Kind.ENUM; value: 'VAL' }, '']
+    >();
+  });
+
+  it('parses list values', () => {
+    type expected = [
       {
-        kind: 'ListValue';
+        kind: Kind.LIST;
         values: [
           {
-            kind: 'IntValue';
+            kind: Kind.INT;
             value: string;
           },
           {
-            kind: 'StringValue';
+            kind: Kind.STRING;
             value: string;
             block: false;
           }
         ];
       },
       ''
-    ]
-  >(any as TakeValue<'[123 "abc"]', false>);
-});
+    ];
 
-test('parses integers', () => {
-  assertType<void>(any as TakeValue<'-', false>);
-  assertType<[{ kind: 'IntValue' }, '']>(any as TakeValue<'12', false>);
-  assertType<[{ kind: 'IntValue' }, '']>(any as TakeValue<'-12', false>);
-});
+    expectTypeOf<TakeValue<'[123 "abc"]', false>>().toEqualTypeOf<expected>();
+  });
 
-test('parses floats', () => {
-  assertType<void>(any as TakeValue<'-.0e', false>);
-  assertType<[{ kind: 'FloatValue' }, '']>(any as TakeValue<'12e2', false>);
-  assertType<[{ kind: 'FloatValue' }, '']>(any as TakeValue<'0.2E3', false>);
-  assertType<[{ kind: 'FloatValue' }, '']>(any as TakeValue<'-1.2e+3', false>);
-});
+  it('parses integers', () => {
+    type expected = [{ kind: Kind.INT; value: string }, ''];
 
-test('parses strings', () => {
-  assertType<[{ kind: 'StringValue' }, '']>(any as TakeValue<'""', false>);
-  assertType<[{ kind: 'StringValue' }, '']>(any as TakeValue<'"\\t\\t"', false>);
-  assertType<[{ kind: 'StringValue' }, '']>(any as TakeValue<'" \\" "', false>);
-  assertType<[{ kind: 'StringValue' }, ' "x"']>(any as TakeValue<'"x" "x"', false>);
-  assertType<[{ kind: 'StringValue' }, ' ""']>(any as TakeValue<'"" ""', false>);
-  assertType<[{ kind: 'StringValue' }, ' ""']>(any as TakeValue<'" \\" " ""', false>);
-});
+    expectTypeOf<TakeValue<'-', false>>().toEqualTypeOf<void>();
 
-test('parses block strings', () => {
-  const x = `""" 
-    \\"""
-  """` as const;
+    expectTypeOf<TakeValue<'12', false>>().toEqualTypeOf<expected>();
+    expectTypeOf<TakeValue<'-12', false>>().toEqualTypeOf<expected>();
+  });
 
-  assertType<[{ kind: 'StringValue'; block: true }, '']>(any as TakeValue<'""""""', false>);
-  assertType<[{ kind: 'StringValue'; block: true }, '']>(any as TakeValue<'"""\n"""', false>);
-  assertType<[{ kind: 'StringValue'; block: true }, '']>(any as TakeValue<'""" \\""" """', false>);
-  assertType<[{ kind: 'StringValue'; block: true }, '']>(any as TakeValue<typeof x, false>);
-});
+  it('parses floats', () => {
+    type expected = [{ kind: Kind.FLOAT; value: string }, ''];
 
-test('parses objects', () => {
-  assertType<[{ kind: 'ObjectValue' }, '']>(any as TakeValue<'{}', false>);
+    expectTypeOf<TakeValue<'-.0e', false>>().toEqualTypeOf<void>();
 
-  assertType<void>(any as TakeValue<'{name}', false>);
-  assertType<void>(any as TakeValue<'{name:}', false>);
-  assertType<void>(any as TakeValue<'{name:null', false>);
+    expectTypeOf<TakeValue<'12e2', false>>().toEqualTypeOf<expected>();
+    expectTypeOf<TakeValue<'0.2E3', false>>().toEqualTypeOf<expected>();
+    expectTypeOf<TakeValue<'-1.2e+3', false>>().toEqualTypeOf<expected>();
+  });
 
-  assertType<
-    [
-      {
-        kind: 'ObjectValue';
-        fields: [
-          {
-            kind: 'ObjectField';
-            name: {
-              kind: 'Name';
-              value: 'name';
-            };
-            value: {
-              kind: 'NullValue';
-            };
-          }
-        ];
-      },
-      ''
-    ]
-  >(any as TakeValue<'{name:null}', false>);
+  it('parses strings', () => {
+    type expected = { kind: Kind.STRING; value: string; block: false };
 
-  assertType<
-    [
-      {
-        kind: 'ObjectValue';
-        fields: [
-          {
-            kind: 'ObjectField';
-            name: {
-              kind: 'Name';
-              value: 'a';
-            };
-            value: {
-              kind: 'StringValue';
-              value: string;
-            };
-          }
-        ];
-      },
-      ''
-    ]
-  >(any as TakeValue<'{a:"a"}', false>);
+    expectTypeOf<TakeValue<'""', false>>().toEqualTypeOf<[expected, '']>();
+    expectTypeOf<TakeValue<'"\\t\\t"', false>>().toEqualTypeOf<[expected, '']>();
+    expectTypeOf<TakeValue<'" \\" "', false>>().toEqualTypeOf<[expected, '']>();
+    expectTypeOf<TakeValue<'"x" "x"', false>>().toEqualTypeOf<[expected, ' "x"']>();
+    expectTypeOf<TakeValue<'"" ""', false>>().toEqualTypeOf<[expected, ' ""']>();
+    expectTypeOf<TakeValue<'" \\" " ""', false>>().toEqualTypeOf<[expected, ' ""']>();
+  });
 
-  assertType<
-    [
-      {
-        kind: 'ObjectValue';
-        fields: [
-          {
-            kind: 'ObjectField';
-            name: {
-              kind: 'Name';
-              value: 'a';
-            };
-            value: {
-              kind: 'StringValue';
-              value: string;
-            };
-          },
-          {
-            kind: 'ObjectField';
-            name: {
-              kind: 'Name';
-              value: 'b';
-            };
-            value: {
-              kind: 'StringValue';
-              value: string;
-            };
-          }
-        ];
-      },
-      ''
-    ]
-  >(any as TakeValue<'{a:"a"\nb: """\n\\"""\n"""}', false>);
-});
+  it('parses block strings', () => {
+    type expected = [{ kind: Kind.STRING; value: string; block: true }, ''];
 
-test('parses lists', () => {
-  assertType<[{ kind: 'ListValue' }, '']>(any as TakeValue<'[]', false>);
+    const x = `""" 
+      \\"""
+    """` as const;
 
-  assertType<void>(any as TakeValue<'[', false>);
-  assertType<void>(any as TakeValue<'[null', false>);
+    expectTypeOf<TakeValue<'""""""', false>>().toEqualTypeOf<expected>();
+    expectTypeOf<TakeValue<'"""\n"""', false>>().toEqualTypeOf<expected>();
+    expectTypeOf<TakeValue<'""" \\""" """', false>>().toEqualTypeOf<expected>();
+    expectTypeOf<TakeValue<typeof x, false>>().toEqualTypeOf<expected>();
+  });
 
-  assertType<
-    [
-      {
-        kind: 'ListValue';
-        values: [
-          {
-            kind: 'NullValue';
-          }
-        ];
-      },
-      ''
-    ]
-  >(any as TakeValue<'[null]', false>);
-});
+  it('parses objects', () => {
+    expectTypeOf<TakeValue<'{}', false>>().toEqualTypeOf<[{ kind: Kind.OBJECT; fields: [] }, '']>();
 
-test('parses block strings', () => {
-  assertType<[{ kind: 'ListValue' }, '']>(any as TakeValue<'[]', false>);
+    expectTypeOf<TakeValue<'{name}', false>>().toEqualTypeOf<void>();
+    expectTypeOf<TakeValue<'{name:}', false>>().toEqualTypeOf<void>();
+    expectTypeOf<TakeValue<'{name:null', false>>().toEqualTypeOf<void>();
 
-  assertType<void>(any as TakeValue<'[', false>);
-  assertType<void>(any as TakeValue<'[null', false>);
+    expectTypeOf<TakeValue<'{name:null}', false>>().toEqualTypeOf<
+      [
+        {
+          kind: Kind.OBJECT;
+          fields: [
+            {
+              kind: Kind.OBJECT_FIELD;
+              name: {
+                kind: Kind.NAME;
+                value: 'name';
+              };
+              value: {
+                kind: Kind.NULL;
+              };
+            }
+          ];
+        },
+        ''
+      ]
+    >();
 
-  assertType<
-    [
-      {
-        kind: 'ListValue';
-        values: [
-          {
-            kind: 'NullValue';
-          }
-        ];
-      },
-      ''
-    ]
-  >(any as TakeValue<'[null]', false>);
-});
+    expectTypeOf<TakeValue<'{a:"a"}', false>>().toEqualTypeOf<
+      [
+        {
+          kind: Kind.OBJECT;
+          fields: [
+            {
+              kind: Kind.OBJECT_FIELD;
+              name: {
+                kind: Kind.NAME;
+                value: 'a';
+              };
+              value: {
+                kind: Kind.STRING;
+                value: string;
+                block: false;
+              };
+            }
+          ];
+        },
+        ''
+      ]
+    >();
 
-test('allows variables', () => {
-  assertType<
-    [
-      {
-        kind: 'ListValue';
-        values: [
-          {
-            kind: 'Variable';
-            name: {
-              kind: 'Name';
-              value: 'var';
-            };
-          }
-        ];
-      },
-      ''
-    ]
-  >(any as TakeValue<'[$var]', false>);
+    expectTypeOf<TakeValue<'{a:"a"\nb: """\n\\"""\n"""}', false>>().toEqualTypeOf<
+      [
+        {
+          kind: Kind.OBJECT;
+          fields: [
+            {
+              kind: Kind.OBJECT_FIELD;
+              name: {
+                kind: Kind.NAME;
+                value: 'a';
+              };
+              value: {
+                kind: Kind.STRING;
+                value: string;
+                block: false;
+              };
+            },
+            {
+              kind: Kind.OBJECT_FIELD;
+              name: {
+                kind: Kind.NAME;
+                value: 'b';
+              };
+              value: {
+                kind: Kind.STRING;
+                value: string;
+                block: true;
+              };
+            }
+          ];
+        },
+        ''
+      ]
+    >();
+  });
 
-  assertType<void>(any as TakeValue<'[$var]', true>);
-});
+  it('parses lists', () => {
+    expectTypeOf<TakeValue<'[]', false>>().toEqualTypeOf<[{ kind: Kind.LIST; values: [] }, '']>();
 
-test('parses basic types', () => {
-  assertType<void>(any as TakeType<''>);
-  assertType<void>(any as TakeType<'['>);
+    expectTypeOf<TakeValue<'[', false>>().toEqualTypeOf<void>();
+    expectTypeOf<TakeValue<'[null', false>>().toEqualTypeOf<void>();
 
-  assertType<
-    [
-      {
-        kind: 'NamedType';
-        name: {
-          kind: 'Name';
-          value: 'Type';
-        };
-      },
-      ''
-    ]
-  >(any as TakeType<'Type'>);
+    expectTypeOf<TakeValue<'[null]', false>>().toEqualTypeOf<
+      [
+        {
+          kind: Kind.LIST;
+          values: [{ kind: Kind.NULL }];
+        },
+        ''
+      ]
+    >();
+  });
 
-  assertType<
-    [
-      {
-        kind: 'NonNullType';
-        type: {
-          kind: 'NamedType';
+  it('parses variables', () => {
+    expectTypeOf<TakeValue<'$var', false>>().toEqualTypeOf<
+      [
+        {
+          kind: Kind.VARIABLE;
           name: {
-            kind: 'Name';
+            kind: Kind.NAME;
+            value: 'var';
+          };
+        },
+        ''
+      ]
+    >();
+
+    expectTypeOf<TakeValue<'$var', true>>().toEqualTypeOf<void>();
+  });
+});
+
+describe('TakeType', () => {
+  it('parses basic types', () => {
+    expectTypeOf<TakeType<''>>().toEqualTypeOf<void>();
+    expectTypeOf<TakeType<'['>>().toEqualTypeOf<void>();
+    expectTypeOf<TakeType<'!'>>().toEqualTypeOf<void>();
+
+    expectTypeOf<TakeType<'Type'>>().toEqualTypeOf<
+      [
+        {
+          kind: Kind.NAMED_TYPE;
+          name: {
+            kind: Kind.NAME;
             value: 'Type';
           };
-        };
-      },
-      ''
-    ]
-  >(any as TakeType<'Type!'>);
+        },
+        ''
+      ]
+    >();
 
-  assertType<
-    [
-      {
-        kind: 'ListType';
-        type: {
-          kind: 'NonNullType';
+    expectTypeOf<TakeType<'Type!'>>().toEqualTypeOf<
+      [
+        {
+          kind: Kind.NON_NULL_TYPE;
           type: {
-            kind: 'NamedType';
+            kind: 'NamedType'; // TODO: Fix literal type
             name: {
-              kind: 'Name';
+              kind: Kind.NAME;
               value: 'Type';
             };
           };
-        };
-      },
-      ''
-    ]
-  >(any as TakeType<'[Type!]'>);
+        },
+        ''
+      ]
+    >();
 
-  assertType<
-    [
-      {
-        kind: 'NonNullType';
-        type: {
-          kind: 'ListType';
+    expectTypeOf<TakeType<'[Type!]'>>().toEqualTypeOf<
+      [
+        {
+          kind: Kind.LIST_TYPE;
           type: {
-            kind: 'NonNullType';
+            kind: Kind.NON_NULL_TYPE;
             type: {
-              kind: 'NamedType';
+              kind: 'NamedType'; // TODO: Fix literal type
               name: {
-                kind: 'Name';
+                kind: Kind.NAME;
                 value: 'Type';
               };
             };
           };
-        };
-      },
-      ''
-    ]
-  >(any as TakeType<'[Type!]!'>);
+        },
+        ''
+      ]
+    >();
+
+    expectTypeOf<TakeType<'[Type!]!'>>().toEqualTypeOf<
+      [
+        {
+          kind: Kind.NON_NULL_TYPE;
+          type: {
+            kind: 'ListType'; // TODO: Fix literal type
+            type: {
+              kind: Kind.NON_NULL_TYPE;
+              type: {
+                kind: 'NamedType'; // TODO: Fix literal type
+                name: {
+                  kind: Kind.NAME;
+                  value: 'Type';
+                };
+              };
+            };
+          };
+        },
+        ''
+      ]
+    >();
+  });
 });
 
-test('parses kitchen sink query', () => {
-  const query = `
-    # Copyright (c) 2015-present, Facebook, Inc.
-    #
-    # This source code is licensed under the MIT license found in the
-    # LICENSE file in the root directory of this source tree.
+describe('Document', () => {
+  it('parses kitchen sink query', () => {
+    type kitchensinkQuery = typeof import('./fixtures/kitchensinkQuery').kitchensinkQuery;
+    type kitchensinkDocument = import('./fixtures/kitchensinkQuery').kitchensinkDocument;
 
-    query queryName($foo: ComplexType, $site: Site = MOBILE) @onQuery {
-      whoever123is: node(id: [123, 456]) {
-        id
-        ... on User @onInlineFragment {
-          field2 {
-            id
-            alias: field1(first: 10, after: $foo) @include(if: $foo) {
-              id
-              ...frag @onFragmentSpread
-            }
-          }
-        }
-        ... @skip(unless: $foo) {
-          id
-        }
-        ... {
-          id
-        }
-      }
-    }
-
-    mutation likeStory @onMutation {
-      like(story: 123) @onField {
-        story {
-          id @onField
-        }
-      }
-    }
-
-    subscription StoryLikeSubscription($input: StoryLikeSubscribeInput)
-    @onSubscription {
-      storyLikeSubscribe(input: $input) {
-        story {
-          likers {
-            count
-          }
-          likeSentence {
-            text
-          }
-        }
-      }
-    }
-
-    fragment frag on Friend @onFragmentDefinition {
-      foo(
-        size: $site
-        bar: 12
-        obj: {
-          key: "value"
-          block: """
-            \\"""
-          """
-        }
-      )
-    }
-
-    query teeny {
-      unnamed(truthy: true, falsey: false, nullish: null)
-      query
-    }
-
-    query tiny {
-      __typename
-    }
-  ` as const;
-
-  type actual = {
-    kind: 'Document';
-    definitions: [
-      {
-        kind: 'OperationDefinition';
-        operation: 'query';
-        name: {
-          kind: 'Name';
-          value: 'queryName';
-        };
-        variableDefinitions: [
-          {
-            kind: 'VariableDefinition';
-            variable: {
-              kind: 'Variable';
-              name: {
-                kind: 'Name';
-                value: 'foo';
-              };
-            };
-            type: {
-              kind: 'NamedType';
-              name: {
-                kind: 'Name';
-                value: 'ComplexType';
-              };
-            };
-            directives: [];
-          },
-          {
-            kind: 'VariableDefinition';
-            variable: {
-              kind: 'Variable';
-              name: {
-                kind: 'Name';
-                value: 'site';
-              };
-            };
-            type: {
-              kind: 'NamedType';
-              name: {
-                kind: 'Name';
-                value: 'Site';
-              };
-            };
-            defaultValue: {
-              kind: 'EnumValue';
-              value: 'MOBILE';
-            };
-            directives: [];
-          }
-        ];
-        directives: [
-          {
-            kind: 'Directive';
-            name: {
-              kind: 'Name';
-              value: 'onQuery';
-            };
-            arguments: [];
-          }
-        ];
-        selectionSet: {
-          kind: 'SelectionSet';
-          selections: [
-            {
-              kind: 'Field';
-              alias: {
-                kind: 'Name';
-                value: 'whoever123is';
-              };
-              name: {
-                kind: 'Name';
-                value: 'node';
-              };
-              arguments: [
-                {
-                  kind: 'Argument';
-                  name: {
-                    kind: 'Name';
-                    value: 'id';
-                  };
-                  value: {
-                    kind: 'ListValue';
-                    values: [
-                      {
-                        kind: 'IntValue';
-                        value: string;
-                      },
-                      {
-                        kind: 'IntValue';
-                        value: string;
-                      }
-                    ];
-                  };
-                }
-              ];
-              directives: [];
-              selectionSet: {
-                kind: 'SelectionSet';
-                selections: [
-                  {
-                    kind: 'Field';
-                    name: {
-                      kind: 'Name';
-                      value: 'id';
-                    };
-                    arguments: [];
-                    directives: [];
-                  },
-                  {
-                    kind: 'InlineFragment';
-                    typeCondition: {
-                      kind: 'NamedType';
-                      name: {
-                        kind: 'Name';
-                        value: 'User';
-                      };
-                    };
-                    directives: [
-                      {
-                        kind: 'Directive';
-                        name: {
-                          kind: 'Name';
-                          value: 'onInlineFragment';
-                        };
-                        arguments: [];
-                      }
-                    ];
-                    selectionSet: {
-                      kind: 'SelectionSet';
-                      selections: [
-                        {
-                          kind: 'Field';
-                          name: {
-                            kind: 'Name';
-                            value: 'field2';
-                          };
-                          arguments: [];
-                          directives: [];
-                          selectionSet: {
-                            kind: 'SelectionSet';
-                            selections: [
-                              {
-                                kind: 'Field';
-                                name: {
-                                  kind: 'Name';
-                                  value: 'id';
-                                };
-                                arguments: [];
-                                directives: [];
-                              },
-                              {
-                                kind: 'Field';
-                                alias: {
-                                  kind: 'Name';
-                                  value: 'alias';
-                                };
-                                name: {
-                                  kind: 'Name';
-                                  value: 'field1';
-                                };
-                                arguments: [
-                                  {
-                                    kind: 'Argument';
-                                    name: {
-                                      kind: 'Name';
-                                      value: 'first';
-                                    };
-                                    value: {
-                                      kind: 'IntValue';
-                                      value: string;
-                                    };
-                                  },
-                                  {
-                                    kind: 'Argument';
-                                    name: {
-                                      kind: 'Name';
-                                      value: 'after';
-                                    };
-                                    value: {
-                                      kind: 'Variable';
-                                      name: {
-                                        kind: 'Name';
-                                        value: 'foo';
-                                      };
-                                    };
-                                  }
-                                ];
-                                directives: [
-                                  {
-                                    kind: 'Directive';
-                                    name: {
-                                      kind: 'Name';
-                                      value: 'include';
-                                    };
-                                    arguments: [
-                                      {
-                                        kind: 'Argument';
-                                        name: {
-                                          kind: 'Name';
-                                          value: 'if';
-                                        };
-                                        value: {
-                                          kind: 'Variable';
-                                          name: {
-                                            kind: 'Name';
-                                            value: 'foo';
-                                          };
-                                        };
-                                      }
-                                    ];
-                                  }
-                                ];
-                                selectionSet: {
-                                  kind: 'SelectionSet';
-                                  selections: [
-                                    {
-                                      kind: 'Field';
-                                      name: {
-                                        kind: 'Name';
-                                        value: 'id';
-                                      };
-                                      arguments: [];
-                                      directives: [];
-                                    },
-                                    {
-                                      kind: 'FragmentSpread';
-                                      name: {
-                                        kind: 'Name';
-                                        value: 'frag';
-                                      };
-                                      directives: [
-                                        {
-                                          kind: 'Directive';
-                                          name: {
-                                            kind: 'Name';
-                                            value: 'onFragmentSpread';
-                                          };
-                                          arguments: [];
-                                        }
-                                      ];
-                                    }
-                                  ];
-                                };
-                              }
-                            ];
-                          };
-                        }
-                      ];
-                    };
-                  },
-                  {
-                    kind: 'InlineFragment';
-                    directives: [
-                      {
-                        kind: 'Directive';
-                        name: {
-                          kind: 'Name';
-                          value: 'skip';
-                        };
-                        arguments: [
-                          {
-                            kind: 'Argument';
-                            name: {
-                              kind: 'Name';
-                              value: 'unless';
-                            };
-                            value: {
-                              kind: 'Variable';
-                              name: {
-                                kind: 'Name';
-                                value: 'foo';
-                              };
-                            };
-                          }
-                        ];
-                      }
-                    ];
-                    selectionSet: {
-                      kind: 'SelectionSet';
-                      selections: [
-                        {
-                          kind: 'Field';
-                          name: {
-                            kind: 'Name';
-                            value: 'id';
-                          };
-                          arguments: [];
-                          directives: [];
-                        }
-                      ];
-                    };
-                  },
-                  {
-                    kind: 'InlineFragment';
-                    directives: [];
-                    selectionSet: {
-                      kind: 'SelectionSet';
-                      selections: [
-                        {
-                          kind: 'Field';
-                          name: {
-                            kind: 'Name';
-                            value: 'id';
-                          };
-                          arguments: [];
-                          directives: [];
-                        }
-                      ];
-                    };
-                  }
-                ];
-              };
-            }
-          ];
-        };
-      },
-      {
-        kind: 'OperationDefinition';
-        operation: 'mutation';
-        name: {
-          kind: 'Name';
-          value: 'likeStory';
-        };
-        variableDefinitions: [];
-        directives: [
-          {
-            kind: 'Directive';
-            name: {
-              kind: 'Name';
-              value: 'onMutation';
-            };
-            arguments: [];
-          }
-        ];
-        selectionSet: {
-          kind: 'SelectionSet';
-          selections: [
-            {
-              kind: 'Field';
-              name: {
-                kind: 'Name';
-                value: 'like';
-              };
-              arguments: [
-                {
-                  kind: 'Argument';
-                  name: {
-                    kind: 'Name';
-                    value: 'story';
-                  };
-                  value: {
-                    kind: 'IntValue';
-                    value: string;
-                  };
-                }
-              ];
-              directives: [
-                {
-                  kind: 'Directive';
-                  name: {
-                    kind: 'Name';
-                    value: 'onField';
-                  };
-                  arguments: [];
-                }
-              ];
-              selectionSet: {
-                kind: 'SelectionSet';
-                selections: [
-                  {
-                    kind: 'Field';
-                    name: {
-                      kind: 'Name';
-                      value: 'story';
-                    };
-                    arguments: [];
-                    directives: [];
-                    selectionSet: {
-                      kind: 'SelectionSet';
-                      selections: [
-                        {
-                          kind: 'Field';
-                          name: {
-                            kind: 'Name';
-                            value: 'id';
-                          };
-                          arguments: [];
-                          directives: [
-                            {
-                              kind: 'Directive';
-                              name: {
-                                kind: 'Name';
-                                value: 'onField';
-                              };
-                              arguments: [];
-                            }
-                          ];
-                        }
-                      ];
-                    };
-                  }
-                ];
-              };
-            }
-          ];
-        };
-      },
-      {
-        kind: 'OperationDefinition';
-        operation: 'subscription';
-        name: {
-          kind: 'Name';
-          value: 'StoryLikeSubscription';
-        };
-        variableDefinitions: [
-          {
-            kind: 'VariableDefinition';
-            variable: {
-              kind: 'Variable';
-              name: {
-                kind: 'Name';
-                value: 'input';
-              };
-            };
-            type: {
-              kind: 'NamedType';
-              name: {
-                kind: 'Name';
-                value: 'StoryLikeSubscribeInput';
-              };
-            };
-            directives: [];
-          }
-        ];
-        directives: [
-          {
-            kind: 'Directive';
-            name: {
-              kind: 'Name';
-              value: 'onSubscription';
-            };
-            arguments: [];
-          }
-        ];
-        selectionSet: {
-          kind: 'SelectionSet';
-          selections: [
-            {
-              kind: 'Field';
-              name: {
-                kind: 'Name';
-                value: 'storyLikeSubscribe';
-              };
-              arguments: [
-                {
-                  kind: 'Argument';
-                  name: {
-                    kind: 'Name';
-                    value: 'input';
-                  };
-                  value: {
-                    kind: 'Variable';
-                    name: {
-                      kind: 'Name';
-                      value: 'input';
-                    };
-                  };
-                }
-              ];
-              directives: [];
-              selectionSet: {
-                kind: 'SelectionSet';
-                selections: [
-                  {
-                    kind: 'Field';
-                    name: {
-                      kind: 'Name';
-                      value: 'story';
-                    };
-                    arguments: [];
-                    directives: [];
-                    selectionSet: {
-                      kind: 'SelectionSet';
-                      selections: [
-                        {
-                          kind: 'Field';
-                          name: {
-                            kind: 'Name';
-                            value: 'likers';
-                          };
-                          arguments: [];
-                          directives: [];
-                          selectionSet: {
-                            kind: 'SelectionSet';
-                            selections: [
-                              {
-                                kind: 'Field';
-                                name: {
-                                  kind: 'Name';
-                                  value: 'count';
-                                };
-                                arguments: [];
-                                directives: [];
-                              }
-                            ];
-                          };
-                        },
-                        {
-                          kind: 'Field';
-                          name: {
-                            kind: 'Name';
-                            value: 'likeSentence';
-                          };
-                          arguments: [];
-                          directives: [];
-                          selectionSet: {
-                            kind: 'SelectionSet';
-                            selections: [
-                              {
-                                kind: 'Field';
-                                name: {
-                                  kind: 'Name';
-                                  value: 'text';
-                                };
-                                arguments: [];
-                                directives: [];
-                              }
-                            ];
-                          };
-                        }
-                      ];
-                    };
-                  }
-                ];
-              };
-            }
-          ];
-        };
-      },
-      {
-        kind: 'FragmentDefinition';
-        name: {
-          kind: 'Name';
-          value: 'frag';
-        };
-        typeCondition: {
-          kind: 'NamedType';
-          name: {
-            kind: 'Name';
-            value: 'Friend';
-          };
-        };
-        directives: [
-          {
-            kind: 'Directive';
-            name: {
-              kind: 'Name';
-              value: 'onFragmentDefinition';
-            };
-            arguments: [];
-          }
-        ];
-        selectionSet: {
-          kind: 'SelectionSet';
-          selections: [
-            {
-              kind: 'Field';
-              name: {
-                kind: 'Name';
-                value: 'foo';
-              };
-              arguments: [
-                {
-                  kind: 'Argument';
-                  name: {
-                    kind: 'Name';
-                    value: 'size';
-                  };
-                  value: {
-                    kind: 'Variable';
-                    name: {
-                      kind: 'Name';
-                      value: 'site';
-                    };
-                  };
-                },
-                {
-                  kind: 'Argument';
-                  name: {
-                    kind: 'Name';
-                    value: 'bar';
-                  };
-                  value: {
-                    kind: 'IntValue';
-                    value: string;
-                  };
-                },
-                {
-                  kind: 'Argument';
-                  name: {
-                    kind: 'Name';
-                    value: 'obj';
-                  };
-                  value: {
-                    kind: 'ObjectValue';
-                    fields: [
-                      {
-                        kind: 'ObjectField';
-                        name: {
-                          kind: 'Name';
-                          value: 'key';
-                        };
-                        value: {
-                          kind: 'StringValue';
-                          value: string;
-                        };
-                      },
-                      {
-                        kind: 'ObjectField';
-                        name: {
-                          kind: 'Name';
-                          value: 'block';
-                        };
-                        value: {
-                          kind: 'StringValue';
-                          value: string;
-                        };
-                      }
-                    ];
-                  };
-                }
-              ];
-              directives: [];
-            }
-          ];
-        };
-      },
-      {
-        kind: 'OperationDefinition';
-        operation: 'query';
-        name: {
-          kind: 'Name';
-          value: 'teeny';
-        };
-        variableDefinitions: [];
-        directives: [];
-        selectionSet: {
-          kind: 'SelectionSet';
-          selections: [
-            {
-              kind: 'Field';
-              name: {
-                kind: 'Name';
-                value: 'unnamed';
-              };
-              arguments: [
-                {
-                  kind: 'Argument';
-                  name: {
-                    kind: 'Name';
-                    value: 'truthy';
-                  };
-                  value: {
-                    kind: 'BooleanValue';
-                    value: boolean;
-                  };
-                },
-                {
-                  kind: 'Argument';
-                  name: {
-                    kind: 'Name';
-                    value: 'falsey';
-                  };
-                  value: {
-                    kind: 'BooleanValue';
-                    value: boolean;
-                  };
-                },
-                {
-                  kind: 'Argument';
-                  name: {
-                    kind: 'Name';
-                    value: 'nullish';
-                  };
-                  value: {
-                    kind: 'NullValue';
-                  };
-                }
-              ];
-              directives: [];
-            },
-            {
-              kind: 'Field';
-              name: {
-                kind: 'Name';
-                value: 'query';
-              };
-              arguments: [];
-              directives: [];
-            }
-          ];
-        };
-      },
-      {
-        kind: 'OperationDefinition';
-        operation: 'query';
-        name: {
-          kind: 'Name';
-          value: 'tiny';
-        };
-        variableDefinitions: [];
-        directives: [];
-        selectionSet: {
-          kind: 'SelectionSet';
-          selections: [
-            {
-              kind: 'Field';
-              name: {
-                kind: 'Name';
-                value: '__typename';
-              };
-              arguments: [];
-              directives: [];
-            }
-          ];
-        };
-      }
-    ];
-  };
-
-  const expected = any as Document<typeof query>;
-  assertType<actual>(expected);
-
-  // NOTE: This must also be able to pass the `DocumentNode` type
-  assertType<DocumentNode>(expected);
+    expectTypeOf<Document<kitchensinkQuery>>().toEqualTypeOf<kitchensinkDocument>();
+    expectTypeOf<Document<kitchensinkQuery>>().toMatchTypeOf<kitchensinkDocument>();
+    expectTypeOf<Document<kitchensinkQuery>>().toMatchTypeOf<DocumentNode>();
+  });
 });
