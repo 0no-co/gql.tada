@@ -12,8 +12,8 @@ import {
   createSourceFile,
 } from '@0no-co/typescript.js';
 
-import fs from 'node:fs';
-import path from 'node:path/posix';
+import fs from 'fs';
+import path from 'path/posix';
 
 export const compilerOptions: CompilerOptions = {
   rootDir: '/',

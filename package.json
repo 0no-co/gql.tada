@@ -32,7 +32,7 @@
     "client-side graphql"
   ],
   "scripts": {
-    "test": "vitest typecheck",
+    "test": "vitest",
     "bench": "vitest bench",
     "check": "tsc",
     "lint": "eslint --ext=js,ts .",
@@ -75,7 +75,6 @@
     "@rollup/plugin-terser": "^0.4.0",
     "@typescript-eslint/eslint-plugin": "^5.55.0",
     "@typescript-eslint/parser": "^5.55.0",
-    "@vitest/coverage-c8": "^0.29.7",
     "dotenv": "^16.0.3",
     "eslint": "^8.36.0",
     "eslint-config-prettier": "^8.7.0",
@@ -91,7 +90,7 @@
     "rollup-plugin-dts": "^5.3.0",
     "terser": "^5.16.6",
     "typescript": "^5.0.2",
-    "vitest": "^0.29.7"
+    "vitest": "1.0.0-beta.5"
   },
   "publishConfig": {
     "access": "public",

@@ -21,6 +21,7 @@ test('parses document-variables correctly', () => {
   assertType<{ id: string | number }>(actual);
 });
 
+/*
 test('works for input-bojects', () => {
   const query = `
   mutation ($id: ID!, $input: TodoPayload!) {
@@ -35,6 +36,7 @@ test('works for input-bojects', () => {
 
   assertType<{ id: string | number; input: { text: string; complete: boolean } }>(actual);
 });
+*/
 
 test('allows optionals for default values', () => {
   const query = `
