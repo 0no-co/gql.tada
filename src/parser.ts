@@ -285,13 +285,13 @@ export type TakeType<In extends string> = In extends `${'['}${infer In}`
   ? TakeType<skipIgnored<In>> extends [infer Subtype, infer In]
     ? In extends `${']'}${infer In}`
       ? skipIgnored<In> extends `${'!'}${infer In}`
-        ? [{ kind: Kind.NON_NULL_TYPE; type: { kind: 'ListType'; type: Subtype } }, In]
+        ? [{ kind: Kind.NON_NULL_TYPE; type: { kind: Kind.LIST_TYPE; type: Subtype } }, In]
         : [{ kind: Kind.LIST_TYPE; type: Subtype }, In]
       : void
     : void
   : TakeName<skipIgnored<In>> extends [infer Name, infer In]
   ? skipIgnored<In> extends `${'!'}${infer In}`
-    ? [{ kind: Kind.NON_NULL_TYPE; type: { kind: 'NamedType'; name: Name } }, In]
+    ? [{ kind: Kind.NON_NULL_TYPE; type: { kind: Kind.NAMED_TYPE; name: Name } }, In]
     : [{ kind: Kind.NAMED_TYPE; name: Name }, In]
   : void;
 

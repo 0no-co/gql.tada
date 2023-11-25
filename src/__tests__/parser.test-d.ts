@@ -789,7 +789,7 @@ describe('TakeType', () => {
         {
           kind: Kind.NON_NULL_TYPE;
           type: {
-            kind: 'NamedType'; // TODO: Fix literal type
+            kind: Kind.NAMED_TYPE;
             name: {
               kind: Kind.NAME;
               value: 'Type';
@@ -807,7 +807,7 @@ describe('TakeType', () => {
           type: {
             kind: Kind.NON_NULL_TYPE;
             type: {
-              kind: 'NamedType'; // TODO: Fix literal type
+              kind: Kind.NAMED_TYPE;
               name: {
                 kind: Kind.NAME;
                 value: 'Type';
@@ -824,11 +824,11 @@ describe('TakeType', () => {
         {
           kind: Kind.NON_NULL_TYPE;
           type: {
-            kind: 'ListType'; // TODO: Fix literal type
+            kind: Kind.LIST_TYPE;
             type: {
               kind: Kind.NON_NULL_TYPE;
               type: {
-                kind: 'NamedType'; // TODO: Fix literal type
+                kind: Kind.NAMED_TYPE;
                 name: {
                   kind: Kind.NAME;
                   value: 'Type';
