@@ -13,7 +13,7 @@ import {
 } from '@0no-co/typescript.js';
 
 import fs from 'fs';
-import path from 'path/posix';
+import { posix as path } from 'path';
 
 export const compilerOptions: CompilerOptions = {
   rootDir: '/',
