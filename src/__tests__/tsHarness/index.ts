@@ -7,7 +7,12 @@ export type { TypeHost } from './typeCheckerHost';
 export { createTypeChecker } from '@0no-co/typescript.js';
 export { createTypeHost } from './typeCheckerHost';
 
-export { createVirtualHost, readFileFromRoot, readVirtualModule } from './virtualHost';
+export {
+  createVirtualHost,
+  readFileFromRoot,
+  readVirtualModule,
+  readSourceFolders,
+} from './virtualHost';
 
 export function runDiagnostics(host: TypeHost) {
   const checker = createTypeChecker(host);

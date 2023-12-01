@@ -122,6 +122,21 @@ export function readVirtualModule(moduleName: string): Files {
   return files;
 }
 
+export function readSourceFolders(directories: string[]): Files {
+  const files: Files = {};
+  for (const directory of directories) {
+    const target = path.resolve(virtualRoot, 'src', directory);
+    for (const entry of fs.readdirSync(target)) {
+      const entryTarget = path.resolve(target, entry);
+      const stat = fs.statSync(entryTarget);
+      if (stat.isFile() && /\.ts$/.test(entry)) {
+        files[path.join(directory, entry)] = fs.readFileSync(entryTarget).toString();
+      }
+    }
+  }
+  return files;
+}
+
 export type VirtualHost = ReturnType<typeof createVirtualHost> extends infer U
   ? U extends CompilerHost
     ? U
