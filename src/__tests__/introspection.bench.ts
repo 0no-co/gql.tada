@@ -2,7 +2,7 @@ import { describe, bench } from 'vitest';
 import * as ts from './tsHarness';
 
 describe('Introspection', () => {
-  (function () {
+  (() => {
     const virtualHost = ts.createVirtualHost({
       ...ts.readVirtualModule('@0no-co/graphql.web'),
       ...ts.readSourceFolders(['.']),
@@ -27,7 +27,7 @@ describe('Introspection', () => {
     });
   })();
 
-  (function () {
+  (() => {
     const virtualHost = ts.createVirtualHost({
       ...ts.readVirtualModule('@0no-co/graphql.web'),
       ...ts.readSourceFolders(['.']),
