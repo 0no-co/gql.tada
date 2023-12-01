@@ -32,8 +32,8 @@
     "client-side graphql"
   ],
   "scripts": {
-    "test": "vitest",
-    "bench": "vitest bench",
+    "test": "vitest test",
+    "bench": "vitest bench --typecheck.enabled=false",
     "check": "tsc",
     "lint": "eslint --ext=js,ts .",
     "build": "rollup -c scripts/rollup.config.mjs",
