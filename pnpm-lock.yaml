@@ -55,6 +55,9 @@ devDependencies:
   eslint-plugin-tsdoc:
     specifier: ^0.2.17
     version: 0.2.17
+  expect-type:
+    specifier: ^0.17.3
+    version: 0.17.3
   graphql:
     specifier: ^16.6.0
     version: 16.6.0
@@ -1953,6 +1956,11 @@ packages:
       onetime: 6.0.0
       signal-exit: 4.1.0
       strip-final-newline: 3.0.0
+    dev: true
+
+  /expect-type@0.17.3:
+    resolution: {integrity: sha512-K0ZdZJ97jiAtaOwhEHHz/f0N6Xbj5reRz5g6+5BO7+OvqQ7PMQz0/c8bFSJs1zPotNJL5HJaC6t6lGPEAtGyOw==}
+    engines: {node: '>=12.0.0'}
     dev: true
 
   /extendable-error@0.1.7:

@@ -33,11 +33,15 @@ export interface TypeHostOptions {
   host: CompilerHost;
   strict?: boolean;
   strictNullChecks?: boolean;
+  noImplicitAny?: boolean;
 }
 
 export function createTypeHost(options: TypeHostOptions): TypeHost {
   const { host, rootNames, ...rest } = options;
-  const compilerOptions = { ...baseCompilerOptions, ...rest };
+  const compilerOptions: CompilerOptions = {
+    ...baseCompilerOptions,
+    ...rest,
+  };
 
   const fileIncludeReasons = arrayToMultiMap<any, any>([], () => FileIncludeKind.Import);
   const resolvedTypeReferenceDirectives = createModeAwareCache<any>();
