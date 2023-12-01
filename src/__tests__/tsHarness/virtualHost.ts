@@ -98,43 +98,53 @@ class Directory {
 
 const virtualRoot = path.resolve(__dirname, '../../../');
 
+const _virtualModuleCache: Record<string, Files> = {};
+const _sourceFolderCache: Record<string, Files> = {};
+const _fileCache: Record<string, FileData> = {};
+
 export function readFileFromRoot(name: string): FileData {
-  return fs.readFileSync(path.join(virtualRoot, name));
+  return _fileCache[name] || (_fileCache[name] = fs.readFileSync(path.join(virtualRoot, name)));
 }
 
 export function readVirtualModule(moduleName: string): Files {
-  const files: Files = {};
-
-  function walk(directory: string) {
-    for (const entry of fs.readdirSync(path.resolve(virtualRoot, directory))) {
-      const file = path.join(directory, entry);
-      const target = path.resolve(virtualRoot, file);
-      const stat = fs.statSync(target);
-      if (stat.isDirectory()) {
-        walk(file);
-      } else {
-        files[file] = fs.readFileSync(target).toString();
+  let files: Files = _virtualModuleCache[moduleName];
+  if (!files) {
+    files = {};
+    function walk(directory: string) {
+      for (const entry of fs.readdirSync(path.resolve(virtualRoot, directory))) {
+        const file = path.join(directory, entry);
+        const target = path.resolve(virtualRoot, file);
+        const stat = fs.statSync(target);
+        if (stat.isDirectory()) {
+          walk(file);
+        } else {
+          files[file] = fs.readFileSync(target).toString();
+        }
       }
     }
+    walk(path.join('node_modules', moduleName));
   }
-
-  walk(path.join('node_modules', moduleName));
-  return files;
+  return (_virtualModuleCache[moduleName] = files);
 }
 
 export function readSourceFolders(directories: string[]): Files {
-  const files: Files = {};
+  let combinedFiles: Files = {};
   for (const directory of directories) {
-    const target = path.resolve(virtualRoot, 'src', directory);
-    for (const entry of fs.readdirSync(target)) {
-      const entryTarget = path.resolve(target, entry);
-      const stat = fs.statSync(entryTarget);
-      if (stat.isFile() && /\.ts$/.test(entry)) {
-        files[path.join(directory, entry)] = fs.readFileSync(entryTarget).toString();
+    let files: Files = _sourceFolderCache[directory];
+    if (!files) {
+      files = _sourceFolderCache[directory] = {};
+      const target = path.resolve(virtualRoot, 'src', directory);
+      for (const entry of fs.readdirSync(target)) {
+        const entryTarget = path.resolve(target, entry);
+        const stat = fs.statSync(entryTarget);
+        if (stat.isFile() && /\.ts$/.test(entry)) {
+          files[path.join(directory, entry)] = fs.readFileSync(entryTarget).toString();
+        }
       }
     }
+    combinedFiles = Object.assign(combinedFiles, files);
   }
-  return files;
+  return combinedFiles;
 }
 
 export type VirtualHost = ReturnType<typeof createVirtualHost> extends infer U
@@ -144,7 +154,8 @@ export type VirtualHost = ReturnType<typeof createVirtualHost> extends infer U
   : never;
 
 export function createVirtualHost(files: Files) {
-  files = { ...files, ...readVirtualModule('@0no-co/typescript.js') };
+  // TODO: When another lib with references is selected, the resolution mode doesn't adapt
+  files['lib.d.ts'] = readFileFromRoot('node_modules/@0no-co/typescript.js/lib/lib.es5.d.ts');
 
   const cache = createModuleResolutionCache(path.sep, normalize, compilerOptions);
   const root = new Directory();
@@ -180,8 +191,7 @@ export function createVirtualHost(files: Files) {
   return {
     getCanonicalFileName: normalize,
     getDefaultLibFileName() {
-      // TODO: When another lib with references is selected, the resolution mode doesn't adapt
-      return normalize('/node_modules/@0no-co/typescript.js/lib/lib.es5.d.ts');
+      return '/lib.d.ts';
     },
     getCurrentDirectory() {
       return path.sep;
