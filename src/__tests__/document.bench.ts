@@ -5,19 +5,17 @@ describe('TypedDocument', () => {
   const virtualHost = ts.createVirtualHost({
     ...ts.readVirtualModule('@0no-co/graphql.web'),
     ...ts.readSourceFolders(['.', 'typed-document']),
-    'githubIntrospection.ts': ts.readFileFromRoot('src/__tests__/fixtures/githubIntrospection.ts'),
+    'simpleSchema.ts': ts.readFileFromRoot('src/__tests__/fixtures/simpleSchema.ts'),
     'index.ts': `
-      import { githubIntrospection } from './githubIntrospection';
+      import type { simpleSchema as schema } from './simpleSchema';
       import type { Introspection } from './introspection';
       import type { Document } from './parser';
       import type { TypedDocument } from './typed-document';
       import type { Variables } from './typed-document/variables';
 
-      type schema = Introspection<typeof githubIntrospection>;
-
       type document = Document<\`
         query ($org: String!, $repo: String!) {
-          repository(owner: $org, name: $repo) {
+          todos {
             id
           }
         }

@@ -96,7 +96,7 @@ interface IntrospectionInputValue {
 type _mapNames<T extends readonly any[]> = Obj<{
   [P in T[number]['name']]: T[number] extends infer Value
     ? Value extends { readonly name: P }
-      ? Value
+      ? Obj<Value>
       : never
     : never;
 }>;
@@ -118,6 +118,7 @@ type _scalarMap<T extends IntrospectionScalarType> = {
 
 type _enumMap<T extends IntrospectionEnumType> = {
   kind: 'ENUM';
+  name: T['name'];
   type: T['enumValues'][number]['name'];
 };
 
@@ -163,13 +164,13 @@ type _typeMap<T> = T extends IntrospectionScalarType
   ? _inputObjectMap<T>
   : never;
 
-type _introspectionTypesMap<T extends IntrospectionQuery> = {
+type _introspectionTypesMap<T extends IntrospectionQuery> = Obj<{
   [P in T['__schema']['types'][number]['name']]: T['__schema']['types'][number] extends infer Type
     ? Type extends { readonly name: P }
       ? _typeMap<Type>
       : never
     : never;
-};
+}>;
 
 type _introspectionMap<T extends IntrospectionQuery> = {
   query: T['__schema']['queryType']['name'];

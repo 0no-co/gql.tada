@@ -20,7 +20,11 @@ export function runDiagnostics(host: TypeHost) {
   if (diagnostics.length) {
     throw new Error(
       diagnostics
-        .map(x => (x.messageText as DiagnosticMessageChain)?.messageText || x.messageText)
+        .map(x => {
+          let text = (x.messageText as DiagnosticMessageChain)?.messageText || x.messageText;
+          if (x.file) text += ` (in ${x.file.path})`;
+          return text;
+        })
         .join('\n')
     );
   }

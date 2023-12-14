@@ -1,17 +1,17 @@
 import { expectTypeOf, test } from 'vitest';
-import { simpleIntrospection } from './fixtures/simpleIntrospection';
+import { simpleSchema } from './fixtures/simpleSchema';
 import { Introspection } from '../introspection';
 import { Document } from '../parser';
 import { TypedDocument } from '../typed-document';
 
-type Intro = Introspection<typeof simpleIntrospection>;
+type schema = simpleSchema;
 
 test('infers simple fields', () => {
   type query = Document</* GraphQL */ `
     query { todos { id } }
   `>;
 
-  type actual = TypedDocument<query, Intro>;
+  type actual = TypedDocument<query, schema>;
   type expected = { todos: Array<{ id: string | number } | null> | null };
 
   expectTypeOf<expected>().toEqualTypeOf<actual>();
@@ -22,7 +22,7 @@ test('infers adjacent inline fragments', () => {
     query { todos { id ... on Todo { text } ... on Todo { complete } } }
   `>;
 
-  type actual = TypedDocument<query, Intro>;
+  type actual = TypedDocument<query, schema>;
   type expected = {
     todos: Array<{
       id: string | number;
@@ -39,7 +39,7 @@ test('infers aliased fields', () => {
     query { todos { myIdIsGreat: id } }
   `>;
 
-  type actual = TypedDocument<query, Intro>;
+  type actual = TypedDocument<query, schema>;
   type expected = {
     todos: Array<{ myIdIsGreat: string | number } | null> | null;
   };
@@ -57,7 +57,7 @@ test('infers optional properties for @skip/', () => {
     }
   `>;
 
-  type actual = TypedDocument<query, Intro>;
+  type actual = TypedDocument<query, schema>;
   type expected = {
     todos: Array<{
       id?: string | number | undefined;
@@ -73,7 +73,7 @@ test('infers enum values', () => {
     query { todos { id test } }
   `>;
 
-  type actual = TypedDocument<query, Intro>;
+  type actual = TypedDocument<query, schema>;
   type expected = {
     todos: Array<{ id: string | number; test: 'value' | 'more' | null } | null> | null;
   };
@@ -87,7 +87,7 @@ test('infers fragment spreads', () => {
     fragment Fields on Todo { id text __typename }
   `>;
 
-  type actual = TypedDocument<query, Intro>;
+  type actual = TypedDocument<query, schema>;
   type expected = {
     todos: Array<{
       __typename: 'Todo';
@@ -106,7 +106,7 @@ test('infers inline fragments and fragment spreads', () => {
     fragment Fields on Todo { id  __typename }
   `>;
 
-  type actual = TypedDocument<query, Intro>;
+  type actual = TypedDocument<query, schema>;
   type expected = {
     todos: Array<{
       __typename: 'Todo';
@@ -142,7 +142,7 @@ test('infers fragment spreads on unions', () => {
     }
   `>;
 
-  type actual = TypedDocument<query, Intro>;
+  type actual = TypedDocument<query, schema>;
   type expected = {
     latestTodo:
       | { message: string; __typename: 'NoTodosError' }
@@ -171,7 +171,7 @@ test('infers mutations', () => {
     }
   `>;
 
-  type actual = TypedDocument<query, Intro>;
+  type actual = TypedDocument<query, schema>;
   type expected = {
     toggleTodo: { id: string | number } | null;
   };
@@ -196,7 +196,7 @@ test('infers unions and interfaces correctly', () => {
     }
   `>;
 
-  type actual = TypedDocument<query, Intro>;
+  type actual = TypedDocument<query, schema>;
   type expected = {
     test:
       | {
@@ -216,7 +216,7 @@ test('infers unions and interfaces correctly', () => {
   expectTypeOf<expected>().toEqualTypeOf<actual>();
 });
 
-test('infers queries from GitHub Introspection schema', () => {
+test('infers queries from GitHub schemaspection schema', () => {
   type schema = Introspection<typeof import('./fixtures/githubIntrospection').githubIntrospection>;
 
   type repositories = Document</* GraphQL */ `
