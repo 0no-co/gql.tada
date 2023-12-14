@@ -1230,31 +1230,6 @@ export const simpleIntrospection = {
           },
         ],
       },
-      {
-        kind: 'ENUM',
-        name: 'CacheControlScope',
-        fields: null,
-        inputFields: null,
-        interfaces: null,
-        enumValues: [
-          {
-            name: 'PUBLIC',
-          },
-          {
-            name: 'PRIVATE',
-          },
-        ],
-        possibleTypes: null,
-      },
-      {
-        kind: 'SCALAR',
-        name: 'Upload',
-        fields: null,
-        inputFields: null,
-        interfaces: null,
-        enumValues: null,
-        possibleTypes: null,
-      },
     ],
   },
 } as const;

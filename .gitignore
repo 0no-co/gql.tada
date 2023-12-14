@@ -8,3 +8,5 @@ dist/
 coverage/
 package-lock.json
 .DS_Store
+
+/tsconfig.vitest-temp.json
