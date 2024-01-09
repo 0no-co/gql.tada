@@ -88,17 +88,17 @@ type FragmentSelection<
   : readonly [];
 
 type FragmentSpreadType<
-  Spread extends { kind: Kind.FRAGMENT_SPREAD | Kind.INLINE_FRAGMENT },
+  Node extends { kind: Kind.FRAGMENT_SPREAD | Kind.INLINE_FRAGMENT },
   BaseType extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any }
-> = Spread extends { kind: Kind.INLINE_FRAGMENT; typeCondition?: any }
-  ? Spread['typeCondition'] extends { kind: Kind.NAMED_TYPE; name: any }
-    ? Introspection['types'][Spread['typeCondition']['name']['value']]
+> = Node extends { kind: Kind.INLINE_FRAGMENT; typeCondition?: any }
+  ? Node['typeCondition'] extends { kind: Kind.NAMED_TYPE; name: any }
+    ? Introspection['types'][Node['typeCondition']['name']['value']]
     : BaseType
-  : Spread extends { kind: Kind.FRAGMENT_SPREAD; name: any }
-  ? Spread['name']['value'] extends keyof Fragments
-    ? Introspection['types'][Fragments[Spread['name']['value']]['typeCondition']['name']['value']]
+  : Node extends { kind: Kind.FRAGMENT_SPREAD; name: any }
+  ? Node['name']['value'] extends keyof Fragments
+    ? Introspection['types'][Fragments[Node['name']['value']]['typeCondition']['name']['value']]
     : never
   : never;
 
@@ -116,7 +116,7 @@ export type Selection<
   Fragments extends { [name: string]: any }
 > = Obj<
   FieldSelectionContinue<Selections, Type, Introspection, Fragments> &
-    PossibleFragmentsSelection<Selections, Type, Introspection, Fragments>
+    FragmentsSelection<Selections, Type, Introspection, Fragments>
 >;
 
 type FieldSelectionContinue<
@@ -153,67 +153,47 @@ type FieldSelectionContinue<
       FieldSelectionContinue<Rest, Type, Introspection, Fragments>
   : {};
 
-type PossibleFragmentsContinue<
-  PossibleType extends string,
-  Selections extends readonly unknown[],
-  Type extends ObjectLikeType,
-  Introspection extends IntrospectionLikeType,
-  Fragments extends { [name: string]: any }
-> = Selections extends [infer Selection, ...infer Rest]
-  ? PossibleFragmentsContinue<PossibleType, Rest, Type, Introspection, Fragments> extends [
-      ...infer Rest
-    ]
-    ? Selection extends { kind: Kind.FRAGMENT_SPREAD | Kind.INLINE_FRAGMENT }
-      ? FragmentSpreadType<Selection, Type, Introspection, Fragments>['name'] extends PossibleType
-        ? [Selection, ...Rest]
-        : FragmentSpreadType<Selection, Type, Introspection, Fragments> extends {
-            possibleTypes: infer PossibleSubtypes;
-          }
-        ? PossibleType extends PossibleSubtypes
-          ? [Selection, ...Rest]
-          : Rest
-        : Rest
-      : Rest
-    : never
-  : Selections extends []
-  ? []
-  : never;
-
-type PossibleFragmentsSelection<
+type FragmentsSelection<
   Selections extends readonly unknown[],
   Type extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any }
 > = Type extends { kind: 'UNION' | 'INTERFACE'; possibleTypes: any }
   ? ObjValues<{
-      [SubtypeName in Type['possibleTypes']]: FragmentSelectionContinue<
-        PossibleFragmentsContinue<SubtypeName, Selections, Type, Introspection, Fragments>,
+      [PossibleType in Type['possibleTypes']]: FragmentSelectionContinue<
+        Selections,
+        PossibleType,
         Type,
         Introspection,
         Fragments
       >;
     }>
-  : Type extends { kind: 'OBJECT' }
-  ? FragmentSelectionContinue<Selections, Type, Introspection, Fragments>
+  : Type extends { kind: 'OBJECT'; name: any }
+  ? FragmentSelectionContinue<Selections, Type['name'], Type, Introspection, Fragments>
   : {};
 
 type FragmentSelectionContinue<
   Selections extends readonly unknown[],
+  PossibleType extends string,
   Type extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any }
-> = Selections extends [infer Fragment, ...infer Rest]
-  ? (Fragment extends FragmentSpreadNode | InlineFragmentNode
-      ?
-          | (ShouldInclude<Fragment['directives']> extends true ? never : {})
-          | Selection<
-              FragmentSelection<Fragment, Fragments>,
-              FragmentSpreadType<Fragment, Type, Introspection, Fragments>,
-              Introspection,
-              Fragments
-            >
+> = Selections extends [infer Node, ...infer Rest]
+  ? (Node extends FragmentSpreadNode | InlineFragmentNode
+      ? FragmentSpreadType<
+          Node,
+          Type,
+          Introspection,
+          Fragments
+        > extends infer Subtype extends ObjectLikeType
+        ? PossibleType extends Subtype['name'] | TypenameOfType<Subtype>
+          ?
+              | (ShouldInclude<Node['directives']> extends true ? never : {})
+              | Selection<FragmentSelection<Node, Fragments>, Subtype, Introspection, Fragments>
+          : {}
+        : {}
       : {}) &
-      FragmentSelectionContinue<Rest, Type, Introspection, Fragments>
+      FragmentSelectionContinue<Rest, PossibleType, Type, Introspection, Fragments>
   : {};
 
 type DefinitionContinue<
