@@ -204,16 +204,14 @@ type FragmentSelectionContinue<
   Fragments extends { [name: string]: any }
 > = Selections extends [infer Fragment, ...infer Rest]
   ? (Fragment extends FragmentSpreadNode | InlineFragmentNode
-      ? Selection<
-          FragmentSelection<Fragment, Fragments>,
-          FragmentSpreadType<Fragment, Type, Introspection, Fragments>,
-          Introspection,
-          Fragments
-        > extends infer Selection
-        ? ShouldInclude<Fragment['directives']> extends true
-          ? Selection
-          : Selection | {}
-        : never
+      ?
+          | (ShouldInclude<Fragment['directives']> extends true ? never : {})
+          | Selection<
+              FragmentSelection<Fragment, Fragments>,
+              FragmentSpreadType<Fragment, Type, Introspection, Fragments>,
+              Introspection,
+              Fragments
+            >
       : {}) &
       FragmentSelectionContinue<Rest, Type, Introspection, Fragments>
   : {};
