@@ -7,48 +7,67 @@ type InputValues<
   Introspection extends IntrospectionType<any>
 > = InputFields extends [infer InputField, ...infer Rest]
   ? (InputField extends { name: any; type: any }
-      ? // TODO: This is unwrapping with an incorrect reference mapper:
-        { [Name in InputField['name']]: UnwrapType<InputField['type'], Introspection> }
+      ? { [Name in InputField['name']]: UnwrapType<InputField['type'], Introspection> }
       : {}) &
       InputValues<Rest, Introspection>
   : {};
 
 type ScalarType<
-  Type extends { kind: 'NamedType'; name: any },
+  TypeName,
   Introspection extends IntrospectionType<any>
-> = Type['name'] extends { kind: Kind.NAME; value: infer Value }
-  ? Value extends keyof Introspection['types']
-    ? Introspection['types'][Value] extends {
-        kind: 'SCALAR' | 'ENUM';
-        type: infer IntrospectionValueType;
+> = TypeName extends keyof Introspection['types']
+  ? Introspection['types'][TypeName] extends {
+      kind: 'SCALAR' | 'ENUM';
+      type: infer IntrospectionValueType;
+    }
+    ? IntrospectionValueType
+    : Introspection['types'][TypeName] extends {
+        kind: 'INPUT_OBJECT';
+        inputFields: [...infer InputFields];
       }
-      ? IntrospectionValueType
-      : Introspection['types'][Value] extends {
-          kind: 'INPUT_OBJECT';
-          inputFields: [...infer InputFields];
-        }
-      ? Obj<InputValues<InputFields, Introspection>>
-      : never
+    ? Obj<InputValues<InputFields, Introspection>>
     : never
   : never;
 
 type UnwrapTypeInner<
   Type extends TypeNode,
   Introspection extends IntrospectionType<any>
-> = Type extends { kind: 'NonNullType' }
-  ? UnwrapTypeInner<Type['type'], Introspection>
-  : Type extends { kind: 'ListType' }
-  ? Array<UnwrapType<Type['type'], Introspection>>
-  : Type extends { kind: 'NamedType' }
-  ? ScalarType<Type, Introspection>
+> = Type extends { kind: 'NON_NULL' }
+  ? UnwrapTypeInner<Type['ofType'], Introspection>
+  : Type extends { kind: 'LIST' }
+  ? Array<UnwrapType<Type['ofType'], Introspection>>
+  : Type extends { name: infer Name }
+  ? Name extends keyof Introspection['types']
+    ? ScalarType<Name, Introspection>
+    : unknown
   : never;
 
 type UnwrapType<
   Type extends TypeNode,
   Introspection extends IntrospectionType<any>
-> = Type extends { kind: 'NonNullType' }
-  ? UnwrapTypeInner<Type['type'], Introspection>
+> = Type extends { kind: 'NON_NULL' }
+  ? UnwrapTypeInner<Type['ofType'], Introspection>
   : null | UnwrapTypeInner<Type, Introspection>;
+
+type UnwrapTypeRefInner<
+  Type extends TypeNode,
+  Introspection extends IntrospectionType<any>
+> = Type extends { kind: Kind.NON_NULL_TYPE }
+  ? UnwrapTypeRefInner<Type['type'], Introspection>
+  : Type extends { kind: Kind.LIST_TYPE }
+  ? Array<UnwrapTypeRef<Type['type'], Introspection>>
+  : Type extends { kind: Kind.NAMED_TYPE; name: { kind: Kind.NAME; value: infer Name } }
+  ? Name extends keyof Introspection['types']
+    ? ScalarType<Name, Introspection>
+    : unknown
+  : never;
+
+type UnwrapTypeRef<
+  Type extends TypeNode,
+  Introspection extends IntrospectionType<any>
+> = Type extends { kind: Kind.NON_NULL_TYPE }
+  ? UnwrapTypeRefInner<Type['type'], Introspection>
+  : null | UnwrapTypeRefInner<Type, Introspection>;
 
 type VariablesContinue<
   Variables extends readonly unknown[],
@@ -57,13 +76,13 @@ type VariablesContinue<
   ? (Variable extends { kind: Kind.VARIABLE_DEFINITION; variable: any; type: any }
       ? Variable extends { defaultValue: undefined }
         ? {
-            [Name in Variable['variable']['name']['value']]: UnwrapType<
+            [Name in Variable['variable']['name']['value']]: UnwrapTypeRef<
               Variable['type'],
               Introspection
             >;
           }
         : {
-            [Name in Variable['variable']['name']['value']]?: UnwrapType<
+            [Name in Variable['variable']['name']['value']]?: UnwrapTypeRef<
               Variable['type'],
               Introspection
             >;
