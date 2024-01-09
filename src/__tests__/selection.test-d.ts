@@ -1,14 +1,14 @@
 import { expectTypeOf, test } from 'vitest';
 import { simpleSchema } from './fixtures/simpleSchema';
 import { tada } from '../namespace';
+import { parseDocument } from '../parser';
 import { Introspection } from '../introspection';
-import { Document } from '../parser';
 import { TypedDocument } from '../selection';
 
 type schema = simpleSchema;
 
 test('infers simple fields', () => {
-  type query = Document</* GraphQL */ `
+  type query = parseDocument</* GraphQL */ `
     query { todos { id } }
   `>;
 
@@ -19,7 +19,7 @@ test('infers simple fields', () => {
 });
 
 test('infers unknown fields as `unknown`', () => {
-  type query = Document</* GraphQL */ `
+  type query = parseDocument</* GraphQL */ `
     query { unknown, unknownObj { __typename } }
   `>;
 
@@ -30,7 +30,7 @@ test('infers unknown fields as `unknown`', () => {
 });
 
 test('infers adjacent inline fragments', () => {
-  type query = Document</* GraphQL */ `
+  type query = parseDocument</* GraphQL */ `
     query { todos { id ... on Todo { text } ... on Todo { complete } } }
   `>;
 
@@ -47,7 +47,7 @@ test('infers adjacent inline fragments', () => {
 });
 
 test('infers aliased fields', () => {
-  type query = Document</* GraphQL */ `
+  type query = parseDocument</* GraphQL */ `
     query { todos { myIdIsGreat: id } }
   `>;
 
@@ -60,7 +60,7 @@ test('infers aliased fields', () => {
 });
 
 test('infers optional properties for @skip/@include', () => {
-  type query = Document</* GraphQL */ `
+  type query = parseDocument</* GraphQL */ `
     query {
       todos {
         id @skip(if: false)
@@ -81,7 +81,7 @@ test('infers optional properties for @skip/@include', () => {
 });
 
 test('infers enum values', () => {
-  type query = Document</* GraphQL */ `
+  type query = parseDocument</* GraphQL */ `
     query { todos { id test } }
   `>;
 
@@ -94,7 +94,7 @@ test('infers enum values', () => {
 });
 
 test('infers fragment spreads', () => {
-  type query = Document</* GraphQL */ `
+  type query = parseDocument</* GraphQL */ `
     query { todos { ...Fields complete } }
     fragment Fields on Todo { id text __typename }
   `>;
@@ -113,13 +113,13 @@ test('infers fragment spreads', () => {
 });
 
 test('infers fragment spreads for fragment refs', () => {
-  type fragment = Document</* GraphQL */ `
+  type fragment = parseDocument</* GraphQL */ `
     fragment Fields on Todo { id text __typename }
   `>['definitions'][0] & {
     [tada.fragmentName]: 'Fields';
   };
 
-  type query = Document</* GraphQL */ `
+  type query = parseDocument</* GraphQL */ `
     query { todos { ...Fields } }
   `>;
 
@@ -137,7 +137,7 @@ test('infers fragment spreads for fragment refs', () => {
 });
 
 test('infers inline fragments and fragment spreads', () => {
-  type query = Document</* GraphQL */ `
+  type query = parseDocument</* GraphQL */ `
     query { todos { ...Fields ... on Todo { text } complete } }
     fragment Fields on Todo { id  __typename }
   `>;
@@ -156,7 +156,7 @@ test('infers inline fragments and fragment spreads', () => {
 });
 
 test('infers fragment spreads on unions', () => {
-  type query = Document</* GraphQL */ `
+  type query = parseDocument</* GraphQL */ `
     query {
       latestTodo {
         __typename
@@ -201,7 +201,7 @@ test('infers fragment spreads on unions', () => {
 });
 
 test('infers mutations', () => {
-  type query = Document</* GraphQL */ `
+  type query = parseDocument</* GraphQL */ `
     mutation ($id: ID!, $input: TodoPayload!) {
       toggleTodo (id: $id input: $input) { id }
     }
@@ -216,7 +216,7 @@ test('infers mutations', () => {
 });
 
 test('infers unions and interfaces correctly', () => {
-  type query = Document</* GraphQL */ `
+  type query = parseDocument</* GraphQL */ `
     query {
       test {
         __typename
@@ -255,7 +255,7 @@ test('infers unions and interfaces correctly', () => {
 test('infers queries from GitHub schemaspection schema', () => {
   type schema = Introspection<typeof import('./fixtures/githubIntrospection').githubIntrospection>;
 
-  type repositories = Document</* GraphQL */ `
+  type repositories = parseDocument</* GraphQL */ `
     query ($org: String!, $repo: String!) {
       repository(owner: $org, name: $repo) {
         id

@@ -7,8 +7,8 @@ describe('Document', () => {
       ...ts.readVirtualModule('@0no-co/graphql.web'),
       'parser.ts': ts.readFileFromRoot('src/parser.ts'),
       'index.ts': `
-        import type { Document } from './parser';
-        type document = Document<'{ test }'>;
+        import { parseDocument } from './parser';
+        type document = parseDocument<'{ test }'>;
         type operation = document['definitions'][0]['operation'];
       `,
     });
@@ -29,9 +29,9 @@ describe('Document', () => {
       'kitchensinkQuery.ts': ts.readFileFromRoot('src/__tests__/fixtures/kitchensinkQuery.ts'),
       'parser.ts': ts.readFileFromRoot('src/parser.ts'),
       'index.ts': `
-        import type { Document } from './parser';
+        import { parseDocument } from './parser';
         import { kitchensinkQuery } from './kitchensinkQuery';
-        type document = Document<typeof kitchensinkQuery>;
+        type document = parseDocument<typeof kitchensinkQuery>;
         type operation = document['definitions'][0]['operation'];
       `,
     });

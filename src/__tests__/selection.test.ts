@@ -18,12 +18,12 @@ describe('simple introspection', () => {
       'index.ts': `
         import { expectTypeOf } from 'expect-type';
         import { simpleIntrospection } from './simpleIntrospection';
+        import { parseDocument } from './parser';
         import type { Introspection } from './introspection';
-        import type { Document } from './parser';
         import type { TypedDocument } from './selection';
         import type { Variables } from './variables';
 
-        type query = Document<\`
+        type query = parseDocument<\`
           {
             todos {
               id
@@ -66,12 +66,12 @@ describe('simple introspection', () => {
       'index.ts': `
         import { expectTypeOf } from 'expect-type';
         import { simpleIntrospection } from './simpleIntrospection';
+        import { parseDocument } from './parser';
         import type { Introspection } from './introspection';
-        import type { Document } from './parser';
         import type { TypedDocument } from './selection';
         import type { Variables } from './variables';
 
-        type query = Document<\`
+        type query = parseDocument<\`
           query {
             test {
               __typename

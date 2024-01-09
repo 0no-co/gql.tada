@@ -15,9 +15,9 @@ testTypeHost('parses kitchen sink query (%o)', options => {
     'index.ts': `
       import { expectTypeOf } from 'expect-type';
       import { kitchensinkQuery, kitchensinkDocument } from './kitchensinkQuery';
-      import type { Document } from './parser';
+      import { parseDocument } from './parser';
 
-      type actual = Document<typeof kitchensinkQuery>;
+      type actual = parseDocument<typeof kitchensinkQuery>;
 
       expectTypeOf<actual>().toEqualTypeOf<kitchensinkDocument>();
     `,
