@@ -17,6 +17,17 @@ test('infers simple fields', () => {
   expectTypeOf<expected>().toEqualTypeOf<actual>();
 });
 
+test('infers unknown fields as `unknown`', () => {
+  type query = Document</* GraphQL */ `
+    query { unknown, unknownObj { __typename } }
+  `>;
+
+  type actual = TypedDocument<query, schema>;
+  type expected = { unknown: unknown; unknownObj: unknown };
+
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
+});
+
 test('infers adjacent inline fragments', () => {
   type query = Document</* GraphQL */ `
     query { todos { id ... on Todo { text } ... on Todo { complete } } }

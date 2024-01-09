@@ -50,7 +50,7 @@ type UnwrapTypeInner<
         >
       : {}
     : Introspection['types'][Type['name']]['type']
-  : never;
+  : unknown;
 
 type UnwrapType<
   Type extends IntrospectionTypeRef,
@@ -138,16 +138,14 @@ type FieldSelectionContinue<
                 >;
           }
         : {
-            [Prop in FieldAlias<Selection>]?:
-              | (Selection['name']['value'] extends '__typename'
-                  ? TypenameOfType<Type>
-                  : UnwrapType<
-                      Type['fields'][Selection['name']['value']]['type'],
-                      Selection['selectionSet'],
-                      Introspection,
-                      Fragments
-                    >)
-              | undefined;
+            [Prop in FieldAlias<Selection>]?: Selection['name']['value'] extends '__typename'
+              ? TypenameOfType<Type>
+              : UnwrapType<
+                  Type['fields'][Selection['name']['value']]['type'],
+                  Selection['selectionSet'],
+                  Introspection,
+                  Fragments
+                >;
           }
       : {}) &
       FieldSelectionContinue<Rest, Type, Introspection, Fragments>
