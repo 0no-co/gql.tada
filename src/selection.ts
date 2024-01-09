@@ -40,20 +40,16 @@ type UnwrapTypeInner<
   : Type extends IntrospectionListTypeRef
   ? Array<UnwrapType<Type['ofType'], SelectionSet, Introspection, Fragments>>
   : Type extends IntrospectionNamedTypeRef
-  ? Type['name'] extends keyof Introspection['types']
-    ? Introspection['types'][Type['name']] extends ObjectLikeType
-      ? SelectionSet extends { kind: Kind.SELECTION_SET; selections: any }
-        ? Selection<
-            SelectionSet['selections'],
-            Introspection['types'][Type['name']],
-            Introspection,
-            Fragments
-          >
-        : {}
-      : Introspection['types'][Type['name']] extends { kind: 'SCALAR' | 'ENUM'; type: infer Type }
-      ? Type
-      : never
-    : never
+  ? Introspection['types'][Type['name']] extends ObjectLikeType
+    ? SelectionSet extends { kind: Kind.SELECTION_SET; selections: any }
+      ? Selection<
+          SelectionSet['selections'],
+          Introspection['types'][Type['name']],
+          Introspection,
+          Fragments
+        >
+      : {}
+    : Introspection['types'][Type['name']]['type']
   : never;
 
 type UnwrapType<
@@ -96,21 +92,13 @@ type FragmentSpreadType<
   BaseType extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any }
-> = Spread extends { kind: Kind.INLINE_FRAGMENT; typeCondition: any }
-  ? Spread['typeCondition'] extends { kind: Kind.NAMED_TYPE }
-    ? Spread['typeCondition']['name']['value'] extends keyof Introspection['types']
-      ? Introspection['types'][Spread['typeCondition']['name']['value']] extends ObjectLikeType
-        ? Introspection['types'][Spread['typeCondition']['name']['value']]
-        : never
-      : never
+> = Spread extends { kind: Kind.INLINE_FRAGMENT; typeCondition?: any }
+  ? Spread['typeCondition'] extends { kind: Kind.NAMED_TYPE; name: any }
+    ? Introspection['types'][Spread['typeCondition']['name']['value']]
     : BaseType
   : Spread extends { kind: Kind.FRAGMENT_SPREAD; name: any }
   ? Spread['name']['value'] extends keyof Fragments
-    ? Fragments[Spread['name']['value']]['typeCondition']['name']['value'] extends keyof Introspection['types']
-      ? Introspection['types'][Fragments[Spread['name']['value']]['typeCondition']['name']['value']] extends ObjectLikeType
-        ? Introspection['types'][Fragments[Spread['name']['value']]['typeCondition']['name']['value']]
-        : BaseType
-      : never
+    ? Introspection['types'][Fragments[Spread['name']['value']]['typeCondition']['name']['value']]
     : never
   : never;
 
