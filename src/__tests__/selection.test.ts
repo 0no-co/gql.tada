@@ -20,7 +20,7 @@ describe('simple introspection', () => {
         import { simpleIntrospection } from './simpleIntrospection';
         import type { Introspection } from './introspection';
         import type { Document } from './parser';
-        import type { TypedDocument } from './definitions';
+        import type { TypedDocument } from './selection';
         import type { Variables } from './variables';
 
         type query = Document<\`
@@ -68,7 +68,7 @@ describe('simple introspection', () => {
         import { simpleIntrospection } from './simpleIntrospection';
         import type { Introspection } from './introspection';
         import type { Document } from './parser';
-        import type { TypedDocument } from './definitions';
+        import type { TypedDocument } from './selection';
         import type { Variables } from './variables';
 
         type query = Document<\`

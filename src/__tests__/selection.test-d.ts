@@ -2,7 +2,7 @@ import { expectTypeOf, test } from 'vitest';
 import { simpleSchema } from './fixtures/simpleSchema';
 import { Introspection } from '../introspection';
 import { Document } from '../parser';
-import { TypedDocument } from '../definitions';
+import { TypedDocument } from '../selection';
 
 type schema = simpleSchema;
 
