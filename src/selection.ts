@@ -10,7 +10,6 @@ import type { Obj, ObjValues } from './utils';
 import type { FragmentMap } from './fragments';
 
 import type {
-  Introspection as IntrospectionType,
   IntrospectionField,
   IntrospectionListTypeRef,
   IntrospectionNamedTypeRef,
@@ -24,10 +23,17 @@ type ObjectLikeType = {
   fields: { [key: string]: IntrospectionField };
 };
 
+type IntrospectionLikeType = {
+  query: string;
+  mutation: string | never;
+  subscription: string | never;
+  types: { [name: string]: any };
+};
+
 type UnwrapTypeInner<
   Type extends IntrospectionTypeRef,
   SelectionSet extends { kind: Kind.SELECTION_SET } | undefined,
-  Introspection extends IntrospectionType<any>,
+  Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any }
 > = Type extends IntrospectionNonNullTypeRef
   ? UnwrapTypeInner<Type['ofType'], SelectionSet, Introspection, Fragments>
@@ -53,7 +59,7 @@ type UnwrapTypeInner<
 type UnwrapType<
   Type extends IntrospectionTypeRef,
   SelectionSet extends { kind: Kind.SELECTION_SET } | undefined,
-  Introspection extends IntrospectionType<any>,
+  Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any }
 > = Type extends IntrospectionNonNullTypeRef
   ? UnwrapTypeInner<Type['ofType'], SelectionSet, Introspection, Fragments>
@@ -88,7 +94,7 @@ type FragmentSelection<
 type FragmentSpreadType<
   Spread extends { kind: Kind.FRAGMENT_SPREAD | Kind.INLINE_FRAGMENT },
   BaseType extends ObjectLikeType,
-  Introspection extends IntrospectionType<any>,
+  Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any }
 > = Spread extends { kind: Kind.INLINE_FRAGMENT; typeCondition: any }
   ? Spread['typeCondition'] extends { kind: Kind.NAMED_TYPE }
@@ -118,7 +124,7 @@ type TypenameOfType<X extends ObjectLikeType> = X extends {
 export type Selection<
   Selections extends readonly any[],
   Type extends ObjectLikeType,
-  Introspection extends IntrospectionType<any>,
+  Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any }
 > = Obj<
   FieldSelectionContinue<Selections, Type, Introspection, Fragments> &
@@ -128,7 +134,7 @@ export type Selection<
 type FieldSelectionContinue<
   Selections extends readonly unknown[],
   Type extends ObjectLikeType,
-  Introspection extends IntrospectionType<any>,
+  Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any }
 > = Selections extends readonly [infer Selection, ...infer Rest]
   ? (Selection extends FieldNode
@@ -163,7 +169,7 @@ type PossibleFragmentsContinue<
   PossibleType extends string,
   Selections extends readonly unknown[],
   Type extends ObjectLikeType,
-  Introspection extends IntrospectionType<any>,
+  Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any }
 > = Selections extends [infer Selection, ...infer Rest]
   ? PossibleFragmentsContinue<PossibleType, Rest, Type, Introspection, Fragments> extends [
@@ -188,7 +194,7 @@ type PossibleFragmentsContinue<
 type PossibleFragmentsSelection<
   Selections extends readonly unknown[],
   Type extends ObjectLikeType,
-  Introspection extends IntrospectionType<any>,
+  Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any }
 > = Type extends { kind: 'UNION' | 'INTERFACE'; possibleTypes: infer PossibleTypes }
   ? PossibleTypes extends string
@@ -208,7 +214,7 @@ type PossibleFragmentsSelection<
 type FragmentSelectionContinue<
   Selections extends readonly unknown[],
   Type extends ObjectLikeType,
-  Introspection extends IntrospectionType<any>,
+  Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any }
 > = Selections extends [infer Fragment, ...infer Rest]
   ? (Fragment extends FragmentSpreadNode | InlineFragmentNode
@@ -228,7 +234,7 @@ type FragmentSelectionContinue<
 
 type DefinitionContinue<
   Definitions extends any[],
-  Introspection extends IntrospectionType<any>,
+  Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any }
 > = Definitions extends readonly [infer Definition, ...infer Rest]
   ? Definition extends {
@@ -249,13 +255,13 @@ type DefinitionContinue<
 
 export type TypedDocument<
   Document extends { kind: Kind.DOCUMENT; definitions: any[] },
-  Introspection extends IntrospectionType<any>,
+  Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any } = FragmentMap<Document>
 > = DefinitionContinue<Document['definitions'], Introspection, Fragments>;
 
 export type FragmentType<
   Document extends { kind: Kind.DOCUMENT; definitions: any[] },
-  Introspection extends IntrospectionType<any>,
+  Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any } = FragmentMap<Document>
 > = Document['definitions'][0] extends {
   kind: Kind.FRAGMENT_DEFINITION;
