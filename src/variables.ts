@@ -1,6 +1,6 @@
 import type { Kind, TypeNode } from '@0no-co/graphql.web';
-import type { Introspection as IntrospectionType } from '../introspection';
-import type { Obj } from '../utils';
+import type { Introspection as IntrospectionType } from './introspection';
+import type { Obj } from './utils';
 
 type InputValues<
   InputFields extends readonly unknown[],

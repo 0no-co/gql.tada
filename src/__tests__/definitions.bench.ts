@@ -4,14 +4,14 @@ import * as ts from './tsHarness';
 describe('TypedDocument', () => {
   const virtualHost = ts.createVirtualHost({
     ...ts.readVirtualModule('@0no-co/graphql.web'),
-    ...ts.readSourceFolders(['.', 'typed-document']),
+    ...ts.readSourceFolders(['.']),
     'simpleSchema.ts': ts.readFileFromRoot('src/__tests__/fixtures/simpleSchema.ts'),
     'index.ts': `
       import type { simpleSchema as schema } from './simpleSchema';
       import type { Introspection } from './introspection';
       import type { Document } from './parser';
-      import type { TypedDocument } from './typed-document';
-      import type { Variables } from './typed-document/variables';
+      import type { TypedDocument } from './definitions';
+      import type { Variables } from './variables';
 
       type document = Document<\`
         query ($org: String!, $repo: String!) {

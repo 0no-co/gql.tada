@@ -2,7 +2,7 @@ import { expectTypeOf, test } from 'vitest';
 import { simpleIntrospection } from './fixtures/simpleIntrospection';
 import { Introspection } from '../introspection';
 import { Document } from '../parser';
-import { Variables } from '../typed-document/variables';
+import { Variables } from '../variables';
 
 type Intro = Introspection<typeof simpleIntrospection>;
 

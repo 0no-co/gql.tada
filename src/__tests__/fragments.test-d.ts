@@ -2,7 +2,7 @@ import { assertType, test } from 'vitest';
 import { simpleIntrospection } from './fixtures/simpleIntrospection';
 import { Introspection } from '../introspection';
 import { Document } from '../parser';
-import { FragmentType } from '../typed-document/fragments';
+import { FragmentType } from '../definitions';
 
 type Intro = Introspection<typeof simpleIntrospection>;
 

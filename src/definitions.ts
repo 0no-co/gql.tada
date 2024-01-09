@@ -6,6 +6,8 @@ import type {
   NameNode,
 } from '@0no-co/graphql.web';
 
+import type { Obj, ObjValues } from './utils';
+
 import type {
   Introspection as IntrospectionType,
   IntrospectionField,
@@ -13,7 +15,7 @@ import type {
   IntrospectionNamedTypeRef,
   IntrospectionNonNullTypeRef,
   IntrospectionTypeRef,
-} from '../introspection';
+} from './introspection';
 
 // TODO: Replace
 type FragmentDefinitionNode = {
@@ -22,8 +24,6 @@ type FragmentDefinitionNode = {
   readonly typeCondition: any;
   readonly selectionSet: any;
 };
-
-import type { Obj, ObjValues } from '../utils';
 
 export type ObjectLikeType = {
   kind: 'OBJECT' | 'INTERFACE' | 'UNION';
@@ -92,7 +92,7 @@ type FragmentSelection<
     : readonly []
   : readonly [];
 
-type FragmentType<
+type FragmentSpreadType<
   Spread extends { kind: Kind.FRAGMENT_SPREAD | Kind.INLINE_FRAGMENT },
   BaseType extends ObjectLikeType,
   Introspection extends IntrospectionType<any>,
@@ -181,9 +181,9 @@ type PossibleFragmentsContinue<
       ...infer Rest
     ]
     ? Selection extends { kind: Kind.FRAGMENT_SPREAD | Kind.INLINE_FRAGMENT }
-      ? FragmentType<Selection, Type, Introspection, Fragments>['name'] extends PossibleType
+      ? FragmentSpreadType<Selection, Type, Introspection, Fragments>['name'] extends PossibleType
         ? [Selection, ...Rest]
-        : FragmentType<Selection, Type, Introspection, Fragments> extends {
+        : FragmentSpreadType<Selection, Type, Introspection, Fragments> extends {
             possibleTypes: infer PossibleSubtypes;
           }
         ? PossibleType extends PossibleSubtypes
@@ -225,7 +225,7 @@ type FragmentSelectionContinue<
   ? (Fragment extends FragmentSpreadNode | InlineFragmentNode
       ? Selection<
           FragmentSelection<Fragment, Fragments>,
-          FragmentType<Fragment, Type, Introspection, Fragments>,
+          FragmentSpreadType<Fragment, Type, Introspection, Fragments>,
           Introspection,
           Fragments
         > extends infer Selection
@@ -277,3 +277,23 @@ type _FragmentMapContinue<Definitions> = Definitions extends readonly [
 
 export type FragmentMap<Document extends { kind: Kind.DOCUMENT; definitions: any[] }> =
   _FragmentMapContinue<Document['definitions']>;
+
+export type FragmentType<
+  Document extends { kind: Kind.DOCUMENT; definitions: any[] },
+  Introspection extends IntrospectionType<any>,
+  Fragments extends Record<string, FragmentDefinitionNode> = FragmentMap<Document>
+> = Document['definitions'][0] extends {
+  kind: Kind.FRAGMENT_DEFINITION;
+  typeCondition: { name: { value: infer TypeName } };
+}
+  ? TypeName extends keyof Introspection['types']
+    ? Introspection['types'][TypeName] extends ObjectLikeType
+      ? Selection<
+          Document['definitions'][0]['selectionSet']['selections'],
+          Introspection['types'][TypeName],
+          Introspection,
+          Fragments
+        >
+      : never
+    : never
+  : never;
