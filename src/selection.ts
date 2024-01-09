@@ -114,12 +114,12 @@ type FragmentSpreadType<
     : never
   : never;
 
-type TypenameOfType<X extends ObjectLikeType> = X extends {
+type TypenameOfType<Type extends ObjectLikeType> = Type extends {
   kind: 'UNION' | 'INTERFACE';
-  possibleTypes: infer PossibleTypes;
+  possibleTypes: any;
 }
-  ? PossibleTypes
-  : X['name'];
+  ? Type['possibleTypes']
+  : Type['name'];
 
 export type Selection<
   Selections extends readonly any[],
