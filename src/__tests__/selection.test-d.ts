@@ -1,5 +1,6 @@
 import { expectTypeOf, test } from 'vitest';
 import { simpleSchema } from './fixtures/simpleSchema';
+import { tada } from '../namespace';
 import { Introspection } from '../introspection';
 import { Document } from '../parser';
 import { TypedDocument } from '../selection';
@@ -58,7 +59,7 @@ test('infers aliased fields', () => {
   expectTypeOf<expected>().toEqualTypeOf<actual>();
 });
 
-test('infers optional properties for @skip/', () => {
+test('infers optional properties for @skip/@include', () => {
   type query = Document</* GraphQL */ `
     query {
       todos {
@@ -105,6 +106,30 @@ test('infers fragment spreads', () => {
       id: string | number;
       text: string;
       complete: boolean | null;
+    } | null> | null;
+  };
+
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
+});
+
+test('infers fragment spreads for fragment refs', () => {
+  type fragment = Document</* GraphQL */ `
+    fragment Fields on Todo { id text __typename }
+  `>['definitions'][0] & {
+    [tada.fragmentName]: 'Fields';
+  };
+
+  type query = Document</* GraphQL */ `
+    query { todos { ...Fields } }
+  `>;
+
+  type actual = TypedDocument<query, schema, { Fields: fragment }>;
+
+  type expected = {
+    todos: Array<{
+      [tada.fragmentRefs]: {
+        Fields: fragment;
+      };
     } | null> | null;
   };
 

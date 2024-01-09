@@ -6,6 +6,7 @@ import type {
   NameNode,
 } from '@0no-co/graphql.web';
 
+import type { tada } from './namespace';
 import type { Obj, ObjValues } from './utils';
 import type { FragmentMap } from './fragments';
 
@@ -77,15 +78,26 @@ type FieldAlias<Field extends FieldNode> = Field['alias'] extends undefined
     : never;
 
 type FragmentSelection<
-  Selection extends { kind: Kind.FRAGMENT_SPREAD | Kind.INLINE_FRAGMENT },
+  Node extends { kind: Kind.FRAGMENT_SPREAD | Kind.INLINE_FRAGMENT },
+  Type extends ObjectLikeType,
+  Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
-> = Selection extends { kind: Kind.INLINE_FRAGMENT; selectionSet: any }
-  ? Selection['selectionSet']['selections']
-  : Selection extends { kind: Kind.FRAGMENT_SPREAD; name: any }
-    ? Selection['name']['value'] extends keyof Fragments
-      ? Fragments[Selection['name']['value']]['selectionSet']['selections']
-      : readonly []
-    : readonly [];
+> = Node extends { kind: Kind.INLINE_FRAGMENT; selectionSet: any }
+  ? Selection<Node['selectionSet']['selections'], Type, Introspection, Fragments>
+  : Node extends { kind: Kind.FRAGMENT_SPREAD; name: any }
+    ? Node['name']['value'] extends keyof Fragments
+      ? Fragments[Node['name']['value']] extends infer Fragment extends {
+          [tada.fragmentName]: string;
+        }
+        ? { [tada.fragmentRefs]: { [Name in Fragment[tada.fragmentName]]: Fragment } }
+        : Selection<
+            Fragments[Node['name']['value']]['selectionSet']['selections'],
+            Type,
+            Introspection,
+            Fragments
+          >
+      : {}
+    : {};
 
 type FragmentSpreadType<
   Node extends { kind: Kind.FRAGMENT_SPREAD | Kind.INLINE_FRAGMENT },
@@ -183,7 +195,7 @@ type FragmentSelectionContinue<
         ? PossibleType extends Subtype['name'] | TypenameOfType<Subtype>
           ?
               | (ShouldInclude<Node['directives']> extends true ? never : {})
-              | Selection<FragmentSelection<Node, Fragments>, Subtype, Introspection, Fragments>
+              | FragmentSelection<Node, Subtype, Introspection, Fragments>
           : {}
         : {}
       : {}) &
@@ -214,13 +226,13 @@ type DefinitionContinue<
 export type TypedDocument<
   Document extends { kind: Kind.DOCUMENT; definitions: any[] },
   Introspection extends IntrospectionLikeType,
-  Fragments extends { [name: string]: any } = FragmentMap<Document>,
-> = DefinitionContinue<Document['definitions'], Introspection, Fragments>;
+  Fragments extends { [name: string]: any } = {},
+> = DefinitionContinue<Document['definitions'], Introspection, FragmentMap<Document> & Fragments>;
 
 export type FragmentType<
   Document extends { kind: Kind.DOCUMENT; definitions: any[] },
   Introspection extends IntrospectionLikeType,
-  Fragments extends { [name: string]: any } = FragmentMap<Document>,
+  Fragments extends { [name: string]: any } = {},
 > = Document['definitions'][0] extends {
   kind: Kind.FRAGMENT_DEFINITION;
   typeCondition: { name: { value: infer TypeName } };
@@ -231,7 +243,7 @@ export type FragmentType<
           Document['definitions'][0]['selectionSet']['selections'],
           Introspection['types'][TypeName],
           Introspection,
-          Fragments
+          FragmentMap<Document> & Fragments
         >
       : never
     : never
