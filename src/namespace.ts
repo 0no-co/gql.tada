@@ -2,8 +2,11 @@ declare namespace tada {
   const fragmentRefs: unique symbol;
   export type fragmentRefs = typeof fragmentRefs;
 
-  const fragmentDefs: unique symbol;
-  export type fragmentDefs = typeof fragmentDefs;
+  const fragmentName: unique symbol;
+  export type fragmentName = typeof fragmentName;
+
+  const fragmentCondition: unique symbol;
+  export type fragmentCondition = typeof fragmentCondition;
 }
 
 export type { tada };

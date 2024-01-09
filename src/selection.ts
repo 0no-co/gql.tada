@@ -7,6 +7,7 @@ import type {
 } from '@0no-co/graphql.web';
 
 import type { Obj, ObjValues } from './utils';
+import type { FragmentMap } from './fragments';
 
 import type {
   Introspection as IntrospectionType,
@@ -252,19 +253,6 @@ export type TypedDocument<
   Introspection extends IntrospectionType<any>,
   Fragments extends { [name: string]: any } = FragmentMap<Document>
 > = DefinitionContinue<Document['definitions'], Introspection, Fragments>;
-
-type _FragmentMapContinue<Definitions> = Definitions extends readonly [
-  infer Definition,
-  ...infer Rest
-]
-  ? (Definition extends { kind: Kind.FRAGMENT_DEFINITION; name: any }
-      ? { [Prop in Definition['name']['value']]: Definitions[0] }
-      : {}) &
-      _FragmentMapContinue<Rest>
-  : {};
-
-export type FragmentMap<Document extends { kind: Kind.DOCUMENT; definitions: any[] }> =
-  _FragmentMapContinue<Document['definitions']>;
 
 export type FragmentType<
   Document extends { kind: Kind.DOCUMENT; definitions: any[] },
