@@ -196,17 +196,15 @@ type PossibleFragmentsSelection<
   Type extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any }
-> = Type extends { kind: 'UNION' | 'INTERFACE'; possibleTypes: infer PossibleTypes }
-  ? PossibleTypes extends string
-    ? ObjValues<{
-        [SubtypeName in PossibleTypes]: FragmentSelectionContinue<
-          PossibleFragmentsContinue<SubtypeName, Selections, Type, Introspection, Fragments>,
-          Type,
-          Introspection,
-          Fragments
-        >;
-      }>
-    : {}
+> = Type extends { kind: 'UNION' | 'INTERFACE'; possibleTypes: any }
+  ? ObjValues<{
+      [SubtypeName in Type['possibleTypes']]: FragmentSelectionContinue<
+        PossibleFragmentsContinue<SubtypeName, Selections, Type, Introspection, Fragments>,
+        Type,
+        Introspection,
+        Fragments
+      >;
+    }>
   : Type extends { kind: 'OBJECT' }
   ? FragmentSelectionContinue<Selections, Type, Introspection, Fragments>
   : {};
