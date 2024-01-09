@@ -2,7 +2,7 @@ import type { Kind } from '@0no-co/graphql.web';
 
 type _FragmentMapContinue<Definitions> = Definitions extends readonly [
   infer Definition,
-  ...infer Rest
+  ...infer Rest,
 ]
   ? (Definition extends { kind: Kind.FRAGMENT_DEFINITION; name: any }
       ? { [Name in Definition['name']['value']]: Definition }

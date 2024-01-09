@@ -123,7 +123,7 @@ export type kitchensinkDocument = {
             value: 'MOBILE';
           };
           directives: [];
-        }
+        },
       ];
       directives: [
         {
@@ -133,7 +133,7 @@ export type kitchensinkDocument = {
             value: 'onQuery';
           };
           arguments: [];
-        }
+        },
       ];
       selectionSet: {
         kind: Kind.SELECTION_SET;
@@ -165,10 +165,10 @@ export type kitchensinkDocument = {
                     {
                       kind: Kind.INT;
                       value: string;
-                    }
+                    },
                   ];
                 };
-              }
+              },
             ];
             directives: [];
             selectionSet: {
@@ -202,7 +202,7 @@ export type kitchensinkDocument = {
                         value: 'onInlineFragment';
                       };
                       arguments: [];
-                    }
+                    },
                   ];
                   selectionSet: {
                     kind: Kind.SELECTION_SET;
@@ -265,7 +265,7 @@ export type kitchensinkDocument = {
                                       value: 'foo';
                                     };
                                   };
-                                }
+                                },
                               ];
                               directives: [
                                 {
@@ -288,9 +288,9 @@ export type kitchensinkDocument = {
                                           value: 'foo';
                                         };
                                       };
-                                    }
+                                    },
                                   ];
-                                }
+                                },
                               ];
                               selectionSet: {
                                 kind: Kind.SELECTION_SET;
@@ -320,15 +320,15 @@ export type kitchensinkDocument = {
                                           value: 'onFragmentSpread';
                                         };
                                         arguments: [];
-                                      }
+                                      },
                                     ];
-                                  }
+                                  },
                                 ];
                               };
-                            }
+                            },
                           ];
                         };
-                      }
+                      },
                     ];
                   };
                 },
@@ -356,9 +356,9 @@ export type kitchensinkDocument = {
                               value: 'foo';
                             };
                           };
-                        }
+                        },
                       ];
-                    }
+                    },
                   ];
                   selectionSet: {
                     kind: Kind.SELECTION_SET;
@@ -373,7 +373,7 @@ export type kitchensinkDocument = {
                         directives: [];
                         alias: undefined;
                         selectionSet: undefined;
-                      }
+                      },
                     ];
                   };
                 },
@@ -394,13 +394,13 @@ export type kitchensinkDocument = {
                         directives: [];
                         alias: undefined;
                         selectionSet: undefined;
-                      }
+                      },
                     ];
                   };
-                }
+                },
               ];
             };
-          }
+          },
         ];
       };
     },
@@ -420,7 +420,7 @@ export type kitchensinkDocument = {
             value: 'onMutation';
           };
           arguments: [];
-        }
+        },
       ];
       selectionSet: {
         kind: Kind.SELECTION_SET;
@@ -443,7 +443,7 @@ export type kitchensinkDocument = {
                   kind: Kind.INT;
                   value: string;
                 };
-              }
+              },
             ];
             directives: [
               {
@@ -453,7 +453,7 @@ export type kitchensinkDocument = {
                   value: 'onField';
                 };
                 arguments: [];
-              }
+              },
             ];
             selectionSet: {
               kind: Kind.SELECTION_SET;
@@ -485,17 +485,17 @@ export type kitchensinkDocument = {
                               value: 'onField';
                             };
                             arguments: [];
-                          }
+                          },
                         ];
                         alias: undefined;
                         selectionSet: undefined;
-                      }
+                      },
                     ];
                   };
-                }
+                },
               ];
             };
-          }
+          },
         ];
       };
     },
@@ -525,7 +525,7 @@ export type kitchensinkDocument = {
           };
           directives: [];
           defaultValue: undefined;
-        }
+        },
       ];
       directives: [
         {
@@ -535,7 +535,7 @@ export type kitchensinkDocument = {
             value: 'onSubscription';
           };
           arguments: [];
-        }
+        },
       ];
       selectionSet: {
         kind: Kind.SELECTION_SET;
@@ -561,7 +561,7 @@ export type kitchensinkDocument = {
                     value: 'input';
                   };
                 };
-              }
+              },
             ];
             directives: [];
             selectionSet: {
@@ -601,7 +601,7 @@ export type kitchensinkDocument = {
                               selectionSet: undefined;
                               arguments: [];
                               directives: [];
-                            }
+                            },
                           ];
                         };
                       },
@@ -627,16 +627,16 @@ export type kitchensinkDocument = {
                               selectionSet: undefined;
                               arguments: [];
                               directives: [];
-                            }
+                            },
                           ];
                         };
-                      }
+                      },
                     ];
                   };
-                }
+                },
               ];
             };
-          }
+          },
         ];
       };
     },
@@ -661,7 +661,7 @@ export type kitchensinkDocument = {
             value: 'onFragmentDefinition';
           };
           arguments: [];
-        }
+        },
       ];
       selectionSet: {
         kind: Kind.SELECTION_SET;
@@ -732,13 +732,13 @@ export type kitchensinkDocument = {
                         value: string;
                         block: true;
                       };
-                    }
+                    },
                   ];
                 };
-              }
+              },
             ];
             directives: [];
-          }
+          },
         ];
       };
     },
@@ -794,7 +794,7 @@ export type kitchensinkDocument = {
                 value: {
                   kind: Kind.NULL;
                 };
-              }
+              },
             ];
             directives: [];
           },
@@ -808,7 +808,7 @@ export type kitchensinkDocument = {
             selectionSet: undefined;
             arguments: [];
             directives: [];
-          }
+          },
         ];
       };
     },
@@ -834,9 +834,9 @@ export type kitchensinkDocument = {
             selectionSet: undefined;
             arguments: [];
             directives: [];
-          }
+          },
         ];
       };
-    }
+    },
   ];
 };

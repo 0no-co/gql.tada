@@ -45,16 +45,16 @@ describe('TakeValue', () => {
                           kind: Kind.NAME;
                           value: 'var';
                         };
-                      }
+                      },
                     ];
                   };
-                }
+                },
               ];
             };
-          }
+          },
         ];
       },
-      ''
+      '',
     ];
 
     expectTypeOf<TakeValue<'{ a: { b: [ $var ] } }', false>>().toEqualTypeOf<expected>();
@@ -83,9 +83,9 @@ describe('TakeVarDefinitions', () => {
           };
           defaultValue: undefined;
           directives: [];
-        }
+        },
       ],
-      ''
+      '',
     ];
 
     expectTypeOf<TakeVarDefinitions<'($x: A)'>>().toEqualTypeOf<expected>();
@@ -131,9 +131,9 @@ describe('TakeVarDefinitions', () => {
           };
           defaultValue: undefined;
           directives: [];
-        }
+        },
       ],
-      ''
+      '',
     ];
 
     expectTypeOf<TakeVarDefinitions<'($x: A, $y: B)'>>().toEqualTypeOf<expected>();
@@ -164,7 +164,7 @@ describe('TakeVarDefinitions', () => {
         };
         directives: [];
       },
-      ''
+      '',
     ];
 
     expectTypeOf<TakeVarDefinition<'$x: Complex = "42"'>>().toEqualTypeOf<expected>();
@@ -201,10 +201,10 @@ describe('TakeVarDefinitions', () => {
               value: 'bar';
             };
             arguments: [];
-          }
+          },
         ];
       },
-      ''
+      '',
     ];
 
     expectTypeOf<TakeVarDefinition<'$x: Boolean = false @bar'>>().toEqualTypeOf<expected>();
@@ -224,10 +224,10 @@ describe('TakeSelectionSetContinue', () => {
               kind: Kind.NAME;
               value: 'On';
             };
-          }
+          },
         ];
       },
-      ''
+      '',
     ];
 
     expectTypeOf<TakeSelectionSetContinue<'{ ...On }'>>().toEqualTypeOf<expected>();
@@ -257,11 +257,11 @@ describe('TakeOperationDefinition', () => {
               alias: undefined;
               selectionSet: undefined;
               directives: [];
-            }
+            },
           ];
         };
       },
-      ''
+      '',
     ];
 
     expectTypeOf<TakeOperationDefinition<'mutation { mutationField }'>>().toEqualTypeOf<expected>();
@@ -291,11 +291,11 @@ describe('TakeOperationDefinition', () => {
               alias: undefined;
               selectionSet: undefined;
               directives: [];
-            }
+            },
           ];
         };
       },
-      ''
+      '',
     ];
 
     expectTypeOf<
@@ -332,11 +332,11 @@ describe('TakeOperationDefinition', () => {
               alias: undefined;
               selectionSet: undefined;
               directives: [];
-            }
+            },
           ];
         };
       },
-      ''
+      '',
     ];
 
     expectTypeOf<TakeFragmentDefinition<'fragment { test }'>>().toEqualTypeOf<void>();
@@ -380,9 +380,9 @@ describe('TakeField', () => {
                 value: {
                   kind: Kind.NULL;
                 };
-              }
+              },
             ];
-          }
+          },
         ];
         selectionSet: {
           kind: Kind.SELECTION_SET;
@@ -397,11 +397,11 @@ describe('TakeField', () => {
               alias: undefined;
               selectionSet: undefined;
               directives: [];
-            }
+            },
           ];
         };
       },
-      ''
+      '',
     ];
 
     expectTypeOf<TakeField<'field: '>>().toEqualTypeOf<void>();
@@ -439,12 +439,12 @@ describe('TakeField', () => {
             value: {
               kind: Kind.NULL;
             };
-          }
+          },
         ];
         directives: [];
         selectionSet: undefined;
       },
-      ''
+      '',
     ];
 
     expectTypeOf<TakeField<'field()'>>().toEqualTypeOf<void>();
@@ -475,10 +475,10 @@ describe('TakeDirective', () => {
             value: {
               kind: Kind.NULL;
             };
-          }
+          },
         ];
       },
-      ''
+      '',
     ];
 
     expectTypeOf<TakeDirective<'@', false>>().toEqualTypeOf<void>();
@@ -514,11 +514,11 @@ describe('TakeFragmentSpread', () => {
               alias: undefined;
               selectionSet: undefined;
               directives: [];
-            }
+            },
           ];
         };
       },
-      ''
+      '',
     ];
 
     expectTypeOf<TakeFragmentSpread<'... on Test'>>().toEqualTypeOf<void>();
@@ -546,11 +546,11 @@ describe('TakeFragmentSpread', () => {
               alias: undefined;
               selectionSet: undefined;
               directives: [];
-            }
+            },
           ];
         };
       },
-      ''
+      '',
     ];
 
     expectTypeOf<TakeFragmentSpread<'... on Test'>>().toEqualTypeOf<void>();
@@ -591,10 +591,10 @@ describe('TakeValue', () => {
             kind: Kind.STRING;
             value: string;
             block: false;
-          }
+          },
         ];
       },
-      ''
+      '',
     ];
 
     expectTypeOf<TakeValue<'[123 "abc"]', false>>().toEqualTypeOf<expected>();
@@ -664,10 +664,10 @@ describe('TakeValue', () => {
               value: {
                 kind: Kind.NULL;
               };
-            }
+            },
           ];
         },
-        ''
+        '',
       ]
     >();
 
@@ -687,10 +687,10 @@ describe('TakeValue', () => {
                 value: string;
                 block: false;
               };
-            }
+            },
           ];
         },
-        ''
+        '',
       ]
     >();
 
@@ -722,10 +722,10 @@ describe('TakeValue', () => {
                 value: string;
                 block: true;
               };
-            }
+            },
           ];
         },
-        ''
+        '',
       ]
     >();
   });
@@ -742,7 +742,7 @@ describe('TakeValue', () => {
           kind: Kind.LIST;
           values: [{ kind: Kind.NULL }];
         },
-        ''
+        '',
       ]
     >();
   });
@@ -757,7 +757,7 @@ describe('TakeValue', () => {
             value: 'var';
           };
         },
-        ''
+        '',
       ]
     >();
 
@@ -780,7 +780,7 @@ describe('TakeType', () => {
             value: 'Type';
           };
         },
-        ''
+        '',
       ]
     >();
 
@@ -796,7 +796,7 @@ describe('TakeType', () => {
             };
           };
         },
-        ''
+        '',
       ]
     >();
 
@@ -815,7 +815,7 @@ describe('TakeType', () => {
             };
           };
         },
-        ''
+        '',
       ]
     >();
 
@@ -837,7 +837,7 @@ describe('TakeType', () => {
             };
           };
         },
-        ''
+        '',
       ]
     >();
   });

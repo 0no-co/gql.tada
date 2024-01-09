@@ -45,7 +45,7 @@ export type Overload<U> = (U extends any ? (k: U) => void : never) extends (k: i
  */
 export type TypedDocumentNode<
   Result = { [key: string]: any },
-  Variables = { [key: string]: any }
+  Variables = { [key: string]: any },
 > = DocumentNode & {
   /** Type to support `@graphql-typed-document-node/core`
    * @internal

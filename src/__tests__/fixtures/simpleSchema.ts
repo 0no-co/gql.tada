@@ -260,7 +260,7 @@ export type simpleSchema = {
             ofType: null;
           };
           defaultValue: null;
-        }
+        },
       ];
     };
 

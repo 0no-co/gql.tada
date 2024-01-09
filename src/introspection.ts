@@ -106,14 +106,14 @@ type _scalarMap<T extends IntrospectionScalarType> = {
   type: T['name'] extends 'Int'
     ? number
     : T['name'] extends 'Float'
-    ? number
-    : T['name'] extends 'String'
-    ? string
-    : T['name'] extends 'Boolean'
-    ? boolean
-    : T['name'] extends 'ID'
-    ? number | string
-    : unknown;
+      ? number
+      : T['name'] extends 'String'
+        ? string
+        : T['name'] extends 'Boolean'
+          ? boolean
+          : T['name'] extends 'ID'
+            ? number | string
+            : unknown;
 };
 
 type _enumMap<T extends IntrospectionEnumType> = {
@@ -153,16 +153,16 @@ type _unionMap<T extends IntrospectionUnionType> = {
 type _typeMap<T> = T extends IntrospectionScalarType
   ? _scalarMap<T>
   : T extends IntrospectionEnumType
-  ? _enumMap<T>
-  : T extends IntrospectionObjectType
-  ? _objectMap<T>
-  : T extends IntrospectionInterfaceType
-  ? _interfaceMap<T>
-  : T extends IntrospectionUnionType
-  ? _unionMap<T>
-  : T extends IntrospectionInputObjectType
-  ? _inputObjectMap<T>
-  : never;
+    ? _enumMap<T>
+    : T extends IntrospectionObjectType
+      ? _objectMap<T>
+      : T extends IntrospectionInterfaceType
+        ? _interfaceMap<T>
+        : T extends IntrospectionUnionType
+          ? _unionMap<T>
+          : T extends IntrospectionInputObjectType
+            ? _inputObjectMap<T>
+            : never;
 
 type _introspectionTypesMap<T extends IntrospectionQuery> = Obj<{
   [P in T['__schema']['types'][number]['name']]: T['__schema']['types'][number] extends infer Type
