@@ -231,21 +231,20 @@ type DefinitionContinue<
   Introspection extends IntrospectionType<any>,
   Fragments extends { [name: string]: any }
 > = Definitions extends readonly [infer Definition, ...infer Rest]
-  ? (Definition extends {
+  ? Definition extends {
       kind: Kind.OPERATION_DEFINITION;
       selectionSet: { kind: Kind.SELECTION_SET; selections: [...infer Selections] };
       operation: any;
     }
-      ? Introspection['types'][Introspection[Definition['operation']]] extends ObjectLikeType
-        ? Selection<
-            Selections,
-            Introspection['types'][Introspection[Definition['operation']]],
-            Introspection,
-            Fragments
-          >
-        : {}
-      : {}) &
-      DefinitionContinue<Rest, Introspection, Fragments>
+    ? Introspection['types'][Introspection[Definition['operation']]] extends ObjectLikeType
+      ? Selection<
+          Selections,
+          Introspection['types'][Introspection[Definition['operation']]],
+          Introspection,
+          Fragments
+        >
+      : {}
+    : DefinitionContinue<Rest, Introspection, Fragments>
   : {};
 
 export type TypedDocument<
