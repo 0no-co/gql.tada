@@ -1,5 +1,6 @@
 import type { Kind } from '@0no-co/graphql.web';
 import type { DocumentNodeLike } from './parser';
+import type { obj } from './utils';
 
 /** Private namespace holding our symbols for markers.
  *
@@ -20,23 +21,19 @@ declare namespace $tada {
   export type fragmentId = typeof fragmentId;
 }
 
-type decorateDocument<Document extends DocumentNodeLike> = Document['definitions'][0] extends {
+type decorateFragmentDef<Document extends DocumentNodeLike> = Document['definitions'][0] extends {
   kind: Kind.FRAGMENT_DEFINITION;
   name: any;
   typeCondition: any;
 }
-  ? {
-      [$tada.fragmentDef]?: Document['definitions'][0] & {
-        readonly [$tada.fragmentId]: unique symbol;
-      };
-    }
-  : {};
+  ? obj<Document['definitions'][0] & { readonly [$tada.fragmentId]: unique symbol }>
+  : never;
 
 type getFragmentsOfDocumentsRec<Documents> = Documents extends readonly [
   infer Document,
   ...infer Rest,
 ]
-  ? (Document extends { [$tada.fragmentDef]?: any }
+  ? (Document extends FragmentDefDecorationLike
       ? Exclude<Document[$tada.fragmentDef], undefined> extends infer FragmentDef extends {
           kind: Kind.FRAGMENT_DEFINITION;
           name: any;
@@ -48,13 +45,25 @@ type getFragmentsOfDocumentsRec<Documents> = Documents extends readonly [
       getFragmentsOfDocumentsRec<Rest>
   : {};
 
-type FragmentDocumentNode = {
+interface FragmentDefDecorationLike {
   [$tada.fragmentDef]?: {
     readonly [$tada.fragmentId]: symbol;
     kind: Kind.FRAGMENT_DEFINITION;
     name: any;
     typeCondition: any;
   };
-};
+}
 
-export type { $tada, decorateDocument, getFragmentsOfDocumentsRec, FragmentDocumentNode };
+interface FragmentDefDecoration<Definition> {
+  [$tada.fragmentDef]?: Definition extends FragmentDefDecorationLike[$tada.fragmentDef]
+    ? Definition
+    : never;
+}
+
+export type {
+  $tada,
+  decorateFragmentDef,
+  getFragmentsOfDocumentsRec,
+  FragmentDefDecorationLike,
+  FragmentDefDecoration,
+};

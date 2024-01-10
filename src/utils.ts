@@ -54,28 +54,3 @@ export interface DocumentDecoration<
    */
   __ensureTypesOfVariablesAndResultMatching?: (variables: Variables) => Result;
 }
-
-/** A GraphQL `DocumentNode` with attached generics for its result data and variables.
- *
- * @remarks
- * A GraphQL {@link DocumentNode} defines both the variables it accepts on request and the `data`
- * shape it delivers on a response in the GraphQL query language.
- *
- * To bridge the gap to TypeScript, tools may be used to generate TypeScript types that define the shape
- * of `data` and `variables` ahead of time. These types are then attached to GraphQL documents using this
- * `TypedDocumentNode` type.
- *
- * Using a `DocumentNode` that is typed like this will cause any `urql` API to type its input `variables`
- * and resulting `data` using the types provided.
- *
- * @privateRemarks
- * For compatibility reasons this type has been copied and internalized from:
- * https://github.com/dotansimha/graphql-typed-document-node/blob/3711b12/packages/core/src/index.ts#L3-L10
- *
- * @see {@link https://github.com/dotansimha/graphql-typed-document-node} for more information.
- */
-export interface TypedDocumentNode<
-  Result = { [key: string]: any },
-  Variables = { [key: string]: any },
-> extends DocumentNode,
-    DocumentDecoration<Result, Variables> {}
