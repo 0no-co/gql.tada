@@ -8,10 +8,10 @@ const SEE_LINE = /^See:\s*(.*)/i;
 const TRAILING_CHAR = /[.;:]$/g;
 const listFormatter = new Intl.ListFormat('en-US');
 
-const getSummaryLines = cs => {
+const getSummaryLines = (cs) => {
   let lines = cs.summary.trim().split(/\r?\n/);
-  if (!lines.some(line => /```/.test(line))) {
-    lines = lines.map(l => l.trim()).filter(Boolean);
+  if (!lines.some((line) => /```/.test(line))) {
+    lines = lines.map((l) => l.trim()).filter(Boolean);
     const size = lines.length;
     if (size > 0) {
       lines[size - 1] = lines[size - 1].replace(TRAILING_CHAR, '');
@@ -21,8 +21,8 @@ const getSummaryLines = cs => {
 };
 
 /** Creates a "(See X)" string from a template */
-const templateSeeRef = links => {
-  const humanReadableLinks = links.filter(Boolean).map(link => {
+const templateSeeRef = (links) => {
+  const humanReadableLinks = links.filter(Boolean).map((link) => {
     if (typeof link === 'string') return link;
     return link.pull || link.commit;
   });
@@ -39,11 +39,11 @@ const changelogFunctions = {
     if (dependenciesUpdated.length === 0) return '';
 
     const dependenciesLinks = await Promise.all(
-      changesets.map(async cs => {
+      changesets.map(async (cs) => {
         if (!cs.commit) return undefined;
 
         const lines = getSummaryLines(cs);
-        const prLine = lines.find(line => SEE_LINE.test(line));
+        const prLine = lines.find((line) => SEE_LINE.test(line));
         if (prLine) {
           const match = prLine.match(SEE_LINE);
           return (match && match[1].trim()) || undefined;
@@ -63,7 +63,7 @@ const changelogFunctions = {
     const seeRef = templateSeeRef(dependenciesLinks);
     if (seeRef) changesetLink += ` ${seeRef}`;
 
-    const detailsLinks = dependenciesUpdated.map(dep => {
+    const detailsLinks = dependenciesUpdated.map((dep) => {
       return `  - ${dep.name}@${dep.newVersion}`;
     });
 
@@ -73,7 +73,7 @@ const changelogFunctions = {
     let pull, commit, user;
 
     const lines = getSummaryLines(changeset);
-    const prLineIndex = lines.findIndex(line => SEE_LINE.test(line));
+    const prLineIndex = lines.findIndex((line) => SEE_LINE.test(line));
     if (prLineIndex > -1) {
       const match = lines[prLineIndex].match(SEE_LINE);
       pull = (match && match[1].trim()) || undefined;
@@ -100,7 +100,7 @@ const changelogFunctions = {
 
     let str = `- ${annotation}${firstLine}`;
     if (futureLines.length > 0) {
-      str += `\n${futureLines.map(l => `  ${l}`).join('\n')}`;
+      str += `\n${futureLines.map((l) => `  ${l}`).join('\n')}`;
     }
 
     const endsWithParagraph = /(?<=(?:[!;?.]|```) *)$/g;

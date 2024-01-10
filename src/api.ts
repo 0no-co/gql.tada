@@ -1,4 +1,5 @@
-import { Kind, DocumentNode, DefinitionNode, parse as _parse } from '@0no-co/graphql.web';
+import type { DocumentNode, DefinitionNode } from '@0no-co/graphql.web';
+import { Kind, parse as _parse } from '@0no-co/graphql.web';
 
 import type {
   IntrospectionQuery,

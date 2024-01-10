@@ -1,4 +1,4 @@
-import {
+import type {
   CompilerHost,
   StringLiteralLike,
   StringLiteral,
@@ -10,12 +10,14 @@ import {
   SyntaxKind,
   ModuleDeclaration,
   ModuleBlock,
-  ModuleKind,
   Mutable,
   Node,
   ResolutionMode,
   JSDocParsingMode,
   CreateSourceFileOptions,
+} from '@0no-co/typescript.js';
+import {
+  ModuleKind,
   walkUpParenthesizedExpressions,
   isImportEqualsDeclaration,
   toPath,

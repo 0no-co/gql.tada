@@ -1,5 +1,4 @@
-import {
-  ModuleResolutionKind,
+import type {
   CompilerOptions,
   ResolvedModule,
   CompilerHost,
@@ -7,6 +6,9 @@ import {
   CreateSourceFileOptions,
   SourceFile,
   JsxEmit,
+} from '@0no-co/typescript.js';
+import {
+  ModuleResolutionKind,
   createModuleResolutionCache,
   resolveModuleName,
   createSourceFile,

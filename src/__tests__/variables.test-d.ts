@@ -1,8 +1,8 @@
 import { expectTypeOf, test } from 'vitest';
-import { simpleIntrospection } from './fixtures/simpleIntrospection';
-import { parseDocument } from '../parser';
-import { mapIntrospection } from '../introspection';
-import { getVariablesType } from '../variables';
+import type { simpleIntrospection } from './fixtures/simpleIntrospection';
+import type { parseDocument } from '../parser';
+import type { mapIntrospection } from '../introspection';
+import type { getVariablesType } from '../variables';
 
 type introspection = mapIntrospection<typeof simpleIntrospection>;
 

@@ -1,5 +1,6 @@
 import type { TypeHost } from './typeCheckerHost';
-import { DiagnosticMessageChain, createTypeChecker } from '@0no-co/typescript.js';
+import type { DiagnosticMessageChain } from '@0no-co/typescript.js';
+import { createTypeChecker } from '@0no-co/typescript.js';
 
 export type { FileData, Files, VirtualHost } from './virtualHost';
 export type { TypeHost } from './typeCheckerHost';
@@ -16,11 +17,11 @@ export {
 
 export function runDiagnostics(host: TypeHost) {
   const checker = createTypeChecker(host);
-  const diagnostics = checker.getDiagnostics().filter(x => !x.file?.isDeclarationFile);
+  const diagnostics = checker.getDiagnostics().filter((x) => !x.file?.isDeclarationFile);
   if (diagnostics.length) {
     throw new Error(
       diagnostics
-        .map(x => {
+        .map((x) => {
           let text = (x.messageText as DiagnosticMessageChain)?.messageText || x.messageText;
           if (x.file) text += ` (in ${x.file.path})`;
           return text;

@@ -6,7 +6,7 @@ const testTypeHost = test.each([
   { strictNullChecks: true },
 ]);
 
-testTypeHost('parses kitchen sink query (%o)', options => {
+testTypeHost('parses kitchen sink query (%o)', (options) => {
   const virtualHost = ts.createVirtualHost({
     ...ts.readVirtualModule('expect-type'),
     ...ts.readVirtualModule('@0no-co/graphql.web'),

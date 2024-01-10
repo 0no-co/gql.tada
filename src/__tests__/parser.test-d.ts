@@ -1,7 +1,7 @@
 import { describe, it, expectTypeOf } from 'vitest';
-import { Kind, OperationTypeNode, DocumentNode } from '@0no-co/graphql.web';
+import type { Kind, OperationTypeNode, DocumentNode } from '@0no-co/graphql.web';
 
-import {
+import type {
   parseDocument,
   takeValue,
   takeType,

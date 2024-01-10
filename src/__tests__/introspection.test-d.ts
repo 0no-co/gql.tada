@@ -1,7 +1,7 @@
 import { test, expectTypeOf } from 'vitest';
-import { simpleIntrospection } from './fixtures/simpleIntrospection';
-import { simpleSchema } from './fixtures/simpleSchema';
-import { mapIntrospection } from '../introspection';
+import type { simpleIntrospection } from './fixtures/simpleIntrospection';
+import type { simpleSchema } from './fixtures/simpleSchema';
+import type { mapIntrospection } from '../introspection';
 
 test('prepares sample schema', () => {
   type expected = mapIntrospection<typeof simpleIntrospection>;

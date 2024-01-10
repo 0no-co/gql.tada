@@ -1,14 +1,16 @@
-import {
+import type {
   CompilerHost,
   CompilerOptions,
   SourceFile,
   TypeCheckerHost,
-  FileIncludeKind,
   RedirectTargetsMap,
   ModeAwareCache,
   ResolvedModuleWithFailedLookupLocations,
   StringLiteralLike,
   Path,
+} from '@0no-co/typescript.js';
+import {
+  FileIncludeKind,
   getNormalizedAbsolutePath,
   createModeAwareCache,
   arrayToMultiMap,
@@ -101,7 +103,7 @@ export function createTypeHost(options: TypeHostOptions): TypeHost {
         currentDirectory
       );
       return host.resolveModuleNames!(
-        moduleNames.map(literal => literal.text),
+        moduleNames.map((literal) => literal.text),
         containingFileName,
         undefined,
         undefined,
@@ -168,7 +170,7 @@ export function createTypeHost(options: TypeHostOptions): TypeHost {
   const checker = createTypeChecker(typeHost);
   const diagnostics = checker.getGlobalDiagnostics();
   if (diagnostics.length) {
-    throw new Error(diagnostics.map(x => x.messageText).join('\n'));
+    throw new Error(diagnostics.map((x) => x.messageText).join('\n'));
   }
 
   return typeHost;

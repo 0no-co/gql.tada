@@ -7,7 +7,7 @@ const testTypeHost = test.each([
 ]);
 
 describe('simple introspection', () => {
-  testTypeHost('infers simple document (%o)', options => {
+  testTypeHost('infers simple document (%o)', (options) => {
     const virtualHost = ts.createVirtualHost({
       ...ts.readVirtualModule('expect-type'),
       ...ts.readVirtualModule('@0no-co/graphql.web'),
@@ -54,7 +54,7 @@ describe('simple introspection', () => {
     );
   });
 
-  testTypeHost('infers union and interface documents (%o)', options => {
+  testTypeHost('infers union and interface documents (%o)', (options) => {
     const virtualHost = ts.createVirtualHost({
       ...ts.readVirtualModule('expect-type'),
       ...ts.readVirtualModule('@0no-co/graphql.web'),

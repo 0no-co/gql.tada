@@ -1,11 +1,11 @@
 import { expectTypeOf, test } from 'vitest';
 
-import { simpleSchema } from './fixtures/simpleSchema';
-import { parseDocument } from '../parser';
-import { mapIntrospection } from '../introspection';
-import { getDocumentType } from '../selection';
+import type { simpleSchema } from './fixtures/simpleSchema';
+import type { parseDocument } from '../parser';
+import type { mapIntrospection } from '../introspection';
+import type { getDocumentType } from '../selection';
 
-import {
+import type {
   $tada,
   decorateFragmentDef,
   getFragmentsOfDocumentsRec,

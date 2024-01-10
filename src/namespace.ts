@@ -1,6 +1,5 @@
 import type { Kind, DocumentNode } from '@0no-co/graphql.web';
 import type { DocumentNodeLike } from './parser';
-import type { obj } from './utils';
 
 /** Private namespace holding our symbols for markers.
  *

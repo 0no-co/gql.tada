@@ -51,7 +51,8 @@
   "prettier": {
     "singleQuote": true,
     "tabWidth": 2,
-    "printWidth": 100
+    "printWidth": 100,
+    "trailingComma": "es5"
   },
   "lint-staged": {
     "*.{ts,js}": "eslint -c scripts/eslint-preset.js --fix",
