@@ -843,6 +843,11 @@ describe('takeType', () => {
 });
 
 describe('parseDocument', () => {
+  it('should not parse invalid documents', () => {
+    type actual = parseDocument<'INVALID'>;
+    expectTypeOf<actual>().toEqualTypeOf<void>();
+  });
+
   it('parses kitchen sink query', () => {
     type kitchensinkQuery = typeof import('./fixtures/kitchensinkQuery').kitchensinkQuery;
     type kitchensinkDocument = import('./fixtures/kitchensinkQuery').kitchensinkDocument;

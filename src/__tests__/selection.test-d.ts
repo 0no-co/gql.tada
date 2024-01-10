@@ -252,7 +252,7 @@ test('infers unions and interfaces correctly', () => {
   expectTypeOf<expected>().toEqualTypeOf<actual>();
 });
 
-test('infers queries from GitHub schemaspection schema', () => {
+test('infers queries from GitHub introspection schema', () => {
   type schema = mapIntrospection<
     typeof import('./fixtures/githubIntrospection').githubIntrospection
   >;

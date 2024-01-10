@@ -489,9 +489,11 @@ type _takeDocumentRec<
 
 type parseDocument<In extends string> = _takeDocumentRec<[], skipIgnored<In>> extends [
   [...infer Definitions],
-  infer _,
+  infer _Rest,
 ]
-  ? { kind: Kind.DOCUMENT; definitions: Definitions }
+  ? Definitions extends []
+    ? void
+    : { kind: Kind.DOCUMENT; definitions: Definitions }
   : void;
 
 type parseValue<In> = takeValue<skipIgnored<In>, false> extends [infer Node, string] ? Node : void;
