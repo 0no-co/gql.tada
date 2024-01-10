@@ -8,7 +8,7 @@ import type {
 
 import type { tada } from './namespace';
 import type { obj, objValues } from './utils';
-import type { FragmentMap } from './fragments';
+import type { getFragmentMap } from './fragments';
 
 import type {
   IntrospectionField,
@@ -223,7 +223,7 @@ type getDocumentType<
 > = getDefinitionSelectionRec<
   Document['definitions'],
   Introspection,
-  FragmentMap<Document> & Fragments
+  getFragmentMap<Document> & Fragments
 >;
 
 type getFragmentType<
@@ -240,7 +240,7 @@ type getFragmentType<
           Document['definitions'][0]['selectionSet']['selections'],
           Introspection['types'][TypeName],
           Introspection,
-          FragmentMap<Document> & Fragments
+          getFragmentMap<Document> & Fragments
         >
       : never
     : never
