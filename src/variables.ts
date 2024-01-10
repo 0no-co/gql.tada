@@ -13,7 +13,7 @@ type getInputObjectTypeRec<
   : {};
 
 type getScalarType<
-  TypeName,
+  TypeName extends string,
   Introspection extends IntrospectionLikeType,
 > = TypeName extends keyof Introspection['types']
   ? Introspection['types'][TypeName] extends {
@@ -27,20 +27,18 @@ type getScalarType<
         }
       ? obj<getInputObjectTypeRec<InputFields, Introspection>>
       : never
-  : never;
+  : unknown;
 
 type _unwrapTypeRec<
-  Type extends TypeNode,
+  TypeRef extends TypeNode,
   Introspection extends IntrospectionLikeType,
-> = Type extends { kind: 'NON_NULL' }
-  ? _unwrapTypeRec<Type['ofType'], Introspection>
-  : Type extends { kind: 'LIST' }
-    ? Array<unwrapType<Type['ofType'], Introspection>>
-    : Type extends { name: infer Name }
-      ? Name extends keyof Introspection['types']
-        ? getScalarType<Name, Introspection>
-        : unknown
-      : never;
+> = TypeRef extends { kind: 'NON_NULL' }
+  ? _unwrapTypeRec<TypeRef['ofType'], Introspection>
+  : TypeRef extends { kind: 'LIST' }
+    ? Array<unwrapType<TypeRef['ofType'], Introspection>>
+    : TypeRef extends { name: any }
+      ? getScalarType<TypeRef['name'], Introspection>
+      : unknown;
 
 type unwrapType<Type extends TypeNode, Introspection extends IntrospectionLikeType> = Type extends {
   kind: 'NON_NULL';
@@ -55,11 +53,9 @@ type _nwrapTypeRefRec<
   ? _nwrapTypeRefRec<Type['type'], Introspection>
   : Type extends { kind: Kind.LIST_TYPE }
     ? Array<unwrapTypeRef<Type['type'], Introspection>>
-    : Type extends { kind: Kind.NAMED_TYPE; name: { kind: Kind.NAME; value: infer Name } }
-      ? Name extends keyof Introspection['types']
-        ? getScalarType<Name, Introspection>
-        : unknown
-      : never;
+    : Type extends { kind: Kind.NAMED_TYPE; name: any }
+      ? getScalarType<Type['name']['value'], Introspection>
+      : unknown;
 
 type unwrapTypeRef<
   Type extends TypeNode,
