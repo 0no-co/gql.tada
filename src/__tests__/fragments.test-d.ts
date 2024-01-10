@@ -2,7 +2,7 @@ import { assertType, test } from 'vitest';
 import { simpleIntrospection } from './fixtures/simpleIntrospection';
 import { parseDocument } from '../parser';
 import { mapIntrospection } from '../introspection';
-import { FragmentType } from '../selection';
+import { getFragmentType } from '../selection';
 
 type introspection = mapIntrospection<typeof simpleIntrospection>;
 
@@ -19,7 +19,7 @@ test('creates a type for a given fragment', () => {
 `;
 
   type doc = parseDocument<typeof unionQuery>;
-  type typedDoc = FragmentType<doc, introspection>;
+  type typedDoc = getFragmentType<doc, introspection>;
 
   const actual = any as typedDoc;
 

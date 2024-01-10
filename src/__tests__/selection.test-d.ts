@@ -3,7 +3,7 @@ import { simpleSchema } from './fixtures/simpleSchema';
 import { tada } from '../namespace';
 import { parseDocument } from '../parser';
 import { mapIntrospection } from '../introspection';
-import { TypedDocument } from '../selection';
+import { getDocumentType } from '../selection';
 
 type schema = simpleSchema;
 
@@ -12,7 +12,7 @@ test('infers simple fields', () => {
     query { todos { id } }
   `>;
 
-  type actual = TypedDocument<query, schema>;
+  type actual = getDocumentType<query, schema>;
   type expected = { todos: Array<{ id: string | number } | null> | null };
 
   expectTypeOf<expected>().toEqualTypeOf<actual>();
@@ -23,7 +23,7 @@ test('infers unknown fields as `unknown`', () => {
     query { unknown, unknownObj { __typename } }
   `>;
 
-  type actual = TypedDocument<query, schema>;
+  type actual = getDocumentType<query, schema>;
   type expected = { unknown: unknown; unknownObj: unknown };
 
   expectTypeOf<expected>().toEqualTypeOf<actual>();
@@ -34,7 +34,7 @@ test('infers adjacent inline fragments', () => {
     query { todos { id ... on Todo { text } ... on Todo { complete } } }
   `>;
 
-  type actual = TypedDocument<query, schema>;
+  type actual = getDocumentType<query, schema>;
   type expected = {
     todos: Array<{
       id: string | number;
@@ -51,7 +51,7 @@ test('infers aliased fields', () => {
     query { todos { myIdIsGreat: id } }
   `>;
 
-  type actual = TypedDocument<query, schema>;
+  type actual = getDocumentType<query, schema>;
   type expected = {
     todos: Array<{ myIdIsGreat: string | number } | null> | null;
   };
@@ -69,7 +69,7 @@ test('infers optional properties for @skip/@include', () => {
     }
   `>;
 
-  type actual = TypedDocument<query, schema>;
+  type actual = getDocumentType<query, schema>;
   type expected = {
     todos: Array<{
       id?: string | number | undefined;
@@ -85,7 +85,7 @@ test('infers enum values', () => {
     query { todos { id test } }
   `>;
 
-  type actual = TypedDocument<query, schema>;
+  type actual = getDocumentType<query, schema>;
   type expected = {
     todos: Array<{ id: string | number; test: 'value' | 'more' | null } | null> | null;
   };
@@ -99,7 +99,7 @@ test('infers fragment spreads', () => {
     fragment Fields on Todo { id text __typename }
   `>;
 
-  type actual = TypedDocument<query, schema>;
+  type actual = getDocumentType<query, schema>;
   type expected = {
     todos: Array<{
       __typename: 'Todo';
@@ -123,7 +123,7 @@ test('infers fragment spreads for fragment refs', () => {
     query { todos { ...Fields } }
   `>;
 
-  type actual = TypedDocument<query, schema, { Fields: fragment }>;
+  type actual = getDocumentType<query, schema, { Fields: fragment }>;
 
   type expected = {
     todos: Array<{
@@ -142,7 +142,7 @@ test('infers inline fragments and fragment spreads', () => {
     fragment Fields on Todo { id  __typename }
   `>;
 
-  type actual = TypedDocument<query, schema>;
+  type actual = getDocumentType<query, schema>;
   type expected = {
     todos: Array<{
       __typename: 'Todo';
@@ -178,7 +178,7 @@ test('infers fragment spreads on unions', () => {
     }
   `>;
 
-  type actual = TypedDocument<query, schema>;
+  type actual = getDocumentType<query, schema>;
   type expected = {
     latestTodo:
       | { message: string; __typename: 'NoTodosError' }
@@ -207,7 +207,7 @@ test('infers mutations', () => {
     }
   `>;
 
-  type actual = TypedDocument<query, schema>;
+  type actual = getDocumentType<query, schema>;
   type expected = {
     toggleTodo: { id: string | number } | null;
   };
@@ -232,7 +232,7 @@ test('infers unions and interfaces correctly', () => {
     }
   `>;
 
-  type actual = TypedDocument<query, schema>;
+  type actual = getDocumentType<query, schema>;
   type expected = {
     test:
       | {
@@ -265,7 +265,7 @@ test('infers queries from GitHub schemaspection schema', () => {
     }
   `>;
 
-  type actual = TypedDocument<repositories, schema>;
+  type actual = getDocumentType<repositories, schema>;
 
   type expected = {
     repository: {

@@ -7,10 +7,9 @@ describe('TypedDocument', () => {
     ...ts.readSourceFolders(['.']),
     'simpleSchema.ts': ts.readFileFromRoot('src/__tests__/fixtures/simpleSchema.ts'),
     'index.ts': `
-      import type { simpleSchema as schema } from './simpleSchema';
-      import type { Introspection } from './introspection';
-      import type { parseDocument } from './parser';
-      import type { TypedDocument } from './selection';
+      import { simpleSchema as schema } from './simpleSchema';
+      import { parseDocument } from './parser';
+      import { getDocumentType } from './selection';
       import type { Variables } from './variables';
 
       type document = parseDocument<\`
@@ -21,7 +20,7 @@ describe('TypedDocument', () => {
         }
       \`>;
 
-      type Result = TypedDocument<document, schema>;
+      type Result = getDocumentType<document, schema>;
       type Input = Variables<document, schema>;
     `,
   });
