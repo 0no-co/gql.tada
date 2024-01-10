@@ -18,7 +18,7 @@ import type {
 import type { getDocumentType } from './selection';
 import type { getVariablesType } from './variables';
 import type { parseDocument, DocumentNodeLike } from './parser';
-import type { stringLiteral, DocumentDecoration } from './utils';
+import type { stringLiteral, matchOr, DocumentDecoration } from './utils';
 
 interface AbstractSetupSchema {
   introspection: IntrospectionQuery;
@@ -30,8 +30,8 @@ interface setupSchema extends AbstractSetupSchema {
 }
 
 type Schema = mapIntrospection<
-  setupSchema['introspection'] extends IntrospectionQuery ? setupSchema['introspection'] : never,
-  setupSchema['scalars'] extends ScalarsLike ? setupSchema['scalars'] : {}
+  matchOr<IntrospectionQuery, setupSchema['introspection'], never>,
+  matchOr<ScalarsLike, setupSchema['scalars'], {}>
 >;
 
 function parse<const In extends stringLiteral<In>>(input: In): parseDocument<In> {

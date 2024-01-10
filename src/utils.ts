@@ -3,6 +3,13 @@ import type { DocumentNode } from '@0no-co/graphql.web';
 /** Constraints a given string to a string literal. */
 export type stringLiteral<T extends string> = string extends T ? never : string;
 
+/** Returns `T` if it matches `Constraint` without being equal to it. Failing this evaluates to `Fallback` otherwise. */
+export type matchOr<Constraint, T, Fallback> = Constraint extends T
+  ? Fallback
+  : T extends Constraint
+    ? T
+    : Fallback;
+
 /** Flattens a given object type.
  *
  * @remarks
