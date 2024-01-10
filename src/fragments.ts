@@ -1,4 +1,5 @@
 import type { Kind } from '@0no-co/graphql.web';
+import type { DocumentNodeLike } from './parser';
 
 type _getFragmentMapRec<Definitions> = Definitions extends readonly [
   infer Definition,
@@ -10,5 +11,6 @@ type _getFragmentMapRec<Definitions> = Definitions extends readonly [
       _getFragmentMapRec<Rest>
   : {};
 
-export type getFragmentMap<Document extends { kind: Kind.DOCUMENT; definitions: any[] }> =
-  _getFragmentMapRec<Document['definitions']>;
+export type getFragmentMap<Document extends DocumentNodeLike> = _getFragmentMapRec<
+  Document['definitions']
+>;

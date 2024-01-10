@@ -9,6 +9,7 @@ import type {
 import type { tada } from './namespace';
 import type { obj, objValues } from './utils';
 import type { getFragmentMap } from './fragments';
+import type { DocumentNodeLike } from './parser';
 
 import type {
   IntrospectionField,
@@ -217,7 +218,7 @@ type getDefinitionSelectionRec<
   : {};
 
 type getDocumentType<
-  Document extends { kind: Kind.DOCUMENT; definitions: any[] },
+  Document extends DocumentNodeLike,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any } = {},
 > = getDefinitionSelectionRec<
@@ -227,7 +228,7 @@ type getDocumentType<
 >;
 
 type getFragmentType<
-  Document extends { kind: Kind.DOCUMENT; definitions: any[] },
+  Document extends DocumentNodeLike,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any } = {},
 > = Document['definitions'][0] extends {

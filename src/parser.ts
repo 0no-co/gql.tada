@@ -506,4 +506,9 @@ type parseType<In> = takeType<skipIgnored<In>> extends [infer Node, string] ? No
 
 type parseOperation<In> = TakeOperation<skipIgnored<In>> extends [infer Node, string] ? Node : void;
 
+export type DocumentNodeLike = {
+  kind: Kind.DOCUMENT;
+  definitions: any[];
+};
+
 export type { parseConstValue, parseOperation, parseDocument, parseValue, parseType };
