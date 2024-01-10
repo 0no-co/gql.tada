@@ -16,19 +16,13 @@ import type {
   IntrospectionNamedTypeRef,
   IntrospectionNonNullTypeRef,
   IntrospectionTypeRef,
+  IntrospectionLikeType,
 } from './introspection';
 
 type ObjectLikeType = {
   kind: 'OBJECT' | 'INTERFACE' | 'UNION';
   name: string;
   fields: { [key: string]: IntrospectionField };
-};
-
-type IntrospectionLikeType = {
-  query: string;
-  mutation: string | never;
-  subscription: string | never;
-  types: { [name: string]: any };
 };
 
 type UnwrapTypeInner<

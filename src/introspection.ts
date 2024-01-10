@@ -93,7 +93,7 @@ interface IntrospectionInputValue {
   readonly defaultValue?: string | null;
 }
 
-type _mapNames<T extends readonly any[]> = Obj<{
+type mapNames<T extends readonly any[]> = Obj<{
   [P in T[number]['name']]: T[number] extends infer Value
     ? Value extends { readonly name: P }
       ? Obj<Value>
@@ -101,7 +101,7 @@ type _mapNames<T extends readonly any[]> = Obj<{
     : never;
 }>;
 
-type _scalarMap<T extends IntrospectionScalarType> = {
+type mapScalar<T extends IntrospectionScalarType> = {
   kind: 'SCALAR';
   type: T['name'] extends 'Int'
     ? number
@@ -116,63 +116,63 @@ type _scalarMap<T extends IntrospectionScalarType> = {
             : unknown;
 };
 
-type _enumMap<T extends IntrospectionEnumType> = {
+type mapEnum<T extends IntrospectionEnumType> = {
   kind: 'ENUM';
   name: T['name'];
   type: T['enumValues'][number]['name'];
 };
 
-export type _objectMap<T extends IntrospectionObjectType> = {
+export type mapObject<T extends IntrospectionObjectType> = {
   kind: 'OBJECT';
   name: T['name'];
   interfaces: T['interfaces'][number]['name'];
-  fields: Obj<_mapNames<T['fields']>>;
+  fields: Obj<mapNames<T['fields']>>;
 };
 
-export type _inputObjectMap<T extends IntrospectionInputObjectType> = {
+export type mapInputObject<T extends IntrospectionInputObjectType> = {
   kind: 'INPUT_OBJECT';
   name: T['name'];
   inputFields: [...T['inputFields']];
 };
 
-type _interfaceMap<T extends IntrospectionInterfaceType> = {
+type mapInterface<T extends IntrospectionInterfaceType> = {
   kind: 'INTERFACE';
   name: T['name'];
   interfaces: T['interfaces'] extends readonly any[] ? T['interfaces'][number]['name'] : never;
   possibleTypes: T['possibleTypes'][number]['name'];
-  fields: Obj<_mapNames<T['fields']>>;
+  fields: Obj<mapNames<T['fields']>>;
 };
 
-type _unionMap<T extends IntrospectionUnionType> = {
+type mapUnion<T extends IntrospectionUnionType> = {
   kind: 'UNION';
   name: T['name'];
   fields: {};
   possibleTypes: T['possibleTypes'][number]['name'];
 };
 
-type _typeMap<T> = T extends IntrospectionScalarType
-  ? _scalarMap<T>
+type mapType<T> = T extends IntrospectionScalarType
+  ? mapScalar<T>
   : T extends IntrospectionEnumType
-    ? _enumMap<T>
+    ? mapEnum<T>
     : T extends IntrospectionObjectType
-      ? _objectMap<T>
+      ? mapObject<T>
       : T extends IntrospectionInterfaceType
-        ? _interfaceMap<T>
+        ? mapInterface<T>
         : T extends IntrospectionUnionType
-          ? _unionMap<T>
+          ? mapUnion<T>
           : T extends IntrospectionInputObjectType
-            ? _inputObjectMap<T>
+            ? mapInputObject<T>
             : never;
 
-type _introspectionTypesMap<T extends IntrospectionQuery> = Obj<{
+type mapIntrospectionTypes<T extends IntrospectionQuery> = Obj<{
   [P in T['__schema']['types'][number]['name']]: T['__schema']['types'][number] extends infer Type
     ? Type extends { readonly name: P }
-      ? _typeMap<Type>
+      ? mapType<Type>
       : never
     : never;
 }>;
 
-type _introspectionMap<T extends IntrospectionQuery> = {
+type mapIntrospection<T extends IntrospectionQuery> = {
   query: T['__schema']['queryType']['name'];
   mutation: T['__schema']['mutationType'] extends { name: string }
     ? T['__schema']['mutationType']['name']
@@ -180,7 +180,14 @@ type _introspectionMap<T extends IntrospectionQuery> = {
   subscription: T['__schema']['subscriptionType'] extends { name: string }
     ? T['__schema']['subscriptionType']['name']
     : never;
-  types: _introspectionTypesMap<T>;
+  types: mapIntrospectionTypes<T>;
 };
 
-export type { _introspectionTypesMap as IntrospectionTypes, _introspectionMap as Introspection };
+export type IntrospectionLikeType = {
+  query: string;
+  mutation: string | never;
+  subscription: string | never;
+  types: { [name: string]: any };
+};
+
+export type { mapIntrospectionTypes, mapIntrospection };

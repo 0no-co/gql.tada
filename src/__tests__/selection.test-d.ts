@@ -2,7 +2,7 @@ import { expectTypeOf, test } from 'vitest';
 import { simpleSchema } from './fixtures/simpleSchema';
 import { tada } from '../namespace';
 import { parseDocument } from '../parser';
-import { Introspection } from '../introspection';
+import { mapIntrospection } from '../introspection';
 import { TypedDocument } from '../selection';
 
 type schema = simpleSchema;
@@ -253,7 +253,9 @@ test('infers unions and interfaces correctly', () => {
 });
 
 test('infers queries from GitHub schemaspection schema', () => {
-  type schema = Introspection<typeof import('./fixtures/githubIntrospection').githubIntrospection>;
+  type schema = mapIntrospection<
+    typeof import('./fixtures/githubIntrospection').githubIntrospection
+  >;
 
   type repositories = parseDocument</* GraphQL */ `
     query ($org: String!, $repo: String!) {

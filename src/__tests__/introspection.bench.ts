@@ -11,9 +11,9 @@ describe('Introspection', () => {
       ),
       'index.ts': `
         import { simpleIntrospection } from './simpleIntrospection';
-        import type { Introspection } from './introspection';
+        import { mapIntrospection } from './introspection';
 
-        type Schema = Introspection<typeof simpleIntrospection>;
+        type schema = mapIntrospection<typeof simpleIntrospection>;
       `,
     });
 
@@ -36,9 +36,9 @@ describe('Introspection', () => {
       ),
       'index.ts': `
         import { githubIntrospection } from './githubIntrospection';
-        import type { Introspection } from './introspection';
+        import type { mapIntrospection } from './introspection';
 
-        type Schema = Introspection<typeof githubIntrospection>;
+        type schema = mapIntrospection<typeof githubIntrospection>;
       `,
     });
 

@@ -1,10 +1,10 @@
 import type { Kind, TypeNode } from '@0no-co/graphql.web';
-import type { Introspection as IntrospectionType } from './introspection';
+import type { IntrospectionLikeType } from './introspection';
 import type { Obj } from './utils';
 
 type InputValues<
   InputFields extends readonly unknown[],
-  Introspection extends IntrospectionType<any>,
+  Introspection extends IntrospectionLikeType,
 > = InputFields extends [infer InputField, ...infer Rest]
   ? (InputField extends { name: any; type: any }
       ? { [Name in InputField['name']]: UnwrapType<InputField['type'], Introspection> }
@@ -14,7 +14,7 @@ type InputValues<
 
 type ScalarType<
   TypeName,
-  Introspection extends IntrospectionType<any>,
+  Introspection extends IntrospectionLikeType,
 > = TypeName extends keyof Introspection['types']
   ? Introspection['types'][TypeName] extends {
       kind: 'SCALAR' | 'ENUM';
@@ -31,7 +31,7 @@ type ScalarType<
 
 type UnwrapTypeInner<
   Type extends TypeNode,
-  Introspection extends IntrospectionType<any>,
+  Introspection extends IntrospectionLikeType,
 > = Type extends { kind: 'NON_NULL' }
   ? UnwrapTypeInner<Type['ofType'], Introspection>
   : Type extends { kind: 'LIST' }
@@ -42,16 +42,15 @@ type UnwrapTypeInner<
         : unknown
       : never;
 
-type UnwrapType<
-  Type extends TypeNode,
-  Introspection extends IntrospectionType<any>,
-> = Type extends { kind: 'NON_NULL' }
+type UnwrapType<Type extends TypeNode, Introspection extends IntrospectionLikeType> = Type extends {
+  kind: 'NON_NULL';
+}
   ? UnwrapTypeInner<Type['ofType'], Introspection>
   : null | UnwrapTypeInner<Type, Introspection>;
 
 type UnwrapTypeRefInner<
   Type extends TypeNode,
-  Introspection extends IntrospectionType<any>,
+  Introspection extends IntrospectionLikeType,
 > = Type extends { kind: Kind.NON_NULL_TYPE }
   ? UnwrapTypeRefInner<Type['type'], Introspection>
   : Type extends { kind: Kind.LIST_TYPE }
@@ -64,14 +63,14 @@ type UnwrapTypeRefInner<
 
 type UnwrapTypeRef<
   Type extends TypeNode,
-  Introspection extends IntrospectionType<any>,
+  Introspection extends IntrospectionLikeType,
 > = Type extends { kind: Kind.NON_NULL_TYPE }
   ? UnwrapTypeRefInner<Type['type'], Introspection>
   : null | UnwrapTypeRefInner<Type, Introspection>;
 
 type VariablesContinue<
   Variables extends readonly unknown[],
-  Introspection extends IntrospectionType<any>,
+  Introspection extends IntrospectionLikeType,
 > = Variables extends [infer Variable, ...infer Rest]
   ? (Variable extends { kind: Kind.VARIABLE_DEFINITION; variable: any; type: any }
       ? Variable extends { defaultValue: undefined }
@@ -93,7 +92,7 @@ type VariablesContinue<
 
 type DefinitionContinue<
   Definitions extends readonly unknown[],
-  Introspection extends IntrospectionType<any>,
+  Introspection extends IntrospectionLikeType,
 > = (Definitions[0] extends {
   kind: Kind.OPERATION_DEFINITION;
   variableDefinitions: infer VarDefs;
@@ -110,5 +109,5 @@ type DefinitionContinue<
 
 export type Variables<
   D extends { kind: Kind.DOCUMENT; definitions: any[] },
-  I extends IntrospectionType<any>,
+  I extends IntrospectionLikeType,
 > = Obj<DefinitionContinue<D['definitions'], I>>;

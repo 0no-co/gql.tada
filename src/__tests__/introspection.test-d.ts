@@ -1,9 +1,9 @@
 import { test, expectTypeOf } from 'vitest';
 import { simpleIntrospection } from './fixtures/simpleIntrospection';
 import { simpleSchema } from './fixtures/simpleSchema';
-import { Introspection } from '../introspection';
+import { mapIntrospection } from '../introspection';
 
 test('prepares sample schema', () => {
-  type expected = Introspection<typeof simpleIntrospection>;
+  type expected = mapIntrospection<typeof simpleIntrospection>;
   expectTypeOf<expected>().toMatchTypeOf<simpleSchema>();
 });
