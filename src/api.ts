@@ -27,7 +27,10 @@ interface setupSchema extends AbstractSetupSchema {
   /*empty*/
 }
 
-type Schema = mapIntrospection<setupSchema['introspection'], setupSchema['scalars']>;
+type Schema = mapIntrospection<
+  setupSchema['introspection'] extends IntrospectionQuery ? setupSchema['introspection'] : never,
+  setupSchema['scalars'] extends ScalarsLike ? setupSchema['scalars'] : {}
+>;
 
 function parse<const In extends stringLiteral<In>>(input: In): parseDocument<In> {
   return _parse(input) as any;
