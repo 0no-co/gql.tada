@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import sucrase from '@rollup/plugin-sucrase';
@@ -25,6 +27,11 @@ const commonPlugins = [
     transforms: ['typescript']
   }),
 ];
+
+const packageJson = JSON.parse(readFileSync('package.json'));
+const externalModules = Object.keys(packageJson.dependencies);
+const externalPredicate = new RegExp(`^(${externalModules.join('|')})($|/)`);
+const external = (id) => externalPredicate.test(id);
 
 const jsPlugins = [
   ...commonPlugins,
@@ -117,7 +124,7 @@ const commonConfig = {
     'gql-tada': './src/index.ts',
   },
   onwarn: () => {},
-  external: () => false,
+  external,
   treeshake: {
     unknownGlobalSideEffects: false,
     tryCatchDeoptimization: false,
@@ -140,7 +147,7 @@ const dtsConfig = {
     'gql-tada': './src/index.ts',
   },
   onwarn: () => {},
-  external: () => false,
+  external,
   plugins: dtsPlugins,
   treeshake: {
     unknownGlobalSideEffects: false,
