@@ -1,9 +1,16 @@
 import { expectTypeOf, test } from 'vitest';
+
 import { simpleSchema } from './fixtures/simpleSchema';
-import { $tada, decorateFragmentDef, getFragmentsOfDocumentsRec } from '../namespace';
 import { parseDocument } from '../parser';
 import { mapIntrospection } from '../introspection';
 import { getDocumentType } from '../selection';
+
+import {
+  $tada,
+  decorateFragmentDef,
+  getFragmentsOfDocumentsRec,
+  FragmentDefDecoration,
+} from '../namespace';
 
 type schema = simpleSchema;
 
@@ -121,7 +128,10 @@ test('infers fragment spreads for fragment refs', () => {
     query { ...Fields }
   `>;
 
-  type extraFragments = getFragmentsOfDocumentsRec<[decorateFragmentDef<fragment>]>;
+  type extraFragments = getFragmentsOfDocumentsRec<
+    [FragmentDefDecoration<decorateFragmentDef<fragment>>]
+  >;
+
   type actual = getDocumentType<query, schema, extraFragments>;
 
   type expected = {
