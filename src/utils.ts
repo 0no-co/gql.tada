@@ -1,5 +1,8 @@
 import type { DocumentNode } from '@0no-co/graphql.web';
 
+/** Constraints a given string to a string literal. */
+export type stringLiteral<T extends string> = string extends T ? never : string;
+
 /** Flattens a given object type.
  *
  * @remarks

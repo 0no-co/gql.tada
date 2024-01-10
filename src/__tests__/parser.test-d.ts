@@ -844,8 +844,11 @@ describe('takeType', () => {
 
 describe('parseDocument', () => {
   it('should not parse invalid documents', () => {
-    type actual = parseDocument<'INVALID'>;
-    expectTypeOf<actual>().toEqualTypeOf<void>();
+    expectTypeOf<parseDocument<'INVALID'>>().toBeNever();
+  });
+
+  it('should parse initially valid definitions', () => {
+    expectTypeOf<parseDocument<'{ test } INVALID'>>().not.toBeNever();
   });
 
   it('parses kitchen sink query', () => {
