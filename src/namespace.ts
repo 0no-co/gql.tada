@@ -1,4 +1,4 @@
-import type { Kind } from '@0no-co/graphql.web';
+import type { Kind, DocumentNode } from '@0no-co/graphql.web';
 import type { DocumentNodeLike } from './parser';
 import type { obj } from './utils';
 
@@ -33,7 +33,7 @@ type getFragmentsOfDocumentsRec<Documents> = Documents extends readonly [
   infer Document,
   ...infer Rest,
 ]
-  ? (Document extends FragmentDefDecorationLike
+  ? (Document extends { [$tada.fragmentDef]?: any }
       ? Exclude<Document[$tada.fragmentDef], undefined> extends infer FragmentDef extends {
           kind: Kind.FRAGMENT_DEFINITION;
           name: any;
@@ -45,7 +45,7 @@ type getFragmentsOfDocumentsRec<Documents> = Documents extends readonly [
       getFragmentsOfDocumentsRec<Rest>
   : {};
 
-interface FragmentDefDecorationLike {
+interface FragmentDefDecorationLike extends DocumentNode {
   [$tada.fragmentDef]?: {
     readonly [$tada.fragmentId]: symbol;
     kind: Kind.FRAGMENT_DEFINITION;

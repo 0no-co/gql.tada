@@ -73,6 +73,7 @@
     "@rollup/plugin-node-resolve": "^15.0.1",
     "@rollup/plugin-sucrase": "^5.0.1",
     "@rollup/plugin-terser": "^0.4.0",
+    "@types/node": "^20.10.8",
     "@typescript-eslint/eslint-plugin": "^6.18.1",
     "@typescript-eslint/parser": "^6.18.1",
     "dotenv": "^16.0.3",

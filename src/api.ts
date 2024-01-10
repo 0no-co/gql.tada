@@ -1,5 +1,5 @@
-import { parse as _parse } from '@0no-co/graphql.web';
-import type { DocumentNode } from '@0no-co/graphql.web';
+import { Kind, parse as _parse } from '@0no-co/graphql.web';
+import type { DocumentNode, DefinitionNode } from '@0no-co/graphql.web';
 
 import type {
   IntrospectionQuery,
@@ -59,9 +59,32 @@ function graphql<
   const Fragments extends readonly [...FragmentDefDecorationLike[]],
 >(
   input: In,
-  _fragments?: Fragments
+  fragments?: Fragments
 ): getDocumentNode<In, Schema, getFragmentsOfDocumentsRec<Fragments>> {
-  return _parse(input) as any;
+  const definitions = _parse(input).definitions as DefinitionNode[];
+  const fragmentNames = new Map<string, unknown>();
+  for (const document of fragments || []) {
+    for (const definition of document.definitions) {
+      if (definition.kind !== Kind.FRAGMENT_DEFINITION) {
+        /*noop*/
+      } else if (!fragmentNames.has(definition.name.value)) {
+        fragmentNames.set(definition.name.value, definition);
+        definitions.push(definition);
+      } else if (
+        process.env.NODE_ENV !== 'production' &&
+        fragmentNames.get(definition.name.value) !== definition
+      ) {
+        // Fragments with the same names is expected to have the same contents
+        console.warn(
+          '[WARNING: Duplicate Fragment] A fragment with name `' +
+            definition.name.value +
+            '` already exists in this document.\n' +
+            'While fragment names may not be unique across your source, each name must be unique per document.'
+        );
+      }
+    }
+  }
+  return { kind: Kind.DOCUMENT, definitions } as any;
 }
 
 /** A GraphQL `DocumentNode` with attached generics for its result data and variables.
