@@ -1,4 +1,4 @@
-import type { Obj } from './utils';
+import type { obj } from './utils';
 
 interface IntrospectionQuery {
   readonly __schema: IntrospectionSchema;
@@ -93,10 +93,10 @@ interface IntrospectionInputValue {
   readonly defaultValue?: string | null;
 }
 
-type mapNames<T extends readonly any[]> = Obj<{
+type mapNames<T extends readonly any[]> = obj<{
   [P in T[number]['name']]: T[number] extends infer Value
     ? Value extends { readonly name: P }
-      ? Obj<Value>
+      ? obj<Value>
       : never
     : never;
 }>;
@@ -126,7 +126,7 @@ export type mapObject<T extends IntrospectionObjectType> = {
   kind: 'OBJECT';
   name: T['name'];
   interfaces: T['interfaces'][number]['name'];
-  fields: Obj<mapNames<T['fields']>>;
+  fields: obj<mapNames<T['fields']>>;
 };
 
 export type mapInputObject<T extends IntrospectionInputObjectType> = {
@@ -140,7 +140,7 @@ type mapInterface<T extends IntrospectionInterfaceType> = {
   name: T['name'];
   interfaces: T['interfaces'] extends readonly any[] ? T['interfaces'][number]['name'] : never;
   possibleTypes: T['possibleTypes'][number]['name'];
-  fields: Obj<mapNames<T['fields']>>;
+  fields: obj<mapNames<T['fields']>>;
 };
 
 type mapUnion<T extends IntrospectionUnionType> = {
@@ -164,7 +164,7 @@ type mapType<T> = T extends IntrospectionScalarType
             ? mapInputObject<T>
             : never;
 
-type mapIntrospectionTypes<T extends IntrospectionQuery> = Obj<{
+type mapIntrospectionTypes<T extends IntrospectionQuery> = obj<{
   [P in T['__schema']['types'][number]['name']]: T['__schema']['types'][number] extends infer Type
     ? Type extends { readonly name: P }
       ? mapType<Type>

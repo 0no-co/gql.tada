@@ -1,6 +1,6 @@
 import type { Kind, TypeNode } from '@0no-co/graphql.web';
 import type { IntrospectionLikeType } from './introspection';
-import type { Obj } from './utils';
+import type { obj } from './utils';
 
 type InputValues<
   InputFields extends readonly unknown[],
@@ -25,7 +25,7 @@ type ScalarType<
           kind: 'INPUT_OBJECT';
           inputFields: [...infer InputFields];
         }
-      ? Obj<InputValues<InputFields, Introspection>>
+      ? obj<InputValues<InputFields, Introspection>>
       : never
   : never;
 
@@ -110,4 +110,4 @@ type DefinitionContinue<
 export type Variables<
   D extends { kind: Kind.DOCUMENT; definitions: any[] },
   I extends IntrospectionLikeType,
-> = Obj<DefinitionContinue<D['definitions'], I>>;
+> = obj<DefinitionContinue<D['definitions'], I>>;

@@ -7,7 +7,7 @@ import type {
 } from '@0no-co/graphql.web';
 
 import type { tada } from './namespace';
-import type { Obj, ObjValues } from './utils';
+import type { obj, objValues } from './utils';
 import type { FragmentMap } from './fragments';
 
 import type {
@@ -120,7 +120,7 @@ export type Selection<
   Type extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
-> = Obj<
+> = obj<
   FieldSelectionContinue<Selections, Type, Introspection, Fragments> &
     FragmentsSelection<Selections, Type, Introspection, Fragments>
 >;
@@ -163,7 +163,7 @@ type FragmentsSelection<
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
 > = Type extends { kind: 'UNION' | 'INTERFACE'; possibleTypes: any }
-  ? ObjValues<{
+  ? objValues<{
       [PossibleType in Type['possibleTypes']]: FragmentSelectionContinue<
         Selections,
         PossibleType,
