@@ -224,7 +224,7 @@ type getFragmentSelectionType<
   ? Introspection['types'][Definition['typeCondition']['name']['value']] extends infer Type extends
       ObjectLikeType
     ? getSelection<Definition['selectionSet']['selections'], Type, Introspection, Fragments>
-    : {}
+    : never
   : never;
 
 type getDocumentType<
