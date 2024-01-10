@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 
+import * as prettier from 'prettier';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import babel from '@rollup/plugin-babel';
@@ -149,7 +150,18 @@ const dtsConfig = {
         renderChunk(code, chunk) {
           if (chunk.fileName.endsWith('d.ts')) {
             const gqlImportRe = /(import\s+(?:[*\s{}\w\d]+)\s*from\s*'graphql';?)/g;
-            return code.replace(gqlImportRe, x => '/*!@ts-ignore*/\n' + x);
+            code = code.replace(gqlImportRe, x => '/*!@ts-ignore*/\n' + x);
+
+            code = prettier.format(code, {
+              filepath: chunk.fileName,
+              parser: 'typescript',
+              singleQuote: true,
+              tabWidth: 2,
+              printWidth: 100,
+              trailingComma: 'es5',
+            });
+
+            return code;
           }
         },
       },
