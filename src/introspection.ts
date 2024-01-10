@@ -93,6 +93,14 @@ interface IntrospectionInputValue {
   readonly defaultValue?: string | null;
 }
 
+interface DefaultScalars {
+  ID: number | string;
+  Boolean: boolean;
+  String: string;
+  Float: number;
+  Int: number;
+}
+
 type mapNames<T extends readonly any[]> = obj<{
   [P in T[number]['name']]: T[number] extends infer Value
     ? Value extends { readonly name: P }
@@ -101,19 +109,16 @@ type mapNames<T extends readonly any[]> = obj<{
     : never;
 }>;
 
-type mapScalar<T extends IntrospectionScalarType> = {
+type mapScalar<
+  Type extends IntrospectionScalarType,
+  Scalars extends ScalarsLike = DefaultScalars,
+> = {
   kind: 'SCALAR';
-  type: T['name'] extends 'Int'
-    ? number
-    : T['name'] extends 'Float'
-      ? number
-      : T['name'] extends 'String'
-        ? string
-        : T['name'] extends 'Boolean'
-          ? boolean
-          : T['name'] extends 'ID'
-            ? number | string
-            : unknown;
+  type: Type['name'] extends keyof Scalars
+    ? Scalars[Type['name']]
+    : Type['name'] extends keyof DefaultScalars
+      ? DefaultScalars[Type['name']]
+      : unknown;
 };
 
 type mapEnum<T extends IntrospectionEnumType> = {
@@ -150,37 +155,50 @@ type mapUnion<T extends IntrospectionUnionType> = {
   possibleTypes: T['possibleTypes'][number]['name'];
 };
 
-type mapType<T> = T extends IntrospectionScalarType
-  ? mapScalar<T>
-  : T extends IntrospectionEnumType
-    ? mapEnum<T>
-    : T extends IntrospectionObjectType
-      ? mapObject<T>
-      : T extends IntrospectionInterfaceType
-        ? mapInterface<T>
-        : T extends IntrospectionUnionType
-          ? mapUnion<T>
-          : T extends IntrospectionInputObjectType
-            ? mapInputObject<T>
+type mapType<
+  Type,
+  Scalars extends ScalarsLike = DefaultScalars,
+> = Type extends IntrospectionScalarType
+  ? mapScalar<Type, Scalars>
+  : Type extends IntrospectionEnumType
+    ? mapEnum<Type>
+    : Type extends IntrospectionObjectType
+      ? mapObject<Type>
+      : Type extends IntrospectionInterfaceType
+        ? mapInterface<Type>
+        : Type extends IntrospectionUnionType
+          ? mapUnion<Type>
+          : Type extends IntrospectionInputObjectType
+            ? mapInputObject<Type>
             : never;
 
-type mapIntrospectionTypes<T extends IntrospectionQuery> = obj<{
-  [P in T['__schema']['types'][number]['name']]: T['__schema']['types'][number] extends infer Type
+type mapIntrospectionTypes<
+  Query extends IntrospectionQuery,
+  Scalars extends ScalarsLike = DefaultScalars,
+> = obj<{
+  [P in Query['__schema']['types'][number]['name']]: Query['__schema']['types'][number] extends infer Type
     ? Type extends { readonly name: P }
-      ? mapType<Type>
+      ? mapType<Type, Scalars>
       : never
     : never;
 }>;
 
-type mapIntrospection<T extends IntrospectionQuery> = {
-  query: T['__schema']['queryType']['name'];
-  mutation: T['__schema']['mutationType'] extends { name: string }
-    ? T['__schema']['mutationType']['name']
+type mapIntrospection<
+  Query extends IntrospectionQuery,
+  Scalars extends ScalarsLike = DefaultScalars,
+> = {
+  query: Query['__schema']['queryType']['name'];
+  mutation: Query['__schema']['mutationType'] extends { name: string }
+    ? Query['__schema']['mutationType']['name']
     : never;
-  subscription: T['__schema']['subscriptionType'] extends { name: string }
-    ? T['__schema']['subscriptionType']['name']
+  subscription: Query['__schema']['subscriptionType'] extends { name: string }
+    ? Query['__schema']['subscriptionType']['name']
     : never;
-  types: mapIntrospectionTypes<T>;
+  types: mapIntrospectionTypes<Query, Scalars>;
+};
+
+export type ScalarsLike = {
+  [name: string]: any;
 };
 
 export type IntrospectionLikeType = {
