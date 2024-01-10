@@ -1,5 +1,6 @@
 import type { Kind, TypeNode } from '@0no-co/graphql.web';
 import type { IntrospectionLikeType } from './introspection';
+import type { DocumentNodeLike } from './parser';
 import type { obj } from './utils';
 
 type getInputObjectTypeRec<
@@ -86,26 +87,14 @@ type getVariablesRec<
       getVariablesRec<Rest, Introspection>
   : {};
 
-type getDefinitionVariablesRec<
-  Definitions extends readonly unknown[],
-  Introspection extends IntrospectionLikeType,
-> = (Definitions[0] extends {
-  kind: Kind.OPERATION_DEFINITION;
-  variableDefinitions: infer VarDefs;
-}
-  ? VarDefs extends Array<{ kind: Kind.VARIABLE_DEFINITION }>
-    ? getVariablesRec<VarDefs, Introspection>
-    : never
-  : never) &
-  (Definitions extends readonly [any, ...infer Rest]
-    ? Rest extends readonly []
-      ? {}
-      : getDefinitionVariablesRec<Rest, Introspection>
-    : never);
-
 type getVariablesType<
-  D extends { kind: Kind.DOCUMENT; definitions: any[] },
-  I extends IntrospectionLikeType,
-> = obj<getDefinitionVariablesRec<D['definitions'], I>>;
+  Document extends DocumentNodeLike,
+  Introspection extends IntrospectionLikeType,
+> = Document['definitions'][0] extends {
+  kind: Kind.OPERATION_DEFINITION;
+  variableDefinitions: any;
+}
+  ? obj<getVariablesRec<Document['definitions'][0]['variableDefinitions'], Introspection>>
+  : {};
 
 export type { getVariablesType };

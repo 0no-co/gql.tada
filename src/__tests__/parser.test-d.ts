@@ -854,9 +854,10 @@ describe('parseDocument', () => {
   it('parses kitchen sink query', () => {
     type kitchensinkQuery = typeof import('./fixtures/kitchensinkQuery').kitchensinkQuery;
     type kitchensinkDocument = import('./fixtures/kitchensinkQuery').kitchensinkDocument;
+    type actual = parseDocument<kitchensinkQuery>;
 
-    expectTypeOf<parseDocument<kitchensinkQuery>>().toEqualTypeOf<kitchensinkDocument>();
-    expectTypeOf<parseDocument<kitchensinkQuery>>().toMatchTypeOf<kitchensinkDocument>();
-    expectTypeOf<parseDocument<kitchensinkQuery>>().toMatchTypeOf<DocumentNode>();
+    expectTypeOf<actual>().toEqualTypeOf<kitchensinkDocument>();
+    expectTypeOf<actual>().toMatchTypeOf<kitchensinkDocument>();
+    expectTypeOf<actual>().toMatchTypeOf<DocumentNode>();
   });
 });

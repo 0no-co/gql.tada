@@ -1,6 +1,6 @@
 import type { obj } from './utils';
 
-interface IntrospectionQuery {
+export interface IntrospectionQuery {
   readonly __schema: IntrospectionSchema;
 }
 

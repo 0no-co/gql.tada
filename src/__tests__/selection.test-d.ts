@@ -1,6 +1,6 @@
 import { expectTypeOf, test } from 'vitest';
 import { simpleSchema } from './fixtures/simpleSchema';
-import { $tada } from '../namespace';
+import { $tada, decorateDocument, getFragmentsOfDocumentsRec } from '../namespace';
 import { parseDocument } from '../parser';
 import { mapIntrospection } from '../introspection';
 import { getDocumentType } from '../selection';
@@ -114,23 +114,20 @@ test('infers fragment spreads', () => {
 
 test('infers fragment spreads for fragment refs', () => {
   type fragment = parseDocument</* GraphQL */ `
-    fragment Fields on Todo { id text __typename }
-  `>['definitions'][0] & {
-    [$tada.fragmentName]: 'Fields';
-  };
-
-  type query = parseDocument</* GraphQL */ `
-    query { todos { ...Fields } }
+    fragment Fields on Query { __typename }
   `>;
 
-  type actual = getDocumentType<query, schema, { Fields: fragment }>;
+  type query = parseDocument</* GraphQL */ `
+    query { ...Fields }
+  `>;
+
+  type extraFragments = getFragmentsOfDocumentsRec<[decorateDocument<fragment>]>;
+  type actual = getDocumentType<query, schema, extraFragments>;
 
   type expected = {
-    todos: Array<{
-      [$tada.fragmentRefs]: {
-        Fields: fragment;
-      };
-    } | null> | null;
+    [$tada.fragmentRefs]?: {
+      Fields: extraFragments['Fields'][$tada.fragmentId];
+    };
   };
 
   expectTypeOf<expected>().toEqualTypeOf<actual>();
@@ -271,6 +268,28 @@ test('infers queries from GitHub introspection schema', () => {
     repository: {
       id: string | number;
     } | null;
+  };
+
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
+});
+
+test('creates a type for a given fragment', () => {
+  type fragment = parseDocument<`
+    fragment Fields on Todo {
+      id
+      text
+      complete
+      __typename
+    }
+  `>;
+
+  type actual = getDocumentType<fragment, schema>;
+
+  type expected = {
+    __typename: 'Todo';
+    id: string | number;
+    text: string;
+    complete: boolean | null;
   };
 
   expectTypeOf<expected>().toEqualTypeOf<actual>();

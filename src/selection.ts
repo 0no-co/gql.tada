@@ -8,7 +8,6 @@ import type {
 
 import type { $tada } from './namespace';
 import type { obj, objValues } from './utils';
-import type { getFragmentMap } from './fragments';
 import type { DocumentNodeLike } from './parser';
 
 import type {
@@ -81,10 +80,12 @@ type getFragmentSelection<
   ? getSelection<Node['selectionSet']['selections'], Type, Introspection, Fragments>
   : Node extends { kind: Kind.FRAGMENT_SPREAD; name: any }
     ? Node['name']['value'] extends keyof Fragments
-      ? Fragments[Node['name']['value']] extends infer Fragment extends {
-          [$tada.fragmentName]: string;
-        }
-        ? { [$tada.fragmentRefs]: { [Name in Fragment[$tada.fragmentName]]: Fragment } }
+      ? Fragments[Node['name']['value']] extends { readonly [$tada.fragmentId]: symbol }
+        ? {
+            [$tada.fragmentRefs]?: {
+              [Name in Node['name']['value']]: Fragments[Node['name']['value']][$tada.fragmentId];
+            };
+          }
         : getSelection<
             Fragments[Node['name']['value']]['selectionSet']['selections'],
             Type,
@@ -196,55 +197,53 @@ type getFragmentsSelection<
     ? _getFragmentsSelectionRec<Selections, Type['name'], Type, Introspection, Fragments>
     : {};
 
-type getDefinitionSelectionRec<
-  Definitions extends any[],
+type getOperationSelectionType<
+  Definition,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
-> = Definitions extends readonly [infer Definition, ...infer Rest]
-  ? Definition extends {
-      kind: Kind.OPERATION_DEFINITION;
-      selectionSet: { kind: Kind.SELECTION_SET; selections: [...infer Selections] };
-      operation: any;
-    }
-    ? Introspection['types'][Introspection[Definition['operation']]] extends ObjectLikeType
-      ? getSelection<
-          Selections,
-          Introspection['types'][Introspection[Definition['operation']]],
-          Introspection,
-          Fragments
-        >
-      : {}
-    : getDefinitionSelectionRec<Rest, Introspection, Fragments>
-  : {};
+> = Definition extends {
+  kind: Kind.OPERATION_DEFINITION;
+  selectionSet: any;
+  operation: any;
+}
+  ? Introspection['types'][Introspection[Definition['operation']]] extends infer Type extends
+      ObjectLikeType
+    ? getSelection<Definition['selectionSet']['selections'], Type, Introspection, Fragments>
+    : {}
+  : never;
+
+type getFragmentSelectionType<
+  Definition,
+  Introspection extends IntrospectionLikeType,
+  Fragments extends { [name: string]: any },
+> = Definition extends {
+  kind: Kind.FRAGMENT_DEFINITION;
+  selectionSet: any;
+  typeCondition: any;
+}
+  ? Introspection['types'][Definition['typeCondition']['name']['value']] extends infer Type extends
+      ObjectLikeType
+    ? getSelection<Definition['selectionSet']['selections'], Type, Introspection, Fragments>
+    : {}
+  : never;
 
 type getDocumentType<
   Document extends DocumentNodeLike,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any } = {},
-> = getDefinitionSelectionRec<
-  Document['definitions'],
-  Introspection,
-  getFragmentMap<Document> & Fragments
->;
-
-type getFragmentType<
-  Document extends DocumentNodeLike,
-  Introspection extends IntrospectionLikeType,
-  Fragments extends { [name: string]: any } = {},
-> = Document['definitions'][0] extends {
-  kind: Kind.FRAGMENT_DEFINITION;
-  typeCondition: { name: { value: infer TypeName } };
-}
-  ? TypeName extends keyof Introspection['types']
-    ? Introspection['types'][TypeName] extends ObjectLikeType
-      ? getSelection<
-          Document['definitions'][0]['selectionSet']['selections'],
-          Introspection['types'][TypeName],
-          Introspection,
-          getFragmentMap<Document> & Fragments
-        >
+> = Document['definitions'] extends readonly [infer Definition, ...infer Rest]
+  ? Definition extends { kind: Kind.OPERATION_DEFINITION }
+    ? getOperationSelectionType<Definition, Introspection, getFragmentMapRec<Rest> & Fragments>
+    : Definition extends { kind: Kind.FRAGMENT_DEFINITION }
+      ? getFragmentSelectionType<Definition, Introspection, getFragmentMapRec<Rest> & Fragments>
       : never
-    : never
   : never;
 
-export type { getDocumentType, getFragmentType };
+type getFragmentMapRec<Definitions> = Definitions extends readonly [infer Definition, ...infer Rest]
+  ? (Definition extends { kind: Kind.FRAGMENT_DEFINITION; name: any }
+      ? { [Name in Definition['name']['value']]: Definition }
+      : {}) &
+      getFragmentMapRec<Rest>
+  : {};
+
+export type { getDocumentType, getFragmentMapRec };
