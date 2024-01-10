@@ -1,6 +1,6 @@
 import { expectTypeOf, test } from 'vitest';
 import { simpleSchema } from './fixtures/simpleSchema';
-import { tada } from '../namespace';
+import { $tada } from '../namespace';
 import { parseDocument } from '../parser';
 import { mapIntrospection } from '../introspection';
 import { getDocumentType } from '../selection';
@@ -116,7 +116,7 @@ test('infers fragment spreads for fragment refs', () => {
   type fragment = parseDocument</* GraphQL */ `
     fragment Fields on Todo { id text __typename }
   `>['definitions'][0] & {
-    [tada.fragmentName]: 'Fields';
+    [$tada.fragmentName]: 'Fields';
   };
 
   type query = parseDocument</* GraphQL */ `
@@ -127,7 +127,7 @@ test('infers fragment spreads for fragment refs', () => {
 
   type expected = {
     todos: Array<{
-      [tada.fragmentRefs]: {
+      [$tada.fragmentRefs]: {
         Fields: fragment;
       };
     } | null> | null;

@@ -6,7 +6,7 @@ import type {
   NameNode,
 } from '@0no-co/graphql.web';
 
-import type { tada } from './namespace';
+import type { $tada } from './namespace';
 import type { obj, objValues } from './utils';
 import type { getFragmentMap } from './fragments';
 import type { DocumentNodeLike } from './parser';
@@ -82,9 +82,9 @@ type getFragmentSelection<
   : Node extends { kind: Kind.FRAGMENT_SPREAD; name: any }
     ? Node['name']['value'] extends keyof Fragments
       ? Fragments[Node['name']['value']] extends infer Fragment extends {
-          [tada.fragmentName]: string;
+          [$tada.fragmentName]: string;
         }
-        ? { [tada.fragmentRefs]: { [Name in Fragment[tada.fragmentName]]: Fragment } }
+        ? { [$tada.fragmentRefs]: { [Name in Fragment[$tada.fragmentName]]: Fragment } }
         : getSelection<
             Fragments[Node['name']['value']]['selectionSet']['selections'],
             Type,
