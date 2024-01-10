@@ -2,7 +2,7 @@ import { expectTypeOf, test } from 'vitest';
 import { simpleIntrospection } from './fixtures/simpleIntrospection';
 import { parseDocument } from '../parser';
 import { mapIntrospection } from '../introspection';
-import { Variables } from '../variables';
+import { getVariablesType } from '../variables';
 
 type introspection = mapIntrospection<typeof simpleIntrospection>;
 
@@ -14,7 +14,7 @@ test('parses document-variables correctly', () => {
   `;
 
   type doc = parseDocument<typeof query>;
-  type variables = Variables<doc, introspection>;
+  type variables = getVariablesType<doc, introspection>;
 
   expectTypeOf<variables>().toEqualTypeOf<{ id: string | number }>();
 });
@@ -27,7 +27,7 @@ test('works for input-objects', () => {
   `;
 
   type doc = parseDocument<typeof query>;
-  type variables = Variables<doc, introspection>;
+  type variables = getVariablesType<doc, introspection>;
 
   expectTypeOf<variables>().toEqualTypeOf<{
     id: string | number;
@@ -43,7 +43,7 @@ test('allows optionals for default values', () => {
   `;
 
   type doc = parseDocument<typeof query>;
-  type variables = Variables<doc, introspection>;
+  type variables = getVariablesType<doc, introspection>;
 
   expectTypeOf<variables>().toEqualTypeOf<{ id?: string | number | undefined }>();
   expectTypeOf<variables['id']>().toEqualTypeOf<string | number | undefined>();

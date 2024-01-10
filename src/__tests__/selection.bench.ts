@@ -10,7 +10,7 @@ describe('TypedDocument', () => {
       import { simpleSchema as schema } from './simpleSchema';
       import { parseDocument } from './parser';
       import { getDocumentType } from './selection';
-      import type { Variables } from './variables';
+      import { getVariablesType } from './variables';
 
       type document = parseDocument<\`
         query ($org: String!, $repo: String!) {
@@ -21,7 +21,7 @@ describe('TypedDocument', () => {
       \`>;
 
       type Result = getDocumentType<document, schema>;
-      type Input = Variables<document, schema>;
+      type Input = getVariablesType<document, schema>;
     `,
   });
 

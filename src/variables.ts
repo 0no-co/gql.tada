@@ -2,17 +2,17 @@ import type { Kind, TypeNode } from '@0no-co/graphql.web';
 import type { IntrospectionLikeType } from './introspection';
 import type { obj } from './utils';
 
-type InputValues<
+type getInputObjectTypeRec<
   InputFields extends readonly unknown[],
   Introspection extends IntrospectionLikeType,
 > = InputFields extends [infer InputField, ...infer Rest]
   ? (InputField extends { name: any; type: any }
-      ? { [Name in InputField['name']]: UnwrapType<InputField['type'], Introspection> }
+      ? { [Name in InputField['name']]: unwrapType<InputField['type'], Introspection> }
       : {}) &
-      InputValues<Rest, Introspection>
+      getInputObjectTypeRec<Rest, Introspection>
   : {};
 
-type ScalarType<
+type getScalarType<
   TypeName,
   Introspection extends IntrospectionLikeType,
 > = TypeName extends keyof Introspection['types']
@@ -25,72 +25,72 @@ type ScalarType<
           kind: 'INPUT_OBJECT';
           inputFields: [...infer InputFields];
         }
-      ? obj<InputValues<InputFields, Introspection>>
+      ? obj<getInputObjectTypeRec<InputFields, Introspection>>
       : never
   : never;
 
-type UnwrapTypeInner<
+type _unwrapTypeRec<
   Type extends TypeNode,
   Introspection extends IntrospectionLikeType,
 > = Type extends { kind: 'NON_NULL' }
-  ? UnwrapTypeInner<Type['ofType'], Introspection>
+  ? _unwrapTypeRec<Type['ofType'], Introspection>
   : Type extends { kind: 'LIST' }
-    ? Array<UnwrapType<Type['ofType'], Introspection>>
+    ? Array<unwrapType<Type['ofType'], Introspection>>
     : Type extends { name: infer Name }
       ? Name extends keyof Introspection['types']
-        ? ScalarType<Name, Introspection>
+        ? getScalarType<Name, Introspection>
         : unknown
       : never;
 
-type UnwrapType<Type extends TypeNode, Introspection extends IntrospectionLikeType> = Type extends {
+type unwrapType<Type extends TypeNode, Introspection extends IntrospectionLikeType> = Type extends {
   kind: 'NON_NULL';
 }
-  ? UnwrapTypeInner<Type['ofType'], Introspection>
-  : null | UnwrapTypeInner<Type, Introspection>;
+  ? _unwrapTypeRec<Type['ofType'], Introspection>
+  : null | _unwrapTypeRec<Type, Introspection>;
 
-type UnwrapTypeRefInner<
+type _nwrapTypeRefRec<
   Type extends TypeNode,
   Introspection extends IntrospectionLikeType,
 > = Type extends { kind: Kind.NON_NULL_TYPE }
-  ? UnwrapTypeRefInner<Type['type'], Introspection>
+  ? _nwrapTypeRefRec<Type['type'], Introspection>
   : Type extends { kind: Kind.LIST_TYPE }
-    ? Array<UnwrapTypeRef<Type['type'], Introspection>>
+    ? Array<unwrapTypeRef<Type['type'], Introspection>>
     : Type extends { kind: Kind.NAMED_TYPE; name: { kind: Kind.NAME; value: infer Name } }
       ? Name extends keyof Introspection['types']
-        ? ScalarType<Name, Introspection>
+        ? getScalarType<Name, Introspection>
         : unknown
       : never;
 
-type UnwrapTypeRef<
+type unwrapTypeRef<
   Type extends TypeNode,
   Introspection extends IntrospectionLikeType,
 > = Type extends { kind: Kind.NON_NULL_TYPE }
-  ? UnwrapTypeRefInner<Type['type'], Introspection>
-  : null | UnwrapTypeRefInner<Type, Introspection>;
+  ? _nwrapTypeRefRec<Type['type'], Introspection>
+  : null | _nwrapTypeRefRec<Type, Introspection>;
 
-type VariablesContinue<
+type getVariablesRec<
   Variables extends readonly unknown[],
   Introspection extends IntrospectionLikeType,
 > = Variables extends [infer Variable, ...infer Rest]
   ? (Variable extends { kind: Kind.VARIABLE_DEFINITION; variable: any; type: any }
       ? Variable extends { defaultValue: undefined }
         ? {
-            [Name in Variable['variable']['name']['value']]: UnwrapTypeRef<
+            [Name in Variable['variable']['name']['value']]: unwrapTypeRef<
               Variable['type'],
               Introspection
             >;
           }
         : {
-            [Name in Variable['variable']['name']['value']]?: UnwrapTypeRef<
+            [Name in Variable['variable']['name']['value']]?: unwrapTypeRef<
               Variable['type'],
               Introspection
             >;
           }
       : {}) &
-      VariablesContinue<Rest, Introspection>
+      getVariablesRec<Rest, Introspection>
   : {};
 
-type DefinitionContinue<
+type getDefinitionVariablesRec<
   Definitions extends readonly unknown[],
   Introspection extends IntrospectionLikeType,
 > = (Definitions[0] extends {
@@ -98,16 +98,18 @@ type DefinitionContinue<
   variableDefinitions: infer VarDefs;
 }
   ? VarDefs extends Array<{ kind: Kind.VARIABLE_DEFINITION }>
-    ? VariablesContinue<VarDefs, Introspection>
+    ? getVariablesRec<VarDefs, Introspection>
     : never
   : never) &
   (Definitions extends readonly [any, ...infer Rest]
     ? Rest extends readonly []
       ? {}
-      : DefinitionContinue<Rest, Introspection>
+      : getDefinitionVariablesRec<Rest, Introspection>
     : never);
 
-export type Variables<
+type getVariablesType<
   D extends { kind: Kind.DOCUMENT; definitions: any[] },
   I extends IntrospectionLikeType,
-> = obj<DefinitionContinue<D['definitions'], I>>;
+> = obj<getDefinitionVariablesRec<D['definitions'], I>>;
+
+export type { getVariablesType };

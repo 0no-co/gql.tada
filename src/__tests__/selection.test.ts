@@ -21,7 +21,6 @@ describe('simple introspection', () => {
         import { parseDocument } from './parser';
         import { mapIntrospection } from './introspection';
         import { getDocumentType } from './selection';
-        import type { Variables } from './variables';
 
         type query = parseDocument<\`
           {
@@ -69,7 +68,6 @@ describe('simple introspection', () => {
         import { parseDocument } from './parser';
         import { mapIntrospection } from './introspection';
         import { getDocumentType } from './selection';
-        import type { Variables } from './variables';
 
         type query = parseDocument<\`
           query {
