@@ -1,5 +1,4 @@
-import { Kind, parse as _parse } from '@0no-co/graphql.web';
-import type { DocumentNode, DefinitionNode } from '@0no-co/graphql.web';
+import { Kind, DocumentNode, DefinitionNode, parse as _parse } from '@0no-co/graphql.web';
 
 import type {
   IntrospectionQuery,
@@ -114,5 +113,9 @@ interface TadaDocumentNode<
     DocumentDecoration<Result, Variables>,
     FragmentDefDecoration<Decoration> {}
 
+type ResultOf<T> = T extends DocumentDecoration<infer Result, infer _> ? Result : never;
+
+type VariablesOf<T> = T extends DocumentDecoration<infer _, infer Variables> ? Variables : never;
+
 export { parse, graphql };
-export type { setupSchema, TadaDocumentNode };
+export type { setupSchema, TadaDocumentNode, ResultOf, VariablesOf };
