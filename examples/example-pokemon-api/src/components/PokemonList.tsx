@@ -4,8 +4,8 @@ import { graphql } from '../graphql';
 import { PokemonItem, PokemonItemFragment } from './PokemonItem';
 
 const PokemonsQuery = graphql(`
-  query Pokemons {
-    pokemons(limit: 10) {
+  query Pokemons ($limit: Int = 10) {
+    pokemons(limit: $limit) {
       id
       ...PokemonItem
     }

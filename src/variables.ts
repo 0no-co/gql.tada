@@ -70,7 +70,7 @@ type getVariablesRec<
   Introspection extends IntrospectionLikeType,
 > = Variables extends [infer Variable, ...infer Rest]
   ? (Variable extends { kind: Kind.VARIABLE_DEFINITION; variable: any; type: any }
-      ? Variable extends { defaultValue: undefined }
+      ? Variable extends { defaultValue: undefined; type: { kind: Kind.NON_NULL_TYPE } }
         ? {
             [Name in Variable['variable']['name']['value']]: unwrapTypeRef<
               Variable['type'],

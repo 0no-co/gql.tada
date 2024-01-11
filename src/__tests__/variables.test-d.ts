@@ -48,3 +48,17 @@ test('allows optionals for default values', () => {
   expectTypeOf<variables>().toEqualTypeOf<{ id?: string | number | undefined }>();
   expectTypeOf<variables['id']>().toEqualTypeOf<string | number | undefined>();
 });
+
+test('allows optionals for nullable values', () => {
+  const query = `
+    mutation ($id: ID) {
+      toggleTodo (id: $id) { id }
+    }
+  `;
+
+  type doc = parseDocument<typeof query>;
+  type variables = getVariablesType<doc, introspection>;
+
+  expectTypeOf<variables>().toEqualTypeOf<{ id?: string | number | null | undefined }>();
+  expectTypeOf<variables['id']>().toEqualTypeOf<string | number | null | undefined>();
+});
