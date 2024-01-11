@@ -157,7 +157,14 @@ export type VirtualHost = ReturnType<typeof createVirtualHost> extends infer U
 
 export function createVirtualHost(files: Files) {
   // TODO: When another lib with references is selected, the resolution mode doesn't adapt
-  files['lib.d.ts'] = readFileFromRoot('node_modules/@0no-co/typescript.js/lib/lib.es5.d.ts');
+  files['lib.d.ts'] = [
+    readFileFromRoot('node_modules/@0no-co/typescript.js/lib/lib.es5.d.ts').toString(),
+    readFileFromRoot('node_modules/@0no-co/typescript.js/lib/lib.es2015.symbol.d.ts').toString(),
+    readFileFromRoot(
+      'node_modules/@0no-co/typescript.js/lib/lib.es2015.collection.d.ts'
+    ).toString(),
+    readFileFromRoot('node_modules/@0no-co/typescript.js/lib/lib.es2015.iterable.d.ts').toString(),
+  ].join('\n');
 
   const cache = createModuleResolutionCache(path.sep, normalize, compilerOptions);
   const root = new Directory();
