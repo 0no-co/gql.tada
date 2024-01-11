@@ -8,7 +8,9 @@ type getInputObjectTypeRec<
   Introspection extends IntrospectionLikeType,
 > = InputFields extends [infer InputField, ...infer Rest]
   ? (InputField extends { name: any; type: any }
-      ? { [Name in InputField['name']]: unwrapType<InputField['type'], Introspection> }
+      ? InputField extends { type: { kind: 'NON_NULL' } }
+        ? { [Name in InputField['name']]: unwrapType<InputField['type'], Introspection> }
+        : { [Name in InputField['name']]?: unwrapType<InputField['type'], Introspection> }
       : {}) &
       getInputObjectTypeRec<Rest, Introspection>
   : {};

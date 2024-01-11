@@ -31,7 +31,7 @@ test('works for input-objects', () => {
 
   expectTypeOf<variables>().toEqualTypeOf<{
     id: string | number;
-    input: { title: string; complete: boolean | null };
+    input: { title: string; complete?: boolean | null };
   }>();
 });
 
