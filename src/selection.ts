@@ -48,7 +48,7 @@ type _unwrapTypeRec<
               Introspection,
               Fragments
             >
-          : {}
+          : unknown
         : Introspection['types'][Type['name']]['type']
       : unknown;
 

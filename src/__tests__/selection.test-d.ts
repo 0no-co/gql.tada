@@ -36,6 +36,17 @@ test('infers unknown fields as `unknown`', () => {
   expectTypeOf<expected>().toEqualTypeOf<actual>();
 });
 
+test('infers object fields with missing selection set as `unknown`', () => {
+  type query = parseDocument</* GraphQL */ `
+    query { latestTodo }
+  `>;
+
+  type actual = getDocumentType<query, schema>;
+  type expected = { latestTodo: unknown };
+
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
+});
+
 test('infers adjacent inline fragments', () => {
   type query = parseDocument</* GraphQL */ `
     query { todos { id ... on Todo { text } ... on Todo { complete } } }
