@@ -67,6 +67,12 @@ type makeFragmentRef<Definition extends FragmentDefDecorationLike> = {
   };
 };
 
+type makeUndefinedFragmentRef<FragmentName extends string> = {
+  [$tada.fragmentRefs]?: {
+    [Name in FragmentName]: 'Undefined Fragment';
+  };
+};
+
 type makeFragmentDefDecoration<Definition> = {
   [$tada.fragmentDef]?: Definition extends DocumentDefDecorationLike[$tada.fragmentDef]
     ? Definition
@@ -79,6 +85,7 @@ export type {
   getFragmentsOfDocumentsRec,
   makeFragmentDefDecoration,
   makeFragmentRef,
+  makeUndefinedFragmentRef,
   FragmentDefDecorationLike,
   DocumentDefDecorationLike,
 };

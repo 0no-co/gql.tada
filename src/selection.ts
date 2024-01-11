@@ -8,7 +8,12 @@ import type {
 
 import type { obj, objValues } from './utils';
 import type { DocumentNodeLike } from './parser';
-import type { FragmentDefDecorationLike, $tada, makeFragmentRef } from './namespace';
+
+import type {
+  FragmentDefDecorationLike,
+  makeUndefinedFragmentRef,
+  makeFragmentRef,
+} from './namespace';
 
 import type {
   IntrospectionField,
@@ -103,8 +108,8 @@ type getSpreadSubtype<
   : Node extends { kind: Kind.FRAGMENT_SPREAD; name: any }
     ? Node['name']['value'] extends keyof Fragments
       ? Introspection['types'][Fragments[Node['name']['value']]['typeCondition']['name']['value']]
-      : never
-    : never;
+      : void
+    : void;
 
 type getTypenameOfType<Type extends ObjectLikeType> = Type extends {
   possibleTypes: any;
@@ -169,7 +174,9 @@ type _getFragmentsSelectionRec<
               | (isOptionalRec<Node['directives']> extends true ? never : {})
               | getFragmentSelection<Node, Subtype, Introspection, Fragments>
           : {}
-        : {}
+        : Node extends FragmentSpreadNode
+          ? makeUndefinedFragmentRef<Node['name']['value']>
+          : {}
       : {}) &
       _getFragmentsSelectionRec<Rest, PossibleType, Type, Introspection, Fragments>
   : {};

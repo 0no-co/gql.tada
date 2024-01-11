@@ -143,6 +143,22 @@ test('infers fragment spreads for fragment refs', () => {
   expectTypeOf<expected>().toEqualTypeOf<actual>();
 });
 
+test('marks undefined fragments with special fragment ref error', () => {
+  type query = parseDocument</* GraphQL */ `
+    query { ...Fields }
+  `>;
+
+  type actual = getDocumentType<query, schema>;
+
+  type expected = {
+    [$tada.fragmentRefs]?: {
+      Fields: 'Undefined Fragment';
+    };
+  };
+
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
+});
+
 test('infers inline fragments and fragment spreads', () => {
   type query = parseDocument</* GraphQL */ `
     query { todos { ...Fields ... on Todo { text } complete } }
