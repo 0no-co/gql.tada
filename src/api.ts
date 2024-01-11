@@ -1,4 +1,4 @@
-import type { DocumentNode } from '@0no-co/graphql.web';
+import type { DocumentNode, DefinitionNode } from '@0no-co/graphql.web';
 import { Kind, parse as _parse } from '@0no-co/graphql.web';
 
 import type {
@@ -9,10 +9,13 @@ import type {
 } from './introspection';
 
 import type {
-  decorateFragmentDef,
-  getFragmentsOfDocumentsRec,
   FragmentDefDecorationLike,
-  FragmentDefDecoration,
+  OperationDefDecorationLike,
+  getFragmentsOfDocumentsRec,
+  makeFragmentDefDecoration,
+  decorateFragmentDef,
+  makeFragmentRef,
+  $tada,
 } from './namespace';
 
 import type { getDocumentType } from './selection';
@@ -56,15 +59,20 @@ type getDocumentNode<
 
 function graphql<
   const In extends stringLiteral<In>,
-  const Fragments extends readonly [...FragmentDefDecorationLike[]],
+  const Fragments extends readonly [...OperationDefDecorationLike[]],
 >(
   input: In,
   fragments?: Fragments
 ): getDocumentNode<In, Schema, getFragmentsOfDocumentsRec<Fragments>> {
-  const definitions = new Set(_parse(input).definitions);
+  const definitions = _parse(input).definitions as DefinitionNode[];
+  const seen = new Set<unknown>();
   for (const document of fragments || []) {
-    for (const definition of document.definitions)
-      if (definition.kind === Kind.FRAGMENT_DEFINITION) definitions.add(definition);
+    for (const definition of document.definitions) {
+      if (definition.kind === Kind.FRAGMENT_DEFINITION && !seen.has(definition)) {
+        definitions.push(definition);
+        seen.add(definition);
+      }
+    }
   }
   return { kind: Kind.DOCUMENT, definitions: [...definitions] } as any;
 }
@@ -94,11 +102,22 @@ interface TadaDocumentNode<
   Decoration = never,
 > extends DocumentNode,
     DocumentDecoration<Result, Variables>,
-    FragmentDefDecoration<Decoration> {}
+    makeFragmentDefDecoration<Decoration> {}
 
-type ResultOf<T> = T extends DocumentDecoration<infer Result, infer _> ? Result : never;
+type ResultOf<Document> = Document extends DocumentDecoration<infer Result, infer _>
+  ? Result
+  : never;
 
-type VariablesOf<T> = T extends DocumentDecoration<infer _, infer Variables> ? Variables : never;
+type VariablesOf<Document> = Document extends DocumentDecoration<infer _, infer Variables>
+  ? Variables
+  : never;
+
+type FragmentOf<Document extends OperationDefDecorationLike> = Exclude<
+  Document[$tada.fragmentDef],
+  undefined
+> extends infer FragmentDef extends FragmentDefDecorationLike
+  ? makeFragmentRef<FragmentDef>
+  : never;
 
 export { parse, graphql };
-export type { setupSchema, TadaDocumentNode, ResultOf, VariablesOf };
+export type { setupSchema, TadaDocumentNode, ResultOf, VariablesOf, FragmentOf };

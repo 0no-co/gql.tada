@@ -6,9 +6,9 @@ import type {
   NameNode,
 } from '@0no-co/graphql.web';
 
-import type { $tada } from './namespace';
 import type { obj, objValues } from './utils';
 import type { DocumentNodeLike } from './parser';
+import type { FragmentDefDecorationLike, $tada, makeFragmentRef } from './namespace';
 
 import type {
   IntrospectionField,
@@ -80,12 +80,8 @@ type getFragmentSelection<
   ? getSelection<Node['selectionSet']['selections'], Type, Introspection, Fragments>
   : Node extends { kind: Kind.FRAGMENT_SPREAD; name: any }
     ? Node['name']['value'] extends keyof Fragments
-      ? Fragments[Node['name']['value']] extends { readonly [$tada.fragmentId]: symbol }
-        ? {
-            [$tada.fragmentRefs]?: {
-              [Name in Node['name']['value']]: Fragments[Node['name']['value']][$tada.fragmentId];
-            };
-          }
+      ? Fragments[Node['name']['value']] extends FragmentDefDecorationLike
+        ? makeFragmentRef<Fragments[Node['name']['value']]>
         : getSelection<
             Fragments[Node['name']['value']]['selectionSet']['selections'],
             Type,

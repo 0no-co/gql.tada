@@ -20,6 +20,17 @@ declare namespace $tada {
   export type fragmentId = typeof fragmentId;
 }
 
+interface FragmentDefDecorationLike {
+  readonly [$tada.fragmentId]: symbol;
+  kind: Kind.FRAGMENT_DEFINITION;
+  name: any;
+  typeCondition: any;
+}
+
+interface OperationDefDecorationLike extends DocumentNode {
+  [$tada.fragmentDef]?: FragmentDefDecorationLike;
+}
+
 type decorateFragmentDef<Document extends DocumentNodeLike> = Document['definitions'][0] extends {
   kind: Kind.FRAGMENT_DEFINITION;
   name: any;
@@ -50,25 +61,24 @@ type getFragmentsOfDocumentsRec<Documents> = Documents extends readonly [
       getFragmentsOfDocumentsRec<Rest>
   : {};
 
-interface FragmentDefDecorationLike extends DocumentNode {
-  [$tada.fragmentDef]?: {
-    readonly [$tada.fragmentId]: symbol;
-    kind: Kind.FRAGMENT_DEFINITION;
-    name: any;
-    typeCondition: any;
+type makeFragmentRef<Definition extends FragmentDefDecorationLike> = {
+  [$tada.fragmentRefs]?: {
+    [Name in Definition['name']['value']]: Definition[$tada.fragmentId];
   };
-}
+};
 
-interface FragmentDefDecoration<Definition> {
-  [$tada.fragmentDef]?: Definition extends FragmentDefDecorationLike[$tada.fragmentDef]
+type makeFragmentDefDecoration<Definition> = {
+  [$tada.fragmentDef]?: Definition extends OperationDefDecorationLike[$tada.fragmentDef]
     ? Definition
     : never;
-}
+};
 
 export type {
   $tada,
   decorateFragmentDef,
   getFragmentsOfDocumentsRec,
+  makeFragmentDefDecoration,
+  makeFragmentRef,
   FragmentDefDecorationLike,
-  FragmentDefDecoration,
+  OperationDefDecorationLike,
 };
