@@ -23,21 +23,36 @@ import type { getVariablesType } from './variables';
 import type { parseDocument, DocumentNodeLike } from './parser';
 import type { stringLiteral, matchOr, DocumentDecoration } from './utils';
 
-/** Private interface used to constrain [setupSchema]. */
+/** Abstract configuration type input for your schema and scalars.
+ *
+ * @remarks
+ * This is used either via {@link setupSchema} or {@link initGraphQLTada} to set
+ * up your schema and scalars.
+ *
+ * The `scalars` option is optional and can be used to set up more scalars, apart
+ * from the default ones (like: Int, Float, String, Boolean).
+ * It must be an object map of scalar names to their desired TypeScript types.
+ *
+ * @param introspection - Introspection of your schema matching {@link IntrospectionQuery}.
+ * @param scalars - An object type with scalar names as keys and the corresponding scalar types as values.
+ */
 interface AbstractSetupSchema {
   introspection: IntrospectionQuery;
-  scalars: ScalarsLike;
+  scalars?: ScalarsLike;
 }
 
 /** This is used to configure gql.tada with your introspection data and scalars.
  *
  * @remarks
- * You must extend this interface via declaration merging with your {@link IntrospectionQuery}
+ * You may extend this interface via declaration merging with your {@link IntrospectionQuery}
  * data and optionally your scalars to get proper type inference.
  * This is done by declaring a declaration for it as per the following example.
  *
  * Configuring scalars is optional and by default the standard scalrs are already
  * defined.
+ *
+ * This will configure the {@link graphql} export to infer types from your schema.
+ * Alternatively, you may call {@link initGraphQLTada} instead.
  *
  * @param introspection - Introspection of your schema matching {@link IntrospectionQuery}.
  * @param scalars - An object type with scalar names as keys and the corresponding scalar types as values.
@@ -62,10 +77,103 @@ interface setupSchema extends AbstractSetupSchema {
   /*empty*/
 }
 
-type Schema = mapIntrospection<
-  matchOr<IntrospectionQuery, setupSchema['introspection'], never>,
-  matchOr<ScalarsLike, setupSchema['scalars'], {}>
->;
+interface GraphQLTadaAPI<Schema extends IntrospectionLikeType> {
+  /** Function to create and compose GraphQL documents with result and variable types.
+   *
+   * @param input - A string of a GraphQL document.
+   * @param fragments - An optional list of other GraphQL fragments created with this function.
+   * @returns A {@link DocumentNode} with result and variables types.
+   *
+   * @remarks
+   * This function creates a {@link DocumentNode} with result and variables types.
+   * It is used with your schema in {@link setupSchema} to create a result type
+   * of your queries, fragments, and variables.
+   *
+   * You can compose fragments into this function by passing them and a fragment
+   * mask will be created for them.
+   * When creating queries, the returned document of queries can be passed into GraphQL clients
+   * which will then automatically infer the result and variables types.
+   *
+   * @example
+   *
+   * ```
+   * import { graphql } from 'gql.tada';
+   *
+   * const bookFragment = graphql(`
+   *   fragment BookComponent on Book {
+   *     id
+   *     title
+   *   }
+   * `);
+   *
+   * const bookQuery = graphql(`
+   *   query Book ($id: ID!) {
+   *     book(id: $id) {
+   *       id
+   *       ...BookComponent
+   *     }
+   *   }
+   * `, [bookFragment]);
+   * ```
+   *
+   * @see {@link readFragment} for how to read from fragment masks.
+   */
+  <
+    const In extends stringLiteral<In>,
+    const Fragments extends readonly [...DocumentDefDecorationLike[]],
+  >(
+    input: In,
+    fragments?: Fragments
+  ): getDocumentNode<parseDocument<In>, Schema, getFragmentsOfDocumentsRec<Fragments>>;
+}
+
+/** Setup function to create a typed `graphql` document function with.
+ *
+ * @remarks
+ * `initGraphQLTada` accepts an {@link AbstractSetupSchema} configuration object as a generic
+ * and returns a `graphql` function that may be used to create documents typed using your
+ * GraphQL schema.
+ *
+ * You should use and re-export the resulting function named as `graphql` or `gql` for your
+ * editor and the TypeScript language server to recognize your GraphQL documents correctly.
+ *
+ * @example
+ *
+ * ```
+ * import { initGraphQLTada } from 'gql.tada';
+ * import { myIntrospection } from './myIntrospection';
+ *
+ * export const graphql = initGraphQLTada<{
+ *   introspection: typeof myIntrospection;
+ *   scalars: {
+ *     DateTime: string;
+ *     Json: any;
+ *   };
+ * }>();
+ *
+ * const query = graphql(`{ __typename }`);
+ * ```
+ */
+function initGraphQLTada<const Setup extends AbstractSetupSchema>() {
+  type Schema = mapIntrospection<
+    matchOr<IntrospectionQuery, Setup['introspection'], never>,
+    matchOr<ScalarsLike, Setup['scalars'], {}>
+  >;
+
+  return function graphql(input: string, fragments?: readonly DocumentDefDecorationLike[]): any {
+    const definitions = _parse(input).definitions as DefinitionNode[];
+    const seen = new Set<unknown>();
+    for (const document of fragments || []) {
+      for (const definition of document.definitions) {
+        if (definition.kind === Kind.FRAGMENT_DEFINITION && !seen.has(definition)) {
+          definitions.push(definition);
+          seen.add(definition);
+        }
+      }
+    }
+    return { kind: Kind.DOCUMENT, definitions: [...definitions] } as any;
+  } as GraphQLTadaAPI<Schema>;
+}
 
 /** Alias to a GraphQL parse function returning an exact document type.
  *
@@ -94,66 +202,6 @@ type getDocumentNode<
         decorateFragmentDef<Document>
       >
   : never;
-
-/** Function to create and compose GraphQL documents with result and variable types.
- *
- * @param input - A string of a GraphQL document.
- * @param fragments - An optional list of other GraphQL fragments created with this function.
- * @returns A {@link DocumentNode} with result and variables types.
- *
- * @remarks
- * This function creates a {@link DocumentNode} with result and variables types.
- * It is used with your schema in {@link setupSchema} to create a result type
- * of your queries, fragments, and variables.
- *
- * You can compose fragments into this function by passing them and a fragment
- * mask will be created for them.
- * When creating queries, the returned document of queries can be passed into GraphQL clients
- * which will then automatically infer the result and variables types.
- *
- * @example
- *
- * ```
- * import { graphql } from 'gql.tada';
- *
- * const bookFragment = graphql(`
- *   fragment BookComponent on Book {
- *     id
- *     title
- *   }
- * `);
- *
- * const bookQuery = graphql(`
- *   query Book ($id: ID!) {
- *     book(id: $id) {
- *       id
- *       ...BookComponent
- *     }
- *   }
- * `, [bookFragment]);
- * ```
- *
- * @see {@link readFragment} for how to read from fragment masks.
- */
-function graphql<
-  const In extends stringLiteral<In>,
-  const Fragments extends readonly [...DocumentDefDecorationLike[]],
->(
-  input: In,
-  fragments?: Fragments
-): getDocumentNode<parseDocument<In>, Schema, getFragmentsOfDocumentsRec<Fragments>> {
-  const definitions = _parse(input).definitions as DefinitionNode[];
-  const seen = new Set<unknown>();
-  for (const document of fragments || []) {
-    for (const definition of document.definitions) {
-      if (definition.kind === Kind.FRAGMENT_DEFINITION && !seen.has(definition)) {
-        definitions.push(definition);
-        seen.add(definition);
-      }
-    }
-  }
-  return { kind: Kind.DOCUMENT, definitions: [...definitions] } as any;
-}
 
 /** A GraphQL `DocumentNode` with attached types for results and variables.
  *
@@ -310,5 +358,16 @@ function readFragment<
   return fragment as any;
 }
 
-export { parse, graphql, readFragment };
-export type { setupSchema, parseDocument, TadaDocumentNode, ResultOf, VariablesOf, FragmentOf };
+const graphql = initGraphQLTada<setupSchema>();
+
+export { parse, graphql, readFragment, initGraphQLTada };
+export type {
+  setupSchema,
+  parseDocument,
+  AbstractSetupSchema,
+  GraphQLTadaAPI,
+  TadaDocumentNode,
+  ResultOf,
+  VariablesOf,
+  FragmentOf,
+};
