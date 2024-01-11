@@ -42,19 +42,17 @@ function parse<const In extends stringLiteral<In>>(input: In): parseDocument<In>
 }
 
 type getDocumentNode<
-  In extends string,
+  Document extends DocumentNodeLike,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any } = {},
-> = parseDocument<In> extends infer Document extends DocumentNodeLike
-  ? getDocumentType<Document, Introspection, Fragments> extends infer Result
-    ? Result extends never
-      ? never
-      : TadaDocumentNode<
-          Result,
-          getVariablesType<Document, Introspection>,
-          decorateFragmentDef<Document>
-        >
-    : never
+> = getDocumentType<Document, Introspection, Fragments> extends infer Result
+  ? Result extends never
+    ? never
+    : TadaDocumentNode<
+        Result,
+        getVariablesType<Document, Introspection>,
+        decorateFragmentDef<Document>
+      >
   : never;
 
 function graphql<
@@ -63,7 +61,7 @@ function graphql<
 >(
   input: In,
   fragments?: Fragments
-): getDocumentNode<In, Schema, getFragmentsOfDocumentsRec<Fragments>> {
+): getDocumentNode<parseDocument<In>, Schema, getFragmentsOfDocumentsRec<Fragments>> {
   const definitions = _parse(input).definitions as DefinitionNode[];
   const seen = new Set<unknown>();
   for (const document of fragments || []) {
@@ -145,4 +143,4 @@ function readFragment<
 }
 
 export { parse, graphql, readFragment };
-export type { setupSchema, TadaDocumentNode, ResultOf, VariablesOf, FragmentOf };
+export type { setupSchema, parseDocument, TadaDocumentNode, ResultOf, VariablesOf, FragmentOf };
