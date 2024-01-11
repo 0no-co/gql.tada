@@ -61,6 +61,7 @@ jobs:
 
       - name: Publish Prerelease
         if: steps.changesets.outputs.published != 'true'
+        continue-on-error: true
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
