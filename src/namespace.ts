@@ -27,7 +27,7 @@ interface FragmentDefDecorationLike {
   typeCondition: any;
 }
 
-interface OperationDefDecorationLike extends DocumentNode {
+interface DocumentDefDecorationLike extends DocumentNode {
   [$tada.fragmentDef]?: FragmentDefDecorationLike;
 }
 
@@ -68,7 +68,7 @@ type makeFragmentRef<Definition extends FragmentDefDecorationLike> = {
 };
 
 type makeFragmentDefDecoration<Definition> = {
-  [$tada.fragmentDef]?: Definition extends OperationDefDecorationLike[$tada.fragmentDef]
+  [$tada.fragmentDef]?: Definition extends DocumentDefDecorationLike[$tada.fragmentDef]
     ? Definition
     : never;
 };
@@ -80,5 +80,5 @@ export type {
   makeFragmentDefDecoration,
   makeFragmentRef,
   FragmentDefDecorationLike,
-  OperationDefDecorationLike,
+  DocumentDefDecorationLike,
 };

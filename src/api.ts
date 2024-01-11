@@ -10,7 +10,7 @@ import type {
 
 import type {
   FragmentDefDecorationLike,
-  OperationDefDecorationLike,
+  DocumentDefDecorationLike,
   getFragmentsOfDocumentsRec,
   makeFragmentDefDecoration,
   decorateFragmentDef,
@@ -59,7 +59,7 @@ type getDocumentNode<
 
 function graphql<
   const In extends stringLiteral<In>,
-  const Fragments extends readonly [...OperationDefDecorationLike[]],
+  const Fragments extends readonly [...DocumentDefDecorationLike[]],
 >(
   input: In,
   fragments?: Fragments
@@ -112,12 +112,37 @@ type VariablesOf<Document> = Document extends DocumentDecoration<infer _, infer 
   ? Variables
   : never;
 
-type FragmentOf<Document extends OperationDefDecorationLike> = Exclude<
+type FragmentOf<Document extends DocumentDefDecorationLike> = Exclude<
   Document[$tada.fragmentDef],
   undefined
 > extends infer FragmentDef extends FragmentDefDecorationLike
   ? makeFragmentRef<FragmentDef>
   : never;
 
-export { parse, graphql };
+type mirrorFragmentTypeRec<Fragment, Data> = Fragment extends readonly (infer Value)[]
+  ? mirrorFragmentTypeRec<Value, Data>[]
+  : Fragment extends null
+    ? null
+    : Fragment extends undefined
+      ? undefined
+      : Data;
+
+type fragmentOfTypeRec<Document extends DocumentDefDecorationLike> =
+  | readonly fragmentOfTypeRec<Document>[]
+  | FragmentOf<Document>
+  | undefined
+  | null;
+
+function readFragment<
+  const Document extends DocumentDefDecorationLike,
+  const Fragment extends fragmentOfTypeRec<Document>,
+  const Data,
+>(
+  _document: DocumentDecoration<Data, any> & Document,
+  fragment: Fragment
+): fragmentOfTypeRec<Document> extends Fragment ? unknown : mirrorFragmentTypeRec<Fragment, Data> {
+  return fragment as any;
+}
+
+export { parse, graphql, readFragment };
 export type { setupSchema, TadaDocumentNode, ResultOf, VariablesOf, FragmentOf };
