@@ -39,6 +39,9 @@ interface AbstractSetupSchema {
  * Configuring scalars is optional and by default the standard scalrs are already
  * defined.
  *
+ * @param introspection - Introspection of your schema matching {@link IntrospectionQuery}.
+ * @param scalars - An object type with scalar names as keys and the corresponding scalar types as values.
+ *
  * @example
  *
  * ```

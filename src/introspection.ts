@@ -1,5 +1,14 @@
 import type { obj } from './utils';
 
+/** Format of introspection data queryied from your schema.
+ *
+ * @remarks
+ * You must provide your introspected schema in the standard introspection
+ * format (as represented by this type) to `setupSchema` to configure this
+ * library to use your types.
+ *
+ * @see {@link setupSchema} for where to use this data.
+ */
 export interface IntrospectionQuery {
   readonly __schema: IntrospectionSchema;
 }
