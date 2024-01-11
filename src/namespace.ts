@@ -1,5 +1,6 @@
 import type { Kind, DocumentNode } from '@0no-co/graphql.web';
 import type { DocumentNodeLike } from './parser';
+import type { obj } from './utils';
 
 /** Private namespace holding our symbols for markers.
  *
@@ -61,11 +62,11 @@ type getFragmentsOfDocumentsRec<Documents> = Documents extends readonly [
       getFragmentsOfDocumentsRec<Rest>
   : {};
 
-type makeFragmentRef<Definition extends FragmentDefDecorationLike> = {
+type makeFragmentRef<Definition extends FragmentDefDecorationLike> = obj<{
   [$tada.fragmentRefs]?: {
     [Name in Definition['name']['value']]: Definition[$tada.fragmentId];
   };
-};
+}>;
 
 type makeUndefinedFragmentRef<FragmentName extends string> = {
   [$tada.fragmentRefs]?: {
