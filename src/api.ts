@@ -284,13 +284,15 @@ type FragmentOf<Document extends DocumentDefDecorationLike> = Exclude<
   ? makeFragmentRef<FragmentDef>
   : never;
 
-type mirrorFragmentTypeRec<Fragment, Data> = Fragment extends readonly (infer Value)[]
+export type mirrorFragmentTypeRec<Fragment, Data> = Fragment extends (infer Value)[]
   ? mirrorFragmentTypeRec<Value, Data>[]
-  : Fragment extends null
-    ? null
-    : Fragment extends undefined
-      ? undefined
-      : Data;
+  : Fragment extends readonly (infer Value)[]
+    ? readonly mirrorFragmentTypeRec<Value, Data>[]
+    : Fragment extends null
+      ? null
+      : Fragment extends undefined
+        ? undefined
+        : Data;
 
 type fragmentOfTypeRec<Document extends DocumentDefDecorationLike> =
   | readonly fragmentOfTypeRec<Document>[]
@@ -361,6 +363,7 @@ function readFragment<
 const graphql = initGraphQLTada<setupSchema>();
 
 export { parse, graphql, readFragment, initGraphQLTada };
+
 export type {
   setupSchema,
   parseDocument,
