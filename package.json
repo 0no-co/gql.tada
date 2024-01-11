@@ -68,6 +68,11 @@
       "./scripts/eslint-preset.js"
     ]
   },
+  "pnpm": {
+    "overrides": {
+      "gql.tada": "workspace:*"
+    }
+  },
   "devDependencies": {
     "@0no-co/typescript.js": "5.3.2-2",
     "@babel/plugin-transform-block-scoping": "^7.23.4",
