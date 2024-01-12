@@ -25,6 +25,21 @@ test('infers simple fields', () => {
   expectTypeOf<expected>().toEqualTypeOf<actual>();
 });
 
+test('infers mutation fields', () => {
+  type mutation = parseDocument</* GraphQL */ `
+    mutation ToggleTodo ($id: ID!) {
+      toggleTodo(id: $id) {
+        id
+      }
+    }
+  `>;
+
+  type actual = getDocumentType<mutation, schema>;
+  type expected = { toggleTodo: { id: string | number } | null };
+
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
+});
+
 test('infers unknown fields as `unknown`', () => {
   type query = parseDocument</* GraphQL */ `
     query { unknown, unknownObj { __typename } }
