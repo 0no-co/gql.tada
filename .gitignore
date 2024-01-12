@@ -8,5 +8,7 @@ dist/
 coverage/
 package-lock.json
 .DS_Store
-
+.env
+.env.production
+.astro/
 /tsconfig.vitest-temp.json
