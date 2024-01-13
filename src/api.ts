@@ -127,6 +127,11 @@ interface GraphQLTadaAPI<Schema extends IntrospectionLikeType> {
   ): getDocumentNode<parseDocument<In>, Schema, getFragmentsOfDocumentsRec<Fragments>>;
 }
 
+type schemaOfConfig<Setup extends AbstractSetupSchema> = mapIntrospection<
+  matchOr<IntrospectionQuery, Setup['introspection'], never>,
+  matchOr<ScalarsLike, Setup['scalars'], {}>
+>;
+
 /** Setup function to create a typed `graphql` document function with.
  *
  * @remarks
@@ -155,10 +160,7 @@ interface GraphQLTadaAPI<Schema extends IntrospectionLikeType> {
  * ```
  */
 function initGraphQLTada<const Setup extends AbstractSetupSchema>() {
-  type Schema = mapIntrospection<
-    matchOr<IntrospectionQuery, Setup['introspection'], never>,
-    matchOr<ScalarsLike, Setup['scalars'], {}>
-  >;
+  type Schema = schemaOfConfig<Setup>;
 
   return function graphql(input: string, fragments?: readonly DocumentDefDecorationLike[]): any {
     const definitions = _parse(input).definitions as DefinitionNode[];
@@ -360,7 +362,7 @@ function readFragment<
   return fragment as any;
 }
 
-const graphql = initGraphQLTada<setupSchema>();
+const graphql: GraphQLTadaAPI<schemaOfConfig<setupSchema>> = initGraphQLTada();
 
 export { parse, graphql, readFragment, initGraphQLTada };
 
