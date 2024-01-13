@@ -81,7 +81,7 @@ const commonPlugins = [
 
 const commonOutput = {
   dir: './',
-  exports: 'named',
+  exports: 'auto',
   sourcemap: true,
   sourcemapExcludeSources: false,
   hoistTransitiveImports: false,
