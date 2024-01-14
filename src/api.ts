@@ -58,9 +58,8 @@ interface AbstractSetupSchema {
  * @param scalars - An object type with scalar names as keys and the corresponding scalar types as values.
  *
  * @example
- *
  * ```
- * import { myIntrospection } from './myIntrospection';
+ * import type { myIntrospection } from './myIntrospection';
  *
  * declare module 'gql.tada' {
  *   interface setupSchema {
@@ -95,7 +94,6 @@ interface GraphQLTadaAPI<Schema extends IntrospectionLikeType> {
    * which will then automatically infer the result and variables types.
    *
    * @example
-   *
    * ```
    * import { graphql } from 'gql.tada';
    *
@@ -143,10 +141,9 @@ type schemaOfConfig<Setup extends AbstractSetupSchema> = mapIntrospection<
  * editor and the TypeScript language server to recognize your GraphQL documents correctly.
  *
  * @example
- *
  * ```
  * import { initGraphQLTada } from 'gql.tada';
- * import { myIntrospection } from './myIntrospection';
+ * import type { myIntrospection } from './myIntrospection';
  *
  * export const graphql = initGraphQLTada<{
  *   introspection: typeof myIntrospection;
@@ -259,7 +256,6 @@ type VariablesOf<Document> = Document extends DocumentDecoration<infer _, infer 
  * codebase that defines a fragment.
  *
  * @example
- *
  * ```
  * import { FragmentOf, graphql, readFragment } from 'gql.tada';
  *
@@ -318,7 +314,6 @@ type fragmentOfTypeRec<Document extends DocumentDefDecorationLike> =
  * a part of your codebase to require.
  *
  * @example
- *
  * ```
  * import { FragmentOf, graphql, readFragment } from 'gql.tada';
  *
