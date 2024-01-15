@@ -96,5 +96,12 @@ module.exports = {
         'no-restricted-syntax': 'off',
       },
     },
+
+    {
+      files: ['**/*.d.ts'],
+      rules: {
+        '@typescript-eslint/triple-slash-reference': 'off',
+      },
+    },
   ],
 };

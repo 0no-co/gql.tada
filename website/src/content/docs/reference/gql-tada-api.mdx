@@ -1,0 +1,248 @@
+---
+title: gql.tada API
+---
+
+## Functions
+
+### `graphql()`
+
+| | Description |
+| ----------- | ----------- |
+| `input` argument | A string of a GraphQL document. |
+| `fragments` argument | An optional list of other GraphQL fragments created with this function. |
+| returns | A GraphQL `DocumentNode` with result and variables types. | 
+
+Creates a `DocumentNode` with result and variables types.
+
+You can compose fragments into this function by passing them and a fragment
+mask will be created for them.
+When creating queries, the returned document of queries can be passed into GraphQL clients
+which will then automatically infer the result and variables types.
+
+It is used with your schema in `setupSchema` to create a result type
+of your queries, fragments, and variables.
+If you instead would like to manually create a `graphql` function with an explicit schema type,
+[use `initGraphQLTada` instead.](#initgraphqltada)
+
+#### Example
+
+```ts
+import { graphql } from 'gql.tada';
+const bookFragment = graphql(`
+  fragment BookComponent on Book {
+    id
+    title
+  }
+`);
+
+const bookQuery = graphql(`
+  query Book ($id: ID!) {
+    book(id: $id) {
+      id
+      ...BookComponent
+    }
+  }
+`, [bookFragment]);
+```
+
+### `readFragment()`
+
+| | Description |
+| ----------- | ----------- |
+| `_document` argument | A GraphQL document of a fragment, created using [`graphql()`](#graphql). |
+| `fragment` argument | A mask of the fragment, which can be wrapped in arrays, or nullable. |
+| returns | The unmasked data of the fragment. | 
+
+When [`graphql()`](#graphql) is used to create a fragment and is spread into another
+fragment or query, their result types will only contain a “reference” to the
+fragment. This encourages isolation and is known as “fragment masking.”
+
+This means that you must use `readFragment()` to unmask these fragment masks
+and get to the data. This encourages isolation and only using the data you define
+a part of your codebase to require.
+
+When passing `fragment` masks to `readFragment()`, you may also pass nullable, optional data, or data
+wrapped in arrays to `readFragment()` and the result type will be unwrapped and inferred accordingly.
+
+[Read more about fragment masking on the “Writing GraphQL” page.](../../get-started/writing-graphql/#fragment-masking)
+
+#### Example
+
+```ts
+import { FragmentOf, graphql, readFragment } from 'gql.tada';
+
+const bookFragment = graphql(`
+  fragment BookComponent on Book {
+    id
+    title
+  }
+`);
+
+const getBook = (data: FragmentOf<typeof bookFragment> | null) => {
+  // Unmasks the fragment and casts to the result type of `bookFragment`
+  // This is intersected with `| null` in this case, due to the input type.
+  const book = readFragment(bookFragment, data);
+};
+
+const bookQuery = graphql(`
+  query Book ($id: ID!) {
+    book(id: $id) {
+      id
+      ...BookComponent
+    }
+  }
+`, [bookFragment]);
+
+const getQuery = (data: ResultOf<typeof bookQuery>) => {
+  getBook(data?.book);
+};
+```
+
+### `initGraphQLTada()`
+
+| | Description |
+| ----------- | ----------- |
+| `Setup` generic | An [`AbstractSetupSchema` configuration object](#abstractsetupschema) |
+| returns | A typed [`graphql()`](#graphql) function. | 
+
+`initGraphQLTada` accepts an [`AbstractSetupSchema` configuration object](#abstractsetupschema) as a generic
+and returns [a `graphql()` function](#graphql) that may be used to create documents typed using your
+GraphQL schema.
+
+You should use and re-export the resulting function named as `graphql` or `gql` for your
+editor and the TypeScript language server to recognize your GraphQL documents correctly.
+
+[Read more about how to use `initGraphQLTada()` on the “Installation” page.](../../get-started/installation/#initializing-gqltada-manually)
+
+#### Example
+
+```ts
+import { initGraphQLTada } from 'gql.tada';
+import type { myIntrospection } from './myIntrospection';
+
+export const graphql = initGraphQLTada<{
+  introspection: typeof myIntrospection;
+  scalars: {
+    DateTime: string;
+    Json: any;
+  };
+}>();
+
+const query = graphql(`{ __typename }`);
+```
+
+## Types
+
+### `ResultOf`
+
+| | Description |
+| ----------- | ----------- |
+| `Document` generic | The document type of a `DocumentNode` carrying the result type. |
+
+This accepts a [`TadaDocumentNode`](#tadadocumentnode) and returns the attached `Result` type
+of GraphQL documents.
+
+### `VariablesOf`
+
+| | Description |
+| ----------- | ----------- |
+| `Document` generic | The document type of a `DocumentNode` carrying the variables type. |
+
+This accepts a [`TadaDocumentNode`](#tadadocumentnode) and returns the attached `Variables` type
+of GraphQL documents.
+
+### `FragmentOf`
+
+| | Description |
+| ----------- | ----------- |
+| `Document` generic | A `DocumentNode` containing a fragment definition. |
+
+Creates a fragment mask for a given fragment document.
+
+When [`graphql()`](#graphql) is used to create a fragment and is spread into another
+fragment or query, their result types will only contain a “reference” to the
+fragment. This encourages isolation and is known as “fragment masking.”
+
+While [`readFragment()`](#readfragment) is used to unmask these fragment masks, this utility
+creates a fragment mask, so you can accept the masked data in the part of your
+codebase that defines a fragment.
+
+[Read more about fragment masking on the “Writing GraphQL” page.](../../get-started/writing-graphql/#fragment-masking)
+
+#### Example
+
+```ts
+import { FragmentOf, graphql, readFragment } from 'gql.tada';
+const bookFragment = graphql(`
+  fragment BookComponent on Book {
+    id
+    title
+  }
+`);
+
+// May be called with any GraphQL data that contains a spread of `bookFragment`
+const getBook = (data: FragmentOf<typeof bookFragment>) => {
+  // Unmasks the fragment and casts to the result type of `bookFragment`
+  const book = readFragment(bookFragment, data);
+};
+```
+
+### `TadaDocumentNode`
+
+| | Description |
+| ----------- | ----------- |
+| `Result` generic | The type of GraphQL results, as returned by GraphQL APIs for a given query. |
+| `Variables` generic | The type of variables, as accepted by GraphQL APIs for a given query. |
+
+A GraphQL `DocumentNode` with attached types for results and variables.
+
+This is a GraphQL `DocumentNode` with attached types for results and variables.
+This is used by GraphQL clients to infer the types of results and variables and provide
+type-safety in GraphQL documents.
+
+You can create typed GraphQL documents using the [`graphql()` function.](#graphql)
+
+### `setupSchema`
+
+You may extend this interface via declaration merging with your `IntrospectionQuery`
+data and optionally your scalars to get proper type inference.
+This is done by declaring a declaration for it as per the following example.
+
+Configuring scalars is optional and by default the standard scalrs are already
+defined.
+
+This will configure the default `graphql()` export to infer types from your schema.
+Alternatively, if you don’t want to define your schema project-wide,
+you may call [`initGraphQLTada()`](#initgraphqltada) instead.
+
+[Read more about setting up your schema on the “Installation” page.](../../get-started/installation/#step-3-configuring-typings)
+
+#### Example
+
+```ts
+import type { myIntrospection } from './myIntrospection';
+
+declare module 'gql.tada' {
+  interface setupSchema {
+    introspection: typeof myIntrospection;
+    scalars: {
+      DateTime: string;
+      Json: any;
+    };
+  }
+}
+```
+
+### `AbstractSetupSchema`
+
+| | Description |
+| ----------- | ----------- |
+| `introspection` property | Introspection of your schema in the `IntrospectionQuery` format. |
+| `scalars` property | An optional object type with scalar names as keys and the corresponding scalar types as values. |
+
+This is used either via [`setupSchema`](#setupschema) or [`initGraphQLTada()`](#initgraphqltada) to set
+up your schema and scalars. Your configuration objects must match the shape of this type.
+
+The `scalars` option is optional and can be used to set up more scalars, apart
+from the default ones (like: Int, Float, String, Boolean).
+It must be an object map of scalar names to their desired TypeScript types.
