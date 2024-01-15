@@ -2,6 +2,8 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
 
+import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections';
+
 // https://astro.build/config
 export default defineConfig({
 	integrations: [
@@ -11,6 +13,10 @@ export default defineConfig({
 				github: 'https://github.com/withastro/starlight',
 			},
 			sidebar: [
+				{
+					label: 'Get Started',
+					autogenerate: { directory: 'get-started' },
+				},
 				{
 					label: 'Guides',
 					items: [
@@ -24,7 +30,13 @@ export default defineConfig({
 				},
 			],
 			customCss: ['./src/tailwind.css'],
+      expressiveCode: {
+        plugins: [
+          pluginCollapsibleSections(),
+        ],
+      },
 		}),
+
 		tailwind({ applyBaseStyles: false }),
 	],
 });

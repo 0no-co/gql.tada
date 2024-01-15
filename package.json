@@ -70,7 +70,8 @@
   },
   "pnpm": {
     "overrides": {
-      "gql.tada": "workspace:*"
+      "gql.tada": "workspace:*",
+      "astro-expressive-code": "^0.31.0"
     }
   },
   "devDependencies": {
