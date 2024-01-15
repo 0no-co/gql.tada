@@ -9,6 +9,10 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			title: 'gql.tada',
+      description: 'Magical GraphQL query engine for TypeScript',
+      editLink: {
+        baseUrl: 'https://github.com/0no-co/gql.tada/edit/main/website/',
+      },
 			social: {
 				github: 'https://github.com/0no-co/gql.tada',
         discord: 'https://urql.dev/discord',
