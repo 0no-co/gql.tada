@@ -13,7 +13,7 @@ export default defineConfig({
 				github: 'https://github.com/withastro/starlight',
 			},
 			sidebar: [
-				{
+        {
 					label: 'Get Started',
 					autogenerate: { directory: 'get-started' },
 				},
