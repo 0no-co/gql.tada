@@ -1,0 +1,44 @@
+name: "\U0001F41E Bug report"
+description: Report an issue with gql.tada
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Describe the bug
+      description: Please describe your bug clearly and concisely.
+      placeholder: Bug description
+    validations:
+      required: true
+  - type: input
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Please provide a link to a reproduction. Templates can be found in the [examples folder](https://github.com/0no-co/gql.tada/tree/main/examples)
+      placeholder: Reproduction
+    validations:
+      required: false
+  - type: textarea
+    id: gql-tada-version
+    attributes:
+      label: gql.tada version
+      description: The versions of the relevant gql.tada package you are using
+      placeholder: gql.tada v1.0.0
+    validations:
+      required: true
+  - type: checkboxes
+    id: checkboxes
+    attributes:
+      label: Validations
+      description: Before submitting the issue, please make sure you do the following
+      options:
+        - label: I can confirm that this is a bug report, and not a feature request, RFC, question, or discussion, for which [GitHub Discussions](https://github.com/0no-co/gql.tada/discussions) should be used
+          required: true
+        - label: Read the [docs](https://gql-tada.0no.co/).
+          required: true
+        - label: Follow our [Code of Conduct](https://github.com/0no-co/gql.tada/blob/main/CODE_OF_CONDUCT.md)
+          required: true

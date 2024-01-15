@@ -23,7 +23,26 @@ In short, `gql.tada`,
 Since this is all done in the TypeScript type system and type checker, this all happens
 while you edit your GraphQL front-end code and is always accurate.
 
-### Let’s take a look!
+In short, **with `gql.tada` and [GraphQLSP](https://github.com/0no-co/graphqlsp) you get on-the-fly, automatically typed GraphQL documents
+with full editor feedback, auto-completion, and type hints!**
+
+## 📃 [Documentation](https://gql-tada.0no.co)
+
+Check out the [“Get Started” section’s Installation page](https://gql-tada.0no.co/get-started/installation/) in the documentation.
+
+- Get Started
+  - **[Introduction](https://gql-tada.0no.co)** — everything you need to know
+  - **[Installation](https://gql-tada.0no.co/get-started/installation)** — an installation guide
+  - **[Writing GraphQL](https://gql-tada.0no.co/get-started/writing-graphql/)** — how to write GraphQL documents
+- API Reference
+  - **[`gql.tada` API](https://gql-tada.0no.co/reference/gql-tada-api/)** — `gql.tada` API Reference docs
+  - **[GraphQLSP Config](https://gql-tada.0no.co/reference/graphqlsp-config/)** — GraphQLSP Configuration Reference docs
+
+Furthermore, all APIs and packages are self-documented using TSDocs. If you’re using a language
+server for TypeScript, the documentation for each API should pop up in your editor when hovering
+`gql.tada`’s code and APIs.
+
+## 🔎 Let’s take a look!
 
 ```ts
 import { graphql } from 'gql.tada';
@@ -56,60 +75,15 @@ const query = graphql(
 );
 ```
 
-## 💾 Setup
+## 📦 [Releases](https://github.com/0no-co/gql.tada/releases)
 
-Install `gql.tada` using your project’s package manager,
+If you'd like to get involved, [check out our Contributor's guide.](https://github.com/0no-co/gql.tada/blob/main/CONTRIBUTING.md)
 
-```sh
-npm i gql.tada
-pnpm add graphql
-yarn add gql.tada
-bun add graphql
-```
+All new releases and updates are listed on GitHub with full changelogs.
+The [`CHANGELOG.md` file](https://github.com/0no-co/gql.tada/blob/main/CHANGELOG.md) further documents all the historical changes for `gql.tada`.
 
-`gql.tada` infers the types of your queries. However, it can’t provide you with editor feedback,
-like autocompletion, diagnostics & errors, and hover information inside GraphQL queries.
-For the best experience, it’s recommended to install [GraphQLSP](https://github.com/0no-co/graphqlsp)
-to supplement these features.
-
-Install `@0no-co/graphqlsp` as a dev dependency,
-
-```sh
-npm i -D gql.tada
-pnpm add -D graphql
-yarn add --dev gql.tada
-bun add --dev graphql
-```
-
-Then, update your `tsconfig.json` to enable the `graphqlsp` plugin in your TypeScript server,
-
-**tsconfig.json**
-
-```diff
-{
-  "compilerOptions": {
-+    "plugins": [
-+      {
-+        "name": "@0no-co/graphqlsp",
-+        "schema": "./schema.graphql"
-+      }
-+    ]
-  }
-}
-```
-
-> **Note:**
-> If you are using VSCode, you may want to update your `.vscode/config.json` file to use the
-> [use the **workspace version** of TypeScript](https://code.visualstudio.com/docs/typescript/typescript-compiling#_using-the-workspace-version-of-typescript)
-> automatically.
->
-> **.vscode/config.json**
->
-> ```diff
-> {
-> +  "typescript.tsdk": "node_modules/typescript/lib",
-> +  "typescript.enablePromptUseWorkspaceTsdk": true
-> }
-> ```
-
-<!-- TODO -->
+New releases are prepared using
+[changesets](https://github.com/0no-co/gql.tada/blob/main/CONTRIBUTING.md#how-do-i-document-a-change-for-the-changelog),
+which are changelog entries added to each PR, and we have “Version Packages” PRs that once merged
+will release new versions of the `gql.tada` package. You can use `@canary` releases from `npm` if you’d
+like to get a preview of the merged changes.

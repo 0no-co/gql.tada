@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Ask a question
+    url: https://github.com/0no-co/gql.tada/discussions
+    about: Ask questions and discuss with other community members
+  - name: Join the Discord
+    url: https://urql.dev/discord
+    about: Chat with maintainers and other community members
