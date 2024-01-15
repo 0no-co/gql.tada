@@ -8,22 +8,26 @@ import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-s
 export default defineConfig({
 	integrations: [
 		starlight({
-			title: 'Docs with Tailwind',
+			title: 'gql.tada',
 			social: {
-				github: 'https://github.com/withastro/starlight',
+				github: 'https://github.com/0no-co/gql.tada',
+        discord: 'https://urql.dev/discord',
 			},
 			sidebar: [
         {
 					label: 'Get Started',
-					autogenerate: { directory: 'get-started' },
+          items: [
+            { label: 'Introduction', link: '/' },
+            { label: 'Installation', link: '/get-started/installation/' },
+            { label: 'Writing GraphQL', link: '/get-started/writing-graphql/' },
+          ],
 				},
+        /*
 				{
 					label: 'Guides',
-					items: [
-						// Each item here is one entry in the navigation menu.
-						{ label: 'Example Guide', link: '/guides/example/' },
-					],
+					autogenerate: { directory: 'guides' },
 				},
+        */
 				{
 					label: 'Reference',
 					autogenerate: { directory: 'reference' },
