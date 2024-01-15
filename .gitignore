@@ -11,4 +11,5 @@ package-lock.json
 .env
 .env.production
 .astro/
+.netlify/
 /tsconfig.vitest-temp.json
