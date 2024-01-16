@@ -171,3 +171,20 @@
 :root starlight-theme-select > select {
   color: var(--sl-color-gray-3);
 }
+
+:root[data-theme="light"] starlight-menu-button > button {
+  box-shadow: none;
+  border: 1px solid var(--sl-color-hairline);
+}
+
+:root[data-theme="light"] starlight-menu-button[aria-expanded="true"] > button {
+  background: var(--sl-color-gray-4);
+  color: var(--sl-color-black);
+  border: 1px solid transparent;
+}
+
+:root .tab > a[role="tab"] {
+  padding: 0.7ch 1.25rem;
+  line-height: 1.45;
+  height: 100%;
+}
