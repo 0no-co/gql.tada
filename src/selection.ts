@@ -179,7 +179,9 @@ type _getFragmentsSelectionRec<
           : {}
       : Node extends FieldNode
         ? Node['name']['value'] extends '__typename'
-          ? { [Prop in getFieldAlias<Node>]: PossibleType }
+          ? isOptionalRec<Node['directives']> extends true
+            ? { [Prop in getFieldAlias<Node>]: PossibleType }
+            : { [Prop in getFieldAlias<Node>]?: PossibleType }
           : {}
         : {}) &
       _getFragmentsSelectionRec<Rest, PossibleType, Type, Introspection, Fragments>
