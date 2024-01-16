@@ -54,6 +54,11 @@
   border: none;
 }
 
+:root .expressive-code:not(:where(starlight-tabs *)),
+:root starlight-tabs {
+  padding: 0.8rem 0;
+}
+
 :root .expressive-code .frame {
   --ec-frm-frameBoxShdCssVal: none;
   --code-background: theme('colors.gray.800');
@@ -105,6 +110,32 @@
   box-shadow: var(--sl-shadow-sm);
 }
 
+:root .sl-markdown-content :where(:not(li, a, strong, em, del, span, input, code)) + :not(li, a, strong, em, del, span, input, code, :where(.not-content *, .expressive-code *)) {
+  margin-top: 1.3rem;
+}
+
+:root .sl-markdown-content :not(li, a, strong, em, del, span, input, code) + :where(h2, h3, h4, h5):not(:where(.not-content *, .expressive-code *)) {
+  margin-top: 1.2em;
+  margin-bottom: 0.2em;
+}
+
+:root .sl-markdown-content :where(h2, h3, h4, h5):not(:where(.not-content *)) > code:only-child {
+  border: none;
+}
+
+:root .sl-markdown-content ul:not(:where(.not-content *)) {
+  padding-left: 1.4ch;
+}
+
+:root .sl-markdown-content ul:not(:where(.not-content *)) li {
+  padding-left: 0.7ch;
+}
+
+:root .sl-markdown-content ul:not(:where(.not-content *)) li::marker {
+  content: '- ';
+  color: var(--sl-color-gray-3);
+}
+
 :root .sl-markdown-content video:not(:where(.not-content *)) {
   border: 1px solid var(--sl-color-bg-inline-code-brd);
   border-radius: 7px;
@@ -125,7 +156,24 @@
   text-decoration: underline;
 }
 
-:root .starlight-aside__content a {
+:root .sl-markdown-content .starlight-aside__title:not(:where(.not-content *)) {
+  font-size: 1em;
+}
+
+:root .sl-markdown-content .starlight-aside__title:not(:where(.not-content *)) svg {
+  font-size: 1.2em;
+}
+
+:root .sl-markdown-content .starlight-aside__content:not(:where(.not-content *)) {
+  margin-top: 0.6rem;
+  font-size: 0.9em;
+}
+
+:root .sl-markdown-content .starlight-aside__content:not(:where(.not-content *)) p + p {
+  margin-top: 0.6rem;
+}
+
+:root .sl-markdown-content .starlight-aside__content a {
   color: var(--sl-color-white);
   text-decoration: underline;
 }

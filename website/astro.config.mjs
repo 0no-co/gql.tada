@@ -5,6 +5,7 @@ import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-s
 
 // https://astro.build/config
 export default defineConfig({
+  site: 'https://gql-tada.0no.co',
   integrations: [
     starlight({
       title: 'gql.tada',
