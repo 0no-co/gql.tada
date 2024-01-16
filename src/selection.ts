@@ -65,10 +65,10 @@ type isOptionalRec<Directives extends readonly unknown[] | undefined> =
   Directives extends readonly [infer Directive, ...infer Rest]
     ? Directive extends { kind: Kind.DIRECTIVE; name: any }
       ? Directive['name']['value'] extends 'include' | 'skip' | 'defer'
-        ? false
+        ? true
         : isOptionalRec<Rest>
       : isOptionalRec<Rest>
-    : true;
+    : false;
 
 type getFieldAlias<Node extends FieldNode> = Node['alias'] extends undefined
   ? Node['name']['value']
@@ -136,7 +136,7 @@ type _getPossibleTypeSelectionRec<
           ObjectLikeType
         ? PossibleType extends getTypenameOfType<Subtype>
           ?
-              | (isOptionalRec<Node['directives']> extends true ? never : {})
+              | (isOptionalRec<Node['directives']> extends true ? {} : never)
               | getFragmentSelection<Node, Subtype, Introspection, Fragments>
           : {}
         : Node extends FragmentSpreadNode
@@ -145,7 +145,7 @@ type _getPossibleTypeSelectionRec<
       : Node extends FieldNode
         ? isOptionalRec<Node['directives']> extends true
           ? {
-              [Prop in getFieldAlias<Node>]: Node['name']['value'] extends '__typename'
+              [Prop in getFieldAlias<Node>]?: Node['name']['value'] extends '__typename'
                 ? PossibleType
                 : unwrapType<
                     Type['fields'][Node['name']['value']]['type'],
@@ -155,7 +155,7 @@ type _getPossibleTypeSelectionRec<
                   >;
             }
           : {
-              [Prop in getFieldAlias<Node>]?: Node['name']['value'] extends '__typename'
+              [Prop in getFieldAlias<Node>]: Node['name']['value'] extends '__typename'
                 ? PossibleType
                 : unwrapType<
                     Type['fields'][Node['name']['value']]['type'],
