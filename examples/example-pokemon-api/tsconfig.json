@@ -4,10 +4,7 @@
       {
         "name": "@0no-co/graphqlsp",
         "schema": "./schema/schema.graphql",
-        "disableTypegen": true,
-        "shouldCheckForColocatedFragments": true,
-        "template": "graphql",
-        "templateIsCallExpression": true
+        "tadaOutputLocation": "./schema/introspection.ts"
       }
     ],
     "noEmit": true,

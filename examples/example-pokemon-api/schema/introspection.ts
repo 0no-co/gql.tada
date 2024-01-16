@@ -1,4 +1,25 @@
-export const introspection = {
+/** An IntrospectionQuery representation of your schema.
+ *
+ * @remarks
+ * This is an introspection of your schema saved as a file by GraphQLSP.
+ * You may import it to create a `graphql()` tag function with `gql.tada`
+ * by importing it and passing it to `initGraphQLTada<>()`.
+ *
+ * @example
+ * ```
+ * import { initGraphQLTada } from 'gql.tada';
+ * import type { introspection } from './introspection';
+ *
+ * export const graphql = initGraphQLTada<{
+ *   introspection: typeof introspection;
+ *   scalars: {
+ *     DateTime: string;
+ *     Json: any;
+ *   };
+ * }>();
+ * ```
+ */
+const introspection = {
   __schema: {
     queryType: {
       name: 'Query',
@@ -412,7 +433,13 @@ export const introspection = {
         kind: 'SCALAR',
         name: 'Boolean',
       },
+      {
+        kind: 'SCALAR',
+        name: 'Any',
+      },
     ],
     directives: [],
   },
 } as const;
+
+export { introspection };
