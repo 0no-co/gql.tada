@@ -1,15 +1,11 @@
 # gql.tada
 
-## 1.0.0-beta.1
+## 1.0.0
 
-### Minor Changes
+**Initial Release**
 
-- Test
-  Submitted by undefined
+`gql.tada` is a GraphQL document authoring library, inferring the result and variables types
+of GraphQL queries and fragments in the TypeScript type system. It derives the types for your
+GraphQL queries on the fly allowing you to write type-safe GraphQL documents quickly.
 
-## 1.0.1-beta.0
-
-### Patch Changes
-
-- Test
-  Submitted by undefined
+To get started, check out the [documentation’s “Get Started” section.](https://gql-tada.0no.co/)
