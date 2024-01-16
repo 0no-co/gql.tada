@@ -114,7 +114,7 @@ type getSpreadSubtype<
 type getTypenameOfType<Type extends ObjectLikeType> = Type extends {
   possibleTypes: any;
 }
-  ? Type['possibleTypes']
+  ? Type['name'] | Type['possibleTypes']
   : Type['name'];
 
 type getSelection<
@@ -134,7 +134,7 @@ type _getFragmentsSelectionRec<
   ? (Node extends FragmentSpreadNode | InlineFragmentNode
       ? getSpreadSubtype<Node, Type, Introspection, Fragments> extends infer Subtype extends
           ObjectLikeType
-        ? PossibleType extends Subtype['name'] | getTypenameOfType<Subtype>
+        ? PossibleType extends getTypenameOfType<Subtype>
           ?
               | (isOptionalRec<Node['directives']> extends true ? never : {})
               | getFragmentSelection<Node, Subtype, Introspection, Fragments>
