@@ -65,10 +65,10 @@ type isOptionalRec<Directives extends readonly unknown[] | undefined> =
   Directives extends readonly [infer Directive, ...infer Rest]
     ? Directive extends { kind: Kind.DIRECTIVE; name: any }
       ? Directive['name']['value'] extends 'include' | 'skip' | 'defer'
-        ? false
+        ? true
         : isOptionalRec<Rest>
       : isOptionalRec<Rest>
-    : true;
+    : false;
 
 type getFieldAlias<Node extends FieldNode> = Node['alias'] extends undefined
   ? Node['name']['value']
@@ -114,7 +114,7 @@ type getSpreadSubtype<
 type getTypenameOfType<Type extends ObjectLikeType> = Type extends {
   possibleTypes: any;
 }
-  ? Type['possibleTypes']
+  ? Type['name'] | Type['possibleTypes']
   : Type['name'];
 
 type getSelection<
@@ -122,44 +122,9 @@ type getSelection<
   Type extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
-> = obj<
-  getFieldsSelectionRec<Selections, Type, Introspection, Fragments> &
-    getFragmentsSelection<Selections, Type, Introspection, Fragments>
->;
+> = obj<getPossibleTypesSelection<Selections, Type, Introspection, Fragments>>;
 
-type getFieldsSelectionRec<
-  Selections extends readonly unknown[],
-  Type extends ObjectLikeType,
-  Introspection extends IntrospectionLikeType,
-  Fragments extends { [name: string]: any },
-> = Selections extends readonly [infer Selection, ...infer Rest]
-  ? (Selection extends FieldNode
-      ? isOptionalRec<Selection['directives']> extends true
-        ? {
-            [Prop in getFieldAlias<Selection>]: Selection['name']['value'] extends '__typename'
-              ? getTypenameOfType<Type>
-              : unwrapType<
-                  Type['fields'][Selection['name']['value']]['type'],
-                  Selection['selectionSet'],
-                  Introspection,
-                  Fragments
-                >;
-          }
-        : {
-            [Prop in getFieldAlias<Selection>]?: Selection['name']['value'] extends '__typename'
-              ? getTypenameOfType<Type>
-              : unwrapType<
-                  Type['fields'][Selection['name']['value']]['type'],
-                  Selection['selectionSet'],
-                  Introspection,
-                  Fragments
-                >;
-          }
-      : {}) &
-      getFieldsSelectionRec<Rest, Type, Introspection, Fragments>
-  : {};
-
-type _getFragmentsSelectionRec<
+type _getPossibleTypeSelectionRec<
   Selections extends readonly unknown[],
   PossibleType extends string,
   Type extends ObjectLikeType,
@@ -169,26 +134,48 @@ type _getFragmentsSelectionRec<
   ? (Node extends FragmentSpreadNode | InlineFragmentNode
       ? getSpreadSubtype<Node, Type, Introspection, Fragments> extends infer Subtype extends
           ObjectLikeType
-        ? PossibleType extends Subtype['name'] | getTypenameOfType<Subtype>
+        ? PossibleType extends getTypenameOfType<Subtype>
           ?
-              | (isOptionalRec<Node['directives']> extends true ? never : {})
+              | (isOptionalRec<Node['directives']> extends true ? {} : never)
               | getFragmentSelection<Node, Subtype, Introspection, Fragments>
           : {}
         : Node extends FragmentSpreadNode
           ? makeUndefinedFragmentRef<Node['name']['value']>
           : {}
-      : {}) &
-      _getFragmentsSelectionRec<Rest, PossibleType, Type, Introspection, Fragments>
+      : Node extends FieldNode
+        ? isOptionalRec<Node['directives']> extends true
+          ? {
+              [Prop in getFieldAlias<Node>]?: Node['name']['value'] extends '__typename'
+                ? PossibleType
+                : unwrapType<
+                    Type['fields'][Node['name']['value']]['type'],
+                    Node['selectionSet'],
+                    Introspection,
+                    Fragments
+                  >;
+            }
+          : {
+              [Prop in getFieldAlias<Node>]: Node['name']['value'] extends '__typename'
+                ? PossibleType
+                : unwrapType<
+                    Type['fields'][Node['name']['value']]['type'],
+                    Node['selectionSet'],
+                    Introspection,
+                    Fragments
+                  >;
+            }
+        : {}) &
+      _getPossibleTypeSelectionRec<Rest, PossibleType, Type, Introspection, Fragments>
   : {};
 
-type getFragmentsSelection<
+type getPossibleTypesSelection<
   Selections extends readonly unknown[],
   Type extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
 > = Type extends { kind: 'UNION' | 'INTERFACE'; possibleTypes: any }
   ? objValues<{
-      [PossibleType in Type['possibleTypes']]: _getFragmentsSelectionRec<
+      [PossibleType in Type['possibleTypes']]: _getPossibleTypeSelectionRec<
         Selections,
         PossibleType,
         Type,
@@ -197,7 +184,7 @@ type getFragmentsSelection<
       >;
     }>
   : Type extends { kind: 'OBJECT'; name: any }
-    ? _getFragmentsSelectionRec<Selections, Type['name'], Type, Introspection, Fragments>
+    ? _getPossibleTypeSelectionRec<Selections, Type['name'], Type, Introspection, Fragments>
     : {};
 
 type getOperationSelectionType<
