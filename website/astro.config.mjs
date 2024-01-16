@@ -1,10 +1,13 @@
 import { defineConfig } from 'astro/config';
+import cloudflare from '@astrojs/cloudflare';
 import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
 import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections';
 
 // https://astro.build/config
 export default defineConfig({
+  output: 'hybrid',
+  adapter: cloudflare(),
   site: 'https://gql-tada.0no.co',
   integrations: [
     starlight({
