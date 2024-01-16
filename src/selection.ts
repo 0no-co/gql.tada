@@ -122,9 +122,9 @@ type getSelection<
   Type extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
-> = obj<getFragmentsSelection<Selections, Type, Introspection, Fragments>>;
+> = obj<getPossibleTypesSelection<Selections, Type, Introspection, Fragments>>;
 
-type _getFragmentsSelectionRec<
+type _getPossibleTypeSelectionRec<
   Selections extends readonly unknown[],
   PossibleType extends string,
   Type extends ObjectLikeType,
@@ -165,17 +165,17 @@ type _getFragmentsSelectionRec<
                   >;
             }
         : {}) &
-      _getFragmentsSelectionRec<Rest, PossibleType, Type, Introspection, Fragments>
+      _getPossibleTypeSelectionRec<Rest, PossibleType, Type, Introspection, Fragments>
   : {};
 
-type getFragmentsSelection<
+type getPossibleTypesSelection<
   Selections extends readonly unknown[],
   Type extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
 > = Type extends { kind: 'UNION' | 'INTERFACE'; possibleTypes: any }
   ? objValues<{
-      [PossibleType in Type['possibleTypes']]: _getFragmentsSelectionRec<
+      [PossibleType in Type['possibleTypes']]: _getPossibleTypeSelectionRec<
         Selections,
         PossibleType,
         Type,
@@ -184,7 +184,7 @@ type getFragmentsSelection<
       >;
     }>
   : Type extends { kind: 'OBJECT'; name: any }
-    ? _getFragmentsSelectionRec<Selections, Type['name'], Type, Introspection, Fragments>
+    ? _getPossibleTypeSelectionRec<Selections, Type['name'], Type, Introspection, Fragments>
     : {};
 
 type getOperationSelectionType<
