@@ -1,3 +1,173 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --sl-color-bg-nav: var(--sl-color-bg);
+  --sl-color-bg-overlay: rgba(0, 0, 0, 0.62);
+  --sl-color-bg-sidebar: transparent;
+  --sl-text-code: 0.8rem;
+  --sl-line-height: 1.65;
+  --sl-sidebar-pad-x: 1.8rem;
+
+  --sl-color-text: theme('colors.gray.200');
+  --sl-color-hairline: theme('colors.gray.700');
+  --sl-color-bg-inline-code: theme('colors.gray.700');
+  --sl-color-bg-inline-code-brd: theme('colors.gray.600');
+  --sl-color-text-link: theme('colors.blue.400');
+  --sl-color-blue: theme('colors.blue.500');
+  --sl-color-blue-low: theme('colors.blue.950');
+}
+
+:root[data-theme="light"] {
+  --sl-color-text: theme('colors.gray.900');
+  --sl-color-bg-sidebar: transparent;
+  --sl-color-bg-overlay: rgba(255, 255, 255, 0.62);
+  --sl-color-hairline: theme('colors.gray.200');
+  --sl-color-bg-inline-code: theme('colors.gray.100');
+  --sl-color-bg-inline-code-brd: theme('colors.gray.200');
+  --sl-color-text-link: theme('colors.blue.700');
+}
+
+:root header.header {
+  background: transparent;
+  border: none;
+}
+
+@media (min-width: 72rem) {
+  :root[data-has-sidebar] header.header {
+    backdrop-filter: blur(24px) saturate(250%);
+    background: var(--sl-color-bg-overlay);
+  }
+}
+
+:root mobile-starlight-toc nav {
+  backdrop-filter: blur(32px) saturate(250%);
+  background: var(--sl-color-bg-overlay);
+  margin-top: calc(-1 * var(--sl-nav-height));
+  margin-left: calc(-1 * var(--sl-sidebar-width));
+  padding-top: var(--sl-nav-height);
+  padding-left: var(--sl-sidebar-width);
+}
+
+:root mobile-starlight-toc summary {
+  border: none;
+}
+
+:root .expressive-code .frame {
+  --ec-frm-frameBoxShdCssVal: none;
+  --code-background: theme('colors.gray.800');
+  --ec-brdCol: theme('colors.gray.700');
+  --ec-tm-markBg: theme('colors.gray.700');
+  --ec-frm-trmTtbBg: var(--ec-brdCol);
+  --ec-frm-trmTtbBrdBtmCol: var(--ec-brdCol);
+  --ec-frm-edTabBarBrdBtmCol: var(--ec-brdCol);
+  --ec-frm-edTabBarBrdCol: var(--ec-brdCol);
+  --ec-frm-edTabBarBg: var(--sl-color-bg);
+  --ec-frm-edActTabBg: var(--ec-brdCol);
+  --tmLineBrdCol: var(--sl-color-blue-low);
+  --ec-frm-edActTabIndTopCol: transparent;
+  --ec-frm-edActTabIndBtmCol: transparent;
+  --ec-frm-edTabsMargBlkStart: -5px;
+  --ec-brdWd: 1.45px;
+  --tab-border-radius: 7px;
+  --ec-brdRad: 7px;
+}
+
+:root .expressive-code .frame.is-terminal {
+  --code-background: theme('colors.gray.800');
+}
+
+:root[data-theme="light"] .expressive-code .frame {
+  --code-background: theme('colors.gray.100');
+  --ec-brdCol: theme('colors.gray.200');
+  --ec-tm-markBg: theme('colors.gray.200');
+}
+
+:root[data-theme="light"] .expressive-code .frame.is-terminal {
+  --code-background: theme('colors.gray.100');
+}
+
+:root .expressive-code .frame.has-title:not(.is-terminal) .title {
+  border: none;
+}
+
+:root .pagination-links a {
+  background: linear-gradient(180deg, theme('colors.accent.900') 0%, theme('colors.accent.950') 100%);
+  border: 1px solid theme('colors.accent.800');
+  box-shadow: var(--sl-shadow-sm);
+  opacity: 0.78;
+}
+
+:root[data-theme="light"] .pagination-links a {
+  background: linear-gradient(180deg, theme('colors.accent.50') 0%, theme('colors.accent.100') 80%);
+  border: 1px solid theme('colors.accent.200');
+  box-shadow: var(--sl-shadow-sm);
+}
+
+:root .sl-markdown-content video:not(:where(.not-content *)) {
+  border: 1px solid var(--sl-color-bg-inline-code-brd);
+  border-radius: 7px;
+}
+
+:root .sl-markdown-content code:not(:where(.not-content *)) {
+  white-space: nowrap;
+  border: 1px solid var(--sl-color-bg-inline-code-brd);
+  border-radius: 4px;
+}
+
+:root .sl-markdown-content a:not(:where(.not-content *)) {
+  color: var(--sl-color-text-link);
+  text-decoration: none;
+}
+
+:root .sl-markdown-content a:hover:not(:where(.not-content *)) {
+  text-decoration: underline;
+}
+
+:root .starlight-aside__content a {
+  color: var(--sl-color-white);
+  text-decoration: underline;
+}
+
+:root .sidebar-content a {
+  @apply transition-colors;
+  cursor: pointer;
+  color: var(--sl-color-gray-3);
+}
+
+:root .sidebar-content a:hover {
+  text-decoration: underline;
+}
+
+:root .sidebar-content summary {
+  justify-content: flex-start;
+}
+
+:root .sidebar-content a[aria-current="page"]:where(*, :hover, :focus) {
+  font-weight: 500;
+  color: var(--sl-color-white);
+  background: none;
+}
+
+:root .right-sidebar {
+  border-inline-start: none;
+}
+
+:root .right-sidebar a {
+  @apply transition-colors;
+}
+
+:root .right-sidebar a[aria-current="true"]:where(*, :hover, :focus) {
+  font-weight: 500;
+  color: var(--sl-color-white);
+  background: none;
+}
+
+:root .right-sidebar a:not([aria-current="true"]):where(:hover, :focus) {
+  color: var(--sl-color-white);
+}
+
+:root starlight-theme-select > select {
+  color: var(--sl-color-gray-3);
+}

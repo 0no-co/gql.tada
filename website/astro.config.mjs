@@ -27,13 +27,14 @@ export default defineConfig({
         }, {
           label: 'Writing GraphQL',
           link: '/get-started/writing-graphql/'
-        }]
+        }
+        ]
       },
       /*
-      {
-      label: 'Guides',
-      autogenerate: { directory: 'guides' },
-      },
+        {
+        label: 'Guides',
+        autogenerate: { directory: 'guides' },
+        },
       */
       {
         label: 'Reference',
@@ -41,9 +42,15 @@ export default defineConfig({
           directory: 'reference'
         }
       }],
-      customCss: ['./src/tailwind.css'],
+      customCss: [
+        '@fontsource/inter/latin-400.css',
+        '@fontsource/inter/latin-500.css',
+        '@fontsource/inter/latin-600.css',
+        './src/tailwind.css'
+      ],
       expressiveCode: {
-        plugins: [pluginCollapsibleSections()]
+        plugins: [pluginCollapsibleSections()],
+        themes: ['github-dark-dimmed', 'github-light'],
       }
     }),
 
