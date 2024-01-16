@@ -177,7 +177,11 @@ type _getFragmentsSelectionRec<
         : Node extends FragmentSpreadNode
           ? makeUndefinedFragmentRef<Node['name']['value']>
           : {}
-      : {}) &
+      : Node extends FieldNode
+        ? Node['name']['value'] extends '__typename'
+          ? { [Prop in getFieldAlias<Node>]: PossibleType }
+          : {}
+        : {}) &
       _getFragmentsSelectionRec<Rest, PossibleType, Type, Introspection, Fragments>
   : {};
 
