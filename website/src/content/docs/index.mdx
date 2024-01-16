@@ -53,7 +53,7 @@ This means, all we see in our code is the plain GraphQL documents with no annota
 import { graphql } from 'gql.tada';
 
 const fragment = graphql(`
-  fragment HelloWorld extends Query {
+  fragment HelloWorld on Query {
     hello
     world
   }
