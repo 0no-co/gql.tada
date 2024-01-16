@@ -301,6 +301,32 @@ test('infers unions and interfaces correctly', () => {
   expectTypeOf<expected>().toEqualTypeOf<actual>();
 });
 
+test('infers __typename on union unambiguously', () => {
+  type query = parseDocument</* GraphQL */ `
+    query {
+      test {
+        __typename
+        ... on BigTodo { wallOfText }
+      }
+    }
+  `>;
+
+  type actual = getDocumentType<query, schema>;
+  type expected = {
+    test:
+      | {
+          __typename: 'SmallTodo';
+        }
+      | {
+          __typename: 'BigTodo';
+          wallOfText: string | null;
+        }
+      | null;
+  };
+
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
+});
+
 test('infers queries from GitHub introspection schema', () => {
   type schema = mapIntrospection<
     typeof import('./fixtures/githubIntrospection').githubIntrospection
