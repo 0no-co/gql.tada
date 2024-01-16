@@ -52,6 +52,9 @@ export default defineConfig({
         '@fontsource/inter/latin-600.css',
         './src/tailwind.css'
       ],
+      components: {
+        Head: './src/components/Head.astro',
+      },
       expressiveCode: {
         plugins: [pluginCollapsibleSections()],
         themes: ['github-dark-dimmed', 'github-light'],
