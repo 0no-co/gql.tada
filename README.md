@@ -44,36 +44,7 @@ server for TypeScript, the documentation for each API should pop up in your edit
 
 ## 🔎 Let’s take a look!
 
-```ts
-import { graphql } from 'gql.tada';
-import { myIntrospectionQuery } from './fixtures/introspection';
-
-// We can declare our introspected schema once globally
-declare module 'gql.tada' {
-  interface setupSchema {
-    introspection: typeof myIntrospectionQuery;
-  }
-}
-
-// Creates fragment documents
-const fragment = graphql(`
-  fragment HelloWorld extends Query {
-    hello
-    world
-  }
-`);
-
-// Creates queries, optionally accepting a list of fragments for fragment spreads
-const query = graphql(
-  `
-    {
-      hello
-      ...HelloWorld
-    }
-  `,
-  [fragment]
-);
-```
+<img width="100%" alt="Code Editor showing GraphQL queries being edited with gql.tada and GraphLSP" src="https://github.com/0no-co/gql.tada/blob/277ce424a747522ef2ca0d398b113f4f285eb595/website/public/demo-code.png?raw=true" />
 
 ## 📦 [Releases](https://github.com/0no-co/gql.tada/releases)
 
