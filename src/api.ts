@@ -188,7 +188,7 @@ function parse<const In extends stringLiteral<In>>(input: In): parseDocument<In>
   return _parse(input) as any;
 }
 
-type getDocumentNode<
+export type getDocumentNode<
   Document extends DocumentNodeLike,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any } = {},
@@ -347,13 +347,9 @@ type fragmentOfTypeRec<Document extends DocumentDefDecorationLike> =
  * @see {@link readFragment} for how to read from fragment masks.
  */
 function readFragment<
-  const Document extends DocumentDefDecorationLike,
+  const Document extends DocumentDefDecorationLike & DocumentDecoration<any, any>,
   const Fragment extends fragmentOfTypeRec<Document>,
-  const Data,
->(
-  _document: DocumentDecoration<Data, any> & Document,
-  fragment: Fragment
-): fragmentOfTypeRec<Document> extends Fragment ? unknown : mirrorFragmentTypeRec<Fragment, Data> {
+>(_document: Document, fragment: Fragment): mirrorFragmentTypeRec<Fragment, ResultOf<Document>> {
   return fragment as any;
 }
 
