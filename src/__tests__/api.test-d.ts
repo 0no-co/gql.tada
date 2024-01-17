@@ -38,6 +38,19 @@ describe('mirrorFragmentTypeRec', () => {
 });
 
 describe('readFragment', () => {
+  it('should not unmask empty objects', () => {
+    type fragment = parseDocument<`
+      fragment Fields on Todo {
+        id
+      }
+    `>;
+
+    type document = getDocumentNode<fragment, schema>;
+    // @ts-expect-error
+    const result = readFragment({} as document, {});
+    expectTypeOf<typeof result>().toBeNever();
+  });
+
   it('unmasks regular fragments', () => {
     type fragment = parseDocument<`
       fragment Fields on Todo {

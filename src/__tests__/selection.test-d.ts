@@ -219,7 +219,7 @@ test('infers fragment spreads for fragment refs', () => {
   type actual = getDocumentType<query, schema, extraFragments>;
 
   type expected = {
-    [$tada.fragmentRefs]?: {
+    [$tada.fragmentRefs]: {
       Fields: extraFragments['Fields'][$tada.fragmentId];
     };
   };
@@ -235,7 +235,7 @@ test('marks undefined fragments with special fragment ref error', () => {
   type actual = getDocumentType<query, schema>;
 
   type expected = {
-    [$tada.fragmentRefs]?: {
+    [$tada.fragmentRefs]: {
       Fields: 'Undefined Fragment';
     };
   };

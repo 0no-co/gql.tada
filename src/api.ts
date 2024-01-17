@@ -349,7 +349,12 @@ type fragmentOfTypeRec<Document extends DocumentDefDecorationLike> =
 function readFragment<
   const Document extends DocumentDefDecorationLike & DocumentDecoration<any, any>,
   const Fragment extends fragmentOfTypeRec<Document>,
->(_document: Document, fragment: Fragment): mirrorFragmentTypeRec<Fragment, ResultOf<Document>> {
+>(
+  _document: Document,
+  fragment: Fragment
+): fragmentOfTypeRec<Document> extends Fragment
+  ? never
+  : mirrorFragmentTypeRec<Fragment, ResultOf<Document>> {
   return fragment as any;
 }
 

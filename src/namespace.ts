@@ -63,13 +63,13 @@ type getFragmentsOfDocumentsRec<Documents> = Documents extends readonly [
   : {};
 
 type makeFragmentRef<Definition extends FragmentDefDecorationLike> = obj<{
-  [$tada.fragmentRefs]?: {
+  [$tada.fragmentRefs]: {
     [Name in Definition['name']['value']]: Definition[$tada.fragmentId];
   };
 }>;
 
 type makeUndefinedFragmentRef<FragmentName extends string> = {
-  [$tada.fragmentRefs]?: {
+  [$tada.fragmentRefs]: {
     [Name in FragmentName]: 'Undefined Fragment';
   };
 };
