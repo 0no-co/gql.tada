@@ -188,7 +188,7 @@ function parse<const In extends stringLiteral<In>>(input: In): parseDocument<In>
   return _parse(input) as any;
 }
 
-type getDocumentNode<
+export type getDocumentNode<
   Document extends DocumentNodeLike,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any } = {},
