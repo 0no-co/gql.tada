@@ -29,6 +29,12 @@ describe('mirrorFragmentTypeRec', () => {
     >();
     expectTypeOf<mirrorFragmentTypeRec<readonly value[], data>>().toEqualTypeOf<readonly data[]>();
   });
+
+  it('mirrors complex types', () => {
+    type complex = { a: true } | { b: true };
+    type actual = mirrorFragmentTypeRec<value, complex>;
+    expectTypeOf<actual>().toEqualTypeOf<complex>();
+  });
 });
 
 describe('readFragment', () => {
@@ -40,12 +46,7 @@ describe('readFragment', () => {
     `>;
 
     type document = getDocumentNode<fragment, schema>;
-
-    const document: document = {} as any;
-    const data: FragmentOf<document> = {} as any;
-
-    const result = readFragment(document, data);
-
+    const result = readFragment({} as document, {} as FragmentOf<document>);
     expectTypeOf<typeof result>().toEqualTypeOf<ResultOf<document>>();
   });
 
@@ -59,12 +60,39 @@ describe('readFragment', () => {
     `>;
 
     type document = getDocumentNode<fragment, schema>;
-
-    const document: document = {} as any;
-    const data: FragmentOf<document> = {} as any;
-
-    const result = readFragment(document, data);
-
+    const result = readFragment({} as document, {} as FragmentOf<document>);
     expectTypeOf<typeof result>().toEqualTypeOf<ResultOf<document>>();
+  });
+
+  it('unmasks fragments of interfaces', () => {
+    type fragment = parseDocument<`
+      fragment Fields on ITodo {
+        id
+        ... on BigTodo {
+          wallOfText
+        }
+        ... on SmallTodo {
+          maxLength
+        }
+      }
+    `>;
+
+    type document = getDocumentNode<fragment, schema>;
+    const result = readFragment({} as document, {} as FragmentOf<document>);
+    expectTypeOf<typeof result>().toEqualTypeOf<ResultOf<document>>();
+  });
+
+  it('unmasks fragments of interfaces with optional spreads', () => {
+    type fragment = parseDocument<`
+      fragment Fields on ITodo {
+        ... on ITodo @defer {
+          id
+        }
+      }
+    `>;
+
+    type document = getDocumentNode<fragment, schema>;
+    const result = readFragment({} as document, {} as FragmentOf<document>);
+    expectTypeOf<ResultOf<document>>().toEqualTypeOf<typeof result>();
   });
 });
