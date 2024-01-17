@@ -113,6 +113,64 @@ test('infers optional properties for @skip/@include', () => {
   expectTypeOf<expected>().toEqualTypeOf<actual>();
 });
 
+test('infers optional fragment for @defer', () => {
+  type query = parseDocument</* GraphQL */ `
+    query {
+      todos {
+        ...TodoFields @defer
+      }
+    }
+
+    fragment TodoFields on Todo {
+      id
+    }
+  `>;
+
+  type actual = getDocumentType<query, schema>;
+
+  type expected = {
+    todos: Array<
+      | {
+          id: string | number;
+        }
+      | {}
+      | null
+    > | null;
+  };
+
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
+});
+
+test('infers optional inline fragment for @defer', () => {
+  type query = parseDocument</* GraphQL */ `
+    query {
+      todos {
+        ...TodoFields
+      }
+    }
+
+    fragment TodoFields on Todo {
+      ... on Todo @defer {
+        id
+      }
+    }
+  `>;
+
+  type actual = getDocumentType<query, schema>;
+
+  type expected = {
+    todos: Array<
+      | {
+          id: string | number;
+        }
+      | {}
+      | null
+    > | null;
+  };
+
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
+});
+
 test('infers enum values', () => {
   type query = parseDocument</* GraphQL */ `
     query { todos { id test } }
@@ -369,6 +427,26 @@ test('creates a type for a given fragment', () => {
     text: string;
     complete: boolean | null;
   };
+
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
+});
+
+test('creates a type for a given fragment with optional inline spread', () => {
+  type fragment = parseDocument<`
+    fragment Fields on Todo {
+      ... on Todo @defer {
+        id
+      }
+    }
+  `>;
+
+  type actual = getDocumentType<fragment, schema>;
+
+  type expected =
+    | {}
+    | {
+        id: number | string;
+      };
 
   expectTypeOf<expected>().toEqualTypeOf<actual>();
 });
