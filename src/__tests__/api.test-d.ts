@@ -93,6 +93,6 @@ describe('readFragment', () => {
 
     type document = getDocumentNode<fragment, schema>;
     const result = readFragment({} as document, {} as FragmentOf<document>);
-    expectTypeOf<ResultOf<document>>().toEqualTypeOf<typeof result>();
+    expectTypeOf<typeof result>().toEqualTypeOf<ResultOf<document>>();
   });
 });
