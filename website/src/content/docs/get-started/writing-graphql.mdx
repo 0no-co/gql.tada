@@ -234,7 +234,7 @@ For example, our `TodoItemFragment` may be associated with a `TodoItem` componen
 individual items:
 
 ```tsx title="components/TodoItem.tsx" {"The component accepts a fragment mask of TodoItemFragment:":12-13} {"In the component body we unwrap the fragment mask:":17-18}
-import { graphql, useFragment } from 'gql.tada';
+import { graphql, readFragment } from 'gql.tada';
 
 export const TodoItemFragment = graphql(`
   fragment TodoItem on Todo {
@@ -251,7 +251,7 @@ interface Props {
 
 export const TodoItemComponent = ({ data }: Props) => {
 
-  const todo = useFragment(TodoItemFragment, data);
+  const todo = readFragment(TodoItemFragment, data);
 
   return <li />; // ...
 };
@@ -264,7 +264,7 @@ We can then use our new `TodoItemComponent` in our `TodosListComponent` and comp
 into our query:
 
 ```tsx title="components/TodoList.tsx" {"The masked fragment data is accepted as defined by FragmentOf:":19-20}
-import { graphql, useFragment } from 'gql.tada';
+import { graphql } from 'gql.tada';
 import { TodoItemFragment, TodoItemComponent } from './TodoItem';
 
 const TodosQuery = graphql(`
