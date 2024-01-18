@@ -44,7 +44,6 @@ export interface IntrospectionObjectType {
   // However, to save TypeScript some work, instead, we constraint it to `any` here.
   readonly fields: readonly any[];
   // The `interfaces` field isn't used. It's omitted here
-  readonly interfaces: readonly IntrospectionNamedTypeRef[] | never;
 }
 
 interface IntrospectionInterfaceType {
