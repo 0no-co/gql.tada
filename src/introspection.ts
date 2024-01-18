@@ -136,11 +136,25 @@ type mapEnum<T extends IntrospectionEnumType> = {
   type: T['enumValues'][number]['name'];
 };
 
+type mapField<T> = T extends IntrospectionField
+  ? {
+      name: T['name'];
+      type: T['type'];
+      args: any;
+    }
+  : never;
+
 export type mapObject<T extends IntrospectionObjectType> = {
   kind: 'OBJECT';
   name: T['name'];
   interfaces: T['interfaces'][number]['name'];
-  fields: obj<mapNames<T['fields']>>;
+  fields: obj<{
+    [P in T['fields'][number]['name']]: T['fields'][number] extends infer Field
+      ? Field extends { readonly name: P }
+        ? mapField<Field>
+        : never
+      : never;
+  }>;
 };
 
 export type mapInputObject<T extends IntrospectionInputObjectType> = {
