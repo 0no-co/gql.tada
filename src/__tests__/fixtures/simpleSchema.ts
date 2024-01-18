@@ -7,11 +7,9 @@ export type simpleSchema = {
     Query: {
       kind: 'OBJECT';
       name: 'Query';
-      interfaces: never;
       fields: {
         todos: {
           name: 'todos';
-          args: any;
           type: {
             kind: 'LIST';
             name: null;
@@ -24,7 +22,6 @@ export type simpleSchema = {
         };
         latestTodo: {
           name: 'latestTodo';
-          args: any;
           type: {
             kind: 'NON_NULL';
             name: null;
@@ -37,7 +34,6 @@ export type simpleSchema = {
         };
         test: {
           name: 'test';
-          args: any;
           type: {
             kind: 'UNION';
             name: 'Search';
@@ -66,7 +62,6 @@ export type simpleSchema = {
       fields: {
         id: {
           name: 'id';
-          args: any;
           type: {
             kind: 'NON_NULL';
             name: null;
@@ -79,7 +74,6 @@ export type simpleSchema = {
         };
         text: {
           name: 'text';
-          args: any;
           type: {
             kind: 'NON_NULL';
             name: null;
@@ -92,7 +86,6 @@ export type simpleSchema = {
         };
         complete: {
           name: 'complete';
-          args: any;
           type: {
             kind: 'SCALAR';
             name: 'Boolean';
@@ -101,7 +94,6 @@ export type simpleSchema = {
         };
         author: {
           name: 'author';
-          args: any;
           type: {
             kind: 'OBJECT';
             name: 'Author';
@@ -110,7 +102,6 @@ export type simpleSchema = {
         };
         maxLength: {
           name: 'maxLength';
-          args: any;
           type: {
             kind: 'SCALAR';
             name: 'Int';
@@ -118,7 +109,6 @@ export type simpleSchema = {
           };
         };
       };
-      interfaces: 'ITodo';
     };
 
     BigTodo: {
@@ -127,7 +117,6 @@ export type simpleSchema = {
       fields: {
         id: {
           name: 'id';
-          args: any;
           type: {
             kind: 'NON_NULL';
             name: null;
@@ -140,7 +129,6 @@ export type simpleSchema = {
         };
         text: {
           name: 'text';
-          args: any;
           type: {
             kind: 'NON_NULL';
             name: null;
@@ -153,7 +141,6 @@ export type simpleSchema = {
         };
         complete: {
           name: 'complete';
-          args: any;
           type: {
             kind: 'SCALAR';
             name: 'Boolean';
@@ -162,7 +149,6 @@ export type simpleSchema = {
         };
         author: {
           name: 'author';
-          args: any;
           type: {
             kind: 'OBJECT';
             name: 'Author';
@@ -171,7 +157,6 @@ export type simpleSchema = {
         };
         wallOfText: {
           name: 'wallOfText';
-          args: any;
           type: {
             kind: 'SCALAR';
             name: 'String';
@@ -179,18 +164,15 @@ export type simpleSchema = {
           };
         };
       };
-      interfaces: 'ITodo';
     };
 
     ITodo: {
       kind: 'INTERFACE';
       name: 'ITodo';
-      interfaces: never;
       possibleTypes: 'BigTodo' | 'SmallTodo';
       fields: {
         id: {
           name: 'id';
-          args: any;
           type: {
             kind: 'NON_NULL';
             name: null;
@@ -203,7 +185,6 @@ export type simpleSchema = {
         };
         text: {
           name: 'text';
-          args: any;
           type: {
             kind: 'NON_NULL';
             name: null;
@@ -216,7 +197,6 @@ export type simpleSchema = {
         };
         complete: {
           name: 'complete';
-          args: any;
           type: {
             kind: 'SCALAR';
             name: 'Boolean';
@@ -225,7 +205,6 @@ export type simpleSchema = {
         };
         author: {
           name: 'author';
-          args: any;
           type: {
             kind: 'OBJECT';
             name: 'Author';
@@ -274,11 +253,9 @@ export type simpleSchema = {
     NoTodosError: {
       kind: 'OBJECT';
       name: 'NoTodosError';
-      interfaces: never;
       fields: {
         message: {
           name: 'message';
-          args: any;
           type: {
             kind: 'NON_NULL';
             name: null;
@@ -295,11 +272,9 @@ export type simpleSchema = {
     Todo: {
       kind: 'OBJECT';
       name: 'Todo';
-      interfaces: never;
       fields: {
         id: {
           name: 'id';
-          args: any;
           type: {
             kind: 'NON_NULL';
             name: null;
@@ -312,7 +287,6 @@ export type simpleSchema = {
         };
         text: {
           name: 'text';
-          args: any;
           type: {
             kind: 'NON_NULL';
             name: null;
@@ -325,7 +299,6 @@ export type simpleSchema = {
         };
         complete: {
           name: 'complete';
-          args: any;
           type: {
             kind: 'SCALAR';
             name: 'Boolean';
@@ -334,7 +307,6 @@ export type simpleSchema = {
         };
         test: {
           name: 'test';
-          args: any;
           type: {
             kind: 'ENUM';
             name: 'test';
@@ -343,7 +315,6 @@ export type simpleSchema = {
         };
         author: {
           name: 'author';
-          args: any;
           type: {
             kind: 'OBJECT';
             name: 'Author';
@@ -376,11 +347,9 @@ export type simpleSchema = {
     Author: {
       kind: 'OBJECT';
       name: 'Author';
-      interfaces: never;
       fields: {
         id: {
           name: 'id';
-          args: any;
           type: {
             kind: 'NON_NULL';
             name: null;
@@ -393,7 +362,6 @@ export type simpleSchema = {
         };
         name: {
           name: 'name';
-          args: any;
           type: {
             kind: 'NON_NULL';
             name: null;
@@ -406,7 +374,6 @@ export type simpleSchema = {
         };
         known: {
           name: 'known';
-          args: any;
           type: {
             kind: 'SCALAR';
             name: 'Boolean';
@@ -419,11 +386,9 @@ export type simpleSchema = {
     Mutation: {
       kind: 'OBJECT';
       name: 'Mutation';
-      interfaces: never;
       fields: {
         toggleTodo: {
           name: 'toggleTodo';
-          args: any;
           type: {
             kind: 'OBJECT';
             name: 'Todo';
@@ -432,7 +397,6 @@ export type simpleSchema = {
         };
         updateTodo: {
           name: 'updateTodo';
-          args: any;
           type: {
             kind: 'SCALAR';
             name: 'Boolean';
@@ -445,11 +409,9 @@ export type simpleSchema = {
     Subscription: {
       kind: 'OBJECT';
       name: 'Subscription';
-      interfaces: never;
       fields: {
         newTodo: {
           name: 'newTodo';
-          args: any;
           type: {
             kind: 'OBJECT';
             name: 'Todo';
