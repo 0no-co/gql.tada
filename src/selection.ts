@@ -16,7 +16,6 @@ import type {
 } from './namespace';
 
 import type {
-  IntrospectionField,
   IntrospectionListTypeRef,
   IntrospectionNamedTypeRef,
   IntrospectionNonNullTypeRef,
@@ -27,7 +26,7 @@ import type {
 type ObjectLikeType = {
   kind: 'OBJECT' | 'INTERFACE' | 'UNION';
   name: string;
-  fields: { [key: string]: IntrospectionField };
+  fields: { [key: string]: any };
 };
 
 type _unwrapTypeRec<

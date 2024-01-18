@@ -110,14 +110,6 @@ interface DefaultScalars {
   Int: number;
 }
 
-type mapNames<T extends readonly any[]> = obj<{
-  [P in T[number]['name']]: T[number] extends infer Value
-    ? Value extends { readonly name: P }
-      ? obj<Value>
-      : never
-    : never;
-}>;
-
 type mapScalar<
   Type extends IntrospectionScalarType,
   Scalars extends ScalarsLike = DefaultScalars,
@@ -136,11 +128,25 @@ type mapEnum<T extends IntrospectionEnumType> = {
   type: T['enumValues'][number]['name'];
 };
 
+type mapField<T> = T extends IntrospectionField
+  ? {
+      name: T['name'];
+      type: T['type'];
+      args: any;
+    }
+  : never;
+
 export type mapObject<T extends IntrospectionObjectType> = {
   kind: 'OBJECT';
   name: T['name'];
   interfaces: T['interfaces'][number]['name'];
-  fields: obj<mapNames<T['fields']>>;
+  fields: obj<{
+    [P in T['fields'][number]['name']]: T['fields'][number] extends infer Field
+      ? Field extends { readonly name: P }
+        ? mapField<Field>
+        : never
+      : never;
+  }>;
 };
 
 export type mapInputObject<T extends IntrospectionInputObjectType> = {
@@ -154,7 +160,13 @@ type mapInterface<T extends IntrospectionInterfaceType> = {
   name: T['name'];
   interfaces: T['interfaces'] extends readonly any[] ? T['interfaces'][number]['name'] : never;
   possibleTypes: T['possibleTypes'][number]['name'];
-  fields: obj<mapNames<T['fields']>>;
+  fields: obj<{
+    [P in T['fields'][number]['name']]: T['fields'][number] extends infer Field
+      ? Field extends { readonly name: P }
+        ? mapField<Field>
+        : never
+      : never;
+  }>;
 };
 
 type mapUnion<T extends IntrospectionUnionType> = {
