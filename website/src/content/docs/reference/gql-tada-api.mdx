@@ -118,10 +118,10 @@ editor and the TypeScript language server to recognize your GraphQL documents co
 
 ```ts
 import { initGraphQLTada } from 'gql.tada';
-import type { myIntrospection } from './myIntrospection';
+import type { introspection } from './graphql-env.d.ts';
 
 export const graphql = initGraphQLTada<{
-  introspection: typeof myIntrospection;
+  introspection: introspection;
   scalars: {
     DateTime: string;
     Json: any;
@@ -220,11 +220,11 @@ you may call [`initGraphQLTada()`](#initgraphqltada) instead.
 #### Example
 
 ```ts
-import type { myIntrospection } from './myIntrospection';
+import type { introspection } from './graphql-env.d.ts';
 
 declare module 'gql.tada' {
   interface setupSchema {
-    introspection: typeof myIntrospection;
+    introspection: introspection;
     scalars: {
       DateTime: string;
       Json: any;

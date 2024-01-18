@@ -261,7 +261,7 @@ since the declaration in `graphql-env.d.ts` sets a schema up project-wide.
 To work around this, we’ll create a file that uses the introspection data manually with the
 `initGraphQLTada()` function to create our own `graphql()` function:
 
-```ts title="src/graphql.ts"
+```ts title="src/graphql.ts" {4-6}
 import { initGraphQLTada } from 'gql.tada';
 import type { introspection } from './graphql-env.d.ts';
 
@@ -275,8 +275,9 @@ export { readFragment } from 'gql.tada';
 
 Instead of declaring our schema project-wide, we now have created a `graphql` function
 that specifically uses the introspection inside the `graphql-env.d.ts` file that
-`@0no-co/graphqlsp` outputs for us. Instead of importing `graphql` from `gql.tada`,
-we should now import it from our
+`@0no-co/graphqlsp` outputs for us.
+
+Instead of importing `graphql` from `gql.tada`, we should now import it from our
 custom `src/graphql.ts` file.
 
 ### Customizing scalar types
