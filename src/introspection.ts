@@ -139,7 +139,6 @@ type mapField<T> = T extends IntrospectionField
   ? {
       name: T['name'];
       type: T['type'];
-      args: any;
     }
   : never;
 
