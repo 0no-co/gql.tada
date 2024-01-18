@@ -11,46 +11,51 @@ export default defineConfig({
   site: 'https://gql-tada.0no.co',
   integrations: [
     starlight({
-      title: 'gql.tada',
+      title: 'gql.tada 🪄',
       description: 'Magical GraphQL query engine for TypeScript',
       editLink: {
-        baseUrl: 'https://github.com/0no-co/gql.tada/edit/main/website/'
+        baseUrl: 'https://github.com/0no-co/gql.tada/edit/main/website/',
       },
       social: {
         github: 'https://github.com/0no-co/gql.tada',
-        discord: 'https://urql.dev/discord'
+        discord: 'https://urql.dev/discord',
       },
-      sidebar: [{
-        label: 'Get Started',
-        items: [{
-          label: 'Introduction',
-          link: '/'
-        }, {
-          label: 'Installation',
-          link: '/get-started/installation/'
-        }, {
-          label: 'Writing GraphQL',
-          link: '/get-started/writing-graphql/'
-        }
-        ]
-      },
-      /*
+      sidebar: [
+        {
+          label: 'Get Started',
+          items: [
+            {
+              label: 'Introduction',
+              link: '/',
+            },
+            {
+              label: 'Installation',
+              link: '/get-started/installation/',
+            },
+            {
+              label: 'Writing GraphQL',
+              link: '/get-started/writing-graphql/',
+            },
+          ],
+        },
+        /*
         {
         label: 'Guides',
         autogenerate: { directory: 'guides' },
         },
       */
-      {
-        label: 'Reference',
-        autogenerate: {
-          directory: 'reference'
-        }
-      }],
+        {
+          label: 'Reference',
+          autogenerate: {
+            directory: 'reference',
+          },
+        },
+      ],
       customCss: [
         '@fontsource/inter/latin-400.css',
         '@fontsource/inter/latin-500.css',
         '@fontsource/inter/latin-600.css',
-        './src/tailwind.css'
+        './src/tailwind.css',
       ],
       components: {
         Head: './src/components/Head.astro',
@@ -58,11 +63,11 @@ export default defineConfig({
       expressiveCode: {
         plugins: [pluginCollapsibleSections()],
         themes: ['github-dark-dimmed', 'github-light'],
-      }
+      },
     }),
 
     tailwind({
-      applyBaseStyles: false
-    })
+      applyBaseStyles: false,
+    }),
   ],
 });
