@@ -17,16 +17,19 @@ interface IntrospectionSchema {
   readonly queryType: IntrospectionNamedTypeRef;
   readonly mutationType?: IntrospectionNamedTypeRef | null;
   readonly subscriptionType?: IntrospectionNamedTypeRef | null;
-  readonly types: readonly IntrospectionType[];
+  /* Usually this would be:
+    | IntrospectionScalarType
+    | IntrospectionObjectType
+    | IntrospectionInterfaceType
+    | IntrospectionUnionType
+    | IntrospectionEnumType
+    | IntrospectionInputObjectType;
+    However, this forces TypeScript to evaluate the type of an
+    entire introspection query, rather than accept its shape as-is.
+    So, instead, we constrain it to `any` here.
+  */
+  readonly types: readonly any[];
 }
-
-export type IntrospectionType =
-  | IntrospectionScalarType
-  | IntrospectionObjectType
-  | IntrospectionInterfaceType
-  | IntrospectionUnionType
-  | IntrospectionEnumType
-  | IntrospectionInputObjectType;
 
 interface IntrospectionScalarType {
   readonly kind: 'SCALAR';
@@ -37,16 +40,21 @@ interface IntrospectionScalarType {
 export interface IntrospectionObjectType {
   readonly kind: 'OBJECT';
   readonly name: string;
-  readonly fields: readonly IntrospectionField[];
+  // Usually this would be `IntrospectionField`.
+  // However, to save TypeScript some work, instead, we constraint it to `any` here.
+  readonly fields: readonly any[];
+  // The `interfaces` field isn't used. It's omitted here
   readonly interfaces: readonly IntrospectionNamedTypeRef[] | never;
 }
 
 interface IntrospectionInterfaceType {
   readonly kind: 'INTERFACE';
   readonly name: string;
-  readonly fields: readonly IntrospectionField[];
+  // Usually this would be `IntrospectionField`.
+  // However, to save TypeScript some work, instead, we constraint it to `any` here.
+  readonly fields: readonly any[];
   readonly possibleTypes: readonly IntrospectionNamedTypeRef[];
-  readonly interfaces?: readonly IntrospectionNamedTypeRef[] | null;
+  // The `interfaces` field isn't used. It's omitted here
 }
 
 interface IntrospectionUnionType {
@@ -92,8 +100,8 @@ export interface IntrospectionNamedTypeRef {
 
 export interface IntrospectionField {
   readonly name: string;
-  readonly args: readonly IntrospectionInputValue[];
   readonly type: IntrospectionTypeRef;
+  // The `args` field isn't used. It's omitted here
 }
 
 interface IntrospectionInputValue {
@@ -139,7 +147,6 @@ type mapField<T> = T extends IntrospectionField
 export type mapObject<T extends IntrospectionObjectType> = {
   kind: 'OBJECT';
   name: T['name'];
-  interfaces: T['interfaces'][number]['name'];
   fields: obj<{
     [P in T['fields'][number]['name']]: T['fields'][number] extends infer Field
       ? Field extends { readonly name: P }
@@ -158,7 +165,6 @@ export type mapInputObject<T extends IntrospectionInputObjectType> = {
 type mapInterface<T extends IntrospectionInterfaceType> = {
   kind: 'INTERFACE';
   name: T['name'];
-  interfaces: T['interfaces'] extends readonly any[] ? T['interfaces'][number]['name'] : never;
   possibleTypes: T['possibleTypes'][number]['name'];
   fields: obj<{
     [P in T['fields'][number]['name']]: T['fields'][number] extends infer Field
@@ -224,8 +230,8 @@ export type ScalarsLike = {
 
 export type IntrospectionLikeType = {
   query: string;
-  mutation: string | never;
-  subscription: string | never;
+  mutation?: any;
+  subscription?: any;
   types: { [name: string]: any };
 };
 
