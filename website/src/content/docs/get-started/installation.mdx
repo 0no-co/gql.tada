@@ -9,6 +9,10 @@ The `gql.tada` package provides typings and the runtime API as a library,
 while `@0no-co/graphqlsp` integrates with the TypeScript language server
 to integrate with an IDE or editor.
 
+On this page, we’ll go through the steps to get everything set up properly.
+A quick demo of what this looks like can be found [in an example project in the `gql.tada`
+repository.](https://github.com/0no-co/gql.tada/blob/main/examples/example-pokemon-api/)
+
 ## Step 1 — Installing packages
 
 We’ll start by installing `gql.tada` as a dependency, and `@0no-co/graphqlsp` as
@@ -249,39 +253,20 @@ and is **ready to be used.**
 Above, we let `@0no-co/graphqlsp` generate a `src/graphql-env.d.ts` file, which sets
 `gql.tada` up project-wide for us.
 
-This limits what we can do, since we can’t customize any scalars, or further configuration
+This allows us to import `graphql()` from `gql.tada` directly, but it limits what we
+can do, since we can’t customize any scalars, or further configuration
 for `gql.tada`. This setup also fails if we have multiple schemas (for example, in a monorepo),
 since the declaration in `graphql-env.d.ts` sets a schema up project-wide.
 
-To work around this, we may update `@0no-co/graphqlsp`’s configuration to instead
-output a `.ts` file:
+To work around this, we’ll create a file that uses the introspection data manually with the
+`initGraphQLTada()` function to create our own `graphql()` function:
 
-```json {"Update typings to a ts file here:":7-8} title="tsconfig.json"
-{
-  "compilerOptions": {
-    "plugins": [
-      {
-        "name": "@0no-co/graphqlsp",
-        "schema": "./schema.graphql",
-
-        "tadaOutputLocation": "./src/introspection.ts"
-      }
-    ]
-  }
-}
-```
-
-When opening the project, this will now create a `src/introspection.ts` file that only exports our
-introspection query data, which we can use to initialize `gql.tada` manually.
-
-We’ll create a file that uses this introspection data and passes it to `gql.tada`:
-
-```ts title="src/graphql.ts"
+```ts title="src/graphql.ts" {4-6}
 import { initGraphQLTada } from 'gql.tada';
-import type { introspection } from '../introspection';
+import type { introspection } from './graphql-env.d.ts';
 
 export const graphql = initGraphQLTada<{
-  introspection: typeof introspection;
+  introspection: introspection;
 }>();
 
 export type { FragmentOf, ResultOf, VariablesOf } from 'gql.tada';
@@ -289,8 +274,10 @@ export { readFragment } from 'gql.tada';
 ```
 
 Instead of declaring our schema project-wide, we now have created a `graphql` function
-that specifically uses the `introspection.ts` file that `@0no-co/graphqlsp` outputs
-for us. Instead of importing `graphql` from `gql.tada`, we should now import it from our
+that specifically uses the introspection inside the `graphql-env.d.ts` file that
+`@0no-co/graphqlsp` outputs for us.
+
+Instead of importing `graphql` from `gql.tada`, we should now import it from our
 custom `src/graphql.ts` file.
 
 ### Customizing scalar types
@@ -306,10 +293,10 @@ is a string.
 
 ```ts {"Define scalar types here:":6-10} title="src/graphql.ts"
 import { initGraphQLTada } from 'gql.tada';
-import type { introspection } from '../introspection';
+import type { introspection } from './graphql-env.d.ts';
 
 export const graphql = initGraphQLTada<{
-  introspection: typeof introspection;
+  introspection: introspection;
 
   scalars: {
     DateTime: string,
