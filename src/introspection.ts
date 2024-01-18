@@ -110,14 +110,6 @@ interface DefaultScalars {
   Int: number;
 }
 
-type mapNames<T extends readonly any[]> = obj<{
-  [P in T[number]['name']]: T[number] extends infer Value
-    ? Value extends { readonly name: P }
-      ? obj<Value>
-      : never
-    : never;
-}>;
-
 type mapScalar<
   Type extends IntrospectionScalarType,
   Scalars extends ScalarsLike = DefaultScalars,
