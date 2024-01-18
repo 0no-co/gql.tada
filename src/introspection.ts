@@ -168,7 +168,13 @@ type mapInterface<T extends IntrospectionInterfaceType> = {
   name: T['name'];
   interfaces: T['interfaces'] extends readonly any[] ? T['interfaces'][number]['name'] : never;
   possibleTypes: T['possibleTypes'][number]['name'];
-  fields: obj<mapNames<T['fields']>>;
+  fields: obj<{
+    [P in T['fields'][number]['name']]: T['fields'][number] extends infer Field
+      ? Field extends { readonly name: P }
+        ? mapField<Field>
+        : never
+      : never;
+  }>;
 };
 
 type mapUnion<T extends IntrospectionUnionType> = {
