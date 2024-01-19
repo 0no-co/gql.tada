@@ -69,6 +69,15 @@ type isOptionalRec<Directives extends readonly unknown[] | undefined> =
       : isOptionalRec<Rest>
     : false;
 
+type isUnmaskedFragmentRec<Directives extends readonly unknown[] | undefined> =
+  Directives extends readonly [infer Directive, ...infer Rest]
+    ? Directive extends { kind: Kind.DIRECTIVE; name: any }
+      ? Directive['name']['value'] extends 'mask_disable'
+        ? true
+        : isUnmaskedFragmentRec<Rest>
+      : isUnmaskedFragmentRec<Rest>
+    : false;
+
 type getFieldAlias<Node extends FieldNode> = Node['alias'] extends undefined
   ? Node['name']['value']
   : Node['alias'] extends NameNode
@@ -82,10 +91,17 @@ type getFragmentSelection<
   Fragments extends { [name: string]: any },
 > = Node extends { kind: Kind.INLINE_FRAGMENT; selectionSet: any }
   ? getSelection<Node['selectionSet']['selections'], Type, Introspection, Fragments>
-  : Node extends { kind: Kind.FRAGMENT_SPREAD; name: any }
+  : Node extends { kind: Kind.FRAGMENT_SPREAD; name: any; directives: any[] }
     ? Node['name']['value'] extends keyof Fragments
       ? Fragments[Node['name']['value']] extends FragmentDefDecorationLike
-        ? makeFragmentRef<Fragments[Node['name']['value']]>
+        ? isUnmaskedFragmentRec<Node['directives']> extends true
+          ? getSelection<
+              Fragments[Node['name']['value']]['selectionSet']['selections'],
+              Type,
+              Introspection,
+              Fragments
+            >
+          : makeFragmentRef<Fragments[Node['name']['value']]>
         : getSelection<
             Fragments[Node['name']['value']]['selectionSet']['selections'],
             Type,

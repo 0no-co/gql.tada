@@ -26,6 +26,7 @@ interface FragmentDefDecorationLike {
   kind: Kind.FRAGMENT_DEFINITION;
   name: any;
   typeCondition: any;
+  selectionSet: any;
 }
 
 interface DocumentDefDecorationLike extends DocumentNode {
@@ -36,12 +37,14 @@ type decorateFragmentDef<Document extends DocumentNodeLike> = Document['definiti
   kind: Kind.FRAGMENT_DEFINITION;
   name: any;
   typeCondition: any;
+  selectionSet: any;
 }
   ? {
       // NOTE: This is a shortened definition for readability in LSP hovers
       kind: Kind.FRAGMENT_DEFINITION;
       name: Document['definitions'][0]['name'];
       typeCondition: Document['definitions'][0]['typeCondition'];
+      selectionSet: Document['definitions'][0]['selectionSet'];
       readonly [$tada.fragmentId]: unique symbol;
     }
   : never;
@@ -55,6 +58,7 @@ type getFragmentsOfDocumentsRec<Documents> = Documents extends readonly [
           kind: Kind.FRAGMENT_DEFINITION;
           name: any;
           typeCondition: any;
+          selectionSet: any;
         }
         ? { [Name in FragmentDef['name']['value']]: FragmentDef }
         : {}
