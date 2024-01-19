@@ -62,6 +62,7 @@ describe('getFragmentsOfDocumentsRec', () => {
         value: 'Todo';
       };
     };
+    selectionSet: {};
     readonly [$tada.fragmentId]: unique symbol;
   };
 
