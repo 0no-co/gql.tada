@@ -7,6 +7,13 @@ export const PokemonItemFragment = graphql(`
   }
 `);
 
+export const PokemonItemFragmentUnmasked = graphql(`
+  fragment PokemonItemNoMask on Pokemon @mask_disable {
+    id
+    name
+  }
+`);
+
 interface Props {
   data: FragmentOf<typeof PokemonItemFragment> | null;
 }

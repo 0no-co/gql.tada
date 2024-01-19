@@ -21,7 +21,7 @@ describe('decorateFragmentDef', () => {
               value: 'Todo';
             };
           };
-          directives: unknown;
+          directives: [];
           selectionSet: unknown;
         },
       ];
@@ -62,7 +62,7 @@ describe('getFragmentsOfDocumentsRec', () => {
         value: 'Todo';
       };
     };
-    selectionSet: {};
+    masked: true;
     readonly [$tada.fragmentId]: unique symbol;
   };
 

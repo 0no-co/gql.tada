@@ -27,17 +27,28 @@ interface FragmentDefDecorationLike {
   name: any;
   typeCondition: any;
   selectionSet: any;
+  masked: boolean;
 }
 
 interface DocumentDefDecorationLike extends DocumentNode {
   [$tada.fragmentDef]?: FragmentDefDecorationLike;
 }
 
+type isUnmaskedFragmentRec<Directives extends readonly unknown[] | undefined> =
+  Directives extends readonly [infer Directive, ...infer Rest]
+    ? Directive extends { kind: Kind.DIRECTIVE; name: any }
+      ? Directive['name']['value'] extends 'mask_disable'
+        ? true
+        : isUnmaskedFragmentRec<Rest>
+      : isUnmaskedFragmentRec<Rest>
+    : false;
+
 type decorateFragmentDef<Document extends DocumentNodeLike> = Document['definitions'][0] extends {
   kind: Kind.FRAGMENT_DEFINITION;
   name: any;
   typeCondition: any;
   selectionSet: any;
+  directives: any[];
 }
   ? {
       // NOTE: This is a shortened definition for readability in LSP hovers
@@ -45,6 +56,9 @@ type decorateFragmentDef<Document extends DocumentNodeLike> = Document['definiti
       name: Document['definitions'][0]['name'];
       typeCondition: Document['definitions'][0]['typeCondition'];
       selectionSet: Document['definitions'][0]['selectionSet'];
+      masked: isUnmaskedFragmentRec<Document['definitions'][0]['directives']> extends true
+        ? false
+        : true;
       readonly [$tada.fragmentId]: unique symbol;
     }
   : never;
@@ -58,7 +72,6 @@ type getFragmentsOfDocumentsRec<Documents> = Documents extends readonly [
           kind: Kind.FRAGMENT_DEFINITION;
           name: any;
           typeCondition: any;
-          selectionSet: any;
         }
         ? { [Name in FragmentDef['name']['value']]: FragmentDef }
         : {}

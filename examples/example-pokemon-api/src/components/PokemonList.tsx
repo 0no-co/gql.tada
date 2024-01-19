@@ -1,17 +1,17 @@
 import { useQuery } from 'urql';
 import { graphql } from '../graphql';
 
-import { PokemonItem, PokemonItemFragment } from './PokemonItem';
+import { PokemonItem, PokemonItemFragment, PokemonItemFragmentUnmasked } from './PokemonItem';
 
 const PokemonsQuery = graphql(`
   query Pokemons ($limit: Int = 10) {
     pokemons(limit: $limit) {
       id
-      ...PokemonItem @mask_disable
+      ...PokemonItemNoMask
       ...PokemonItem
     }
   }
-`, [PokemonItemFragment]);
+`, [PokemonItemFragment, PokemonItemFragmentUnmasked]);
 
 const PokemonList = () => {
   const [result] = useQuery({ query: PokemonsQuery });

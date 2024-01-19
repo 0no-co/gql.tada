@@ -165,6 +165,11 @@ function initGraphQLTada<const Setup extends AbstractSetupSchema>() {
     for (const document of fragments || []) {
       for (const definition of document.definitions) {
         if (definition.kind === Kind.FRAGMENT_DEFINITION && !seen.has(definition)) {
+          if (definition.directives && definition.directives.length) {
+            (definition as any).directives = definition.directives.filter(
+              (directive) => directive.name.value !== 'mask_disable'
+            );
+          }
           definitions.push(definition);
           seen.add(definition);
         }
