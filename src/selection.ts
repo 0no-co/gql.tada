@@ -27,7 +27,7 @@ type ObjectLikeType = {
 
 type _unwrapTypeRec<
   Type extends IntrospectionTypeRef,
-  SelectionSet extends { kind: Kind.SELECTION_SET } | undefined,
+  SelectionSet,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
 > = Type extends IntrospectionNonNullTypeRef
@@ -49,7 +49,7 @@ type _unwrapTypeRec<
 
 type unwrapType<
   Type extends IntrospectionTypeRef,
-  SelectionSet extends { kind: Kind.SELECTION_SET } | undefined,
+  SelectionSet,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
   TypeDirective = void,
@@ -61,25 +61,29 @@ type unwrapType<
     ? _unwrapTypeRec<Type, SelectionSet, Introspection, Fragments>
     : null | _unwrapTypeRec<Type, SelectionSet, Introspection, Fragments>;
 
-type getTypeDirective<Directives extends readonly unknown[] | undefined> =
-  Directives extends readonly [infer Directive, ...infer Rest]
-    ? Directive extends { kind: Kind.DIRECTIVE; name: any }
-      ? Directive['name']['value'] extends 'required' | '_required'
-        ? 'required'
-        : Directive['name']['value'] extends 'optional' | '_optional'
-          ? 'optional'
-          : getTypeDirective<Rest>
-      : getTypeDirective<Rest>
-    : void;
+type getTypeDirective<Directives extends readonly any[] | undefined> = Directives extends readonly [
+  infer Directive,
+  ...infer Rest,
+]
+  ? Directive extends { kind: Kind.DIRECTIVE; name: any }
+    ? Directive['name']['value'] extends 'required' | '_required'
+      ? 'required'
+      : Directive['name']['value'] extends 'optional' | '_optional'
+        ? 'optional'
+        : getTypeDirective<Rest>
+    : getTypeDirective<Rest>
+  : void;
 
-type isOptionalRec<Directives extends readonly unknown[] | undefined> =
-  Directives extends readonly [infer Directive, ...infer Rest]
-    ? Directive extends { kind: Kind.DIRECTIVE; name: any }
-      ? Directive['name']['value'] extends 'include' | 'skip' | 'defer'
-        ? true
-        : isOptionalRec<Rest>
+type isOptionalRec<Directives extends readonly any[] | undefined> = Directives extends readonly [
+  infer Directive,
+  ...infer Rest,
+]
+  ? Directive extends { kind: Kind.DIRECTIVE; name: any }
+    ? Directive['name']['value'] extends 'include' | 'skip' | 'defer'
+      ? true
       : isOptionalRec<Rest>
-    : false;
+    : isOptionalRec<Rest>
+  : false;
 
 type getFieldAlias<Node extends FieldNode> = Node['alias'] extends undefined
   ? Node['name']['value']
@@ -133,10 +137,24 @@ type getSelection<
   Type extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
-> = obj<getPossibleTypesSelection<Selections, Type, Introspection, Fragments>>;
+> = obj<
+  Type extends { kind: 'UNION' | 'INTERFACE'; possibleTypes: any }
+    ? objValues<{
+        [PossibleType in Type['possibleTypes']]: _getPossibleTypeSelectionRec<
+          Selections,
+          PossibleType,
+          Type,
+          Introspection,
+          Fragments
+        >;
+      }>
+    : Type extends { kind: 'OBJECT'; name: any }
+      ? _getPossibleTypeSelectionRec<Selections, Type['name'], Type, Introspection, Fragments>
+      : {}
+>;
 
 type _getPossibleTypeSelectionRec<
-  Selections extends readonly unknown[],
+  Selections extends readonly any[],
   PossibleType extends string,
   Type extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
@@ -180,25 +198,6 @@ type _getPossibleTypeSelectionRec<
         : {}) &
       _getPossibleTypeSelectionRec<Rest, PossibleType, Type, Introspection, Fragments>
   : {};
-
-type getPossibleTypesSelection<
-  Selections extends readonly unknown[],
-  Type extends ObjectLikeType,
-  Introspection extends IntrospectionLikeType,
-  Fragments extends { [name: string]: any },
-> = Type extends { kind: 'UNION' | 'INTERFACE'; possibleTypes: any }
-  ? objValues<{
-      [PossibleType in Type['possibleTypes']]: _getPossibleTypeSelectionRec<
-        Selections,
-        PossibleType,
-        Type,
-        Introspection,
-        Fragments
-      >;
-    }>
-  : Type extends { kind: 'OBJECT'; name: any }
-    ? _getPossibleTypeSelectionRec<Selections, Type['name'], Type, Introspection, Fragments>
-    : {};
 
 type getOperationSelectionType<
   Definition,
