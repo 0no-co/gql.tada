@@ -1,14 +1,14 @@
-import type { Kind, TypeNode } from '@0no-co/graphql.web';
+import type { Kind } from '@0no-co/graphql.web';
 import type { IntrospectionLikeType } from './introspection';
 import type { DocumentNodeLike } from './parser';
 import type { obj } from './utils';
 
 type getInputObjectTypeRec<
-  InputFields extends readonly unknown[],
+  InputFields,
   Introspection extends IntrospectionLikeType,
 > = InputFields extends [infer InputField, ...infer Rest]
   ? (InputField extends { name: any; type: any }
-      ? InputField extends { type: { kind: 'NON_NULL' } }
+      ? InputField['type'] extends { kind: 'NON_NULL' }
         ? { [Name in InputField['name']]: unwrapType<InputField['type'], Introspection> }
         : { [Name in InputField['name']]?: unwrapType<InputField['type'], Introspection> }
       : {}) &
@@ -16,61 +16,56 @@ type getInputObjectTypeRec<
   : {};
 
 type getScalarType<
-  TypeName extends string,
+  TypeName,
   Introspection extends IntrospectionLikeType,
 > = TypeName extends keyof Introspection['types']
-  ? Introspection['types'][TypeName] extends {
-      kind: 'SCALAR' | 'ENUM';
-      type: infer IntrospectionValueType;
-    }
-    ? IntrospectionValueType
-    : Introspection['types'][TypeName] extends {
-          kind: 'INPUT_OBJECT';
-          inputFields: [...infer InputFields];
-        }
-      ? obj<getInputObjectTypeRec<InputFields, Introspection>>
+  ? Introspection['types'][TypeName] extends { kind: 'SCALAR' | 'ENUM'; type: any }
+    ? Introspection['types'][TypeName]['type']
+    : Introspection['types'][TypeName] extends { kind: 'INPUT_OBJECT'; inputFields: any }
+      ? obj<getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>>
       : never
   : unknown;
 
-type _unwrapTypeRec<
-  TypeRef extends TypeNode,
-  Introspection extends IntrospectionLikeType,
-> = TypeRef extends { kind: 'NON_NULL' }
+type _unwrapTypeRec<TypeRef, Introspection extends IntrospectionLikeType> = TypeRef extends {
+  kind: 'NON_NULL';
+  ofType: any;
+}
   ? _unwrapTypeRec<TypeRef['ofType'], Introspection>
-  : TypeRef extends { kind: 'LIST' }
+  : TypeRef extends { kind: 'LIST'; ofType: any }
     ? Array<unwrapType<TypeRef['ofType'], Introspection>>
     : TypeRef extends { name: any }
       ? getScalarType<TypeRef['name'], Introspection>
       : unknown;
 
-type unwrapType<Type extends TypeNode, Introspection extends IntrospectionLikeType> = Type extends {
+type unwrapType<Type, Introspection extends IntrospectionLikeType> = Type extends {
   kind: 'NON_NULL';
+  ofType: any;
 }
   ? _unwrapTypeRec<Type['ofType'], Introspection>
   : null | _unwrapTypeRec<Type, Introspection>;
 
-type _nwrapTypeRefRec<
-  Type extends TypeNode,
-  Introspection extends IntrospectionLikeType,
-> = Type extends { kind: Kind.NON_NULL_TYPE }
-  ? _nwrapTypeRefRec<Type['type'], Introspection>
-  : Type extends { kind: Kind.LIST_TYPE }
+type _unwrapTypeRefRec<Type, Introspection extends IntrospectionLikeType> = Type extends {
+  kind: Kind.NON_NULL_TYPE;
+  type: any;
+}
+  ? _unwrapTypeRefRec<Type['type'], Introspection>
+  : Type extends { kind: Kind.LIST_TYPE; type: any }
     ? Array<unwrapTypeRef<Type['type'], Introspection>>
     : Type extends { kind: Kind.NAMED_TYPE; name: any }
       ? getScalarType<Type['name']['value'], Introspection>
       : unknown;
 
-type unwrapTypeRef<
-  Type extends TypeNode,
-  Introspection extends IntrospectionLikeType,
-> = Type extends { kind: Kind.NON_NULL_TYPE }
-  ? _nwrapTypeRefRec<Type['type'], Introspection>
-  : null | _nwrapTypeRefRec<Type, Introspection>;
+type unwrapTypeRef<Type, Introspection extends IntrospectionLikeType> = Type extends {
+  kind: Kind.NON_NULL_TYPE;
+  type: any;
+}
+  ? _unwrapTypeRefRec<Type['type'], Introspection>
+  : null | _unwrapTypeRefRec<Type, Introspection>;
 
-type getVariablesRec<
-  Variables extends readonly unknown[],
-  Introspection extends IntrospectionLikeType,
-> = Variables extends [infer Variable, ...infer Rest]
+type getVariablesRec<Variables, Introspection extends IntrospectionLikeType> = Variables extends [
+  infer Variable,
+  ...infer Rest,
+]
   ? (Variable extends { kind: Kind.VARIABLE_DEFINITION; variable: any; type: any }
       ? Variable extends { defaultValue: undefined; type: { kind: Kind.NON_NULL_TYPE } }
         ? {
