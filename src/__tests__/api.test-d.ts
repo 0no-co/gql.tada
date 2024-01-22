@@ -200,4 +200,16 @@ describe('readFragment', () => {
     const result = readFragment({} as document, {} as FragmentOf<document>);
     expectTypeOf<typeof result>().toEqualTypeOf<ResultOf<document>>();
   });
+
+  it('should behave correctly on unmasked fragments', () => {
+    type fragment = parseDocument<`
+      fragment Fields on Todo @_noMask {
+        id
+      }
+    `>;
+
+    type document = getDocumentNode<fragment, schema>;
+    const result = readFragment({} as document, {} as FragmentOf<document>);
+    expectTypeOf<typeof result>().toEqualTypeOf<ResultOf<document>>();
+  });
 });
