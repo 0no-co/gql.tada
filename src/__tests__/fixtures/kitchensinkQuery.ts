@@ -717,7 +717,7 @@ export type kitchensinkDocument = {
                       };
                       value: {
                         kind: Kind.STRING;
-                        value: string;
+                        value: 'value';
                         block: false;
                       };
                     },

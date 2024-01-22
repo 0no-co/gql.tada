@@ -42,10 +42,10 @@ type skipBlockString<In> = In extends `${infer Hd}${'"""'}${infer In}`
     ? skipBlockString<skipIgnored<In>>
     : In
   : void;
-type skipString<In> = In extends `${infer Hd}${'"'}${infer In}`
-  ? Hd extends `${infer _}${'\\'}`
-    ? skipString<In>
-    : In
+type takeStringRec<Acc extends string, In> = In extends `${infer Hd}${'"'}${infer In}`
+  ? Hd extends `${string}${'\\'}`
+    ? takeStringRec<`${Hd}"`, In>
+    : [`${Acc}${Hd}`, In]
   : void;
 
 type _takeNameLiteralRec<PrevMatch extends string, In> = In extends `${infer Match}${infer Out}`
@@ -90,8 +90,8 @@ type takeString<In> = In extends `${'"""'}${infer In}`
     ? [{ kind: Kind.STRING; value: string; block: true }, In]
     : void
   : In extends `${'"'}${infer In}`
-    ? skipString<In> extends `${infer In}`
-      ? [{ kind: Kind.STRING; value: string; block: false }, In]
+    ? takeStringRec<'', In> extends [infer Value, infer In]
+      ? [{ kind: Kind.STRING; value: Value; block: false }, In]
       : void
     : void;
 

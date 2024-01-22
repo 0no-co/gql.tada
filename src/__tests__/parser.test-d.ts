@@ -159,7 +159,7 @@ describe('takeVarDefinitions', () => {
         };
         defaultValue: {
           kind: Kind.STRING;
-          value: string;
+          value: '42';
           block: false;
         };
         directives: [];
@@ -588,7 +588,7 @@ describe('takeValue', () => {
           },
           {
             kind: Kind.STRING;
-            value: string;
+            value: 'abc';
             block: false;
           },
         ];
@@ -621,12 +621,12 @@ describe('takeValue', () => {
   it('parses strings', () => {
     type expected = { kind: Kind.STRING; value: string; block: false };
 
-    expectTypeOf<takeValue<'""', false>>().toEqualTypeOf<[expected, '']>();
-    expectTypeOf<takeValue<'"\\t\\t"', false>>().toEqualTypeOf<[expected, '']>();
-    expectTypeOf<takeValue<'" \\" "', false>>().toEqualTypeOf<[expected, '']>();
-    expectTypeOf<takeValue<'"x" "x"', false>>().toEqualTypeOf<[expected, ' "x"']>();
-    expectTypeOf<takeValue<'"" ""', false>>().toEqualTypeOf<[expected, ' ""']>();
-    expectTypeOf<takeValue<'" \\" " ""', false>>().toEqualTypeOf<[expected, ' ""']>();
+    expectTypeOf<takeValue<'""', false>>().toMatchTypeOf<[expected, '']>();
+    expectTypeOf<takeValue<'"\\t\\t"', false>>().toMatchTypeOf<[expected, '']>();
+    expectTypeOf<takeValue<'" \\" "', false>>().toMatchTypeOf<[expected, '']>();
+    expectTypeOf<takeValue<'"x" "x"', false>>().toMatchTypeOf<[expected, ' "x"']>();
+    expectTypeOf<takeValue<'"" ""', false>>().toMatchTypeOf<[expected, ' ""']>();
+    expectTypeOf<takeValue<'" \\" " ""', false>>().toMatchTypeOf<[expected, ' ""']>();
   });
 
   it('parses block strings', () => {
@@ -683,7 +683,7 @@ describe('takeValue', () => {
               };
               value: {
                 kind: Kind.STRING;
-                value: string;
+                value: 'a';
                 block: false;
               };
             },
@@ -706,7 +706,7 @@ describe('takeValue', () => {
               };
               value: {
                 kind: Kind.STRING;
-                value: string;
+                value: 'a';
                 block: false;
               };
             },
