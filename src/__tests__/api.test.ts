@@ -14,7 +14,7 @@ describe('graphql function', () => {
     const graphql = initGraphQLTada<{ introspection: simpleIntrospection }>();
 
     const todoFragment = graphql(`
-      fragment TodoData on Todo @_unmask {
+      fragment TodoData on Todo @_unmask @_variables(id: "ID!") {
         id
         text
       }
