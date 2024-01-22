@@ -82,7 +82,7 @@ describe('takeVarDefinitions', () => {
             };
           };
           defaultValue: undefined;
-          directives: [];
+          directives: undefined;
         },
       ],
       '',
@@ -111,7 +111,7 @@ describe('takeVarDefinitions', () => {
             };
           };
           defaultValue: undefined;
-          directives: [];
+          directives: undefined;
         },
         {
           kind: Kind.VARIABLE_DEFINITION;
@@ -130,7 +130,7 @@ describe('takeVarDefinitions', () => {
             };
           };
           defaultValue: undefined;
-          directives: [];
+          directives: undefined;
         },
       ],
       '',
@@ -162,7 +162,7 @@ describe('takeVarDefinitions', () => {
           value: string;
           block: false;
         };
-        directives: [];
+        directives: undefined;
       },
       '',
     ];
@@ -219,7 +219,7 @@ describe('takeSelectionSet', () => {
         selections: [
           {
             kind: Kind.FRAGMENT_SPREAD;
-            directives: [];
+            directives: undefined;
             name: {
               kind: Kind.NAME;
               value: 'On';
@@ -243,7 +243,7 @@ describe('takeOperationDefinition', () => {
         operation: OperationTypeNode.MUTATION;
         name: undefined;
         variableDefinitions: [];
-        directives: [];
+        directives: undefined;
         selectionSet: {
           kind: Kind.SELECTION_SET;
           selections: [
@@ -256,7 +256,7 @@ describe('takeOperationDefinition', () => {
               arguments: [];
               alias: undefined;
               selectionSet: undefined;
-              directives: [];
+              directives: undefined;
             },
           ];
         };
@@ -277,7 +277,7 @@ describe('takeOperationDefinition', () => {
           value: 'Foo';
         };
         variableDefinitions: [];
-        directives: [];
+        directives: undefined;
         selectionSet: {
           kind: Kind.SELECTION_SET;
           selections: [
@@ -290,7 +290,7 @@ describe('takeOperationDefinition', () => {
               arguments: [];
               alias: undefined;
               selectionSet: undefined;
-              directives: [];
+              directives: undefined;
             },
           ];
         };
@@ -318,7 +318,7 @@ describe('takeOperationDefinition', () => {
             value: 'Type';
           };
         };
-        directives: [];
+        directives: undefined;
         selectionSet: {
           kind: Kind.SELECTION_SET;
           selections: [
@@ -331,7 +331,7 @@ describe('takeOperationDefinition', () => {
               arguments: [];
               alias: undefined;
               selectionSet: undefined;
-              directives: [];
+              directives: undefined;
             },
           ];
         };
@@ -396,7 +396,7 @@ describe('takeField', () => {
               arguments: [];
               alias: undefined;
               selectionSet: undefined;
-              directives: [];
+              directives: undefined;
             },
           ];
         };
@@ -441,7 +441,7 @@ describe('takeField', () => {
             };
           },
         ];
-        directives: [];
+        directives: undefined;
         selectionSet: undefined;
       },
       '',
@@ -500,7 +500,7 @@ describe('takeFragmentSpread', () => {
             value: 'Test';
           };
         };
-        directives: [];
+        directives: undefined;
         selectionSet: {
           kind: Kind.SELECTION_SET;
           selections: [
@@ -513,7 +513,7 @@ describe('takeFragmentSpread', () => {
               arguments: [];
               alias: undefined;
               selectionSet: undefined;
-              directives: [];
+              directives: undefined;
             },
           ];
         };
@@ -531,7 +531,7 @@ describe('takeFragmentSpread', () => {
       {
         kind: Kind.INLINE_FRAGMENT;
         typeCondition: undefined;
-        directives: [];
+        directives: undefined;
         selectionSet: {
           kind: Kind.SELECTION_SET;
           selections: [
@@ -544,7 +544,7 @@ describe('takeFragmentSpread', () => {
               arguments: [];
               alias: undefined;
               selectionSet: undefined;
-              directives: [];
+              directives: undefined;
             },
           ];
         };
