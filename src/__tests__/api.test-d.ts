@@ -1,13 +1,105 @@
 import { describe, it, expectTypeOf } from 'vitest';
 
 import type { simpleSchema } from './fixtures/simpleSchema';
+import type { simpleIntrospection } from './fixtures/simpleIntrospection';
+
 import type { parseDocument } from '../parser';
-import type { ResultOf, FragmentOf, mirrorFragmentTypeRec, getDocumentNode } from '../api';
-import { readFragment } from '../api';
+import type { $tada } from '../namespace';
+
+import type {
+  ResultOf,
+  VariablesOf,
+  FragmentOf,
+  mirrorFragmentTypeRec,
+  getDocumentNode,
+} from '../api';
+import { readFragment, initGraphQLTada } from '../api';
 
 type schema = simpleSchema;
 type value = { __value: true };
 type data = { __data: true };
+
+describe('Public API', () => {
+  const graphql = initGraphQLTada<{ introspection: typeof simpleIntrospection }>();
+
+  it('should create a fragment mask on masked fragments', () => {
+    const fragment = graphql(`
+      fragment Fields on Todo {
+        id
+        text
+      }
+    `);
+
+    const query = graphql(
+      `
+        query Test($limit: Int) {
+          todos(limit: $limit) {
+            ...Fields
+          }
+        }
+      `,
+      [fragment]
+    );
+
+    expectTypeOf<FragmentOf<typeof fragment>>().toEqualTypeOf<{
+      [$tada.fragmentRefs]: {
+        Fields: $tada.ref;
+      };
+    }>();
+
+    expectTypeOf<ResultOf<typeof query>>().toEqualTypeOf<{
+      todos:
+        | ({
+            [$tada.fragmentRefs]: {
+              Fields: $tada.ref;
+            };
+          } | null)[]
+        | null;
+    }>();
+
+    expectTypeOf<VariablesOf<typeof query>>().toEqualTypeOf<{
+      limit?: number | null;
+    }>();
+  });
+
+  it('should create a fragment type on unmasked fragments', () => {
+    const fragment = graphql(`
+      fragment Fields on Todo @_noMask {
+        id
+        text
+      }
+    `);
+
+    const query = graphql(
+      `
+        query Test($limit: Int) {
+          todos(limit: $limit) {
+            ...Fields
+          }
+        }
+      `,
+      [fragment]
+    );
+
+    expectTypeOf<FragmentOf<typeof fragment>>().toEqualTypeOf<{
+      id: string | number;
+      text: string;
+    }>();
+
+    expectTypeOf<ResultOf<typeof query>>().toEqualTypeOf<{
+      todos:
+        | ({
+            id: string | number;
+            text: string;
+          } | null)[]
+        | null;
+    }>();
+
+    expectTypeOf<VariablesOf<typeof query>>().toEqualTypeOf<{
+      limit?: number | null;
+    }>();
+  });
+});
 
 describe('mirrorFragmentTypeRec', () => {
   it('mirrors null and undefined', () => {
