@@ -235,9 +235,7 @@ interface TadaDocumentNode<
  * This accepts a {@link TadaDocumentNode} and returns the attached `Result` type
  * of GraphQL documents.
  */
-type ResultOf<Document> = Document extends DocumentDecoration<infer Result, infer _>
-  ? Result
-  : never;
+type ResultOf<Document> = Document extends DocumentDecoration<infer Result, any> ? Result : never;
 
 /** A utility type returning the `Variables` type of typed GraphQL documents.
  *
@@ -245,7 +243,7 @@ type ResultOf<Document> = Document extends DocumentDecoration<infer Result, infe
  * This accepts a {@link TadaDocumentNode} and returns the attached `Variables` type
  * of GraphQL documents.
  */
-type VariablesOf<Document> = Document extends DocumentDecoration<infer _, infer Variables>
+type VariablesOf<Document> = Document extends DocumentDecoration<any, infer Variables>
   ? Variables
   : never;
 
