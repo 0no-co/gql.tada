@@ -73,7 +73,7 @@ type getFieldAlias<Node> = Node extends { alias: undefined; name: any }
     : never;
 
 type getFragmentSelection<
-  Node extends { kind: Kind.FRAGMENT_SPREAD | Kind.INLINE_FRAGMENT },
+  Node,
   Type extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
@@ -93,7 +93,7 @@ type getFragmentSelection<
     : {};
 
 type getSpreadSubtype<
-  Node extends { kind: Kind.FRAGMENT_SPREAD | Kind.INLINE_FRAGMENT },
+  Node,
   BaseType extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
