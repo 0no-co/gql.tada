@@ -107,11 +107,9 @@ type getSpreadSubtype<
       : void
     : void;
 
-type getTypenameOfType<Type extends ObjectLikeType> = Type extends {
-  possibleTypes: any;
-}
-  ? Type['name'] | Type['possibleTypes']
-  : Type['name'];
+type getTypenameOfType<Type> =
+  | (Type extends { name: any } ? Type['name'] : never)
+  | (Type extends { possibleTypes: any } ? Type['possibleTypes'] : never);
 
 type getSelection<
   Selections extends readonly any[],
