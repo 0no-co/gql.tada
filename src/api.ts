@@ -19,7 +19,7 @@ import type {
 import type { getDocumentType } from './selection';
 import type { getVariablesType } from './variables';
 import type { parseDocument, DocumentNodeLike } from './parser';
-import type { stringLiteral, matchOr, DocumentDecoration } from './utils';
+import type { stringLiteral, matchOr, writable, DocumentDecoration } from './utils';
 
 /** Abstract configuration type input for your schema and scalars.
  *
@@ -158,7 +158,7 @@ function initGraphQLTada<const Setup extends AbstractSetupSchema>() {
   type Schema = schemaOfConfig<Setup>;
 
   return function graphql(input: string, fragments?: readonly TadaDocumentNode[]): any {
-    const definitions = _parse(input).definitions as DefinitionNode[];
+    const definitions = _parse(input).definitions as writable<DefinitionNode>[];
     const seen = new Set<unknown>();
     for (const document of fragments || []) {
       for (const definition of document.definitions) {
@@ -168,7 +168,14 @@ function initGraphQLTada<const Setup extends AbstractSetupSchema>() {
         }
       }
     }
-    return { kind: Kind.DOCUMENT, definitions: [...definitions] } as any;
+
+    if (definitions[0].kind === Kind.FRAGMENT_DEFINITION && definitions[0].directives) {
+      definitions[0].directives = definitions[0].directives.filter(
+        (directive) => directive.name.value !== '_noMask'
+      );
+    }
+
+    return { kind: Kind.DOCUMENT, definitions };
   } as GraphQLTadaAPI<Schema>;
 }
 
