@@ -11,7 +11,7 @@ const testTypeHost = test.each([
 
 describe('graphql function', () => {
   it('should strip @_unmask from fragment documents', () => {
-    const graphql = initGraphQLTada<{ introspection: typeof simpleIntrospection }>();
+    const graphql = initGraphQLTada<{ introspection: simpleIntrospection }>();
 
     const todoFragment = graphql(`
       fragment TodoData on Todo @_unmask {
@@ -48,7 +48,7 @@ describe('declare setupSchema configuration', () => {
 
         declare module './api' {
           interface setupSchema {
-            introspection: typeof simpleIntrospection;
+            introspection: simpleIntrospection;
           }
         }
 
@@ -115,7 +115,7 @@ describe('initGraphQLTada configuration', () => {
         import { ResultOf, FragmentOf, initGraphQLTada, readFragment } from './api';
         import { $tada } from './namespace';
 
-        const graphql = initGraphQLTada<{ introspection: typeof simpleIntrospection; }>();
+        const graphql = initGraphQLTada<{ introspection: simpleIntrospection; }>();
 
         const todoFragment = graphql(\`
           fragment TodoData on Todo {
@@ -178,7 +178,7 @@ describe('initGraphQLTada configuration', () => {
         import { ResultOf, FragmentOf, initGraphQLTada, readFragment } from './api';
         import { $tada } from './namespace';
 
-        const graphql = initGraphQLTada<{ introspection: typeof simpleIntrospection; }>();
+        const graphql = initGraphQLTada<{ introspection: simpleIntrospection; }>();
 
         const todoFragment = graphql(\`
           fragment TodoData on Todo @_unmask {

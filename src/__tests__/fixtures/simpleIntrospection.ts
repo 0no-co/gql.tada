@@ -1,4 +1,4 @@
-export const simpleIntrospection = {
+export type simpleIntrospection = {
   __schema: {
     queryType: {
       name: 'Query',
@@ -588,4 +588,4 @@ export const simpleIntrospection = {
       },
     ],
   },
-} as const;
+};

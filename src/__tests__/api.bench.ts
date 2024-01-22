@@ -10,7 +10,7 @@ describe('Document', () => {
       import { simpleIntrospection } from './simpleIntrospection';
       import { ResultOf, initGraphQLTada, readFragment } from './api';
 
-      const graphql = initGraphQLTada<{ introspection: typeof simpleIntrospection; }>();
+      const graphql = initGraphQLTada<{ introspection: simpleIntrospection; }>();
 
       const todoFragment = graphql(\`
         fragment TodoData on Todo {

@@ -32,7 +32,7 @@ describe('simple introspection', () => {
           }
         \`>;
 
-        type schema = mapIntrospection<typeof simpleIntrospection>;
+        type schema = mapIntrospection<simpleIntrospection>;
         type actual = getDocumentType<query, schema>;
 
         expectTypeOf<{
@@ -85,7 +85,7 @@ describe('simple introspection', () => {
           }
         \`>;
 
-        type schema = mapIntrospection<typeof simpleIntrospection>;
+        type schema = mapIntrospection<simpleIntrospection>;
         type actual = getDocumentType<query, schema>;
 
         expectTypeOf<{

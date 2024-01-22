@@ -20,7 +20,7 @@ type value = { __value: true };
 type data = { __data: true };
 
 describe('Public API', () => {
-  const graphql = initGraphQLTada<{ introspection: typeof simpleIntrospection }>();
+  const graphql = initGraphQLTada<{ introspection: simpleIntrospection }>();
 
   it('should create a fragment mask on masked fragments', () => {
     const fragment = graphql(`

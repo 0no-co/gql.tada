@@ -1,10 +1,7 @@
 import { expectTypeOf, test } from 'vitest';
-import type { simpleIntrospection } from './fixtures/simpleIntrospection';
+import type { simpleSchema as schema } from './fixtures/simpleSchema';
 import type { parseDocument } from '../parser';
-import type { mapIntrospection } from '../introspection';
 import type { getVariablesType } from '../variables';
-
-type introspection = mapIntrospection<typeof simpleIntrospection>;
 
 test('parses document-variables correctly', () => {
   const query = `
@@ -14,7 +11,7 @@ test('parses document-variables correctly', () => {
   `;
 
   type doc = parseDocument<typeof query>;
-  type variables = getVariablesType<doc, introspection>;
+  type variables = getVariablesType<doc, schema>;
 
   expectTypeOf<variables>().toEqualTypeOf<{ id: string | number }>();
 });
@@ -27,7 +24,7 @@ test('works for input-objects', () => {
   `;
 
   type doc = parseDocument<typeof query>;
-  type variables = getVariablesType<doc, introspection>;
+  type variables = getVariablesType<doc, schema>;
 
   expectTypeOf<variables>().toEqualTypeOf<{
     id: string | number;
@@ -43,7 +40,7 @@ test('allows optionals for default values', () => {
   `;
 
   type doc = parseDocument<typeof query>;
-  type variables = getVariablesType<doc, introspection>;
+  type variables = getVariablesType<doc, schema>;
 
   expectTypeOf<variables>().toEqualTypeOf<{ id?: string | number | undefined }>();
   expectTypeOf<variables['id']>().toEqualTypeOf<string | number | undefined>();
@@ -57,7 +54,7 @@ test('allows optionals for nullable values', () => {
   `;
 
   type doc = parseDocument<typeof query>;
-  type variables = getVariablesType<doc, introspection>;
+  type variables = getVariablesType<doc, schema>;
 
   expectTypeOf<variables>().toEqualTypeOf<{ id?: string | number | null | undefined }>();
   expectTypeOf<variables['id']>().toEqualTypeOf<string | number | null | undefined>();

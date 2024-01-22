@@ -13,7 +13,7 @@ describe('Introspection', () => {
         import { simpleIntrospection } from './simpleIntrospection';
         import { mapIntrospection } from './introspection';
 
-        type schema = mapIntrospection<typeof simpleIntrospection>;
+        type schema = mapIntrospection<simpleIntrospection>;
       `,
     });
 
@@ -38,7 +38,7 @@ describe('Introspection', () => {
         import { githubIntrospection } from './githubIntrospection';
         import type { mapIntrospection } from './introspection';
 
-        type schema = mapIntrospection<typeof githubIntrospection>;
+        type schema = mapIntrospection<githubIntrospection>;
       `,
     });
 

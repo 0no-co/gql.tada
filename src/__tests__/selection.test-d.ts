@@ -404,9 +404,7 @@ test('infers __typename on union unambiguously', () => {
 });
 
 test('infers queries from GitHub introspection schema', () => {
-  type schema = mapIntrospection<
-    typeof import('./fixtures/githubIntrospection').githubIntrospection
-  >;
+  type schema = mapIntrospection<import('./fixtures/githubIntrospection').githubIntrospection>;
 
   type repositories = parseDocument</* GraphQL */ `
     query ($org: String!, $repo: String!) {

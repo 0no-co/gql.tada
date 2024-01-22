@@ -8,7 +8,7 @@ module.exports = {
   },
   extends: ['prettier'],
   plugins: ['prettier', 'tsdoc'],
-  ignorePatterns: ['node_modules/', 'dist/', 'coverage/', 'perf/'],
+  ignorePatterns: ['node_modules/', 'dist/', 'coverage/', 'perf/', 'fixtures'],
   rules: {
     'no-undef': 'off',
     'no-empty': 'off',
