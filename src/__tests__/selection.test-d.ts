@@ -113,6 +113,29 @@ test('infers optional properties for @skip/@include', () => {
   expectTypeOf<expected>().toEqualTypeOf<actual>();
 });
 
+test('infers nullable field types for @required/@optional', () => {
+  type query = parseDocument</* GraphQL */ `
+    query {
+      todos {
+        id @optional
+        complete @required
+      }
+    }
+  `>;
+
+  type actual = getDocumentType<query, schema>;
+  type expected = {
+    todos:
+      | ({
+          id: string | number | null;
+          complete: boolean;
+        } | null)[]
+      | null;
+  };
+
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
+});
+
 test('infers optional fragment for @defer', () => {
   type query = parseDocument</* GraphQL */ `
     query {
