@@ -52,9 +52,25 @@ type unwrapType<
   SelectionSet extends { kind: Kind.SELECTION_SET } | undefined,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
+  TypeDirective = void,
 > = Type extends IntrospectionNonNullTypeRef
-  ? _unwrapTypeRec<Type['ofType'], SelectionSet, Introspection, Fragments>
-  : null | _unwrapTypeRec<Type, SelectionSet, Introspection, Fragments>;
+  ? TypeDirective extends 'optional'
+    ? null | _unwrapTypeRec<Type['ofType'], SelectionSet, Introspection, Fragments>
+    : _unwrapTypeRec<Type['ofType'], SelectionSet, Introspection, Fragments>
+  : TypeDirective extends 'required'
+    ? _unwrapTypeRec<Type, SelectionSet, Introspection, Fragments>
+    : null | _unwrapTypeRec<Type, SelectionSet, Introspection, Fragments>;
+
+type getTypeDirective<Directives extends readonly unknown[] | undefined> =
+  Directives extends readonly [infer Directive, ...infer Rest]
+    ? Directive extends { kind: Kind.DIRECTIVE; name: any }
+      ? Directive['name']['value'] extends 'required' | '_required'
+        ? 'required'
+        : Directive['name']['value'] extends 'optional' | '_optional'
+          ? 'optional'
+          : getTypeDirective<Rest>
+      : getTypeDirective<Rest>
+    : void;
 
 type isOptionalRec<Directives extends readonly unknown[] | undefined> =
   Directives extends readonly [infer Directive, ...infer Rest]
@@ -146,7 +162,8 @@ type _getPossibleTypeSelectionRec<
                     Type['fields'][Node['name']['value']]['type'],
                     Node['selectionSet'],
                     Introspection,
-                    Fragments
+                    Fragments,
+                    getTypeDirective<Node['directives']>
                   >;
             }
           : {
@@ -156,7 +173,8 @@ type _getPossibleTypeSelectionRec<
                     Type['fields'][Node['name']['value']]['type'],
                     Node['selectionSet'],
                     Introspection,
-                    Fragments
+                    Fragments,
+                    getTypeDirective<Node['directives']>
                   >;
             }
         : {}) &
