@@ -61,3 +61,18 @@ describe('operation variables', () => {
     expectTypeOf<variables['id']>().toEqualTypeOf<string | number | null | undefined>();
   });
 });
+
+describe('fragment variables', () => {
+  it('parses fragment variables correctly', () => {
+    const query = `
+      fragment Test on Test @_variables(id: "ID!") {
+        toggleTodo { id }
+      }
+    `;
+
+    type doc = parseDocument<typeof query>;
+    type variables = getVariablesType<doc, schema>;
+
+    expectTypeOf<variables>().toEqualTypeOf<{ id: string | number }>();
+  });
+});
