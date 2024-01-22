@@ -64,7 +64,7 @@ describe('Public API', () => {
 
   it('should create a fragment type on unmasked fragments', () => {
     const fragment = graphql(`
-      fragment Fields on Todo @_noMask {
+      fragment Fields on Todo @_unmask {
         id
         text
       }
@@ -203,7 +203,7 @@ describe('readFragment', () => {
 
   it('should behave correctly on unmasked fragments', () => {
     type fragment = parseDocument<`
-      fragment Fields on Todo @_noMask {
+      fragment Fields on Todo @_unmask {
         id
       }
     `>;

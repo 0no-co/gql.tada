@@ -171,7 +171,7 @@ function initGraphQLTada<const Setup extends AbstractSetupSchema>() {
 
     if (definitions[0].kind === Kind.FRAGMENT_DEFINITION && definitions[0].directives) {
       definitions[0].directives = definitions[0].directives.filter(
-        (directive) => directive.name.value !== '_noMask'
+        (directive) => directive.name.value !== '_unmask'
       );
     }
 

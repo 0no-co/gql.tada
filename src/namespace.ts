@@ -36,7 +36,7 @@ type isMaskedRec<Directives extends readonly unknown[] | undefined> = Directives
   ...infer Rest,
 ]
   ? Directive extends { kind: Kind.DIRECTIVE; name: any }
-    ? Directive['name']['value'] extends '_noMask'
+    ? Directive['name']['value'] extends '_unmask'
       ? false
       : isMaskedRec<Rest>
     : isMaskedRec<Rest>

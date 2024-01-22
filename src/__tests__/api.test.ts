@@ -10,11 +10,11 @@ const testTypeHost = test.each([
 ]);
 
 describe('graphql function', () => {
-  it('should strip @_noMask from fragment documents', () => {
+  it('should strip @_unmask from fragment documents', () => {
     const graphql = initGraphQLTada<{ introspection: typeof simpleIntrospection }>();
 
     const todoFragment = graphql(`
-      fragment TodoData on Todo @_noMask {
+      fragment TodoData on Todo @_unmask {
         id
         text
       }
@@ -181,7 +181,7 @@ describe('initGraphQLTada configuration', () => {
         const graphql = initGraphQLTada<{ introspection: typeof simpleIntrospection; }>();
 
         const todoFragment = graphql(\`
-          fragment TodoData on Todo @_noMask {
+          fragment TodoData on Todo @_unmask {
             id
             text
           }
