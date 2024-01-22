@@ -10,14 +10,7 @@ import type { obj, objValues } from './utils';
 import type { DocumentNodeLike } from './parser';
 
 import type { $tada, makeUndefinedFragmentRef } from './namespace';
-
-import type {
-  IntrospectionListTypeRef,
-  IntrospectionNamedTypeRef,
-  IntrospectionNonNullTypeRef,
-  IntrospectionTypeRef,
-  IntrospectionLikeType,
-} from './introspection';
+import type { IntrospectionLikeType } from './introspection';
 
 type ObjectLikeType = {
   kind: 'OBJECT' | 'INTERFACE' | 'UNION';
@@ -26,15 +19,15 @@ type ObjectLikeType = {
 };
 
 type _unwrapTypeRec<
-  Type extends IntrospectionTypeRef,
+  Type,
   SelectionSet,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
-> = Type extends IntrospectionNonNullTypeRef
+> = Type extends { readonly kind: 'NON_NULL'; readonly ofType: any }
   ? _unwrapTypeRec<Type['ofType'], SelectionSet, Introspection, Fragments>
-  : Type extends IntrospectionListTypeRef
+  : Type extends { readonly kind: 'LIST'; readonly ofType: any }
     ? Array<unwrapType<Type['ofType'], SelectionSet, Introspection, Fragments>>
-    : Type extends IntrospectionNamedTypeRef
+    : Type extends { readonly name: string }
       ? Introspection['types'][Type['name']] extends ObjectLikeType
         ? SelectionSet extends { kind: Kind.SELECTION_SET; selections: any }
           ? getSelection<
@@ -48,12 +41,12 @@ type _unwrapTypeRec<
       : unknown;
 
 type unwrapType<
-  Type extends IntrospectionTypeRef,
+  Type,
   SelectionSet,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
   TypeDirective = void,
-> = Type extends IntrospectionNonNullTypeRef
+> = Type extends { readonly kind: 'NON_NULL'; readonly ofType: any }
   ? TypeDirective extends 'optional'
     ? null | _unwrapTypeRec<Type['ofType'], SelectionSet, Introspection, Fragments>
     : _unwrapTypeRec<Type['ofType'], SelectionSet, Introspection, Fragments>
