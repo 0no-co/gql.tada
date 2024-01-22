@@ -43,6 +43,7 @@ describe('getFragmentsOfDocumentsRec', () => {
         [$tada.definition]?: {
           fragment: 'TodoFragment';
           on: 'Todo';
+          masked: true;
         };
       },
     ]

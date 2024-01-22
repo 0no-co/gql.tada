@@ -203,7 +203,7 @@ test('infers fragment spreads', () => {
   expectTypeOf<expected>().toEqualTypeOf<actual>();
 });
 
-test('infers fragment spreads for fragment refs', () => {
+test('infers fragment spreads for masked fragment refs', () => {
   type fragment = parseDocument</* GraphQL */ `
     fragment Fields on Query { __typename }
   `>;

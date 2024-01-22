@@ -1,6 +1,6 @@
 import type { Kind } from '@0no-co/graphql.web';
 import type { DocumentNodeLike } from './parser';
-import type { obj } from './utils';
+import type { DocumentDecoration } from './utils';
 
 /** Private namespace holding our symbols for markers.
  *
@@ -24,11 +24,23 @@ declare namespace $tada {
 interface FragmentDefDecorationLike {
   fragment: any;
   on: any;
+  masked: any;
 }
 
 interface DocumentDefDecorationLike {
   [$tada.definition]?: FragmentDefDecorationLike;
 }
+
+type isMaskedRec<Directives extends readonly unknown[] | undefined> = Directives extends readonly [
+  infer Directive,
+  ...infer Rest,
+]
+  ? Directive extends { kind: Kind.DIRECTIVE; name: any }
+    ? Directive['name']['value'] extends '_noMask'
+      ? false
+      : isMaskedRec<Rest>
+    : isMaskedRec<Rest>
+  : true;
 
 type decorateFragmentDef<Document extends DocumentNodeLike> = Document['definitions'][0] extends {
   kind: Kind.FRAGMENT_DEFINITION;
@@ -37,6 +49,7 @@ type decorateFragmentDef<Document extends DocumentNodeLike> = Document['definiti
   ? {
       fragment: Document['definitions'][0]['name']['value'];
       on: Document['definitions'][0]['typeCondition']['name']['value'];
+      masked: isMaskedRec<Document['definitions'][0]['directives']>;
     }
   : never;
 
@@ -71,11 +84,19 @@ type getFragmentsOfDocumentsRec<Documents> = Documents extends readonly [
 
 type makeFragmentRef<Document> = Document extends { [$tada.definition]?: infer Definition }
   ? Definition extends FragmentDefDecorationLike
-    ? obj<{
-        [$tada.fragmentRefs]: {
-          [Name in Definition['fragment']]: $tada.ref;
-        };
-      }>
+    ? Definition['masked'] extends false
+      ? Document extends DocumentDecoration<infer Result, any>
+        ? Result
+        : {
+            [$tada.fragmentRefs]: {
+              [Name in Definition['fragment']]: $tada.ref;
+            };
+          }
+      : {
+          [$tada.fragmentRefs]: {
+            [Name in Definition['fragment']]: $tada.ref;
+          };
+        }
     : never
   : never;
 
