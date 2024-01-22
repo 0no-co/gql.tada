@@ -17,12 +17,12 @@ declare namespace $tada {
   const definition: unique symbol;
   export type definition = typeof definition;
 
-  const fragmentId: unique symbol;
-  export type fragmentId = typeof fragmentId;
+  const ref: unique symbol;
+  export type ref = typeof ref;
 }
 
 interface FragmentDefDecorationLike {
-  readonly [$tada.fragmentId]: symbol;
+  readonly [$tada.ref]: symbol;
   kind: Kind.FRAGMENT_DEFINITION;
   name: any;
   typeCondition: any;
@@ -41,7 +41,7 @@ type decorateFragmentDef<Document extends DocumentNodeLike> = Document['definiti
       kind: Kind.FRAGMENT_DEFINITION;
       name: Document['definitions'][0]['name'];
       typeCondition: Document['definitions'][0]['typeCondition'];
-      readonly [$tada.fragmentId]: unique symbol;
+      readonly [$tada.ref]: unique symbol;
     }
   : never;
 
@@ -63,7 +63,7 @@ type getFragmentsOfDocumentsRec<Documents> = Documents extends readonly [
 
 type makeFragmentRef<Definition extends FragmentDefDecorationLike> = obj<{
   [$tada.fragmentRefs]: {
-    [Name in Definition['name']['value']]: Definition[$tada.fragmentId];
+    [Name in Definition['name']['value']]: Definition[$tada.ref];
   };
 }>;
 

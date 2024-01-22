@@ -220,7 +220,7 @@ test('infers fragment spreads for fragment refs', () => {
 
   type expected = {
     [$tada.fragmentRefs]: {
-      Fields: extraFragments['Fields'][$tada.fragmentId];
+      Fields: extraFragments['Fields'][$tada.ref];
     };
   };
 

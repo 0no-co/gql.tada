@@ -41,7 +41,7 @@ describe('decorateFragmentDef', () => {
           value: 'Todo';
         };
       };
-      readonly [$tada.fragmentId]: symbol;
+      readonly [$tada.ref]: symbol;
     };
 
     expectTypeOf<actual>().toMatchTypeOf<expected>();
@@ -62,7 +62,7 @@ describe('getFragmentsOfDocumentsRec', () => {
         value: 'Todo';
       };
     };
-    readonly [$tada.fragmentId]: unique symbol;
+    readonly [$tada.ref]: unique symbol;
   };
 
   type input = {
