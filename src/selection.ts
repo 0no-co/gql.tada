@@ -9,11 +9,7 @@ import type {
 import type { obj, objValues } from './utils';
 import type { DocumentNodeLike } from './parser';
 
-import type {
-  FragmentDefDecorationLike,
-  makeUndefinedFragmentRef,
-  makeFragmentRef,
-} from './namespace';
+import type { $tada, makeUndefinedFragmentRef } from './namespace';
 
 import type {
   IntrospectionListTypeRef,
@@ -84,8 +80,8 @@ type getFragmentSelection<
   ? getSelection<Node['selectionSet']['selections'], Type, Introspection, Fragments>
   : Node extends { kind: Kind.FRAGMENT_SPREAD; name: any }
     ? Node['name']['value'] extends keyof Fragments
-      ? Fragments[Node['name']['value']] extends FragmentDefDecorationLike
-        ? makeFragmentRef<Fragments[Node['name']['value']]>
+      ? Fragments[Node['name']['value']] extends { [$tada.ref]: any }
+        ? Fragments[Node['name']['value']][$tada.ref]
         : getSelection<
             Fragments[Node['name']['value']]['selectionSet']['selections'],
             Type,

@@ -217,12 +217,7 @@ test('infers fragment spreads for fragment refs', () => {
   >;
 
   type actual = getDocumentType<query, schema, extraFragments>;
-
-  type expected = {
-    [$tada.fragmentRefs]: {
-      Fields: extraFragments['Fields'][$tada.ref];
-    };
-  };
+  type expected = extraFragments['Fields'][$tada.ref];
 
   expectTypeOf<expected>().toEqualTypeOf<actual>();
 });

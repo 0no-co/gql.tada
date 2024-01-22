@@ -9,13 +9,11 @@ import type {
 } from './introspection';
 
 import type {
-  FragmentDefDecorationLike,
   DocumentDefDecorationLike,
   getFragmentsOfDocumentsRec,
   makeDefinitionDecoration,
   decorateFragmentDef,
   makeFragmentRef,
-  $tada,
 } from './namespace';
 
 import type { getDocumentType } from './selection';
@@ -159,7 +157,7 @@ type schemaOfConfig<Setup extends AbstractSetupSchema> = mapIntrospection<
 function initGraphQLTada<const Setup extends AbstractSetupSchema>() {
   type Schema = schemaOfConfig<Setup>;
 
-  return function graphql(input: string, fragments?: readonly DocumentDefDecorationLike[]): any {
+  return function graphql(input: string, fragments?: readonly TadaDocumentNode[]): any {
     const definitions = _parse(input).definitions as DefinitionNode[];
     const seen = new Set<unknown>();
     for (const document of fragments || []) {
@@ -275,12 +273,7 @@ type VariablesOf<Document> = Document extends DocumentDecoration<infer _, infer 
  *
  * @see {@link readFragment} for how to read from fragment masks.
  */
-type FragmentOf<Document extends DocumentDefDecorationLike> = Exclude<
-  Document[$tada.definition],
-  undefined
-> extends infer FragmentDef extends FragmentDefDecorationLike
-  ? makeFragmentRef<FragmentDef>
-  : never;
+type FragmentOf<Document extends DocumentDefDecorationLike> = makeFragmentRef<Document>;
 
 export type mirrorFragmentTypeRec<Fragment, Data> = Fragment extends (infer Value)[]
   ? mirrorFragmentTypeRec<Value, Data>[]
