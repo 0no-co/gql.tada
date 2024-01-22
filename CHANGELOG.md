@@ -1,5 +1,25 @@
 # gql.tada
 
+## 1.1.0
+
+### Minor Changes
+
+- Support `@_optional` and `@_required` directives on fields overriding the field types.
+  When used, `@_required` can turn a nullable type into a non-nullable, and `@_optional`
+  can turn non-nullable fields into nullable ones. (See [“Client-Controlled Nullability” in Graphcache for an example of a client implementing this.](https://formidable.com/open-source/urql/docs/graphcache/local-directives/#client-controlled-nullability))
+  Submitted by [@kitten](https://github.com/kitten) (See [#32](https://github.com/0no-co/gql.tada/pull/32))
+- Add support for `@_unmask` directive on fragments causing the fragment type to not be masked. `FragmentOf<>` will return the full result type of fragments when they’re annotated with `@_unmask` and spreading these unmasked fragments into parent documents will use their full type
+  Submitted by [@kitten](https://github.com/kitten) (See [#31](https://github.com/0no-co/gql.tada/pull/31))
+
+### Patch Changes
+
+- Format `TadaDocumentNode` output’s third generic differently. The output of fragment definitions will now be more readable (e.g. `{ fragment: 'Name', on: 'Type', masked: true }`)
+  Submitted by [@kitten](https://github.com/kitten) (See [#31](https://github.com/0no-co/gql.tada/pull/31))
+- Improve performance of selection and variables inference
+  Submitted by [@kitten](https://github.com/kitten) (See [#35](https://github.com/0no-co/gql.tada/pull/35))
+- Improve performance of GraphQL document parser
+  Submitted by [@kitten](https://github.com/kitten) (See [#34](https://github.com/0no-co/gql.tada/pull/34))
+
 ## 1.0.3
 
 ### Patch Changes
