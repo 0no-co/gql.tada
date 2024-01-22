@@ -1,4 +1,4 @@
-import type { Kind, FieldNode, FragmentSpreadNode, InlineFragmentNode } from '@0no-co/graphql.web';
+import type { Kind } from '@0no-co/graphql.web';
 
 import type { obj, objValues } from './utils';
 import type { DocumentNodeLike } from './parser';
@@ -135,7 +135,7 @@ type _getPossibleTypeSelectionRec<
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
 > = Selections extends [infer Node, ...infer Rest]
-  ? (Node extends FragmentSpreadNode | InlineFragmentNode
+  ? (Node extends { kind: Kind.FRAGMENT_SPREAD | Kind.INLINE_FRAGMENT }
       ? getSpreadSubtype<Node, Type, Introspection, Fragments> extends infer Subtype extends
           ObjectLikeType
         ? PossibleType extends getTypenameOfType<Subtype>
@@ -143,10 +143,10 @@ type _getPossibleTypeSelectionRec<
               | (isOptional<Node> extends true ? {} : never)
               | getFragmentSelection<Node, Subtype, Introspection, Fragments>
           : {}
-        : Node extends FragmentSpreadNode
+        : Node extends { kind: Kind.FRAGMENT_SPREAD; name: any }
           ? makeUndefinedFragmentRef<Node['name']['value']>
           : {}
-      : Node extends FieldNode
+      : Node extends { kind: Kind.FIELD; name: any; selectionSet: any }
         ? isOptional<Node> extends true
           ? {
               [Prop in getFieldAlias<Node>]?: Node['name']['value'] extends '__typename'
