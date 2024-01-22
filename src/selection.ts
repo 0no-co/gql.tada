@@ -48,22 +48,18 @@ type unwrapType<
     ? _unwrapTypeRec<Type, SelectionSet, Introspection, Fragments>
     : null | _unwrapTypeRec<Type, SelectionSet, Introspection, Fragments>;
 
-type getTypeDirective<Directives> = Directives extends readonly [infer Directive, ...infer Rest]
-  ? Directive extends { kind: Kind.DIRECTIVE; name: any }
-    ? Directive['name']['value'] extends 'required' | '_required'
-      ? 'required'
-      : Directive['name']['value'] extends 'optional' | '_optional'
-        ? 'optional'
-        : getTypeDirective<Rest>
-    : getTypeDirective<Rest>
+type getTypeDirective<Node> = Node extends { directives: any[] }
+  ? Node['directives'][number]['name']['value'] & ('required' | '_required') extends never
+    ? Node['directives'][number]['name']['value'] & ('optional' | '_optional') extends never
+      ? void
+      : 'optional'
+    : 'required'
   : void;
 
-type isOptionalRec<Directives> = Directives extends readonly [infer Directive, ...infer Rest]
-  ? Directive extends { kind: Kind.DIRECTIVE; name: any }
-    ? Directive['name']['value'] extends 'include' | 'skip' | 'defer'
-      ? true
-      : isOptionalRec<Rest>
-    : isOptionalRec<Rest>
+type isOptional<Node> = Node extends { directives: any[] }
+  ? Node['directives'][number]['name']['value'] & ('include' | 'skip' | 'defer') extends never
+    ? false
+    : true
   : false;
 
 type getFieldAlias<Node> = Node extends { alias: undefined; name: any }
@@ -144,14 +140,14 @@ type _getPossibleTypeSelectionRec<
           ObjectLikeType
         ? PossibleType extends getTypenameOfType<Subtype>
           ?
-              | (isOptionalRec<Node['directives']> extends true ? {} : never)
+              | (isOptional<Node> extends true ? {} : never)
               | getFragmentSelection<Node, Subtype, Introspection, Fragments>
           : {}
         : Node extends FragmentSpreadNode
           ? makeUndefinedFragmentRef<Node['name']['value']>
           : {}
       : Node extends FieldNode
-        ? isOptionalRec<Node['directives']> extends true
+        ? isOptional<Node> extends true
           ? {
               [Prop in getFieldAlias<Node>]?: Node['name']['value'] extends '__typename'
                 ? PossibleType
@@ -160,7 +156,7 @@ type _getPossibleTypeSelectionRec<
                     Node['selectionSet'],
                     Introspection,
                     Fragments,
-                    getTypeDirective<Node['directives']>
+                    getTypeDirective<Node>
                   >;
             }
           : {
@@ -171,7 +167,7 @@ type _getPossibleTypeSelectionRec<
                     Node['selectionSet'],
                     Introspection,
                     Fragments,
-                    getTypeDirective<Node['directives']>
+                    getTypeDirective<Node>
                   >;
             }
         : {}) &
