@@ -19,16 +19,10 @@ type getScalarType<
   TypeName,
   Introspection extends IntrospectionLikeType,
 > = TypeName extends keyof Introspection['types']
-  ? Introspection['types'][TypeName] extends {
-      kind: 'SCALAR' | 'ENUM';
-      type: infer IntrospectionValueType;
-    }
-    ? IntrospectionValueType
-    : Introspection['types'][TypeName] extends {
-          kind: 'INPUT_OBJECT';
-          inputFields: [...infer InputFields];
-        }
-      ? obj<getInputObjectTypeRec<InputFields, Introspection>>
+  ? Introspection['types'][TypeName] extends { kind: 'SCALAR' | 'ENUM'; type: any }
+    ? Introspection['types'][TypeName]['type']
+    : Introspection['types'][TypeName] extends { kind: 'INPUT_OBJECT'; inputFields: any }
+      ? obj<getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>>
       : never
   : unknown;
 
