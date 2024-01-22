@@ -27,6 +27,9 @@ export type objValues<T> = T[keyof T] extends infer U
     : U
   : never;
 
+/** Marks all properties as writable */
+export type writable<T> = { -readonly [K in keyof T]: T[K] };
+
 /** Annotations for GraphQL’s `DocumentNode` with attached generics for its result data and variables types.
  *
  * @remarks

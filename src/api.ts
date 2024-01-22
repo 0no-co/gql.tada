@@ -9,19 +9,17 @@ import type {
 } from './introspection';
 
 import type {
-  FragmentDefDecorationLike,
   DocumentDefDecorationLike,
   getFragmentsOfDocumentsRec,
-  makeFragmentDefDecoration,
+  makeDefinitionDecoration,
   decorateFragmentDef,
   makeFragmentRef,
-  $tada,
 } from './namespace';
 
 import type { getDocumentType } from './selection';
 import type { getVariablesType } from './variables';
 import type { parseDocument, DocumentNodeLike } from './parser';
-import type { stringLiteral, matchOr, DocumentDecoration } from './utils';
+import type { stringLiteral, matchOr, writable, DocumentDecoration } from './utils';
 
 /** Abstract configuration type input for your schema and scalars.
  *
@@ -159,8 +157,8 @@ type schemaOfConfig<Setup extends AbstractSetupSchema> = mapIntrospection<
 function initGraphQLTada<const Setup extends AbstractSetupSchema>() {
   type Schema = schemaOfConfig<Setup>;
 
-  return function graphql(input: string, fragments?: readonly DocumentDefDecorationLike[]): any {
-    const definitions = _parse(input).definitions as DefinitionNode[];
+  return function graphql(input: string, fragments?: readonly TadaDocumentNode[]): any {
+    const definitions = _parse(input).definitions as writable<DefinitionNode>[];
     const seen = new Set<unknown>();
     for (const document of fragments || []) {
       for (const definition of document.definitions) {
@@ -170,7 +168,14 @@ function initGraphQLTada<const Setup extends AbstractSetupSchema>() {
         }
       }
     }
-    return { kind: Kind.DOCUMENT, definitions: [...definitions] } as any;
+
+    if (definitions[0].kind === Kind.FRAGMENT_DEFINITION && definitions[0].directives) {
+      definitions[0].directives = definitions[0].directives.filter(
+        (directive) => directive.name.value !== '_unmask'
+      );
+    }
+
+    return { kind: Kind.DOCUMENT, definitions };
   } as GraphQLTadaAPI<Schema>;
 }
 
@@ -222,7 +227,7 @@ interface TadaDocumentNode<
   Decoration = never,
 > extends DocumentNode,
     DocumentDecoration<Result, Variables>,
-    makeFragmentDefDecoration<Decoration> {}
+    makeDefinitionDecoration<Decoration> {}
 
 /** A utility type returning the `Result` type of typed GraphQL documents.
  *
@@ -230,9 +235,7 @@ interface TadaDocumentNode<
  * This accepts a {@link TadaDocumentNode} and returns the attached `Result` type
  * of GraphQL documents.
  */
-type ResultOf<Document> = Document extends DocumentDecoration<infer Result, infer _>
-  ? Result
-  : never;
+type ResultOf<Document> = Document extends DocumentDecoration<infer Result, any> ? Result : never;
 
 /** A utility type returning the `Variables` type of typed GraphQL documents.
  *
@@ -240,7 +243,7 @@ type ResultOf<Document> = Document extends DocumentDecoration<infer Result, infe
  * This accepts a {@link TadaDocumentNode} and returns the attached `Variables` type
  * of GraphQL documents.
  */
-type VariablesOf<Document> = Document extends DocumentDecoration<infer _, infer Variables>
+type VariablesOf<Document> = Document extends DocumentDecoration<any, infer Variables>
   ? Variables
   : never;
 
@@ -275,12 +278,7 @@ type VariablesOf<Document> = Document extends DocumentDecoration<infer _, infer 
  *
  * @see {@link readFragment} for how to read from fragment masks.
  */
-type FragmentOf<Document extends DocumentDefDecorationLike> = Exclude<
-  Document[$tada.fragmentDef],
-  undefined
-> extends infer FragmentDef extends FragmentDefDecorationLike
-  ? makeFragmentRef<FragmentDef>
-  : never;
+type FragmentOf<Document extends DocumentDefDecorationLike> = makeFragmentRef<Document>;
 
 export type mirrorFragmentTypeRec<Fragment, Data> = Fragment extends (infer Value)[]
   ? mirrorFragmentTypeRec<Value, Data>[]

@@ -1,6 +1,6 @@
-import type { Kind, DocumentNode } from '@0no-co/graphql.web';
+import type { Kind } from '@0no-co/graphql.web';
 import type { DocumentNodeLike } from './parser';
-import type { obj } from './utils';
+import type { DocumentDecoration } from './utils';
 
 /** Private namespace holding our symbols for markers.
  *
@@ -14,35 +14,42 @@ declare namespace $tada {
   const fragmentRefs: unique symbol;
   export type fragmentRefs = typeof fragmentRefs;
 
-  const fragmentDef: unique symbol;
-  export type fragmentDef = typeof fragmentDef;
+  const definition: unique symbol;
+  export type definition = typeof definition;
 
-  const fragmentId: unique symbol;
-  export type fragmentId = typeof fragmentId;
+  const ref: unique symbol;
+  export type ref = typeof ref;
 }
 
 interface FragmentDefDecorationLike {
-  readonly [$tada.fragmentId]: symbol;
-  kind: Kind.FRAGMENT_DEFINITION;
-  name: any;
-  typeCondition: any;
+  fragment: any;
+  on: any;
+  masked: any;
 }
 
-interface DocumentDefDecorationLike extends DocumentNode {
-  [$tada.fragmentDef]?: FragmentDefDecorationLike;
+interface DocumentDefDecorationLike {
+  [$tada.definition]?: FragmentDefDecorationLike;
 }
+
+type isMaskedRec<Directives extends readonly unknown[] | undefined> = Directives extends readonly [
+  infer Directive,
+  ...infer Rest,
+]
+  ? Directive extends { kind: Kind.DIRECTIVE; name: any }
+    ? Directive['name']['value'] extends '_unmask'
+      ? false
+      : isMaskedRec<Rest>
+    : isMaskedRec<Rest>
+  : true;
 
 type decorateFragmentDef<Document extends DocumentNodeLike> = Document['definitions'][0] extends {
   kind: Kind.FRAGMENT_DEFINITION;
   name: any;
-  typeCondition: any;
 }
   ? {
-      // NOTE: This is a shortened definition for readability in LSP hovers
-      kind: Kind.FRAGMENT_DEFINITION;
-      name: Document['definitions'][0]['name'];
-      typeCondition: Document['definitions'][0]['typeCondition'];
-      readonly [$tada.fragmentId]: unique symbol;
+      fragment: Document['definitions'][0]['name']['value'];
+      on: Document['definitions'][0]['typeCondition']['name']['value'];
+      masked: isMaskedRec<Document['definitions'][0]['directives']>;
     }
   : never;
 
@@ -50,23 +57,48 @@ type getFragmentsOfDocumentsRec<Documents> = Documents extends readonly [
   infer Document,
   ...infer Rest,
 ]
-  ? (Document extends { [$tada.fragmentDef]?: any }
-      ? Exclude<Document[$tada.fragmentDef], undefined> extends infer FragmentDef extends {
-          kind: Kind.FRAGMENT_DEFINITION;
-          name: any;
-          typeCondition: any;
-        }
-        ? { [Name in FragmentDef['name']['value']]: FragmentDef }
+  ? (Document extends { [$tada.definition]?: any }
+      ? Exclude<Document[$tada.definition], undefined> extends infer Definition extends
+          FragmentDefDecorationLike
+        ? {
+            [Name in Definition['fragment']]: {
+              kind: Kind.FRAGMENT_DEFINITION;
+              name: {
+                kind: Kind.NAME;
+                value: Definition['fragment'];
+              };
+              typeCondition: {
+                kind: Kind.NAMED_TYPE;
+                name: {
+                  kind: Kind.NAME;
+                  value: Definition['on'];
+                };
+              };
+              [$tada.ref]: makeFragmentRef<Document>;
+            };
+          }
         : {}
       : {}) &
       getFragmentsOfDocumentsRec<Rest>
   : {};
 
-type makeFragmentRef<Definition extends FragmentDefDecorationLike> = obj<{
-  [$tada.fragmentRefs]: {
-    [Name in Definition['name']['value']]: Definition[$tada.fragmentId];
-  };
-}>;
+type makeFragmentRef<Document> = Document extends { [$tada.definition]?: infer Definition }
+  ? Definition extends FragmentDefDecorationLike
+    ? Definition['masked'] extends false
+      ? Document extends DocumentDecoration<infer Result, any>
+        ? Result
+        : {
+            [$tada.fragmentRefs]: {
+              [Name in Definition['fragment']]: $tada.ref;
+            };
+          }
+      : {
+          [$tada.fragmentRefs]: {
+            [Name in Definition['fragment']]: $tada.ref;
+          };
+        }
+    : never
+  : never;
 
 type makeUndefinedFragmentRef<FragmentName extends string> = {
   [$tada.fragmentRefs]: {
@@ -74,8 +106,8 @@ type makeUndefinedFragmentRef<FragmentName extends string> = {
   };
 };
 
-type makeFragmentDefDecoration<Definition> = {
-  [$tada.fragmentDef]?: Definition extends DocumentDefDecorationLike[$tada.fragmentDef]
+type makeDefinitionDecoration<Definition> = {
+  [$tada.definition]?: Definition extends DocumentDefDecorationLike[$tada.definition]
     ? Definition
     : never;
 };
@@ -84,7 +116,7 @@ export type {
   $tada,
   decorateFragmentDef,
   getFragmentsOfDocumentsRec,
-  makeFragmentDefDecoration,
+  makeDefinitionDecoration,
   makeFragmentRef,
   makeUndefinedFragmentRef,
   FragmentDefDecorationLike,

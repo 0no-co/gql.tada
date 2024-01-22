@@ -9,7 +9,7 @@ import type {
   $tada,
   decorateFragmentDef,
   getFragmentsOfDocumentsRec,
-  makeFragmentDefDecoration,
+  makeDefinitionDecoration,
 } from '../namespace';
 
 type schema = simpleSchema;
@@ -203,7 +203,7 @@ test('infers fragment spreads', () => {
   expectTypeOf<expected>().toEqualTypeOf<actual>();
 });
 
-test('infers fragment spreads for fragment refs', () => {
+test('infers fragment spreads for masked fragment refs', () => {
   type fragment = parseDocument</* GraphQL */ `
     fragment Fields on Query { __typename }
   `>;
@@ -213,16 +213,11 @@ test('infers fragment spreads for fragment refs', () => {
   `>;
 
   type extraFragments = getFragmentsOfDocumentsRec<
-    [makeFragmentDefDecoration<decorateFragmentDef<fragment>>]
+    [makeDefinitionDecoration<decorateFragmentDef<fragment>>]
   >;
 
   type actual = getDocumentType<query, schema, extraFragments>;
-
-  type expected = {
-    [$tada.fragmentRefs]: {
-      Fields: extraFragments['Fields'][$tada.fragmentId];
-    };
-  };
+  type expected = extraFragments['Fields'][$tada.ref];
 
   expectTypeOf<expected>().toEqualTypeOf<actual>();
 });

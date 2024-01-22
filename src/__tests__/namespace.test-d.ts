@@ -28,7 +28,29 @@ describe('decorateFragmentDef', () => {
     };
 
     type actual = decorateFragmentDef<input>;
-    type expected = {
+
+    expectTypeOf<actual>().toMatchTypeOf<{
+      fragment: 'TodoFragment';
+      on: 'Todo';
+    }>();
+  });
+});
+
+describe('getFragmentsOfDocumentsRec', () => {
+  type actual = getFragmentsOfDocumentsRec<
+    [
+      {
+        [$tada.definition]?: {
+          fragment: 'TodoFragment';
+          on: 'Todo';
+          masked: true;
+        };
+      },
+    ]
+  >;
+
+  type expected = {
+    TodoFragment: {
       kind: Kind.FRAGMENT_DEFINITION;
       name: {
         kind: Kind.NAME;
@@ -41,36 +63,13 @@ describe('decorateFragmentDef', () => {
           value: 'Todo';
         };
       };
-      readonly [$tada.fragmentId]: symbol;
-    };
-
-    expectTypeOf<actual>().toMatchTypeOf<expected>();
-  });
-});
-
-describe('getFragmentsOfDocumentsRec', () => {
-  type inputFragmentDef = {
-    kind: Kind.FRAGMENT_DEFINITION;
-    name: {
-      kind: Kind.NAME;
-      value: 'TodoFragment';
-    };
-    typeCondition: {
-      kind: Kind.NAMED_TYPE;
-      name: {
-        kind: Kind.NAME;
-        value: 'Todo';
+      [$tada.ref]: {
+        [$tada.fragmentRefs]: {
+          TodoFragment: $tada.ref;
+        };
       };
     };
-    readonly [$tada.fragmentId]: unique symbol;
   };
-
-  type input = {
-    [$tada.fragmentDef]?: inputFragmentDef;
-  };
-
-  type actual = getFragmentsOfDocumentsRec<[input]>;
-  type expected = { TodoFragment: inputFragmentDef };
 
   expectTypeOf<actual>().toMatchTypeOf<expected>();
 });
