@@ -1,6 +1,6 @@
 import type { Kind } from '@0no-co/graphql.web';
 import type { IntrospectionLikeType } from './introspection';
-import type { DocumentNodeLike } from './parser';
+import type { DocumentNodeLike, parseType } from './parser';
 import type { obj } from './utils';
 
 type getInputObjectTypeRec<
@@ -84,14 +84,53 @@ type getVariablesRec<Variables, Introspection extends IntrospectionLikeType> = V
       getVariablesRec<Rest, Introspection>
   : {};
 
+type getVarDefsRec<Arguments, Introspection extends IntrospectionLikeType> = Arguments extends [
+  infer Argument,
+  ...infer Rest,
+]
+  ? (Argument extends {
+      kind: Kind.ARGUMENT;
+      name: any;
+      value: { kind: Kind.STRING; value: string };
+    }
+      ? {
+          [Name in Argument['name']['value']]: unwrapTypeRef<
+            parseType<Argument['value']['value']>,
+            Introspection
+          >;
+        }
+      : {}) &
+      getVariablesRec<Rest, Introspection>
+  : {};
+
+type getVarDefDirectiveRec<
+  Directives extends readonly any[],
+  Introspection extends IntrospectionLikeType,
+> = Directives extends readonly [infer Directive, ...infer Rest]
+  ? Directive extends {
+      kind: Kind.DIRECTIVE;
+      name: { kind: Kind.NAME; value: '_variables' };
+      arguments: any[];
+    }
+    ? getVarDefsRec<Directive['arguments'], Introspection>
+    : getVarDefDirectiveRec<Rest, Introspection>
+  : {};
+
 type getVariablesType<
   Document extends DocumentNodeLike,
   Introspection extends IntrospectionLikeType,
-> = Document['definitions'][0] extends {
-  kind: Kind.OPERATION_DEFINITION;
-  variableDefinitions: any;
-}
-  ? obj<getVariablesRec<Document['definitions'][0]['variableDefinitions'], Introspection>>
-  : {};
+> = obj<
+  Document['definitions'][0] extends {
+    kind: Kind.OPERATION_DEFINITION;
+    variableDefinitions: any[];
+  }
+    ? getVariablesRec<Document['definitions'][0]['variableDefinitions'], Introspection>
+    : Document['definitions'][0] extends {
+          kind: Kind.FRAGMENT_DEFINITION;
+          directives: any[];
+        }
+      ? getVarDefDirectiveRec<Document['definitions'][0]['directives'], Introspection>
+      : {}
+>;
 
 export type { getVariablesType };
