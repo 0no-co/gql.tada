@@ -54,10 +54,7 @@ type unwrapType<
     ? _unwrapTypeRec<Type, SelectionSet, Introspection, Fragments>
     : null | _unwrapTypeRec<Type, SelectionSet, Introspection, Fragments>;
 
-type getTypeDirective<Directives extends readonly any[] | undefined> = Directives extends readonly [
-  infer Directive,
-  ...infer Rest,
-]
+type getTypeDirective<Directives> = Directives extends readonly [infer Directive, ...infer Rest]
   ? Directive extends { kind: Kind.DIRECTIVE; name: any }
     ? Directive['name']['value'] extends 'required' | '_required'
       ? 'required'
@@ -67,10 +64,7 @@ type getTypeDirective<Directives extends readonly any[] | undefined> = Directive
     : getTypeDirective<Rest>
   : void;
 
-type isOptionalRec<Directives extends readonly any[] | undefined> = Directives extends readonly [
-  infer Directive,
-  ...infer Rest,
-]
+type isOptionalRec<Directives> = Directives extends readonly [infer Directive, ...infer Rest]
   ? Directive extends { kind: Kind.DIRECTIVE; name: any }
     ? Directive['name']['value'] extends 'include' | 'skip' | 'defer'
       ? true
