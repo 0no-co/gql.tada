@@ -1,10 +1,4 @@
-import type {
-  Kind,
-  FieldNode,
-  FragmentSpreadNode,
-  InlineFragmentNode,
-  NameNode,
-} from '@0no-co/graphql.web';
+import type { Kind, FieldNode, FragmentSpreadNode, InlineFragmentNode } from '@0no-co/graphql.web';
 
 import type { obj, objValues } from './utils';
 import type { DocumentNodeLike } from './parser';
@@ -72,9 +66,9 @@ type isOptionalRec<Directives> = Directives extends readonly [infer Directive, .
     : isOptionalRec<Rest>
   : false;
 
-type getFieldAlias<Node extends FieldNode> = Node['alias'] extends undefined
+type getFieldAlias<Node> = Node extends { alias: undefined; name: any }
   ? Node['name']['value']
-  : Node['alias'] extends NameNode
+  : Node extends { alias: any }
     ? Node['alias']['value']
     : never;
 
