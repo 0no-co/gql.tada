@@ -170,11 +170,14 @@ export type takeDirective<In, Const> = In extends `${'@'}${infer In}`
     : void
   : void;
 
-export type takeDirectives<In, Const> = takeDirective<In, Const> extends [infer Directive, infer In]
-  ? takeDirectives<skipIgnored<In>, Const> extends [[...infer Directives], infer In]
-    ? [[Directive, ...Directives], In]
-    : [[], In]
-  : [[], In];
+type takeDirectivesRec<Directives extends any[], In, Const> = takeDirective<In, Const> extends [
+  infer Directive,
+  infer In,
+]
+  ? takeDirectivesRec<[...Directives, Directive], skipIgnored<In>, Const>
+  : Directives extends []
+    ? [undefined, In]
+    : [Directives, In];
 
 type takeFieldName<In> = takeName<In> extends [infer MaybeAlias, infer In]
   ? skipIgnored<In> extends `${':'}${infer In}`
@@ -186,7 +189,7 @@ type takeFieldName<In> = takeName<In> extends [infer MaybeAlias, infer In]
 
 export type takeField<In> = takeFieldName<In> extends [infer Alias, infer Name, infer In]
   ? takeArguments<skipIgnored<In>, false> extends [infer Arguments, infer In]
-    ? takeDirectives<skipIgnored<In>, false> extends [infer Directives, infer In]
+    ? takeDirectivesRec<[], skipIgnored<In>, false> extends [infer Directives, infer In]
       ? takeSelectionSet<skipIgnored<In>> extends [infer SelectionSet, infer In]
         ? [
             {
@@ -237,7 +240,7 @@ type takeTypeCondition<In> = In extends `${'on'}${infer In}`
 export type takeFragmentSpread<In> = In extends `${'...'}${infer In}`
   ? skipIgnored<In> extends `${'on'}${infer In}`
     ? takeName<skipIgnored<In>> extends [infer Name, infer In]
-      ? takeDirectives<skipIgnored<In>, false> extends [infer Directives, infer In]
+      ? takeDirectivesRec<[], skipIgnored<In>, false> extends [infer Directives, infer In]
         ? takeSelectionSet<skipIgnored<In>> extends [infer SelectionSet, infer In]
           ? [
               {
@@ -252,10 +255,10 @@ export type takeFragmentSpread<In> = In extends `${'...'}${infer In}`
         : void
       : void
     : takeName<skipIgnored<In>> extends [infer Name, infer In]
-      ? takeDirectives<skipIgnored<In>, false> extends [infer Directives, infer In]
+      ? takeDirectivesRec<[], skipIgnored<In>, false> extends [infer Directives, infer In]
         ? [{ kind: Kind.FRAGMENT_SPREAD; name: Name; directives: Directives }, In]
         : void
-      : takeDirectives<skipIgnored<In>, false> extends [infer Directives, infer In]
+      : takeDirectivesRec<[], skipIgnored<In>, false> extends [infer Directives, infer In]
         ? takeSelectionSet<skipIgnored<In>> extends [infer SelectionSet, infer In]
           ? [
               {
@@ -287,7 +290,7 @@ export type takeVarDefinition<In> = TakeVariable<In, false> extends [infer Varia
     ? takeType<skipIgnored<In>> extends [infer Type, infer In]
       ? skipIgnored<In> extends `${'='}${infer In}`
         ? takeValue<skipIgnored<In>, true> extends [infer DefaultValue, infer In]
-          ? takeDirectives<skipIgnored<In>, true> extends [infer Directives, infer In]
+          ? takeDirectivesRec<[], skipIgnored<In>, true> extends [infer Directives, infer In]
             ? [
                 {
                   kind: Kind.VARIABLE_DEFINITION;
@@ -300,7 +303,7 @@ export type takeVarDefinition<In> = TakeVariable<In, false> extends [infer Varia
               ]
             : void
           : void
-        : takeDirectives<skipIgnored<In>, true> extends [infer Directives, infer In]
+        : takeDirectivesRec<[], skipIgnored<In>, true> extends [infer Directives, infer In]
           ? [
               {
                 kind: Kind.VARIABLE_DEFINITION;
@@ -328,7 +331,7 @@ export type takeVarDefinitions<In> = skipIgnored<In> extends `${'('}${infer In}`
 export type takeFragmentDefinition<In> = In extends `${'fragment'}${infer In}`
   ? takeName<skipIgnored<In>> extends [infer Name, infer In]
     ? takeTypeCondition<skipIgnored<In>> extends [infer TypeCondition, infer In]
-      ? takeDirectives<skipIgnored<In>, true> extends [infer Directives, infer In]
+      ? takeDirectivesRec<[], skipIgnored<In>, true> extends [infer Directives, infer In]
         ? takeSelectionSet<skipIgnored<In>> extends [infer SelectionSet, infer In]
           ? [
               {
@@ -357,7 +360,7 @@ type TakeOperation<In> = In extends `${'query'}${infer In}`
 export type takeOperationDefinition<In> = TakeOperation<In> extends [infer Operation, infer In]
   ? takeOptionalName<skipIgnored<In>> extends [infer Name, infer In]
     ? takeVarDefinitions<skipIgnored<In>> extends [infer VarDefinitions, infer In]
-      ? takeDirectives<skipIgnored<In>, false> extends [infer Directives, infer In]
+      ? takeDirectivesRec<[], skipIgnored<In>, false> extends [infer Directives, infer In]
         ? takeSelectionSet<skipIgnored<In>> extends [infer SelectionSet, infer In]
           ? [
               {
