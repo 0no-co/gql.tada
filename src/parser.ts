@@ -160,7 +160,7 @@ type _takeArgumentsRec<Arguments extends any[], In, Const> = In extends `${')'}$
     : void;
 export type takeArguments<In, Const> = In extends `${'('}${infer In}`
   ? _takeArgumentsRec<[], skipIgnored<In>, Const>
-  : [[], In];
+  : [undefined, In];
 
 export type takeDirective<In, Const> = In extends `${'@'}${infer In}`
   ? takeName<In> extends [infer Name, infer In]

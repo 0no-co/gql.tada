@@ -200,7 +200,7 @@ describe('takeVarDefinitions', () => {
               kind: Kind.NAME;
               value: 'bar';
             };
-            arguments: [];
+            arguments: undefined;
           },
         ];
       },
@@ -253,7 +253,7 @@ describe('takeOperationDefinition', () => {
                 kind: Kind.NAME;
                 value: 'mutationField';
               };
-              arguments: [];
+              arguments: undefined;
               alias: undefined;
               selectionSet: undefined;
               directives: undefined;
@@ -287,7 +287,7 @@ describe('takeOperationDefinition', () => {
                 kind: Kind.NAME;
                 value: 'mutationField';
               };
-              arguments: [];
+              arguments: undefined;
               alias: undefined;
               selectionSet: undefined;
               directives: undefined;
@@ -328,7 +328,7 @@ describe('takeOperationDefinition', () => {
                 kind: Kind.NAME;
                 value: 'field';
               };
-              arguments: [];
+              arguments: undefined;
               alias: undefined;
               selectionSet: undefined;
               directives: undefined;
@@ -354,7 +354,7 @@ describe('takeField', () => {
     type expected = [
       {
         kind: Kind.FIELD;
-        arguments: [];
+        arguments: undefined;
         alias: {
           kind: Kind.NAME;
           value: 'alias';
@@ -393,7 +393,7 @@ describe('takeField', () => {
                 kind: Kind.NAME;
                 value: 'child';
               };
-              arguments: [];
+              arguments: undefined;
               alias: undefined;
               selectionSet: undefined;
               directives: undefined;
@@ -510,7 +510,7 @@ describe('takeFragmentSpread', () => {
                 kind: Kind.NAME;
                 value: 'field';
               };
-              arguments: [];
+              arguments: undefined;
               alias: undefined;
               selectionSet: undefined;
               directives: undefined;
@@ -541,7 +541,7 @@ describe('takeFragmentSpread', () => {
                 kind: Kind.NAME;
                 value: 'field';
               };
-              arguments: [];
+              arguments: undefined;
               alias: undefined;
               selectionSet: undefined;
               directives: undefined;

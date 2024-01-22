@@ -132,7 +132,7 @@ export type kitchensinkDocument = {
             kind: Kind.NAME;
             value: 'onQuery';
           };
-          arguments: [];
+          arguments: undefined;
         },
       ];
       selectionSet: {
@@ -180,7 +180,7 @@ export type kitchensinkDocument = {
                     kind: Kind.NAME;
                     value: 'id';
                   };
-                  arguments: [];
+                  arguments: undefined;
                   directives: undefined;
                   alias: undefined;
                   selectionSet: undefined;
@@ -201,7 +201,7 @@ export type kitchensinkDocument = {
                         kind: Kind.NAME;
                         value: 'onInlineFragment';
                       };
-                      arguments: [];
+                      arguments: undefined;
                     },
                   ];
                   selectionSet: {
@@ -214,7 +214,7 @@ export type kitchensinkDocument = {
                           value: 'field2';
                         };
                         alias: undefined;
-                        arguments: [];
+                        arguments: undefined;
                         directives: undefined;
                         selectionSet: {
                           kind: Kind.SELECTION_SET;
@@ -225,7 +225,7 @@ export type kitchensinkDocument = {
                                 kind: Kind.NAME;
                                 value: 'id';
                               };
-                              arguments: [];
+                              arguments: undefined;
                               directives: undefined;
                               alias: undefined;
                               selectionSet: undefined;
@@ -301,7 +301,7 @@ export type kitchensinkDocument = {
                                       kind: Kind.NAME;
                                       value: 'id';
                                     };
-                                    arguments: [];
+                                    arguments: undefined;
                                     directives: undefined;
                                     alias: undefined;
                                     selectionSet: undefined;
@@ -319,7 +319,7 @@ export type kitchensinkDocument = {
                                           kind: Kind.NAME;
                                           value: 'onFragmentSpread';
                                         };
-                                        arguments: [];
+                                        arguments: undefined;
                                       },
                                     ];
                                   },
@@ -369,7 +369,7 @@ export type kitchensinkDocument = {
                           kind: Kind.NAME;
                           value: 'id';
                         };
-                        arguments: [];
+                        arguments: undefined;
                         directives: undefined;
                         alias: undefined;
                         selectionSet: undefined;
@@ -390,7 +390,7 @@ export type kitchensinkDocument = {
                           kind: Kind.NAME;
                           value: 'id';
                         };
-                        arguments: [];
+                        arguments: undefined;
                         directives: undefined;
                         alias: undefined;
                         selectionSet: undefined;
@@ -419,7 +419,7 @@ export type kitchensinkDocument = {
             kind: Kind.NAME;
             value: 'onMutation';
           };
-          arguments: [];
+          arguments: undefined;
         },
       ];
       selectionSet: {
@@ -452,7 +452,7 @@ export type kitchensinkDocument = {
                   kind: Kind.NAME;
                   value: 'onField';
                 };
-                arguments: [];
+                arguments: undefined;
               },
             ];
             selectionSet: {
@@ -465,7 +465,7 @@ export type kitchensinkDocument = {
                     value: 'story';
                   };
                   alias: undefined;
-                  arguments: [];
+                  arguments: undefined;
                   directives: undefined;
                   selectionSet: {
                     kind: Kind.SELECTION_SET;
@@ -476,7 +476,7 @@ export type kitchensinkDocument = {
                           kind: Kind.NAME;
                           value: 'id';
                         };
-                        arguments: [];
+                        arguments: undefined;
                         directives: [
                           {
                             kind: Kind.DIRECTIVE;
@@ -484,7 +484,7 @@ export type kitchensinkDocument = {
                               kind: Kind.NAME;
                               value: 'onField';
                             };
-                            arguments: [];
+                            arguments: undefined;
                           },
                         ];
                         alias: undefined;
@@ -534,7 +534,7 @@ export type kitchensinkDocument = {
             kind: Kind.NAME;
             value: 'onSubscription';
           };
-          arguments: [];
+          arguments: undefined;
         },
       ];
       selectionSet: {
@@ -574,7 +574,7 @@ export type kitchensinkDocument = {
                     value: 'story';
                   };
                   alias: undefined;
-                  arguments: [];
+                  arguments: undefined;
                   directives: undefined;
                   selectionSet: {
                     kind: Kind.SELECTION_SET;
@@ -586,7 +586,7 @@ export type kitchensinkDocument = {
                           value: 'likers';
                         };
                         alias: undefined;
-                        arguments: [];
+                        arguments: undefined;
                         directives: undefined;
                         selectionSet: {
                           kind: Kind.SELECTION_SET;
@@ -599,7 +599,7 @@ export type kitchensinkDocument = {
                               };
                               alias: undefined;
                               selectionSet: undefined;
-                              arguments: [];
+                              arguments: undefined;
                               directives: undefined;
                             },
                           ];
@@ -612,7 +612,7 @@ export type kitchensinkDocument = {
                           value: 'likeSentence';
                         };
                         alias: undefined;
-                        arguments: [];
+                        arguments: undefined;
                         directives: undefined;
                         selectionSet: {
                           kind: Kind.SELECTION_SET;
@@ -625,7 +625,7 @@ export type kitchensinkDocument = {
                               };
                               alias: undefined;
                               selectionSet: undefined;
-                              arguments: [];
+                              arguments: undefined;
                               directives: undefined;
                             },
                           ];
@@ -660,7 +660,7 @@ export type kitchensinkDocument = {
             kind: Kind.NAME;
             value: 'onFragmentDefinition';
           };
-          arguments: [];
+          arguments: undefined;
         },
       ];
       selectionSet: {
@@ -806,7 +806,7 @@ export type kitchensinkDocument = {
             };
             alias: undefined;
             selectionSet: undefined;
-            arguments: [];
+            arguments: undefined;
             directives: undefined;
           },
         ];
@@ -832,7 +832,7 @@ export type kitchensinkDocument = {
             };
             alias: undefined;
             selectionSet: undefined;
-            arguments: [];
+            arguments: undefined;
             directives: undefined;
           },
         ];
