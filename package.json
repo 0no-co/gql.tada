@@ -1,7 +1,7 @@
 {
   "name": "gql.tada",
   "description": "The spec-compliant & magical GraphQL query language engine in the TypeScript type system",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "author": "0no.co <hi@0no.co>",
   "source": "./src/index.ts",
   "main": "./dist/gql-tada",
