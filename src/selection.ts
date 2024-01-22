@@ -112,7 +112,7 @@ type getTypenameOfType<Type> =
   | (Type extends { possibleTypes: any } ? Type['possibleTypes'] : never);
 
 type getSelection<
-  Selections extends readonly any[],
+  Selections,
   Type extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
@@ -133,7 +133,7 @@ type getSelection<
 >;
 
 type _getPossibleTypeSelectionRec<
-  Selections extends readonly any[],
+  Selections,
   PossibleType extends string,
   Type extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
