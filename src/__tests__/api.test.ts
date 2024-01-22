@@ -1,10 +1,35 @@
-import { describe, test } from 'vitest';
+import { Kind } from '@0no-co/graphql.web';
+import { describe, it, test, expect } from 'vitest';
 import * as ts from './tsHarness';
+import type { simpleIntrospection } from './fixtures/simpleIntrospection';
+import { initGraphQLTada } from '../api';
 
 const testTypeHost = test.each([
   { strictNullChecks: false, noImplicitAny: false },
   { strictNullChecks: true },
 ]);
+
+describe('graphql function', () => {
+  it('should strip @_noMask from fragment documents', () => {
+    const graphql = initGraphQLTada<{ introspection: typeof simpleIntrospection }>();
+
+    const todoFragment = graphql(`
+      fragment TodoData on Todo @_noMask {
+        id
+        text
+      }
+    `);
+
+    expect(todoFragment).toMatchObject({
+      definitions: [
+        {
+          kind: Kind.FRAGMENT_DEFINITION,
+          directives: [],
+        },
+      ],
+    });
+  });
+});
 
 describe('declare setupSchema configuration', () => {
   testTypeHost('creates simple documents (%o)', (options) => {

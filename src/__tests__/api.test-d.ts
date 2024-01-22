@@ -5,6 +5,7 @@ import type { simpleIntrospection } from './fixtures/simpleIntrospection';
 
 import type { parseDocument } from '../parser';
 import type { $tada } from '../namespace';
+import { readFragment, initGraphQLTada } from '../api';
 
 import type {
   ResultOf,
@@ -13,7 +14,6 @@ import type {
   mirrorFragmentTypeRec,
   getDocumentNode,
 } from '../api';
-import { readFragment, initGraphQLTada } from '../api';
 
 type schema = simpleSchema;
 type value = { __value: true };
