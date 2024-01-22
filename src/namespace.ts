@@ -14,8 +14,8 @@ declare namespace $tada {
   const fragmentRefs: unique symbol;
   export type fragmentRefs = typeof fragmentRefs;
 
-  const fragmentDef: unique symbol;
-  export type fragmentDef = typeof fragmentDef;
+  const definition: unique symbol;
+  export type definition = typeof definition;
 
   const fragmentId: unique symbol;
   export type fragmentId = typeof fragmentId;
@@ -29,13 +29,12 @@ interface FragmentDefDecorationLike {
 }
 
 interface DocumentDefDecorationLike extends DocumentNode {
-  [$tada.fragmentDef]?: FragmentDefDecorationLike;
+  [$tada.definition]?: FragmentDefDecorationLike;
 }
 
 type decorateFragmentDef<Document extends DocumentNodeLike> = Document['definitions'][0] extends {
   kind: Kind.FRAGMENT_DEFINITION;
   name: any;
-  typeCondition: any;
 }
   ? {
       // NOTE: This is a shortened definition for readability in LSP hovers
@@ -50,8 +49,8 @@ type getFragmentsOfDocumentsRec<Documents> = Documents extends readonly [
   infer Document,
   ...infer Rest,
 ]
-  ? (Document extends { [$tada.fragmentDef]?: any }
-      ? Exclude<Document[$tada.fragmentDef], undefined> extends infer FragmentDef extends {
+  ? (Document extends { [$tada.definition]?: any }
+      ? Exclude<Document[$tada.definition], undefined> extends infer FragmentDef extends {
           kind: Kind.FRAGMENT_DEFINITION;
           name: any;
           typeCondition: any;
@@ -74,8 +73,8 @@ type makeUndefinedFragmentRef<FragmentName extends string> = {
   };
 };
 
-type makeFragmentDefDecoration<Definition> = {
-  [$tada.fragmentDef]?: Definition extends DocumentDefDecorationLike[$tada.fragmentDef]
+type makeDefinitionDecoration<Definition> = {
+  [$tada.definition]?: Definition extends DocumentDefDecorationLike[$tada.definition]
     ? Definition
     : never;
 };
@@ -84,7 +83,7 @@ export type {
   $tada,
   decorateFragmentDef,
   getFragmentsOfDocumentsRec,
-  makeFragmentDefDecoration,
+  makeDefinitionDecoration,
   makeFragmentRef,
   makeUndefinedFragmentRef,
   FragmentDefDecorationLike,

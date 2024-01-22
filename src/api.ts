@@ -12,7 +12,7 @@ import type {
   FragmentDefDecorationLike,
   DocumentDefDecorationLike,
   getFragmentsOfDocumentsRec,
-  makeFragmentDefDecoration,
+  makeDefinitionDecoration,
   decorateFragmentDef,
   makeFragmentRef,
   $tada,
@@ -222,7 +222,7 @@ interface TadaDocumentNode<
   Decoration = never,
 > extends DocumentNode,
     DocumentDecoration<Result, Variables>,
-    makeFragmentDefDecoration<Decoration> {}
+    makeDefinitionDecoration<Decoration> {}
 
 /** A utility type returning the `Result` type of typed GraphQL documents.
  *
@@ -276,7 +276,7 @@ type VariablesOf<Document> = Document extends DocumentDecoration<infer _, infer 
  * @see {@link readFragment} for how to read from fragment masks.
  */
 type FragmentOf<Document extends DocumentDefDecorationLike> = Exclude<
-  Document[$tada.fragmentDef],
+  Document[$tada.definition],
   undefined
 > extends infer FragmentDef extends FragmentDefDecorationLike
   ? makeFragmentRef<FragmentDef>

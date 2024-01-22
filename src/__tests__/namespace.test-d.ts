@@ -66,7 +66,7 @@ describe('getFragmentsOfDocumentsRec', () => {
   };
 
   type input = {
-    [$tada.fragmentDef]?: inputFragmentDef;
+    [$tada.definition]?: inputFragmentDef;
   };
 
   type actual = getFragmentsOfDocumentsRec<[input]>;
