@@ -3,6 +3,8 @@ title: Typed Documents
 description: How GraphQL documents and TypeScript come together
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 Although GraphQL defines conventions and guarantees for the
 client-side GraphQL query language and the server-side
 GraphQL type system, it’s still ultimately an API specifaction
@@ -260,13 +262,14 @@ const query = graphql(`
 In essence, what `gql.tada` does is give you a fully typed GraphQL document that
 tells TypeScript what the `Result` and `Variables` types are just via inference.
 
-## Clients supporting types
+## Client Support
 
 Today, supporting typed documents in GraphQL is an accepted and de-facto standard,
 and below you can find a non-exhaustive list of GraphQL clients that support
 typed documents and will hence also work well with `gql.tada`.
 
-### `@apollo/client`
+<Tabs>
+<TabItem label="@apollo/client">
 
 ```tsx
 import { graphql } from 'gql.tada';
@@ -287,7 +290,8 @@ function Books() {
 }
 ```
 
-### `@urql/core`
+</TabItem>
+<TabItem label="@urql/core">
 
 ```ts
 import { graphql } from 'gql.tada';
@@ -308,7 +312,8 @@ async function getBooks() {
 }
 ```
 
-### `urql`
+</TabItem>
+<TabItem label="urql">
 
 ```tsx
 import { graphql } from 'gql.tada';
@@ -329,7 +334,8 @@ function Books() {
 }
 ```
 
-### `graphql-request`
+</TabItem>
+<TabItem label="graphql-request">
 
 ```ts
 import { graphql } from 'gql.tada';
@@ -350,24 +356,5 @@ async function getBooks() {
 }
 ```
 
-### `villus`
-
-```vue
-<script setup>
-import { graphql } from 'gql.tada';
-import { useQuery } from 'villus';
-
-const getBooksQuery = graphql(`
-  query GetBooks {
-    books {
-      id
-      title
-    }
-  }
-`);
-
-const { data } = useQuery({
-  query: AllPosts,
-});
-</script>
-```
+</TabItem>
+</Tabs>
