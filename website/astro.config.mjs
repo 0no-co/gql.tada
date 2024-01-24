@@ -38,12 +38,19 @@ export default defineConfig({
             },
           ],
         },
-        /*
         {
-        label: 'Guides',
-        autogenerate: { directory: 'guides' },
+          label: 'Guides',
+          items: [
+            {
+              label: 'Typed Documents',
+              link: '/guides/typed-documents/',
+            },
+            {
+              label: 'Fragment Colocation',
+              link: '/guides/fragment-colocation/',
+            },
+          ],
         },
-      */
         {
           label: 'Reference',
           autogenerate: {
