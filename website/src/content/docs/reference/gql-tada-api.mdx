@@ -144,6 +144,61 @@ const bookFragment = graphql(`
 const data = maskFragments([bookFragment], { id: 'id', title: 'book' });
 ```
 
+### `unsafe_readResult()`
+
+| | Description |
+| ----------- | ----------- |
+| `_document` argument | A GraphQL document, created using [`graphql()`](#graphql). |
+| `data` argument | The result data of the GraphQL document with optional fragment refs. |
+| returns | The masked result data of the document. | 
+
+:::caution
+Unlike, [`maskFragments()`](#maskfragments), this utility is unsafe, and
+should only be used when you know that data matches the expected shape
+of a GraphQL query you created.
+
+While useful, this utility is only a slightly safer alternative to `as any`
+and doesn’t type check the result shape against the masked fragments in your
+document.
+
+You shouldn’t have to use it in your regular app code.
+:::
+
+When [`graphql()`](#graphql) is used to compose fragments into a document,
+the resulting type will by default be masked, [unless the `@_unmask`
+directive is used.](../../guides/fragment-colocation/#fragment-masking)
+
+This means that when we’re writing tests and are creating “fake data”,
+for instance for a query, that we cannot convert this data to the query’s
+result type, if it contains masked fragment refs.
+
+To address this, the `unsafe_readResult` utility accepts the document and
+converts a query’s data to masked data.
+
+#### Example
+
+```ts
+import { graphql, unsafe_readResult } from 'gql.tada';
+
+const bookFragment = graphql(`
+  fragment BookComponent on Book {
+    id
+    title
+  }
+`);
+
+const query = graphql(`
+  query {
+    book {
+      ...BookComponent
+    }
+  }
+`, [bookFragment]);
+
+// `data` will be cast (unsafely!) to the result type of `query`.
+const data = unsafe_readResult(query, { book: { id: 'id', title: 'book' } });
+```
+
 ### `initGraphQLTada()`
 
 | | Description |
