@@ -45,6 +45,42 @@ const bookQuery = graphql(`
 `, [bookFragment]);
 ```
 
+### `graphql.scalar()`
+
+| | Description |
+| ----------- | ----------- |
+| `name` argument | A name of a GraphQL scalar or enum. |
+| `value` argument | The value to be type-checked against the type. |
+| returns | The `value` will be returned directly. | 
+
+Type checks a given input value to be of a scalar or enum type and
+returns the value directly.
+
+You can use this utility to add a type check for a scalar or enum value,
+or to retrieve the type of a scalar or enum.
+This is useful if you’re writing a function or component that only accepts
+a scalar or enum, but not a full fragment.
+
+:::note
+It’s not recommended to use this utiliy to replace fragments, i.e. to
+create your own object types. Try to use fragments where appropriate
+instead.
+:::
+
+#### Example
+
+```ts {"Call graphql.scalar to type check a value against a scalar type:":3-4} {"Use ReturnType to get the type of a scalar directly:":8-9}
+import { graphql } from 'gql.tada';
+
+
+function validateMediaEnum(value: 'Book' | 'Song' | 'Video') {
+  const media = graphql.scalar('Media', value);
+}
+
+
+type Media = ReturnType<typeof graphql.scalar<'Media'>>;
+```
+
 ### `readFragment()`
 
 | | Description |
