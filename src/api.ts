@@ -12,6 +12,7 @@ import type {
   getFragmentsOfDocumentsRec,
   makeDefinitionDecoration,
   decorateFragmentDef,
+  omitFragmentRefsRec,
   makeFragmentRef,
 } from './namespace';
 
@@ -410,9 +411,56 @@ function maskFragments<
   return data as any;
 }
 
+/** For testing, converts document data without fragment refs to their result type.
+ *
+ * @param _document - A GraphQL document, created using {@link graphql}.
+ * @param data - The result data of the GraphQL document with optional fragment refs.
+ * @returns The masked result data of the document.
+ *
+ * @remarks
+ * When creating test data, you may define data for documents that’s unmasked, but
+ * need to cast the data to match the result type of your document.
+ *
+ * This means that you may have to use {@link unsafe_readResult} to cast
+ * them to the result type, instead of doing `as any as ResultOf<typeof document>`.
+ *
+ * This function is inherently unsafe, since it doesn't check that your document
+ * actually contains the masked fragment data!
+ *
+ * @example
+ * ```
+ * import { FragmentOf, ResultOf, graphql, unsafe_readResult } from 'gql.tada';
+ *
+ * const bookFragment = graphql(`
+ *   fragment BookComponent on Book {
+ *     id
+ *     title
+ *   }
+ * `);
+ *
+ * const query = graphql(`
+ *   query {
+ *     book {
+ *       ...BookComponent
+ *     }
+ *   }
+ * `, [bookFragment]);
+ *
+ * const data = unsafe_readResult(query, { book: { id: 'id', title: 'book' } });
+ * ```
+ *
+ * @see {@link readFragment} for how to read from fragment masks (i.e. the reverse)
+ */
+function unsafe_readResult<
+  const Document extends DocumentDecoration<any, any>,
+  const Data extends omitFragmentRefsRec<ResultOf<Document>>,
+>(_document: Document, data: Data): ResultOf<Document> {
+  return data as any;
+}
+
 const graphql: GraphQLTadaAPI<schemaOfConfig<setupSchema>> = initGraphQLTada();
 
-export { parse, graphql, readFragment, maskFragments, initGraphQLTada };
+export { parse, graphql, readFragment, maskFragments, unsafe_readResult, initGraphQLTada };
 
 export type {
   setupSchema,
