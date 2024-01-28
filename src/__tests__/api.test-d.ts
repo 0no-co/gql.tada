@@ -130,6 +130,11 @@ describe('graphql.scalar()', () => {
     // @ts-expect-error
     const actual = graphql.scalar('test', 'invalid');
   });
+
+  it('should reject invalid names of types', () => {
+    // @ts-expect-error
+    const actual = graphql.scalar('what', null);
+  });
 });
 
 describe('mirrorFragmentTypeRec', () => {
