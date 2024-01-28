@@ -326,21 +326,25 @@ export type simpleSchema = {
 
     ID: {
       kind: 'SCALAR';
+      name: 'ID';
       type: string | number;
     };
 
     String: {
       kind: 'SCALAR';
+      name: 'String';
       type: string;
     };
 
     Boolean: {
       kind: 'SCALAR';
+      name: 'Boolean';
       type: boolean;
     };
 
     Int: {
       kind: 'SCALAR';
+      name: 'Int';
       type: number;
     };
 

@@ -21,7 +21,7 @@ type schema = simpleSchema;
 type value = { __value: true };
 type data = { __data: true };
 
-describe('Public API', () => {
+describe('graphql()', () => {
   const graphql = initGraphQLTada<{ introspection: simpleIntrospection }>();
 
   it('should create a fragment mask on masked fragments', () => {
@@ -100,6 +100,42 @@ describe('Public API', () => {
     expectTypeOf<VariablesOf<typeof query>>().toEqualTypeOf<{
       limit?: number | null;
     }>();
+  });
+});
+
+describe('graphql.scalar()', () => {
+  const graphql = initGraphQLTada<{ introspection: simpleIntrospection }>();
+
+  it('should return the type of a given enum', () => {
+    type actual = ReturnType<typeof graphql.scalar<'test'>>;
+    type expected = 'value' | 'more';
+    expectTypeOf<actual>().toEqualTypeOf<expected>();
+  });
+
+  it('should return the type of a given enum', () => {
+    type actual = ReturnType<typeof graphql.scalar<'String'>>;
+    expectTypeOf<actual>().toEqualTypeOf<string>();
+  });
+
+  it('should narrow the type of a passed value', () => {
+    const actual = graphql.scalar('test', 'more');
+    expectTypeOf<typeof actual>().toEqualTypeOf<'more'>();
+  });
+
+  it('should accept the type or null of a passed value', () => {
+    const input: null | 'more' = {} as any;
+    const actual = graphql.scalar('test', input);
+    expectTypeOf<typeof actual>().toEqualTypeOf<'more' | null>();
+  });
+
+  it('should reject invalid values of a passed value', () => {
+    // @ts-expect-error
+    const actual = graphql.scalar('test', 'invalid');
+  });
+
+  it('should reject invalid names of types', () => {
+    // @ts-expect-error
+    const actual = graphql.scalar('what', null);
   });
 });
 

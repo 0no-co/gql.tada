@@ -6,6 +6,8 @@ import type {
   ScalarsLike,
   IntrospectionLikeType,
   mapIntrospection,
+  getScalarTypeNames,
+  getScalarType,
 } from './introspection';
 
 import type {
@@ -121,6 +123,45 @@ interface GraphQLTadaAPI<Schema extends IntrospectionLikeType> {
     input: In,
     fragments?: Fragments
   ): getDocumentNode<parseDocument<In>, Schema, getFragmentsOfDocumentsRec<Fragments>>;
+
+  /** Function to validate the type of a given scalar or enum value.
+   *
+   * @param name - The name of a scalar or enum type.
+   * @param value - An optional scalar value of the given type.
+   * @returns A {@link DocumentNode} with result and variables types.
+   *
+   * @remarks
+   * This function validates that a value matches an enum or scalar type
+   * as a type check.
+   *
+   * You can use it to retrieve the type of a given scalar or enum type
+   * for use in a utility function or separate component that only
+   * accepts a primitive scalar or enum value.
+   *
+   * Note that this function does not perform runtime checks of your
+   * scalar value!
+   *
+   * @example
+   * ```
+   * import { graphql } from 'gql.tada';
+   *
+   * type myEnum = ReturnType<graphql.scalar<'myEnum'>>;
+   *
+   * const myEnumValue = graphql.scalar('myEnum', 'value');
+   * ```
+   */
+  scalar<
+    const Name extends getScalarTypeNames<Schema>,
+    const Value extends getScalarType<Schema, Name> | null | undefined,
+  >(
+    name: Name,
+    value: Value
+  ): Value;
+
+  scalar<const Name extends getScalarTypeNames<Schema>>(
+    name: Name,
+    value: getScalarType<Schema, Name>
+  ): getScalarType<Schema, Name>;
 }
 
 type schemaOfConfig<Setup extends AbstractSetupSchema> = mapIntrospection<
@@ -157,7 +198,7 @@ type schemaOfConfig<Setup extends AbstractSetupSchema> = mapIntrospection<
 function initGraphQLTada<const Setup extends AbstractSetupSchema>() {
   type Schema = schemaOfConfig<Setup>;
 
-  return function graphql(input: string, fragments?: readonly TadaDocumentNode[]): any {
+  function graphql(input: string, fragments?: readonly TadaDocumentNode[]): any {
     const definitions = _parse(input).definitions as writable<DefinitionNode>[];
     const seen = new Set<unknown>();
     for (const document of fragments || []) {
@@ -176,7 +217,13 @@ function initGraphQLTada<const Setup extends AbstractSetupSchema>() {
     }
 
     return { kind: Kind.DOCUMENT, definitions };
-  } as GraphQLTadaAPI<Schema>;
+  }
+
+  graphql.scalar = function scalar(_schema: Schema, value: any) {
+    return value;
+  };
+
+  return graphql as GraphQLTadaAPI<Schema>;
 }
 
 /** Alias to a GraphQL parse function returning an exact document type.
