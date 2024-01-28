@@ -120,6 +120,12 @@ describe('graphql.scalar()', () => {
     expectTypeOf<typeof actual>().toEqualTypeOf<'more'>();
   });
 
+  it('should accept the type or null of a passed value', () => {
+    const input: null | 'more' = {} as any;
+    const actual = graphql.scalar('test', input);
+    expectTypeOf<typeof actual>().toEqualTypeOf<'more' | null>();
+  });
+
   it('should reject invalid values of a passed value', () => {
     // @ts-expect-error
     const actual = graphql.scalar('test', 'invalid');

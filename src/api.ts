@@ -148,7 +148,10 @@ interface GraphQLTadaAPI<Schema extends IntrospectionLikeType> {
    * const myEnumValue = graphql.scalar('myEnum', 'value');
    * ```
    */
-  scalar<const Name extends keyof Schema['types'], const Value extends getScalarType<Schema, Name>>(
+  scalar<
+    const Name extends keyof Schema['types'],
+    const Value extends getScalarType<Schema, Name> | null | undefined,
+  >(
     name: Name,
     value: Value
   ): Value;
