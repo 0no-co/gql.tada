@@ -18,7 +18,7 @@ import type {
 import type { getDocumentType } from './selection';
 import type { getVariablesType } from './variables';
 import type { parseDocument, DocumentNodeLike } from './parser';
-import type { stringLiteral, matchOr, writable, DocumentDecoration } from './utils';
+import type { stringLiteral, obj, matchOr, writable, DocumentDecoration } from './utils';
 
 /** Abstract configuration type input for your schema and scalars.
  *
@@ -289,11 +289,25 @@ export type mirrorFragmentTypeRec<Fragment, Data> = Fragment extends (infer Valu
         ? undefined
         : Data;
 
+type fragmentRefsOfFragmentsRec<Fragments extends readonly any[]> = Fragments extends readonly [
+  infer Fragment,
+  ...infer Rest,
+]
+  ? obj<makeFragmentRef<Fragment> & fragmentRefsOfFragmentsRec<Rest>>
+  : {};
+
+type resultOfFragmentsRec<Fragments extends readonly any[]> = Fragments extends readonly [
+  infer Fragment,
+  ...infer Rest,
+]
+  ? ResultOf<Fragment> & resultOfFragmentsRec<Rest>
+  : {};
+
 type fragmentOfTypeRec<Document extends makeDefinitionDecoration> =
   | readonly fragmentOfTypeRec<Document>[]
-  | FragmentOf<Document>
-  | undefined
-  | null;
+  | FragmentOf<Document>;
+
+type resultOfTypeRec<Data> = readonly resultOfTypeRec<Data>[] | Data | undefined | null;
 
 /** Unmasks a fragment mask for a given fragment document and data.
  *
@@ -355,9 +369,21 @@ function readFragment<
   return fragment as any;
 }
 
+function maskFragments<
+  const Fragments extends readonly [...makeDefinitionDecoration[]],
+  const Data extends resultOfTypeRec<resultOfFragmentsRec<Fragments>>,
+>(
+  _fragments: Fragments,
+  data: Data
+): resultOfTypeRec<resultOfFragmentsRec<Fragments>> extends Data
+  ? never
+  : mirrorFragmentTypeRec<Data, fragmentRefsOfFragmentsRec<Fragments>> {
+  return data as any;
+}
+
 const graphql: GraphQLTadaAPI<schemaOfConfig<setupSchema>> = initGraphQLTada();
 
-export { parse, graphql, readFragment, initGraphQLTada };
+export { parse, graphql, readFragment, maskFragments, initGraphQLTada };
 
 export type {
   setupSchema,
