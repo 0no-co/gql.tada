@@ -130,6 +130,19 @@ describe('mirrorFragmentTypeRec', () => {
 });
 
 describe('readFragment', () => {
+  it('should not accept a non-fragment document', () => {
+    type query = parseDocument<`
+      query Test {
+        __typename
+      }
+    `>;
+
+    type document = getDocumentNode<query, schema>;
+    // @ts-expect-error
+    const result = readFragment({} as document, {} as FragmentOf<document>);
+    expectTypeOf<typeof result>().toBeNever();
+  });
+
   it('should not unmask empty objects', () => {
     type fragment = parseDocument<`
       fragment Fields on Todo {
