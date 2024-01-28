@@ -9,7 +9,6 @@ import type {
 } from './introspection';
 
 import type {
-  DocumentDefDecorationLike,
   getFragmentsOfDocumentsRec,
   makeDefinitionDecoration,
   decorateFragmentDef,
@@ -116,7 +115,7 @@ interface GraphQLTadaAPI<Schema extends IntrospectionLikeType> {
    */
   <
     const In extends stringLiteral<In>,
-    const Fragments extends readonly [...DocumentDefDecorationLike[]],
+    const Fragments extends readonly [...makeDefinitionDecoration[]],
   >(
     input: In,
     fragments?: Fragments
@@ -224,7 +223,7 @@ export type getDocumentNode<
 interface TadaDocumentNode<
   Result = { [key: string]: any },
   Variables = { [key: string]: any },
-  Decoration = never,
+  Decoration = void,
 > extends DocumentNode,
     DocumentDecoration<Result, Variables>,
     makeDefinitionDecoration<Decoration> {}
@@ -278,7 +277,7 @@ type VariablesOf<Document> = Document extends DocumentDecoration<any, infer Vari
  *
  * @see {@link readFragment} for how to read from fragment masks.
  */
-type FragmentOf<Document extends DocumentDefDecorationLike> = makeFragmentRef<Document>;
+type FragmentOf<Document extends makeDefinitionDecoration> = makeFragmentRef<Document>;
 
 export type mirrorFragmentTypeRec<Fragment, Data> = Fragment extends (infer Value)[]
   ? mirrorFragmentTypeRec<Value, Data>[]
@@ -290,7 +289,7 @@ export type mirrorFragmentTypeRec<Fragment, Data> = Fragment extends (infer Valu
         ? undefined
         : Data;
 
-type fragmentOfTypeRec<Document extends DocumentDefDecorationLike> =
+type fragmentOfTypeRec<Document extends makeDefinitionDecoration> =
   | readonly fragmentOfTypeRec<Document>[]
   | FragmentOf<Document>
   | undefined
@@ -345,7 +344,7 @@ type fragmentOfTypeRec<Document extends DocumentDefDecorationLike> =
  * @see {@link readFragment} for how to read from fragment masks.
  */
 function readFragment<
-  const Document extends DocumentDefDecorationLike & DocumentDecoration<any, any>,
+  const Document extends makeDefinitionDecoration & DocumentDecoration<any, any>,
   const Fragment extends fragmentOfTypeRec<Document>,
 >(
   _document: Document,

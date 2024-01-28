@@ -27,10 +27,6 @@ interface FragmentDefDecorationLike {
   masked: any;
 }
 
-interface DocumentDefDecorationLike {
-  [$tada.definition]?: FragmentDefDecorationLike;
-}
-
 type isMaskedRec<Directives extends readonly unknown[] | undefined> = Directives extends readonly [
   infer Directive,
   ...infer Rest,
@@ -51,7 +47,7 @@ type decorateFragmentDef<Document extends DocumentNodeLike> = Document['definiti
       on: Document['definitions'][0]['typeCondition']['name']['value'];
       masked: isMaskedRec<Document['definitions'][0]['directives']>;
     }
-  : never;
+  : void;
 
 type getFragmentsOfDocumentsRec<Documents> = Documents extends readonly [
   infer Document,
@@ -106,10 +102,8 @@ type makeUndefinedFragmentRef<FragmentName extends string> = {
   };
 };
 
-type makeDefinitionDecoration<Definition> = {
-  [$tada.definition]?: Definition extends DocumentDefDecorationLike[$tada.definition]
-    ? Definition
-    : never;
+type makeDefinitionDecoration<Definition = FragmentDefDecorationLike> = {
+  [Key in $tada.definition]?: Definition;
 };
 
 export type {
@@ -120,5 +114,4 @@ export type {
   makeFragmentRef,
   makeUndefinedFragmentRef,
   FragmentDefDecorationLike,
-  DocumentDefDecorationLike,
 };
