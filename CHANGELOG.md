@@ -1,5 +1,21 @@
 # gql.tada
 
+## 1.2.0
+
+### Minor Changes
+
+- Add `maskFragments` to cast data to fragment masks of a given set of fragments
+  Submitted by [@kitten](https://github.com/kitten) (See [#43](https://github.com/0no-co/gql.tada/pull/43))
+- Add `graphql.scalar()` utility to retrieve or type check the type of scalars and enums
+  Submitted by [@kitten](https://github.com/kitten) (See [#45](https://github.com/0no-co/gql.tada/pull/45))
+- Add `unsafe_readResult` to unsafely cast data to the result data of a given document
+  Submitted by [@kitten](https://github.com/kitten) (See [#43](https://github.com/0no-co/gql.tada/pull/43))
+
+### Patch Changes
+
+- Tighten up type strictness to not accept operation documents where fragment documents are expected
+  Submitted by [@kitten](https://github.com/kitten) (See [#41](https://github.com/0no-co/gql.tada/pull/41))
+
 ## 1.1.0
 
 ### Minor Changes
