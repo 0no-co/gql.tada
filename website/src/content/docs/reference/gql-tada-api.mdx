@@ -98,6 +98,52 @@ const getQuery = (data: ResultOf<typeof bookQuery>) => {
 };
 ```
 
+### `maskFragments()`
+
+| | Description |
+| ----------- | ----------- |
+| `_fragments` argument | A list of GraphQL documents of fragments, created using [`graphql()`](#graphql). |
+| `data` argument | The combined result data of the fragments, which can be wrapped in arrays. |
+| returns | The masked data of the fragments. | 
+
+:::note
+While useful, `maskFragments()` is mostly meant to be used in tests or as
+an escape hatch to convert data to masked fragments.
+
+You shouldn’t have to use it in your regular component code.
+:::
+
+When [`graphql()`](#graphql) is used to compose fragments into another fragment or
+operation, the resulting type will by default be masked, [unless the `@_unmask`
+directive is used.](../../guides/fragment-colocation/#fragment-masking)
+
+This means that when we’re writing tests or are creating “fake data” without
+inferring types from a full document, the types in TypeScript may not match,
+since our testing data will not be masked and will be equal to [the result type](#resultof)
+of the fragments.
+
+To address this, the `maskFragments` utility takes a list of fragments and masks data (or an array of data)
+to match the masked fragment types of the fragments.
+
+- [Read more about fragment masking on the “Writing GraphQL” page.](../../get-started/writing-graphql/#fragment-masking)
+- [For the reverse operation, see `readFragment()`.](#readfragment)
+
+#### Example
+
+```ts
+import { graphql, maskFragments } from 'gql.tada';
+
+const bookFragment = graphql(`
+  fragment BookComponent on Book {
+    id
+    title
+  }
+`);
+
+// `data` will be typed as the fragment mask of `bookFragment`.
+const data = maskFragments([bookFragment], { id: 'id', title: 'book' });
+```
+
 ### `initGraphQLTada()`
 
 | | Description |

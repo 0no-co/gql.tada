@@ -369,6 +369,35 @@ function readFragment<
   return fragment as any;
 }
 
+/** For testing, masks fragment data for given data and fragments.
+ *
+ * @param _fragments - A list of GraphQL documents of fragments, created using {@link graphql}.
+ * @param data - The combined result data of the fragments, which can be wrapped in arrays.
+ * @returns The masked data of the fragments.
+ *
+ * @remarks
+ * When creating test data, you may define data for fragments that’s unmasked, making it
+ * unusable in parent fragments or queries that require masked data.
+ *
+ * This means that you may have to use {@link maskFragments} to mask your data first
+ * for TypeScript to not report an error.
+ *
+ * @example
+ * ```
+ * import { FragmentOf, ResultOf, graphql, maskFragments } from 'gql.tada';
+ *
+ * const bookFragment = graphql(`
+ *   fragment BookComponent on Book {
+ *     id
+ *     title
+ *   }
+ * `);
+ *
+ * const data = maskFragments([bookFragment], { id: 'id', title: 'book' });
+ * ```
+ *
+ * @see {@link readFragment} for how to read from fragment masks (i.e. the reverse)
+ */
 function maskFragments<
   const Fragments extends readonly [...makeDefinitionDecoration[]],
   const Data extends resultOfTypeRec<resultOfFragmentsRec<Fragments>>,
