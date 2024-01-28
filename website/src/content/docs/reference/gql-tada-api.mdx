@@ -69,11 +69,11 @@ instead.
 
 #### Example
 
-```ts {"Call graphql.scalar to type check a value against a scalar type:":3-4} {"Use ReturnType to get the type of a scalar directly:":8-9}
+```ts {"Call graphql.scalar to type check a value against a scalar type:":4-5} {"Use ReturnType to get the type of a scalar directly:":8-9}
 import { graphql } from 'gql.tada';
 
-
 function validateMediaEnum(value: 'Book' | 'Song' | 'Video') {
+
   const media = graphql.scalar('Media', value);
 }
 
