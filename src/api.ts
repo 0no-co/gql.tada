@@ -12,13 +12,14 @@ import type {
   getFragmentsOfDocumentsRec,
   makeDefinitionDecoration,
   decorateFragmentDef,
+  omitFragmentRefsRec,
   makeFragmentRef,
 } from './namespace';
 
 import type { getDocumentType } from './selection';
 import type { getVariablesType } from './variables';
 import type { parseDocument, DocumentNodeLike } from './parser';
-import type { stringLiteral, matchOr, writable, DocumentDecoration } from './utils';
+import type { stringLiteral, obj, matchOr, writable, DocumentDecoration } from './utils';
 
 /** Abstract configuration type input for your schema and scalars.
  *
@@ -289,11 +290,27 @@ export type mirrorFragmentTypeRec<Fragment, Data> = Fragment extends (infer Valu
         ? undefined
         : Data;
 
+type fragmentRefsOfFragmentsRec<Fragments extends readonly any[]> = Fragments extends readonly [
+  infer Fragment,
+  ...infer Rest,
+]
+  ? obj<makeFragmentRef<Fragment> & fragmentRefsOfFragmentsRec<Rest>>
+  : {};
+
+type resultOfFragmentsRec<Fragments extends readonly any[]> = Fragments extends readonly [
+  infer Fragment,
+  ...infer Rest,
+]
+  ? ResultOf<Fragment> & resultOfFragmentsRec<Rest>
+  : {};
+
 type fragmentOfTypeRec<Document extends makeDefinitionDecoration> =
   | readonly fragmentOfTypeRec<Document>[]
   | FragmentOf<Document>
   | undefined
   | null;
+
+type resultOfTypeRec<Data> = readonly resultOfTypeRec<Data>[] | Data | undefined | null;
 
 /** Unmasks a fragment mask for a given fragment document and data.
  *
@@ -355,9 +372,97 @@ function readFragment<
   return fragment as any;
 }
 
+/** For testing, masks fragment data for given data and fragments.
+ *
+ * @param _fragments - A list of GraphQL documents of fragments, created using {@link graphql}.
+ * @param data - The combined result data of the fragments, which can be wrapped in arrays.
+ * @returns The masked data of the fragments.
+ *
+ * @remarks
+ * When creating test data, you may define data for fragments that’s unmasked, making it
+ * unusable in parent fragments or queries that require masked data.
+ *
+ * This means that you may have to use {@link maskFragments} to mask your data first
+ * for TypeScript to not report an error.
+ *
+ * @example
+ * ```
+ * import { FragmentOf, ResultOf, graphql, maskFragments } from 'gql.tada';
+ *
+ * const bookFragment = graphql(`
+ *   fragment BookComponent on Book {
+ *     id
+ *     title
+ *   }
+ * `);
+ *
+ * const data = maskFragments([bookFragment], { id: 'id', title: 'book' });
+ * ```
+ *
+ * @see {@link readFragment} for how to read from fragment masks (i.e. the reverse)
+ */
+function maskFragments<
+  const Fragments extends readonly [...makeDefinitionDecoration[]],
+  const Data extends resultOfTypeRec<resultOfFragmentsRec<Fragments>>,
+>(
+  _fragments: Fragments,
+  data: Data
+): resultOfTypeRec<resultOfFragmentsRec<Fragments>> extends Data
+  ? never
+  : mirrorFragmentTypeRec<Data, fragmentRefsOfFragmentsRec<Fragments>> {
+  return data as any;
+}
+
+/** For testing, converts document data without fragment refs to their result type.
+ *
+ * @param _document - A GraphQL document, created using {@link graphql}.
+ * @param data - The result data of the GraphQL document with optional fragment refs.
+ * @returns The masked result data of the document.
+ *
+ * @remarks
+ * When creating test data, you may define data for documents that’s unmasked, but
+ * need to cast the data to match the result type of your document.
+ *
+ * This means that you may have to use {@link unsafe_readResult} to cast
+ * them to the result type, instead of doing `as any as ResultOf<typeof document>`.
+ *
+ * This function is inherently unsafe, since it doesn't check that your document
+ * actually contains the masked fragment data!
+ *
+ * @example
+ * ```
+ * import { FragmentOf, ResultOf, graphql, unsafe_readResult } from 'gql.tada';
+ *
+ * const bookFragment = graphql(`
+ *   fragment BookComponent on Book {
+ *     id
+ *     title
+ *   }
+ * `);
+ *
+ * const query = graphql(`
+ *   query {
+ *     book {
+ *       ...BookComponent
+ *     }
+ *   }
+ * `, [bookFragment]);
+ *
+ * const data = unsafe_readResult(query, { book: { id: 'id', title: 'book' } });
+ * ```
+ *
+ * @see {@link readFragment} for how to read from fragment masks (i.e. the reverse)
+ */
+function unsafe_readResult<
+  const Document extends DocumentDecoration<any, any>,
+  const Data extends omitFragmentRefsRec<ResultOf<Document>>,
+>(_document: Document, data: Data): ResultOf<Document> {
+  return data as any;
+}
+
 const graphql: GraphQLTadaAPI<schemaOfConfig<setupSchema>> = initGraphQLTada();
 
-export { parse, graphql, readFragment, initGraphQLTada };
+export { parse, graphql, readFragment, maskFragments, unsafe_readResult, initGraphQLTada };
 
 export type {
   setupSchema,

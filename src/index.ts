@@ -1,4 +1,11 @@
-export { parse, graphql, readFragment, initGraphQLTada } from './api';
+export {
+  parse,
+  graphql,
+  readFragment,
+  maskFragments,
+  unsafe_readResult,
+  initGraphQLTada,
+} from './api';
 
 export type {
   setupSchema,
