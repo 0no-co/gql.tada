@@ -5,7 +5,9 @@ import type { simpleIntrospection } from './fixtures/simpleIntrospection';
 
 import type { parseDocument } from '../parser';
 import type { $tada } from '../namespace';
-import { readFragment, initGraphQLTada } from '../api';
+import type { obj } from '../utils';
+
+import { readFragment, maskFragments, initGraphQLTada } from '../api';
 
 import type {
   ResultOf,
@@ -223,6 +225,77 @@ describe('readFragment', () => {
 
     type document = getDocumentNode<fragment, schema>;
     const result = readFragment({} as document, {} as FragmentOf<document>);
+    expectTypeOf<typeof result>().toEqualTypeOf<ResultOf<document>>();
+  });
+});
+
+describe('maskFragments', () => {
+  it('should not mask empty objects', () => {
+    type fragment = parseDocument<`
+      fragment Fields on Todo {
+        id
+      }
+    `>;
+
+    type document = getDocumentNode<fragment, schema>;
+    // @ts-expect-error
+    const result = maskFragments([{} as document], {});
+    expectTypeOf<typeof result>().toBeNever();
+  });
+
+  it('masks fragments', () => {
+    type fragment = parseDocument<`
+      fragment Fields on Todo {
+        id
+      }
+    `>;
+
+    type document = getDocumentNode<fragment, schema>;
+    const result = maskFragments([{} as document], { id: 'id' });
+    expectTypeOf<typeof result>().toEqualTypeOf<FragmentOf<document>>();
+  });
+
+  it('masks arrays of fragment data', () => {
+    type fragment = parseDocument<`
+      fragment Fields on Todo {
+        id
+      }
+    `>;
+
+    type document = getDocumentNode<fragment, schema>;
+    const result = maskFragments([{} as document], [{ id: 'id' }]);
+    expectTypeOf<typeof result>().toEqualTypeOf<readonly FragmentOf<document>[]>();
+  });
+
+  it('masks multiple fragments', () => {
+    type fragmentA = parseDocument<`
+      fragment FieldsA on Todo {
+        a: id
+      }
+    `>;
+
+    type fragmentB = parseDocument<`
+      fragment FieldsB on Todo {
+        b: id
+      }
+    `>;
+
+    type documentA = getDocumentNode<fragmentA, schema>;
+    type documentB = getDocumentNode<fragmentB, schema>;
+    const result = maskFragments([{} as documentA, {} as documentB], { a: 'id', b: 'id' });
+    type expected = obj<FragmentOf<documentA> & FragmentOf<documentB>>;
+    expectTypeOf<typeof result>().toEqualTypeOf<expected>();
+  });
+
+  it('should behave correctly on unmasked fragments', () => {
+    type fragment = parseDocument<`
+      fragment Fields on Todo @_unmask {
+        id
+      }
+    `>;
+
+    type document = getDocumentNode<fragment, schema>;
+    const result = maskFragments([{} as document], { id: 'id' });
     expectTypeOf<typeof result>().toEqualTypeOf<ResultOf<document>>();
   });
 });
