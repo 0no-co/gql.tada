@@ -306,7 +306,9 @@ type resultOfFragmentsRec<Fragments extends readonly any[]> = Fragments extends 
 
 type fragmentOfTypeRec<Document extends makeDefinitionDecoration> =
   | readonly fragmentOfTypeRec<Document>[]
-  | FragmentOf<Document>;
+  | FragmentOf<Document>
+  | undefined
+  | null;
 
 type resultOfTypeRec<Data> = readonly resultOfTypeRec<Data>[] | Data | undefined | null;
 
