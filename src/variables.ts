@@ -3,17 +3,36 @@ import type { IntrospectionLikeType } from './introspection';
 import type { DocumentNodeLike } from './parser';
 import type { obj } from './utils';
 
+type _getInputObjectTypeRec<
+  InputFields,
+  Introspection extends IntrospectionLikeType,
+  ResultType,
+> = InputFields extends [infer InputField, ...infer Rest]
+  ? _getInputObjectTypeRec<
+      Rest,
+      Introspection,
+      (InputField extends {
+        name: any;
+        type: any;
+      }
+        ? InputField['type'] extends {
+            kind: 'NON_NULL';
+          }
+          ? {
+              [Name in InputField['name']]: unwrapType<InputField['type'], Introspection>;
+            }
+          : {
+              [Name in InputField['name']]?: unwrapType<InputField['type'], Introspection>;
+            }
+        : {}) &
+        ResultType
+    >
+  : ResultType;
+
 type getInputObjectTypeRec<
   InputFields,
   Introspection extends IntrospectionLikeType,
-> = InputFields extends [infer InputField, ...infer Rest]
-  ? (InputField extends { name: any; type: any }
-      ? InputField['type'] extends { kind: 'NON_NULL' }
-        ? { [Name in InputField['name']]: unwrapType<InputField['type'], Introspection> }
-        : { [Name in InputField['name']]?: unwrapType<InputField['type'], Introspection> }
-      : {}) &
-      getInputObjectTypeRec<Rest, Introspection>
-  : {};
+> = _getInputObjectTypeRec<InputFields, Introspection, {}>;
 
 type getScalarType<
   TypeName,
