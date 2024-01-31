@@ -28,7 +28,8 @@ type _unwrapTypeRec<
               SelectionSet['selections'],
               Introspection['types'][Type['name']],
               Introspection,
-              Fragments
+              Fragments,
+              never
             >
           : unknown
         : Introspection['types'][Type['name']]['type']
@@ -73,8 +74,15 @@ type getFragmentSelection<
   Type extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
+  UnionAccumulator,
 > = Node extends { kind: Kind.INLINE_FRAGMENT; selectionSet: any }
-  ? getSelection<Node['selectionSet']['selections'], Type, Introspection, Fragments>
+  ? getSelection<
+      Node['selectionSet']['selections'],
+      Type,
+      Introspection,
+      Fragments,
+      UnionAccumulator
+    >
   : Node extends { kind: Kind.FRAGMENT_SPREAD; name: any }
     ? Node['name']['value'] extends keyof Fragments
       ? Fragments[Node['name']['value']] extends { [$tada.ref]: any }
@@ -83,10 +91,11 @@ type getFragmentSelection<
             Fragments[Node['name']['value']]['selectionSet']['selections'],
             Type,
             Introspection,
-            Fragments
+            Fragments,
+            UnionAccumulator
           >
-      : {}
-    : {};
+      : {} | UnionAccumulator
+    : {} | UnionAccumulator;
 
 type getSpreadSubtype<
   Node,
@@ -112,20 +121,29 @@ type getSelection<
   Type extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
+  UnionAccumulator,
 > = obj<
   Type extends { kind: 'UNION' | 'INTERFACE'; possibleTypes: any }
     ? objValues<{
-        [PossibleType in Type['possibleTypes']]: _getPossibleTypeSelectionRec<
+        [PossibleType in Type['possibleTypes']]: getPossibleTypeSelectionRec<
           Selections,
           PossibleType,
           Type,
           Introspection,
-          Fragments
+          Fragments,
+          UnionAccumulator
         >;
       }>
     : Type extends { kind: 'OBJECT'; name: any }
-      ? _getPossibleTypeSelectionRec<Selections, Type['name'], Type, Introspection, Fragments>
-      : {}
+      ? getPossibleTypeSelectionRec<
+          Selections,
+          Type['name'],
+          Type,
+          Introspection,
+          Fragments,
+          UnionAccumulator
+        >
+      : {} | UnionAccumulator
 >;
 
 type _getPossibleTypeSelectionRec<
@@ -133,46 +151,82 @@ type _getPossibleTypeSelectionRec<
   PossibleType extends string,
   Type extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
-  Fragments extends { [name: string]: any },
+  Fragments extends {
+    [name: string]: any;
+  },
+  UnionAccumulator,
+  IntersectionAcc,
 > = Selections extends [infer Node, ...infer Rest]
-  ? (Node extends { kind: Kind.FRAGMENT_SPREAD | Kind.INLINE_FRAGMENT }
-      ? getSpreadSubtype<Node, Type, Introspection, Fragments> extends infer Subtype extends
-          ObjectLikeType
-        ? PossibleType extends getTypenameOfType<Subtype>
-          ?
-              | (isOptional<Node> extends true ? {} : never)
-              | getFragmentSelection<Node, Subtype, Introspection, Fragments>
-          : {}
-        : Node extends { kind: Kind.FRAGMENT_SPREAD; name: any }
-          ? makeUndefinedFragmentRef<Node['name']['value']>
-          : {}
-      : Node extends { kind: Kind.FIELD; name: any; selectionSet: any }
-        ? isOptional<Node> extends true
-          ? {
-              [Prop in getFieldAlias<Node>]?: Node['name']['value'] extends '__typename'
-                ? PossibleType
-                : unwrapType<
-                    Type['fields'][Node['name']['value']]['type'],
-                    Node['selectionSet'],
-                    Introspection,
-                    Fragments,
-                    getTypeDirective<Node>
-                  >;
-            }
-          : {
-              [Prop in getFieldAlias<Node>]: Node['name']['value'] extends '__typename'
-                ? PossibleType
-                : unwrapType<
-                    Type['fields'][Node['name']['value']]['type'],
-                    Node['selectionSet'],
-                    Introspection,
-                    Fragments,
-                    getTypeDirective<Node>
-                  >;
-            }
-        : {}) &
-      _getPossibleTypeSelectionRec<Rest, PossibleType, Type, Introspection, Fragments>
-  : {};
+  ? _getPossibleTypeSelectionRec<
+      Rest,
+      PossibleType,
+      Type,
+      Introspection,
+      Fragments,
+      UnionAccumulator,
+      | ((Node extends { kind: Kind.FRAGMENT_SPREAD | Kind.INLINE_FRAGMENT }
+          ? getSpreadSubtype<Node, Type, Introspection, Fragments> extends infer Subtype extends
+              ObjectLikeType
+            ? PossibleType extends getTypenameOfType<Subtype>
+              ? getFragmentSelection<
+                  Node,
+                  Subtype,
+                  Introspection,
+                  Fragments,
+                  isOptional<Node> extends true ? {} : never
+                >
+              : {}
+            : Node extends { kind: Kind.FRAGMENT_SPREAD; name: any }
+              ? makeUndefinedFragmentRef<Node['name']['value']>
+              : {}
+          : Node extends { kind: Kind.FIELD; name: any; selectionSet: any }
+            ? isOptional<Node> extends true
+              ? {
+                  [Prop in getFieldAlias<Node>]?: Node['name']['value'] extends '__typename'
+                    ? PossibleType
+                    : unwrapType<
+                        Type['fields'][Node['name']['value']]['type'],
+                        Node['selectionSet'],
+                        Introspection,
+                        Fragments,
+                        getTypeDirective<Node>
+                      >;
+                }
+              : {
+                  [Prop in getFieldAlias<Node>]: Node['name']['value'] extends '__typename'
+                    ? PossibleType
+                    : unwrapType<
+                        Type['fields'][Node['name']['value']]['type'],
+                        Node['selectionSet'],
+                        Introspection,
+                        Fragments,
+                        getTypeDirective<Node>
+                      >;
+                }
+            : {}) &
+          IntersectionAcc)
+      | UnionAccumulator
+    >
+  : IntersectionAcc | UnionAccumulator;
+
+type getPossibleTypeSelectionRec<
+  Selections,
+  PossibleType extends string,
+  Type extends ObjectLikeType,
+  Introspection extends IntrospectionLikeType,
+  Fragments extends {
+    [name: string]: any;
+  },
+  UnionAcc,
+> = _getPossibleTypeSelectionRec<
+  Selections,
+  PossibleType,
+  Type,
+  Introspection,
+  Fragments,
+  UnionAcc,
+  {}
+>;
 
 type getOperationSelectionType<
   Definition,
@@ -185,7 +239,7 @@ type getOperationSelectionType<
 }
   ? Introspection['types'][Introspection[Definition['operation']]] extends infer Type extends
       ObjectLikeType
-    ? getSelection<Definition['selectionSet']['selections'], Type, Introspection, Fragments>
+    ? getSelection<Definition['selectionSet']['selections'], Type, Introspection, Fragments, never>
     : {}
   : never;
 
@@ -200,7 +254,7 @@ type getFragmentSelectionType<
 }
   ? Introspection['types'][Definition['typeCondition']['name']['value']] extends infer Type extends
       ObjectLikeType
-    ? getSelection<Definition['selectionSet']['selections'], Type, Introspection, Fragments>
+    ? getSelection<Definition['selectionSet']['selections'], Type, Introspection, Fragments, never>
     : never
   : never;
 

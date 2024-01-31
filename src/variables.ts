@@ -6,7 +6,7 @@ import type { obj } from './utils';
 type _getInputObjectTypeRec<
   InputFields,
   Introspection extends IntrospectionLikeType,
-  ResultType,
+  IntersectionAccumulator,
 > = InputFields extends [infer InputField, ...infer Rest]
   ? _getInputObjectTypeRec<
       Rest,
@@ -25,9 +25,9 @@ type _getInputObjectTypeRec<
               [Name in InputField['name']]?: unwrapType<InputField['type'], Introspection>;
             }
         : {}) &
-        ResultType
+        IntersectionAccumulator
     >
-  : ResultType;
+  : IntersectionAccumulator;
 
 type getInputObjectTypeRec<
   InputFields,
