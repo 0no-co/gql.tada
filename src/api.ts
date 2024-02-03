@@ -6,7 +6,6 @@ import type {
   ScalarsLike,
   IntrospectionLikeType,
   mapIntrospection,
-  getScalarTypeNames,
   getScalarType,
 } from './introspection';
 
@@ -151,14 +150,14 @@ interface GraphQLTadaAPI<Schema extends IntrospectionLikeType> {
    * ```
    */
   scalar<
-    const Name extends getScalarTypeNames<Schema>,
+    const Name extends stringLiteral<Name>,
     const Value extends getScalarType<Schema, Name> | null | undefined,
   >(
     name: Name,
     value: Value
   ): Value;
 
-  scalar<const Name extends getScalarTypeNames<Schema>>(
+  scalar<const Name extends stringLiteral<Name>>(
     name: Name,
     value: getScalarType<Schema, Name>
   ): getScalarType<Schema, Name>;
