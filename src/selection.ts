@@ -134,45 +134,53 @@ type _getPossibleTypeSelectionRec<
   Type extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
+  SelectionAcc = {},
 > = Selections extends [infer Node, ...infer Rest]
-  ? (Node extends { kind: Kind.FRAGMENT_SPREAD | Kind.INLINE_FRAGMENT }
-      ? getSpreadSubtype<Node, Type, Introspection, Fragments> extends infer Subtype extends
-          ObjectLikeType
-        ? PossibleType extends getTypenameOfType<Subtype>
-          ?
-              | (isOptional<Node> extends true ? {} : never)
-              | getFragmentSelection<Node, Subtype, Introspection, Fragments>
-          : {}
-        : Node extends { kind: Kind.FRAGMENT_SPREAD; name: any }
-          ? makeUndefinedFragmentRef<Node['name']['value']>
-          : {}
-      : Node extends { kind: Kind.FIELD; name: any; selectionSet: any }
-        ? isOptional<Node> extends true
-          ? {
-              [Prop in getFieldAlias<Node>]?: Node['name']['value'] extends '__typename'
-                ? PossibleType
-                : unwrapType<
-                    Type['fields'][Node['name']['value']]['type'],
-                    Node['selectionSet'],
-                    Introspection,
-                    Fragments,
-                    getTypeDirective<Node>
-                  >;
-            }
-          : {
-              [Prop in getFieldAlias<Node>]: Node['name']['value'] extends '__typename'
-                ? PossibleType
-                : unwrapType<
-                    Type['fields'][Node['name']['value']]['type'],
-                    Node['selectionSet'],
-                    Introspection,
-                    Fragments,
-                    getTypeDirective<Node>
-                  >;
-            }
-        : {}) &
-      _getPossibleTypeSelectionRec<Rest, PossibleType, Type, Introspection, Fragments>
-  : {};
+  ? _getPossibleTypeSelectionRec<
+      Rest,
+      PossibleType,
+      Type,
+      Introspection,
+      Fragments,
+      (Node extends { kind: Kind.FRAGMENT_SPREAD | Kind.INLINE_FRAGMENT }
+        ? getSpreadSubtype<Node, Type, Introspection, Fragments> extends infer Subtype extends
+            ObjectLikeType
+          ? PossibleType extends getTypenameOfType<Subtype>
+            ?
+                | (isOptional<Node> extends true ? {} : never)
+                | getFragmentSelection<Node, Subtype, Introspection, Fragments>
+            : {}
+          : Node extends { kind: Kind.FRAGMENT_SPREAD; name: any }
+            ? makeUndefinedFragmentRef<Node['name']['value']>
+            : {}
+        : Node extends { kind: Kind.FIELD; name: any; selectionSet: any }
+          ? isOptional<Node> extends true
+            ? {
+                [Prop in getFieldAlias<Node>]?: Node['name']['value'] extends '__typename'
+                  ? PossibleType
+                  : unwrapType<
+                      Type['fields'][Node['name']['value']]['type'],
+                      Node['selectionSet'],
+                      Introspection,
+                      Fragments,
+                      getTypeDirective<Node>
+                    >;
+              }
+            : {
+                [Prop in getFieldAlias<Node>]: Node['name']['value'] extends '__typename'
+                  ? PossibleType
+                  : unwrapType<
+                      Type['fields'][Node['name']['value']]['type'],
+                      Node['selectionSet'],
+                      Introspection,
+                      Fragments,
+                      getTypeDirective<Node>
+                    >;
+              }
+          : {}) &
+        SelectionAcc
+    >
+  : SelectionAcc;
 
 type getOperationSelectionType<
   Definition,
