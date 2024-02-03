@@ -6,14 +6,19 @@ import type { obj } from './utils';
 type getInputObjectTypeRec<
   InputFields,
   Introspection extends IntrospectionLikeType,
+  InputObject = {},
 > = InputFields extends [infer InputField, ...infer Rest]
-  ? (InputField extends { name: any; type: any }
-      ? InputField['type'] extends { kind: 'NON_NULL' }
-        ? { [Name in InputField['name']]: unwrapType<InputField['type'], Introspection> }
-        : { [Name in InputField['name']]?: unwrapType<InputField['type'], Introspection> }
-      : {}) &
-      getInputObjectTypeRec<Rest, Introspection>
-  : {};
+  ? getInputObjectTypeRec<
+      Rest,
+      Introspection,
+      (InputField extends { name: any; type: any }
+        ? InputField['type'] extends { kind: 'NON_NULL' }
+          ? { [Name in InputField['name']]: unwrapType<InputField['type'], Introspection> }
+          : { [Name in InputField['name']]?: unwrapType<InputField['type'], Introspection> }
+        : {}) &
+        InputObject
+    >
+  : InputObject;
 
 type getScalarType<
   TypeName,
