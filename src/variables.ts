@@ -6,14 +6,19 @@ import type { obj } from './utils';
 type getInputObjectTypeRec<
   InputFields,
   Introspection extends IntrospectionLikeType,
+  InputObject = {},
 > = InputFields extends [infer InputField, ...infer Rest]
-  ? (InputField extends { name: any; type: any }
-      ? InputField['type'] extends { kind: 'NON_NULL' }
-        ? { [Name in InputField['name']]: unwrapType<InputField['type'], Introspection> }
-        : { [Name in InputField['name']]?: unwrapType<InputField['type'], Introspection> }
-      : {}) &
-      getInputObjectTypeRec<Rest, Introspection>
-  : {};
+  ? getInputObjectTypeRec<
+      Rest,
+      Introspection,
+      (InputField extends { name: any; type: any }
+        ? InputField['type'] extends { kind: 'NON_NULL' }
+          ? { [Name in InputField['name']]: unwrapType<InputField['type'], Introspection> }
+          : { [Name in InputField['name']]?: unwrapType<InputField['type'], Introspection> }
+        : {}) &
+        InputObject
+    >
+  : InputObject;
 
 type getScalarType<
   TypeName,
@@ -62,27 +67,32 @@ type unwrapTypeRef<Type, Introspection extends IntrospectionLikeType> = Type ext
   ? _unwrapTypeRefRec<Type['type'], Introspection>
   : null | _unwrapTypeRefRec<Type, Introspection>;
 
-type getVariablesRec<Variables, Introspection extends IntrospectionLikeType> = Variables extends [
-  infer Variable,
-  ...infer Rest,
-]
-  ? (Variable extends { kind: Kind.VARIABLE_DEFINITION; variable: any; type: any }
-      ? Variable extends { defaultValue: undefined; type: { kind: Kind.NON_NULL_TYPE } }
-        ? {
-            [Name in Variable['variable']['name']['value']]: unwrapTypeRef<
-              Variable['type'],
-              Introspection
-            >;
-          }
-        : {
-            [Name in Variable['variable']['name']['value']]?: unwrapTypeRef<
-              Variable['type'],
-              Introspection
-            >;
-          }
-      : {}) &
-      getVariablesRec<Rest, Introspection>
-  : {};
+type _getVariablesRec<
+  Variables,
+  Introspection extends IntrospectionLikeType,
+  VariablesObject = {},
+> = Variables extends [infer Variable, ...infer Rest]
+  ? _getVariablesRec<
+      Rest,
+      Introspection,
+      (Variable extends { kind: Kind.VARIABLE_DEFINITION; variable: any; type: any }
+        ? Variable extends { defaultValue: undefined; type: { kind: Kind.NON_NULL_TYPE } }
+          ? {
+              [Name in Variable['variable']['name']['value']]: unwrapTypeRef<
+                Variable['type'],
+                Introspection
+              >;
+            }
+          : {
+              [Name in Variable['variable']['name']['value']]?: unwrapTypeRef<
+                Variable['type'],
+                Introspection
+              >;
+            }
+        : {}) &
+        VariablesObject
+    >
+  : VariablesObject;
 
 type getVariablesType<
   Document extends DocumentNodeLike,
@@ -91,7 +101,7 @@ type getVariablesType<
   kind: Kind.OPERATION_DEFINITION;
   variableDefinitions: any;
 }
-  ? obj<getVariablesRec<Document['definitions'][0]['variableDefinitions'], Introspection>>
+  ? obj<_getVariablesRec<Document['definitions'][0]['variableDefinitions'], Introspection>>
   : {};
 
 export type { getVariablesType };
