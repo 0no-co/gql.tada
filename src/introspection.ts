@@ -226,10 +226,11 @@ type mapIntrospection<
 type getScalarType<
   Schema extends IntrospectionLikeType,
   Name extends string,
+  OrType = never,
 > = Schema['types'][Name] extends { kind: 'SCALAR'; type: infer Type }
-  ? Type
+  ? Type | OrType
   : Schema['types'][Name] extends { kind: 'ENUM'; type: infer Type }
-    ? Type
+    ? Type | OrType
     : never;
 
 export type ScalarsLike = {

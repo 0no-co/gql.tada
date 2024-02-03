@@ -151,7 +151,7 @@ interface GraphQLTadaAPI<Schema extends IntrospectionLikeType> {
    */
   scalar<
     const Name extends stringLiteral<Name>,
-    const Value extends getScalarType<Schema, Name> | null | undefined,
+    const Value extends getScalarType<Schema, Name, null | undefined>,
   >(
     name: Name,
     value: Value
@@ -159,7 +159,7 @@ interface GraphQLTadaAPI<Schema extends IntrospectionLikeType> {
 
   scalar<const Name extends stringLiteral<Name>>(
     name: Name,
-    value: getScalarType<Schema, Name>
+    value?: getScalarType<Schema, Name>
   ): getScalarType<Schema, Name>;
 }
 

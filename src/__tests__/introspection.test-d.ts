@@ -18,6 +18,10 @@ describe('mapIntrospection', () => {
 });
 
 describe('getScalarType', () => {
+  it('resolves to never for invalid types', () => {
+    expectTypeOf<getScalarType<simpleSchema, 'invalid'>>().toEqualTypeOf<never>();
+  });
+
   it('gets the type of a scalar', () => {
     expectTypeOf<getScalarType<simpleSchema, 'String'>>().toEqualTypeOf<string>();
   });
