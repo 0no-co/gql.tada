@@ -106,6 +106,14 @@ describe('graphql()', () => {
 describe('graphql.scalar()', () => {
   const graphql = initGraphQLTada<{ introspection: simpleIntrospection }>();
 
+  it('should reject invalid types', () => {
+    type actual = ReturnType<typeof graphql.scalar<'invalid'>>;
+    expectTypeOf<actual>().toEqualTypeOf<never>();
+
+    // @ts-expect-error
+    const actual = graphql.scalar('invalid', 123);
+  });
+
   it('should return the type of a given enum', () => {
     type actual = ReturnType<typeof graphql.scalar<'test'>>;
     type expected = 'value' | 'more';
