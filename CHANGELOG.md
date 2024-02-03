@@ -1,5 +1,14 @@
 # gql.tada
 
+## 1.2.1
+
+### Patch Changes
+
+- Remove type name constraint from `graphql.scalar`’s type name to improve type checking performance
+  Submitted by [@kitten](https://github.com/kitten) (See [#53](https://github.com/0no-co/gql.tada/pull/53))
+- Improve performance of several smaller types (Thank you, [@deathemperor](https://github.com/deathemperor) & [@HaiNNT](https://github.com/HaiNNT))
+  Submitted by [@kitten](https://github.com/kitten) (See [#51](https://github.com/0no-co/gql.tada/pull/51))
+
 ## 1.2.0
 
 ### Minor Changes
