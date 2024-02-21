@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import sade from 'sade';
 import { promises as fs, existsSync } from 'node:fs';
 import path from 'node:path';
@@ -50,36 +49,40 @@ function hasGraphQLSP(tsconfig: TsConfigJson): boolean {
   return true;
 }
 
-prog
-  .command('generate')
-  .describe(
-    'Generate the gql.tada types file, this will look for your "tsconfig.json" and use the "@0no-co/graphqlsp" configuration to generate the file.'
-  )
-  .action(async () => {
-    const cwd = process.cwd();
-    const tsconfigpath = path.resolve(cwd, 'tsconfig.json');
-    const hasTsConfig = existsSync(tsconfigpath);
-    if (!hasTsConfig) {
-      // Error
-    }
+async function main() {
+  prog
+    .command('generate')
+    .describe(
+      'Generate the gql.tada types file, this will look for your "tsconfig.json" and use the "@0no-co/graphqlsp" configuration to generate the file.'
+    )
+    .action(async () => {
+      const cwd = process.cwd();
+      const tsconfigpath = path.resolve(cwd, 'tsconfig.json');
+      const hasTsConfig = existsSync(tsconfigpath);
+      if (!hasTsConfig) {
+        // Error
+      }
 
-    const tsconfigContents = await fs.readFile(tsconfigpath, 'utf-8');
-    let tsConfig: TsConfigJson;
-    try {
-      tsConfig = parse(tsconfigContents) as TsConfigJson;
-    } catch (err) {
-      // report error and bail
-      return;
-    }
+      const tsconfigContents = await fs.readFile(tsconfigpath, 'utf-8');
+      let tsConfig: TsConfigJson;
+      try {
+        tsConfig = parse(tsconfigContents) as TsConfigJson;
+      } catch (err) {
+        // report error and bail
+        return;
+      }
 
-    if (!hasGraphQLSP(tsConfig)) {
-      // Error
-    }
+      if (!hasGraphQLSP(tsConfig)) {
+        // Error
+      }
 
-    const foundPlugin = tsConfig.compilerOptions!.plugins!.find(
-      (plugin) => plugin.name === '@0no-co/graphqlsp'
-    ) as GraphQLSPConfig;
+      const foundPlugin = tsConfig.compilerOptions!.plugins!.find(
+        (plugin) => plugin.name === '@0no-co/graphqlsp'
+      ) as GraphQLSPConfig;
 
-    await ensureTadaIntrospection(foundPlugin.schema, false);
-    // Generate the file
-  });
+      await ensureTadaIntrospection(foundPlugin.schema, false);
+      // Generate the file
+    });
+}
+
+export default main;

@@ -1,7 +1,7 @@
 {
-  "name": "@gql.tada/cli",
+  "name": "@gql.tada/cli-utils",
   "version": "0.0.0",
-  "description": "A CLI tool to make working with gql.tada easier.",
+  "description": "Main logic for gql.tada’s CLI tool.",
   "author": "0no.co <hi@0no.co>",
   "sideEffects": false,
   "source": "./src/index.ts",
@@ -13,9 +13,6 @@
       "source": "./src/index.ts"
     },
     "./package.json": "./package.json"
-  },
-  "bin": {
-    "gql-tada": "./dist/gql-tada-cli.js"
   },
   "files": [
     "CHANGELOG.md",
@@ -30,7 +27,6 @@
   "devDependencies": {
     "@types/node": "^20.11.0",
     "rollup": "^4.9.4",
-    "tsup": "^8.0.2",
     "type-fest": "^4.10.2",
     "typescript": "^5.3.3"
   },

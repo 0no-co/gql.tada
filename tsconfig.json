@@ -1,12 +1,15 @@
 {
   "compilerOptions": {
+    "baseUrl": "./",
+    "rootDir": ".",
+    "paths": {
+      "@gql.tada/*": ["node_modules/@gql.tada/*/src", "packages/*/src"]
+    },
     "forceConsistentCasingInFileNames": true,
     "importsNotUsedAsValues": "remove",
     "noEmit": true,
     "esModuleInterop": true,
     "noUnusedLocals": true,
-    "rootDir": ".",
-    "baseUrl": ".",
     "allowJs": true,
     "lib": ["dom", "esnext"],
     "jsx": "react",
