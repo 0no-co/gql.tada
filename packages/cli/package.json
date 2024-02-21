@@ -4,7 +4,9 @@
   "description": "A CLI tool to make working with gql.tada easier.",
   "author": "0no.co <hi@0no.co>",
   "sideEffects": false,
-  "bin": "./dist/index.mjs",
+  "bin": {
+    "gql-tada": "./dist/index.mjs"
+  },
   "files": [
     "CHANGELOG.md",
     "LICENSE.md",
