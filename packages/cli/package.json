@@ -1,0 +1,22 @@
+{
+  "name": "@0no-co/gql-tada-cli",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsup": "^8.0.2",
+    "type-fest": "^4.10.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@urql/introspection": "^1.0.3",
+    "comment-json": "^4.2.3",
+    "sade": "^1.8.1"
+  }
+}
