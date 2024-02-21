@@ -1,11 +1,21 @@
 {
-  "name": "@0no-co/gql-tada-cli",
+  "name": "@gql-tada/cli",
   "version": "0.0.0",
   "description": "A CLI tool to make working with gql.tada easier.",
   "author": "0no.co <hi@0no.co>",
   "sideEffects": false,
+  "source": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/gql-tada-cli.d.ts",
+      "import": "./dist/gql-tada-cli.mjs",
+      "require": "./dist/gql-tada-cli.js",
+      "source": "./src/index.ts"
+    },
+    "./package.json": "./package.json"
+  },
   "bin": {
-    "gql-tada": "./dist/index.mjs"
+    "gql-tada": "./dist/gql-tada-cli.js"
   },
   "files": [
     "CHANGELOG.md",
@@ -15,10 +25,11 @@
   ],
   "license": "MIT",
   "scripts": {
-    "build": "tsup"
+    "build": "rollup -c ../../scripts/rollup.config.mjs"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
+    "rollup": "^4.9.4",
     "tsup": "^8.0.2",
     "type-fest": "^4.10.2",
     "typescript": "^5.3.3"

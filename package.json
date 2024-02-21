@@ -8,6 +8,9 @@
   "module": "./dist/gql-tada.mjs",
   "types": "./dist/gql-tada.d.ts",
   "sideEffects": false,
+  "bin": {
+    "gql-tada": "gql-tada"
+  },
   "files": [
     "LICENSE.md",
     "README.md",
@@ -23,7 +26,8 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@0no-co/graphql.web": "^1.0.4"
+    "@0no-co/graphql.web": "^1.0.4",
+    "@gql-tada/cli": "0.1.0"
   },
   "public": true,
   "keywords": [

@@ -156,6 +156,9 @@ importers:
       '@types/node':
         specifier: ^20.11.0
         version: 20.11.0
+      rollup:
+        specifier: ^4.9.4
+        version: 4.9.4
       tsup:
         specifier: ^8.0.2
         version: 8.0.2(typescript@5.3.3)
