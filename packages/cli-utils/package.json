@@ -26,14 +26,14 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
+    "comment-json": "^4.2.3",
     "rollup": "^4.9.4",
+    "sade": "^1.8.1",
     "type-fest": "^4.10.2",
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@urql/introspection": "^1.0.3",
-    "comment-json": "^4.2.3",
-    "sade": "^1.8.1"
+    "@urql/introspection": "^1.0.3"
   },
   "publishConfig": {
     "access": "public",
