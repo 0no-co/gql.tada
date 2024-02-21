@@ -7,7 +7,7 @@ import { parse } from 'comment-json';
 import type { TsConfigJson } from 'type-fest';
 import { ensureTadaIntrospection } from './tada';
 
-const prog = sade('fuse');
+const prog = sade('gql.tada');
 
 prog.version(process.env.npm_package_version || '0.0.0');
 
@@ -19,12 +19,12 @@ type GraphQLSPConfig = {
 
 function hasGraphQLSP(tsconfig: TsConfigJson): boolean {
   if (!tsconfig.compilerOptions) {
-    // Warn
+    console.warn('Missing compilerOptions object in tsconfig.json.');
     return false;
   }
 
   if (!tsconfig.compilerOptions.plugins) {
-    // Warn
+    console.warn('Missing plugins array in tsconfig.json.');
     return false;
   }
 
@@ -32,17 +32,19 @@ function hasGraphQLSP(tsconfig: TsConfigJson): boolean {
     (plugin) => plugin.name === '@0no-co/graphqlsp'
   ) as GraphQLSPConfig | undefined;
   if (!foundPlugin) {
-    // Warn
+    console.warn('Missing @0no-co/graphqlsp plugin in tsconfig.json.');
     return false;
   }
 
   if (!foundPlugin.schema) {
-    // Warn
+    console.warn('Missing schema property in @0no-co/graphqlsp plugin in tsconfig.json.');
     return false;
   }
 
   if (!foundPlugin.tadaOutputLocation) {
-    // Warn
+    console.warn(
+      'Missing tadaOutputLocation property in @0no-co/graphqlsp plugin in tsconfig.json.'
+    );
     return false;
   }
 
@@ -60,7 +62,8 @@ async function main() {
       const tsconfigpath = path.resolve(cwd, 'tsconfig.json');
       const hasTsConfig = existsSync(tsconfigpath);
       if (!hasTsConfig) {
-        // Error
+        console.error('Missing tsconfig.json');
+        return;
       }
 
       const tsconfigContents = await fs.readFile(tsconfigpath, 'utf-8');
@@ -68,20 +71,19 @@ async function main() {
       try {
         tsConfig = parse(tsconfigContents) as TsConfigJson;
       } catch (err) {
-        // report error and bail
+        console.error(err);
         return;
       }
 
       if (!hasGraphQLSP(tsConfig)) {
-        // Error
+        return;
       }
 
       const foundPlugin = tsConfig.compilerOptions!.plugins!.find(
         (plugin) => plugin.name === '@0no-co/graphqlsp'
       ) as GraphQLSPConfig;
 
-      await ensureTadaIntrospection(foundPlugin.schema, false);
-      // Generate the file
+      await ensureTadaIntrospection(foundPlugin.schema, foundPlugin.tadaOutputLocation!);
     });
 }
 

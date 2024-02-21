@@ -1,4 +1,4 @@
-import { promises as fs, watch, existsSync } from 'node:fs';
+import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { buildSchema, introspectionFromSchema } from 'graphql';
 import { minifyIntrospectionQuery } from '@urql/introspection';
@@ -23,9 +23,8 @@ export { readFragment as useFragment } from 'gql.tada';
  * we are not able to leverage the workspace TS version we will rely on
  * this function.
  */
-export async function ensureTadaIntrospection(location: string, shouldWatch: boolean) {
-  const schemaLocation = path.resolve(location, 'schema.graphql');
-
+export async function ensureTadaIntrospection(schemaLocation: string, outputLocation: string) {
+  const base = process.cwd();
   const writeTada = async () => {
     try {
       const content = await fs.readFile(schemaLocation, 'utf-8');
@@ -41,10 +40,7 @@ export async function ensureTadaIntrospection(location: string, shouldWatch: boo
       });
 
       const json = JSON.stringify(minified, null, 2);
-      const hasSrcDir = existsSync(path.resolve(location, 'src'));
-      const base = hasSrcDir ? path.resolve(location, 'src') : location;
-
-      const outputLocation = path.resolve(base, 'fuse', 'introspection.ts');
+      const resolvedOutputLocation = path.resolve(base, outputLocation);
       const contents = [
         preambleComments,
         tsAnnotationComment,
@@ -52,17 +48,13 @@ export async function ensureTadaIntrospection(location: string, shouldWatch: boo
         'export { introspection };',
       ].join('\n');
 
-      await fs.writeFile(outputLocation, contents);
-    } catch (e) {}
+      await fs.writeFile(resolvedOutputLocation, contents);
+    } catch (e) {
+      console.error('Something went wrong while writing the introspection file', e);
+    }
   };
 
   await writeTada();
-
-  if (shouldWatch) {
-    watch(schemaLocation, async () => {
-      await writeTada();
-    });
-  }
 }
 
 const preambleComments = ['/* eslint-disable */', '/* prettier-ignore */'].join('\n') + '\n';
