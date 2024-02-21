@@ -1,4 +1,4 @@
-import { promises as fs, existsSync } from 'node:fs';
+import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { buildSchema, introspectionFromSchema } from 'graphql';
 import { minifyIntrospectionQuery } from '@urql/introspection';
@@ -23,9 +23,8 @@ export { readFragment as useFragment } from 'gql.tada';
  * we are not able to leverage the workspace TS version we will rely on
  * this function.
  */
-export async function ensureTadaIntrospection(location: string, outputLocation: string) {
-  const schemaLocation = path.resolve(location, 'schema.graphql');
-
+export async function ensureTadaIntrospection(schemaLocation: string, outputLocation: string) {
+  const base = process.cwd();
   const writeTada = async () => {
     try {
       const content = await fs.readFile(schemaLocation, 'utf-8');
@@ -41,10 +40,7 @@ export async function ensureTadaIntrospection(location: string, outputLocation: 
       });
 
       const json = JSON.stringify(minified, null, 2);
-      const hasSrcDir = existsSync(path.resolve(location, 'src'));
-      const base = hasSrcDir ? path.resolve(location, 'src') : location;
-
-      const resolvedOutputLocation = path.resolve(base, outputLocation, 'introspection.ts');
+      const resolvedOutputLocation = path.resolve(base, outputLocation);
       const contents = [
         preambleComments,
         tsAnnotationComment,
