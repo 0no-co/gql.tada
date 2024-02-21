@@ -1,5 +1,6 @@
 ---
-'@gql.tada/cli': minor
+'gql.tada': minor
+'@gql.tada/cli-utils': minor
 ---
 
-Add `tada` CLI capable of generating the introspection types file
+Add CLI entrypoint `gql-tada` capable of generating the types file without the LSP running

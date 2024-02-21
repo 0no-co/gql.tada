@@ -1,10 +1,14 @@
 {
   "name": "@gql.tada/cli-utils",
   "version": "0.0.0",
+  "public": true,
   "description": "Main logic for gql.tada’s CLI tool.",
   "author": "0no.co <hi@0no.co>",
   "sideEffects": false,
   "source": "./src/index.ts",
+  "main": "./dist/gql-tada-cli",
+  "module": "./dist/gql-tada-cli.mjs",
+  "types": "./dist/gql-tada-cli.d.ts",
   "exports": {
     ".": {
       "types": "./dist/gql-tada-cli.d.ts",
@@ -20,9 +24,20 @@
     "README.md",
     "dist/"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/0no-co/gql.tada.git",
+    "directory": "packages/cli-utils"
+  },
+  "bugs": {
+    "url": "https://github.com/0no-co/gql.tada/issues"
+  },
+  "homepage": "https://gql-tada.0no.co/",
   "license": "MIT",
   "scripts": {
-    "build": "rollup -c ../../scripts/rollup.config.mjs"
+    "build": "rollup -c ../../scripts/rollup.config.mjs",
+    "clean": "rimraf dist node_modules/.cache",
+    "prepublishOnly": "run-s clean build"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
@@ -33,7 +48,8 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@urql/introspection": "^1.0.3"
+    "@urql/introspection": "^1.0.3",
+    "graphql": "^16.8.1"
   },
   "publishConfig": {
     "access": "public",

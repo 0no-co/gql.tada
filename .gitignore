@@ -13,3 +13,4 @@ package-lock.json
 .astro/
 .netlify/
 /tsconfig.vitest-temp.json
+/cli

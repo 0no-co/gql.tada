@@ -149,6 +149,9 @@ importers:
       '@urql/introspection':
         specifier: ^1.0.3
         version: 1.0.3(graphql@16.8.1)
+      graphql:
+        specifier: ^16.8.1
+        version: 16.8.1
     devDependencies:
       '@types/node':
         specifier: ^20.11.0

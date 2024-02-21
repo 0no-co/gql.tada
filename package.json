@@ -9,12 +9,14 @@
   "types": "./dist/gql-tada.d.ts",
   "sideEffects": false,
   "bin": {
-    "gql.tada": "./dist/gql-tada-cli.js",
-    "gql-tada": "./dist/gql-tada-cli.js"
+    "gql.tada": "./bin/cli.js",
+    "gql-tada": "./bin/cli.js"
   },
   "files": [
     "LICENSE.md",
     "README.md",
+    "cli/",
+    "bin/",
     "dist/"
   ],
   "exports": {
@@ -61,6 +63,7 @@
   "bugs": {
     "url": "https://github.com/0no-co/gql.tada/issues"
   },
+  "homepage": "https://gql-tada.0no.co/",
   "license": "MIT",
   "prettier": {
     "singleQuote": true,
