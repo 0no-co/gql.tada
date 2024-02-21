@@ -1,0 +1,42 @@
+{
+  "name": "@gql.tada/cli-utils",
+  "version": "0.0.0",
+  "description": "Main logic for gql.tada’s CLI tool.",
+  "author": "0no.co <hi@0no.co>",
+  "sideEffects": false,
+  "source": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/gql-tada-cli.d.ts",
+      "import": "./dist/gql-tada-cli.mjs",
+      "require": "./dist/gql-tada-cli.js",
+      "source": "./src/index.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "CHANGELOG.md",
+    "LICENSE.md",
+    "README.md",
+    "dist/"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "build": "rollup -c ../../scripts/rollup.config.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "comment-json": "^4.2.3",
+    "rollup": "^4.9.4",
+    "sade": "^1.8.1",
+    "type-fest": "^4.10.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@urql/introspection": "^1.0.3"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

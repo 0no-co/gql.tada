@@ -8,6 +8,10 @@
   "module": "./dist/gql-tada.mjs",
   "types": "./dist/gql-tada.d.ts",
   "sideEffects": false,
+  "bin": {
+    "gql.tada": "./dist/gql-tada-cli.js",
+    "gql-tada": "./dist/gql-tada-cli.js"
+  },
   "files": [
     "LICENSE.md",
     "README.md",
@@ -20,10 +24,17 @@
       "require": "./dist/gql-tada.js",
       "source": "./src/index.ts"
     },
+    "./cli": {
+      "types": "./dist/gql-tada-cli.d.ts",
+      "import": "./dist/gql-tada-cli.mjs",
+      "require": "./dist/gql-tada-cli.js",
+      "source": "./src/cli/index.ts"
+    },
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@0no-co/graphql.web": "^1.0.4"
+    "@0no-co/graphql.web": "^1.0.4",
+    "@gql.tada/cli-utils": "workspace:*"
   },
   "public": true,
   "keywords": [
