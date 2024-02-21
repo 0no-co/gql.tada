@@ -15,6 +15,9 @@ importers:
       '@0no-co/graphql.web':
         specifier: ^1.0.4
         version: 1.0.4(graphql@16.8.1)
+      '@gql-tada/cli':
+        specifier: workspace:*
+        version: link:packages/cli
     devDependencies:
       '@0no-co/typescript.js':
         specifier: 5.3.2-2

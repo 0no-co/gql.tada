@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@0no-co/graphql.web": "^1.0.4",
-    "@gql-tada/cli": "0.1.0"
+    "@gql-tada/cli": "workspace:*"
   },
   "public": true,
   "keywords": [
