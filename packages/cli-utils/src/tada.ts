@@ -41,12 +41,31 @@ export async function ensureTadaIntrospection(schemaLocation: string, outputLoca
 
       const json = JSON.stringify(minified, null, 2);
       const resolvedOutputLocation = path.resolve(base, outputLocation);
-      const contents = [
-        preambleComments,
-        tsAnnotationComment,
-        `const introspection = ${json} as const;\n`,
-        'export { introspection };',
-      ].join('\n');
+      let contents;
+
+      if (/\.d\.ts$/.test(outputLocation)) {
+        contents = [
+          preambleComments,
+          dtsAnnotationComment,
+          `export type introspection = ${json};\n`,
+          "import * as gqlTada from 'gql.tada';\n",
+          "declare module 'gql.tada' {",
+          '  interface setupSchema {',
+          '    introspection: introspection',
+          '  }',
+          '}',
+        ].join('\n');
+      } else if (path.extname(outputLocation) === '.ts') {
+        contents = [
+          preambleComments,
+          tsAnnotationComment,
+          `const introspection = ${json} as const;\n`,
+          'export { introspection };',
+        ].join('\n');
+      } else {
+        console.warn('Invalid file extension for tadaOutputLocation.');
+        return;
+      }
 
       await fs.writeFile(resolvedOutputLocation, contents);
     } catch (e) {
@@ -58,6 +77,17 @@ export async function ensureTadaIntrospection(schemaLocation: string, outputLoca
 }
 
 const preambleComments = ['/* eslint-disable */', '/* prettier-ignore */'].join('\n') + '\n';
+
+const dtsAnnotationComment = [
+  '/** An IntrospectionQuery representation of your schema.',
+  ' *',
+  ' * @remarks',
+  ' * This is an introspection of your schema saved as a file by GraphQLSP.',
+  ' * It will automatically be used by `gql.tada` to infer the types of your GraphQL documents.',
+  ' * If you need to reuse this data or update your `scalars`, update `tadaOutputLocation` to',
+  ' * instead save to a .ts instead of a .d.ts file.',
+  ' */',
+].join('\n');
 
 const tsAnnotationComment = [
   '/** An IntrospectionQuery representation of your schema.',
