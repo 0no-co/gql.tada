@@ -1,13 +1,20 @@
 {
   "name": "@0no-co/gql-tada-cli",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "0.0.0",
+  "description": "A CLI tool to make working with gql.tada easier.",
+  "author": "0no.co <hi@0no.co>",
+  "sideEffects": false,
+  "bin": "./dist/index.mjs",
+  "files": [
+    "CHANGELOG.md",
+    "LICENSE.md",
+    "README.md",
+    "dist/"
+  ],
+  "license": "MIT",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsup"
   },
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
     "@types/node": "^20.11.0",
     "tsup": "^8.0.2",
@@ -18,5 +25,9 @@
     "@urql/introspection": "^1.0.3",
     "comment-json": "^4.2.3",
     "sade": "^1.8.1"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }
