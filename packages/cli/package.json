@@ -1,5 +1,5 @@
 {
-  "name": "@gql-tada/cli",
+  "name": "@gql.tada/cli",
   "version": "0.0.0",
   "description": "A CLI tool to make working with gql.tada easier.",
   "author": "0no.co <hi@0no.co>",

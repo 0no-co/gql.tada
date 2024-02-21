@@ -15,7 +15,7 @@ importers:
       '@0no-co/graphql.web':
         specifier: ^1.0.4
         version: 1.0.4(graphql@16.8.1)
-      '@gql-tada/cli':
+      '@gql.tada/cli':
         specifier: workspace:*
         version: link:packages/cli
     devDependencies:
