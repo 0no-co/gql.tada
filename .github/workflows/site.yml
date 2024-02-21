@@ -49,7 +49,7 @@ jobs:
 
       - name: Build Website
         working-directory: website
-        run: pnpm run build
+        run: pnpm run export
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/pages-action@v1
