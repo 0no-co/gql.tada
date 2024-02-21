@@ -2,9 +2,13 @@ name: CI
 
 on:
   pull_request:
+    paths:
+      - website/**
   push:
     branches:
       - main
+    paths:
+      - website/**
 
 jobs:
   site:
