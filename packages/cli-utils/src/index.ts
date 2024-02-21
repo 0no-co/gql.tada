@@ -85,6 +85,7 @@ async function main() {
 
       await ensureTadaIntrospection(foundPlugin.schema, foundPlugin.tadaOutputLocation!);
     });
+  prog.parse(process.argv);
 }
 
 export default main;
