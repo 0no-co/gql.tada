@@ -376,6 +376,7 @@ declare module 'gql.tada' {
 | ----------- | ----------- |
 | `introspection` property | Introspection of your schema in the `IntrospectionQuery` format. |
 | `scalars` property | An optional object type with scalar names as keys and the corresponding scalar types as values. |
+| `disableMasking` flag | This may be set to `true` to disable fragment masking globally. |
 
 This is used either via [`setupSchema`](#setupschema) or [`initGraphQLTada()`](#initgraphqltada) to set
 up your schema and scalars. Your configuration objects must match the shape of this type.
@@ -383,3 +384,6 @@ up your schema and scalars. Your configuration objects must match the shape of t
 The `scalars` option is optional and can be used to set up more scalars, apart
 from the default ones (like: Int, Float, String, Boolean).
 It must be an object map of scalar names to their desired TypeScript types.
+
+The `disableMasking` flag may be set to `true` instead of using `@_unmask` on individual fragments
+and allows fragment masking to be disabled globally.
