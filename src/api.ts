@@ -38,6 +38,14 @@ import type { stringLiteral, obj, matchOr, writable, DocumentDecoration } from '
 interface AbstractSetupSchema {
   introspection: IntrospectionQuery;
   scalars?: ScalarsLike;
+  disableMasking?: boolean;
+}
+
+/** Abstract type for internal configuration
+ * @internal
+ */
+interface AbstractConfig {
+  isMaskingDisabled: boolean;
 }
 
 /** This is used to configure gql.tada with your introspection data and scalars.
@@ -75,7 +83,7 @@ interface setupSchema extends AbstractSetupSchema {
   /*empty*/
 }
 
-interface GraphQLTadaAPI<Schema extends IntrospectionLikeType> {
+interface GraphQLTadaAPI<Schema extends IntrospectionLikeType, Config extends AbstractConfig> {
   /** Function to create and compose GraphQL documents with result and variable types.
    *
    * @param input - A string of a GraphQL document.
@@ -121,7 +129,12 @@ interface GraphQLTadaAPI<Schema extends IntrospectionLikeType> {
   >(
     input: In,
     fragments?: Fragments
-  ): getDocumentNode<parseDocument<In>, Schema, getFragmentsOfDocumentsRec<Fragments>>;
+  ): getDocumentNode<
+    parseDocument<In>,
+    Schema,
+    getFragmentsOfDocumentsRec<Fragments>,
+    Config['isMaskingDisabled']
+  >;
 
   /** Function to validate the type of a given scalar or enum value.
    *
@@ -163,10 +176,14 @@ interface GraphQLTadaAPI<Schema extends IntrospectionLikeType> {
   ): getScalarType<Schema, Name>;
 }
 
-type schemaOfConfig<Setup extends AbstractSetupSchema> = mapIntrospection<
+type schemaOfSetup<Setup extends AbstractSetupSchema> = mapIntrospection<
   matchOr<IntrospectionQuery, Setup['introspection'], never>,
   matchOr<ScalarsLike, Setup['scalars'], {}>
 >;
+
+type configOfSetup<Setup extends AbstractSetupSchema> = {
+  isMaskingDisabled: Setup['disableMasking'] extends true ? true : false;
+};
 
 /** Setup function to create a typed `graphql` document function with.
  *
@@ -195,7 +212,8 @@ type schemaOfConfig<Setup extends AbstractSetupSchema> = mapIntrospection<
  * ```
  */
 function initGraphQLTada<const Setup extends AbstractSetupSchema>() {
-  type Schema = schemaOfConfig<Setup>;
+  type Schema = schemaOfSetup<Setup>;
+  type Config = configOfSetup<Setup>;
 
   function graphql(input: string, fragments?: readonly TadaDocumentNode[]): any {
     const definitions = _parse(input).definitions as writable<DefinitionNode>[];
@@ -222,7 +240,7 @@ function initGraphQLTada<const Setup extends AbstractSetupSchema>() {
     return value;
   };
 
-  return graphql as GraphQLTadaAPI<Schema>;
+  return graphql as GraphQLTadaAPI<Schema, Config>;
 }
 
 /** Alias to a GraphQL parse function returning an exact document type.
@@ -243,13 +261,14 @@ export type getDocumentNode<
   Document extends DocumentNodeLike,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any } = {},
+  isMaskingDisabled = false,
 > = getDocumentType<Document, Introspection, Fragments> extends infer Result
   ? Result extends never
     ? never
     : TadaDocumentNode<
         Result,
         getVariablesType<Document, Introspection>,
-        decorateFragmentDef<Document>
+        decorateFragmentDef<Document, isMaskingDisabled>
       >
   : never;
 
@@ -506,7 +525,10 @@ function unsafe_readResult<
   return data as any;
 }
 
-const graphql: GraphQLTadaAPI<schemaOfConfig<setupSchema>> = initGraphQLTada();
+const graphql: GraphQLTadaAPI<
+  schemaOfSetup<setupSchema>,
+  configOfSetup<setupSchema>
+> = initGraphQLTada();
 
 export { parse, graphql, readFragment, maskFragments, unsafe_readResult, initGraphQLTada };
 

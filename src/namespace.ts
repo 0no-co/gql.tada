@@ -38,14 +38,19 @@ type isMaskedRec<Directives extends readonly unknown[] | undefined> = Directives
     : isMaskedRec<Rest>
   : true;
 
-type decorateFragmentDef<Document extends DocumentNodeLike> = Document['definitions'][0] extends {
+type decorateFragmentDef<
+  Document extends DocumentNodeLike,
+  isMaskingDisabled = false,
+> = Document['definitions'][0] extends {
   kind: Kind.FRAGMENT_DEFINITION;
   name: any;
 }
   ? {
       fragment: Document['definitions'][0]['name']['value'];
       on: Document['definitions'][0]['typeCondition']['name']['value'];
-      masked: isMaskedRec<Document['definitions'][0]['directives']>;
+      masked: isMaskingDisabled extends true
+        ? false
+        : isMaskedRec<Document['definitions'][0]['directives']>;
     }
   : void;
 
