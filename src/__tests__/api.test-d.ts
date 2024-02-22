@@ -103,6 +103,47 @@ describe('graphql()', () => {
   });
 });
 
+describe('graphql() with `disableMasking: true`', () => {
+  const graphql = initGraphQLTada<{ introspection: simpleIntrospection; disableMasking: true }>();
+  it('should support unmasked fragments via the `disableMasking` option', () => {
+    const fragment = graphql(`
+      fragment Fields on Todo {
+        id
+        text
+      }
+    `);
+
+    const query = graphql(
+      `
+        query Test($limit: Int) {
+          todos(limit: $limit) {
+            ...Fields
+          }
+        }
+      `,
+      [fragment]
+    );
+
+    expectTypeOf<FragmentOf<typeof fragment>>().toEqualTypeOf<{
+      id: string | number;
+      text: string;
+    }>();
+
+    expectTypeOf<ResultOf<typeof query>>().toEqualTypeOf<{
+      todos:
+        | ({
+            id: string | number;
+            text: string;
+          } | null)[]
+        | null;
+    }>();
+
+    expectTypeOf<VariablesOf<typeof query>>().toEqualTypeOf<{
+      limit?: number | null;
+    }>();
+  });
+});
+
 describe('graphql.scalar()', () => {
   const graphql = initGraphQLTada<{ introspection: simpleIntrospection }>();
 
