@@ -224,11 +224,16 @@ type getDocumentType<
       : never
   : never;
 
-type getFragmentMapRec<Definitions> = Definitions extends readonly [infer Definition, ...infer Rest]
-  ? (Definition extends { kind: Kind.FRAGMENT_DEFINITION; name: any }
-      ? { [Name in Definition['name']['value']]: Definition }
-      : {}) &
-      getFragmentMapRec<Rest>
-  : {};
+type getFragmentMapRec<Definitions, FragmentMap = {}> = Definitions extends readonly [
+  infer Definition,
+  ...infer Rest,
+]
+  ? getFragmentMapRec<
+      Rest,
+      Definition extends { kind: Kind.FRAGMENT_DEFINITION; name: any }
+        ? { [Name in Definition['name']['value']]: Definition } & FragmentMap
+        : FragmentMap
+    >
+  : FragmentMap;
 
 export type { getDocumentType, getFragmentMapRec };
