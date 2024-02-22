@@ -163,7 +163,7 @@ interface GraphQLTadaAPI<Schema extends IntrospectionLikeType> {
   ): getScalarType<Schema, Name>;
 }
 
-type schemaOfConfig<Setup extends AbstractSetupSchema> = mapIntrospection<
+type schemaOfSetup<Setup extends AbstractSetupSchema> = mapIntrospection<
   matchOr<IntrospectionQuery, Setup['introspection'], never>,
   matchOr<ScalarsLike, Setup['scalars'], {}>
 >;
@@ -195,7 +195,7 @@ type schemaOfConfig<Setup extends AbstractSetupSchema> = mapIntrospection<
  * ```
  */
 function initGraphQLTada<const Setup extends AbstractSetupSchema>() {
-  type Schema = schemaOfConfig<Setup>;
+  type Schema = schemaOfSetup<Setup>;
 
   function graphql(input: string, fragments?: readonly TadaDocumentNode[]): any {
     const definitions = _parse(input).definitions as writable<DefinitionNode>[];
@@ -506,7 +506,7 @@ function unsafe_readResult<
   return data as any;
 }
 
-const graphql: GraphQLTadaAPI<schemaOfConfig<setupSchema>> = initGraphQLTada();
+const graphql: GraphQLTadaAPI<schemaOfSetup<setupSchema>> = initGraphQLTada();
 
 export { parse, graphql, readFragment, maskFragments, unsafe_readResult, initGraphQLTada };
 
