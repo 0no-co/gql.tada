@@ -49,34 +49,37 @@ type decorateFragmentDef<Document extends DocumentNodeLike> = Document['definiti
     }
   : void;
 
-type getFragmentsOfDocumentsRec<Documents> = Documents extends readonly [
+type getFragmentsOfDocumentsRec<Documents, Fragments = {}> = Documents extends readonly [
   infer Document,
   ...infer Rest,
 ]
-  ? (Document extends { [$tada.definition]?: any }
-      ? Exclude<Document[$tada.definition], undefined> extends infer Definition extends
-          FragmentDefDecorationLike
-        ? {
-            [Name in Definition['fragment']]: {
-              kind: Kind.FRAGMENT_DEFINITION;
-              name: {
-                kind: Kind.NAME;
-                value: Definition['fragment'];
-              };
-              typeCondition: {
-                kind: Kind.NAMED_TYPE;
+  ? getFragmentsOfDocumentsRec<
+      Rest,
+      (Document extends { [$tada.definition]?: any }
+        ? Exclude<Document[$tada.definition], undefined> extends infer Definition extends
+            FragmentDefDecorationLike
+          ? {
+              [Name in Definition['fragment']]: {
+                kind: Kind.FRAGMENT_DEFINITION;
                 name: {
                   kind: Kind.NAME;
-                  value: Definition['on'];
+                  value: Definition['fragment'];
                 };
+                typeCondition: {
+                  kind: Kind.NAMED_TYPE;
+                  name: {
+                    kind: Kind.NAME;
+                    value: Definition['on'];
+                  };
+                };
+                [$tada.ref]: makeFragmentRef<Document>;
               };
-              [$tada.ref]: makeFragmentRef<Document>;
-            };
-          }
-        : {}
-      : {}) &
-      getFragmentsOfDocumentsRec<Rest>
-  : {};
+            }
+          : {}
+        : {}) &
+        Fragments
+    >
+  : Fragments;
 
 type makeFragmentRef<Document> = Document extends { [$tada.definition]?: infer Definition }
   ? Definition extends FragmentDefDecorationLike
