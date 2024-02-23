@@ -243,6 +243,26 @@ export type simpleSchema = {
       ];
     };
 
+    DefaultPayload: {
+      kind: 'INPUT_OBJECT';
+      name: 'DefaultPayload';
+      inputFields: [
+        {
+          name: 'value';
+          type: {
+            kind: 'NON_NULL';
+            name: null;
+            ofType: {
+              kind: 'SCALAR';
+              name: 'String';
+              ofType: null;
+            };
+          };
+          defaultValue: 'DEFAULT';
+        },
+      ];
+    };
+
     LatestTodoResult: {
       kind: 'UNION';
       name: 'LatestTodoResult';
