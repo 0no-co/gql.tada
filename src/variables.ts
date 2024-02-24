@@ -12,9 +12,9 @@ type getInputObjectTypeRec<
       Rest,
       Introspection,
       (InputField extends { name: any; type: any }
-        ? InputField['type'] extends { kind: 'NON_NULL' }
+        ? InputField extends { defaultValue: undefined | null; type: { kind: 'NON_NULL' } }
           ? { [Name in InputField['name']]: unwrapType<InputField['type'], Introspection> }
-          : { [Name in InputField['name']]?: unwrapType<InputField['type'], Introspection> }
+          : { [Name in InputField['name']]?: unwrapType<InputField['type'], Introspection> | null }
         : {}) &
         InputObject
     >

@@ -43,6 +43,29 @@ export type simpleIntrospection = {
         possibleTypes: null,
       },
       {
+        kind: 'INPUT_OBJECT',
+        name: 'DefaultPayload',
+        fields: null,
+        inputFields: [
+          {
+            name: 'value',
+            type: {
+              kind: 'NON_NULL',
+              name: null,
+              ofType: {
+                kind: 'SCALAR',
+                name: 'String',
+                ofType: null,
+              },
+            },
+            defaultValue: 'DEFAULT',
+          }
+        ],
+        interfaces: null,
+        enumValues: null,
+        possibleTypes: null,
+      },
+      {
         kind: 'OBJECT',
         name: 'Query',
         fields: [

@@ -46,6 +46,23 @@ test('allows optionals for default values', () => {
   expectTypeOf<variables['id']>().toEqualTypeOf<string | number | undefined>();
 });
 
+test('allows optionals for default values inside input-objects', () => {
+  const query = `
+    mutation ($input: DefaultPayload!) {
+      __typename
+    }
+  `;
+
+  type doc = parseDocument<typeof query>;
+  type variables = getVariablesType<doc, schema>;
+
+  expectTypeOf<variables>().toEqualTypeOf<{
+    input: {
+      value?: string | null | undefined;
+    };
+  }>();
+});
+
 test('allows optionals for nullable values', () => {
   const query = `
     mutation ($id: ID) {
