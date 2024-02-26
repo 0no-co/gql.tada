@@ -149,7 +149,7 @@ export const loadSchema = async (
     }
   } else if (typeof schema === 'string') {
     const isJson = path.extname(schema) === '.json';
-    const resolvedPath = path.resolve(path.dirname(root), schema);
+    const resolvedPath = path.resolve(root, schema);
 
     const contents = await fs.readFile(resolvedPath, 'utf-8');
 
