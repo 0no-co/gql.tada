@@ -1,3 +1,5 @@
+export type { $tada } from './namespace';
+
 export {
   parse,
   graphql,
