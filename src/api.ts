@@ -173,6 +173,39 @@ interface GraphQLTadaAPI<Schema extends IntrospectionLikeType, Config extends Ab
     name: Name,
     value?: getScalarType<Name, Schema>
   ): getScalarType<Name, Schema>;
+
+  /** Function to replace a GraphQL document with a persisted document.
+   *
+   * @typeParam Document - The document type of {@link TadaDocumentNode}.
+   * @param id - A document ID that replaces the document for the API.
+   * @returns A {@link TadaPersistedDocumentNode}.
+   *
+   * @remarks
+   * This function may be used to replace a GraphQL document with a
+   * stand-in, persisted document.
+   *
+   * The returned document’s value won’t contain any of the document’s
+   * definitions, but its type will be equivalent to the `Document` that’s
+   * been passed as a generic.
+   *
+   * As long as the query (type parameter of `Document`) is only referenced
+   * as a type in your code, it will be omitted from your output build by
+   * your bundler and the resulting GraphQL document’s ID will replace your
+   * document entirely.
+   *
+   * @example
+   * ```
+   * import { graphql } from 'gql.tada';
+   *
+   * const query = graphql(`query MyQuery { __typename }`);
+   * const persisted = graphql.persisted<typeof query>('MyQuery');
+   * ```
+   */
+  persisted<Document extends DocumentNodeLike = never>(
+    documentId: string
+  ): Document extends DocumentDecoration<infer Result, infer Variables>
+    ? TadaPersistedDocumentNode<Result, Variables>
+    : never;
 }
 
 type schemaOfSetup<Setup extends AbstractSetupSchema> = mapIntrospection<
@@ -239,6 +272,14 @@ function initGraphQLTada<const Setup extends AbstractSetupSchema>() {
     return value;
   };
 
+  graphql.persisted = function persisted(documentId: string): TadaPersistedDocumentNode {
+    return {
+      kind: Kind.DOCUMENT,
+      definitions: [],
+      documentId,
+    };
+  };
+
   return graphql as GraphQLTadaAPI<Schema, Config>;
 }
 
@@ -292,6 +333,25 @@ interface TadaDocumentNode<
 > extends DocumentNode,
     DocumentDecoration<Result, Variables>,
     makeDefinitionDecoration<Decoration> {}
+
+/** A GraphQL persisted document with attached types for results and variables.
+ *
+ * @remarks
+ * This type still matches a GraphQL {@link DocumentNode}, but doesn’t contain
+ * any definitions. At runtime, this means that this document is empty.
+ *
+ * Instead of its definitions, it carries an `id` property that is typically
+ * used to uniquely identify the document to your GraphQL API, without disclosing
+ * the shape of the query or schema transparently.
+ */
+interface TadaPersistedDocumentNode<
+  Result = { [key: string]: any },
+  Variables = { [key: string]: any },
+> extends DocumentNode,
+    DocumentDecoration<Result, Variables> {
+  definitions: readonly [];
+  documentId: string;
+}
 
 /** A utility type returning the `Result` type of typed GraphQL documents.
  *
@@ -537,6 +597,7 @@ export type {
   AbstractSetupSchema,
   GraphQLTadaAPI,
   TadaDocumentNode,
+  TadaPersistedDocumentNode,
   ResultOf,
   VariablesOf,
   FragmentOf,

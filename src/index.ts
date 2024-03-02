@@ -13,6 +13,7 @@ export type {
   AbstractSetupSchema,
   GraphQLTadaAPI,
   TadaDocumentNode,
+  TadaPersistedDocumentNode,
   ResultOf,
   VariablesOf,
   FragmentOf,
