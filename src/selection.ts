@@ -26,6 +26,7 @@ type _unwrapTypeRec<
         ? SelectionSet extends { kind: Kind.SELECTION_SET; selections: any }
           ? getSelection<
               SelectionSet['selections'],
+              unknown,
               Introspection['types'][Type['name']],
               Introspection,
               Fragments
@@ -70,17 +71,19 @@ type getFieldAlias<Node> = Node extends { alias: undefined; name: any }
 
 type getFragmentSelection<
   Node,
+  PossibleType extends string,
   Type extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
 > = Node extends { kind: Kind.INLINE_FRAGMENT; selectionSet: any }
-  ? getSelection<Node['selectionSet']['selections'], Type, Introspection, Fragments>
+  ? getSelection<Node['selectionSet']['selections'], PossibleType, Type, Introspection, Fragments>
   : Node extends { kind: Kind.FRAGMENT_SPREAD; name: any }
     ? Node['name']['value'] extends keyof Fragments
       ? Fragments[Node['name']['value']] extends { [$tada.ref]: any }
         ? Fragments[Node['name']['value']][$tada.ref]
         : getSelection<
             Fragments[Node['name']['value']]['selectionSet']['selections'],
+            PossibleType,
             Type,
             Introspection,
             Fragments
@@ -109,15 +112,16 @@ type getTypenameOfType<Type> =
 
 type getSelection<
   Selections,
+  PossibleType,
   Type extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
 > = obj<
   Type extends { kind: 'UNION' | 'INTERFACE'; possibleTypes: any }
     ? objValues<{
-        [PossibleType in Type['possibleTypes']]: _getPossibleTypeSelectionRec<
+        [PossibleSubType in Type['possibleTypes'] & PossibleType]: _getPossibleTypeSelectionRec<
           Selections,
-          PossibleType,
+          PossibleSubType,
           Type,
           Introspection,
           Fragments
@@ -148,7 +152,7 @@ type _getPossibleTypeSelectionRec<
           ? PossibleType extends getTypenameOfType<Subtype>
             ?
                 | (isOptional<Node> extends true ? {} : never)
-                | getFragmentSelection<Node, Subtype, Introspection, Fragments>
+                | getFragmentSelection<Node, PossibleType, Subtype, Introspection, Fragments>
             : {}
           : Node extends { kind: Kind.FRAGMENT_SPREAD; name: any }
             ? makeUndefinedFragmentRef<Node['name']['value']>
@@ -193,7 +197,13 @@ type getOperationSelectionType<
 }
   ? Introspection['types'][Introspection[Definition['operation']]] extends infer Type extends
       ObjectLikeType
-    ? getSelection<Definition['selectionSet']['selections'], Type, Introspection, Fragments>
+    ? getSelection<
+        Definition['selectionSet']['selections'],
+        unknown,
+        Type,
+        Introspection,
+        Fragments
+      >
     : {}
   : never;
 
@@ -208,7 +218,13 @@ type getFragmentSelectionType<
 }
   ? Introspection['types'][Definition['typeCondition']['name']['value']] extends infer Type extends
       ObjectLikeType
-    ? getSelection<Definition['selectionSet']['selections'], Type, Introspection, Fragments>
+    ? getSelection<
+        Definition['selectionSet']['selections'],
+        unknown,
+        Type,
+        Introspection,
+        Fragments
+      >
     : never
   : never;
 
