@@ -32,6 +32,19 @@ export type simpleSchema = {
             };
           };
         };
+        itodo: {
+          name: 'itodo';
+          type: {
+            kind: 'NON_NULL';
+            name: null;
+            ofType: {
+              kind: 'INTERFACE';
+              name: 'ITodo';
+              ofType: null;
+            };
+          };
+        };
+
         test: {
           name: 'test';
           type: {

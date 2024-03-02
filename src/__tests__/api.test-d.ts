@@ -101,6 +101,59 @@ describe('graphql()', () => {
       limit?: number | null;
     }>();
   });
+
+  // See: https://github.com/0no-co/gql.tada/issues/100#issuecomment-1974924487
+  it('should create a fragment type on unmasked fragments on nested interface', () => {
+    const fragment = graphql(`
+      fragment Fields on ITodo @_unmask {
+        __typename
+        id
+      }
+    `);
+
+    const query = graphql(
+      `
+        query Test {
+          itodo {
+            ...Fields
+            ... on BigTodo {
+              wallOfText
+            }
+            ... on SmallTodo {
+              id
+              maxLength
+            }
+          }
+        }
+      `,
+      [fragment]
+    );
+
+    expectTypeOf<FragmentOf<typeof fragment>>().toEqualTypeOf<
+      | {
+          __typename: 'BigTodo';
+          id: string | number;
+        }
+      | {
+          __typename: 'SmallTodo';
+          id: string | number;
+        }
+    >();
+
+    expectTypeOf<ResultOf<typeof query>>().toEqualTypeOf<{
+      itodo:
+        | {
+            __typename: 'BigTodo';
+            id: string | number;
+            wallOfText: string | null;
+          }
+        | {
+            __typename: 'SmallTodo';
+            id: string | number;
+            maxLength: number | null;
+          };
+    }>();
+  });
 });
 
 describe('graphql() with `disableMasking: true`', () => {

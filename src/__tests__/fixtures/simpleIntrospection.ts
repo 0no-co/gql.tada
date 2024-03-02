@@ -104,6 +104,19 @@ export type simpleIntrospection = {
               },
             },
           },
+          {
+            name: 'itodo',
+            args: [],
+            type: {
+              kind: 'NON_NULL',
+              name: null,
+              ofType: {
+                kind: 'INTERFACE',
+                name: 'ITodo',
+                ofType: null,
+              },
+            },
+          },
         ],
         inputFields: null,
         interfaces: [],
