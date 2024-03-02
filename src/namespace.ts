@@ -3,6 +3,7 @@ import type { DocumentNodeLike } from './parser';
 import type { DocumentDecoration } from './utils';
 
 /** Private namespace holding our symbols for markers.
+ * @internal
  *
  * @remarks
  * Markers are used to indicate, for example, which fragments a given GraphQL document
