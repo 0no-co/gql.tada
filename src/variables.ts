@@ -20,19 +20,14 @@ type getInputObjectTypeRec<
     >
   : InputObject;
 
-type getScalarType<
+type _getScalarType<
   TypeName,
   Introspection extends IntrospectionLikeType,
-  OrType = never,
 > = TypeName extends keyof Introspection['types']
   ? Introspection['types'][TypeName] extends { kind: 'SCALAR' | 'ENUM'; type: any }
-    ? Introspection['types'][TypeName]['type'] | OrType
+    ? Introspection['types'][TypeName]['type']
     : Introspection['types'][TypeName] extends { kind: 'INPUT_OBJECT'; inputFields: any }
-      ?
-          | obj<
-              getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>
-            >
-          | OrType
+      ? obj<getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>>
       : never
   : unknown;
 
@@ -44,7 +39,7 @@ type _unwrapTypeRec<TypeRef, Introspection extends IntrospectionLikeType> = Type
   : TypeRef extends { kind: 'LIST'; ofType: any }
     ? Array<unwrapType<TypeRef['ofType'], Introspection>>
     : TypeRef extends { name: any }
-      ? getScalarType<TypeRef['name'], Introspection>
+      ? _getScalarType<TypeRef['name'], Introspection>
       : unknown;
 
 type unwrapType<Type, Introspection extends IntrospectionLikeType> = Type extends {
@@ -62,7 +57,7 @@ type _unwrapTypeRefRec<Type, Introspection extends IntrospectionLikeType> = Type
   : Type extends { kind: Kind.LIST_TYPE; type: any }
     ? Array<unwrapTypeRef<Type['type'], Introspection>>
     : Type extends { kind: Kind.NAMED_TYPE; name: any }
-      ? getScalarType<Type['name']['value'], Introspection>
+      ? _getScalarType<Type['name']['value'], Introspection>
       : unknown;
 
 type unwrapTypeRef<Type, Introspection extends IntrospectionLikeType> = Type extends {
@@ -108,5 +103,15 @@ type getVariablesType<
 }
   ? obj<_getVariablesRec<Document['definitions'][0]['variableDefinitions'], Introspection>>
   : {};
+
+type getScalarType<
+  TypeName,
+  Introspection extends IntrospectionLikeType,
+  OrType = never,
+> = _getScalarType<TypeName, Introspection> extends infer Type
+  ? unknown extends Type
+    ? never
+    : Type | OrType
+  : never;
 
 export type { getVariablesType, getScalarType };

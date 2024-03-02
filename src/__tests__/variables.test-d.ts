@@ -81,7 +81,7 @@ describe('getVariablesType', () => {
 
 describe('getScalarType', () => {
   it('resolves to unknown for invalid types', () => {
-    expectTypeOf<getScalarType<'invalid', schema>>().toEqualTypeOf<unknown>();
+    expectTypeOf<getScalarType<'invalid', schema>>().toEqualTypeOf<never>();
   });
 
   it('gets the type of a scalar', () => {
