@@ -17,3 +17,6 @@ export type {
   VariablesOf,
   FragmentOf,
 } from './api';
+
+// NOTE: This must be exported for `isolatedModules: true`
+export type { $tada } from './namespace';
