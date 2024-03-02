@@ -232,6 +232,17 @@ export type simpleSchema = {
           defaultValue: null;
         },
         {
+          name: 'description';
+          type: {
+            kind: 'NON_NULL';
+            ofType: {
+              kind: 'SCALAR';
+              name: 'String';
+              ofType: null;
+            };
+          };
+        },
+        {
           name: 'complete';
           type: {
             kind: 'SCALAR';

@@ -29,7 +29,7 @@ describe('getVariablesType', () => {
 
     expectTypeOf<variables>().toEqualTypeOf<{
       id: string | number;
-      input: { title: string; complete?: boolean | null };
+      input: { title: string; complete?: boolean | null; description: string };
     }>();
   });
 
@@ -93,7 +93,7 @@ describe('getScalarType', () => {
   });
 
   it('gets the type of an input object', () => {
-    type expected = { title: string; complete?: boolean | null };
+    type expected = { title: string; complete?: boolean | null; description: string };
     expectTypeOf<getScalarType<'TodoPayload', schema>>().toEqualTypeOf<expected>();
   });
 });
