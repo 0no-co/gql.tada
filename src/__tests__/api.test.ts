@@ -9,7 +9,7 @@ const testTypeHost = test.each([
   { strictNullChecks: true },
 ]);
 
-describe('graphql function', () => {
+describe('graphql()', () => {
   it('should strip @_unmask from fragment documents', () => {
     const graphql = initGraphQLTada<{ introspection: simpleIntrospection }>();
 
@@ -27,6 +27,25 @@ describe('graphql function', () => {
           directives: [],
         },
       ],
+    });
+  });
+});
+
+describe('graphql.persisted()', () => {
+  it('should return an empty document with a given ID', () => {
+    const graphql = initGraphQLTada<{ introspection: simpleIntrospection }>();
+
+    const query = graphql(`
+      query Test {
+        __typename
+      }
+    `);
+
+    const persisted = graphql.persisted<typeof query>('Test');
+
+    expect(persisted).toMatchObject({
+      definitions: [],
+      id: 'Test',
     });
   });
 });

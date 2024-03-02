@@ -446,3 +446,28 @@ describe('unsafe_readResult', () => {
     expectTypeOf<typeof result>().toEqualTypeOf<ResultOf<document>>();
   });
 });
+
+describe('graphql.persisted()', () => {
+  const graphql = initGraphQLTada<{ introspection: simpleIntrospection }>();
+
+  const query = graphql(`
+    query Test {
+      __typename
+    }
+  `);
+
+  it('should take on the value of the document', () => {
+    const persisted = graphql.persisted<typeof query>('Test');
+    expectTypeOf<typeof persisted>().toMatchTypeOf<typeof query>();
+    expectTypeOf<ResultOf<typeof persisted>>().toEqualTypeOf<ResultOf<typeof query>>();
+    expectTypeOf<VariablesOf<typeof persisted>>().toEqualTypeOf<VariablesOf<typeof query>>();
+  });
+
+  it('should require a document to be passed as a generic', () => {
+    const persisted = graphql.persisted('Test');
+    expectTypeOf<typeof persisted>().toBeNever();
+
+    // @ts-expect-error
+    graphql.persisted<number>('Test');
+  });
+});

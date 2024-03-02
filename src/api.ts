@@ -201,7 +201,7 @@ interface GraphQLTadaAPI<Schema extends IntrospectionLikeType, Config extends Ab
    * const persisted = graphql.persisted<typeof query>('MyQuery');
    * ```
    */
-  persisted<const Document extends DocumentNodeLike>(
+  persisted<Document extends DocumentNodeLike = never>(
     id: string
   ): Document extends DocumentDecoration<infer Result, infer Variables>
     ? TadaPersistedDocumentNode<Result, Variables>
