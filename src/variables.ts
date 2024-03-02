@@ -20,17 +20,6 @@ type getInputObjectTypeRec<
     >
   : InputObject;
 
-type _getScalarType<
-  TypeName,
-  Introspection extends IntrospectionLikeType,
-> = TypeName extends keyof Introspection['types']
-  ? Introspection['types'][TypeName] extends { kind: 'SCALAR' | 'ENUM'; type: any }
-    ? Introspection['types'][TypeName]['type']
-    : Introspection['types'][TypeName] extends { kind: 'INPUT_OBJECT'; inputFields: any }
-      ? obj<getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>>
-      : never
-  : unknown;
-
 type _unwrapTypeRec<TypeRef, Introspection extends IntrospectionLikeType> = TypeRef extends {
   kind: 'NON_NULL';
   ofType: any;
@@ -104,14 +93,31 @@ type getVariablesType<
   ? obj<_getVariablesRec<Document['definitions'][0]['variableDefinitions'], Introspection>>
   : {};
 
+type _getScalarType<
+  TypeName,
+  Introspection extends IntrospectionLikeType,
+> = TypeName extends keyof Introspection['types']
+  ? Introspection['types'][TypeName] extends { kind: 'SCALAR' | 'ENUM'; type: any }
+    ? Introspection['types'][TypeName]['type']
+    : Introspection['types'][TypeName] extends { kind: 'INPUT_OBJECT'; inputFields: any }
+      ? obj<getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>>
+      : never
+  : unknown;
+
 type getScalarType<
   TypeName,
   Introspection extends IntrospectionLikeType,
   OrType = never,
-> = _getScalarType<TypeName, Introspection> extends infer Type
-  ? unknown extends Type
-    ? never
-    : Type | OrType
+> = TypeName extends keyof Introspection['types']
+  ? Introspection['types'][TypeName] extends { kind: 'SCALAR' | 'ENUM'; type: any }
+    ? Introspection['types'][TypeName]['type'] | OrType
+    : Introspection['types'][TypeName] extends { kind: 'INPUT_OBJECT'; inputFields: any }
+      ?
+          | obj<
+              getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>
+            >
+          | OrType
+      : never
   : never;
 
 export type { getVariablesType, getScalarType };
