@@ -101,6 +101,59 @@ describe('graphql()', () => {
       limit?: number | null;
     }>();
   });
+
+  // See: https://github.com/0no-co/gql.tada/issues/100#issuecomment-1974924487
+  it('should create a fragment type on unmasked fragments on nested interface', () => {
+    const fragment = graphql(`
+      fragment Fields on ITodo @_unmask {
+        __typename
+        id
+      }
+    `);
+
+    const query = graphql(
+      `
+        query Test {
+          itodo {
+            ...Fields
+            ... on BigTodo {
+              wallOfText
+            }
+            ... on SmallTodo {
+              id
+              maxLength
+            }
+          }
+        }
+      `,
+      [fragment]
+    );
+
+    expectTypeOf<FragmentOf<typeof fragment>>().toEqualTypeOf<
+      | {
+          __typename: 'BigTodo';
+          id: string | number;
+        }
+      | {
+          __typename: 'SmallTodo';
+          id: string | number;
+        }
+    >();
+
+    expectTypeOf<ResultOf<typeof query>>().toEqualTypeOf<{
+      itodo:
+        | {
+            __typename: 'BigTodo';
+            id: string | number;
+            wallOfText: string | null;
+          }
+        | {
+            __typename: 'SmallTodo';
+            id: string | number;
+            maxLength: number | null;
+          };
+    }>();
+  });
 });
 
 describe('graphql() with `disableMasking: true`', () => {
@@ -395,7 +448,7 @@ describe('unsafe_readResult', () => {
 
     type query = parseDocument<`
       query Test {
-        latestTodo {
+        todos {
           id
           ...Fields
         }
@@ -406,10 +459,12 @@ describe('unsafe_readResult', () => {
     type document = getDocumentNode<query, schema, getFragmentsOfDocumentsRec<[fragmentDoc]>>;
 
     const result = unsafe_readResult({} as document, {
-      latestTodo: {
-        id: 'id',
-        fields: 'id',
-      },
+      todos: [
+        {
+          id: 'id',
+          fields: 'id',
+        },
+      ],
     });
 
     expectTypeOf<typeof result>().toEqualTypeOf<ResultOf<document>>();

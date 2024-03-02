@@ -325,6 +325,37 @@ test('infers fragment spreads on unions', () => {
   }
 });
 
+test('infers fragment spreads inside fragment spreads on interfaces', () => {
+  type query = parseDocument</* GraphQL */ `
+    query {
+      itodo {
+        ...ITodo
+        ... on BigTodo {
+          wallOfText
+        }
+        ... on SmallTodo {
+          id
+          maxLength
+        }
+      }
+    }
+
+    fragment ITodo on ITodo {
+      __typename
+      id
+    }
+  `>;
+
+  type actual = getDocumentType<query, schema>;
+  type expected = {
+    itodo:
+      | { wallOfText: string | null; id: string | number; __typename: 'BigTodo' }
+      | { maxLength: number | null; id: string | number; __typename: 'SmallTodo' };
+  };
+
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
+});
+
 test('infers mutations', () => {
   type query = parseDocument</* GraphQL */ `
     mutation ($id: ID!, $input: TodoPayload!) {

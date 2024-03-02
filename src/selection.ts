@@ -70,20 +70,30 @@ type getFieldAlias<Node> = Node extends { alias: undefined; name: any }
 
 type getFragmentSelection<
   Node,
+  PossibleType extends string,
   Type extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
 > = Node extends { kind: Kind.INLINE_FRAGMENT; selectionSet: any }
-  ? getSelection<Node['selectionSet']['selections'], Type, Introspection, Fragments>
+  ? getPossibleTypeSelectionRec<
+      Node['selectionSet']['selections'],
+      PossibleType,
+      Type,
+      Introspection,
+      Fragments,
+      {}
+    >
   : Node extends { kind: Kind.FRAGMENT_SPREAD; name: any }
     ? Node['name']['value'] extends keyof Fragments
       ? Fragments[Node['name']['value']] extends { [$tada.ref]: any }
         ? Fragments[Node['name']['value']][$tada.ref]
-        : getSelection<
+        : getPossibleTypeSelectionRec<
             Fragments[Node['name']['value']]['selectionSet']['selections'],
+            PossibleType,
             Type,
             Introspection,
-            Fragments
+            Fragments,
+            {}
           >
       : {}
     : {};
@@ -115,28 +125,34 @@ type getSelection<
 > = obj<
   Type extends { kind: 'UNION' | 'INTERFACE'; possibleTypes: any }
     ? objValues<{
-        [PossibleType in Type['possibleTypes']]: _getPossibleTypeSelectionRec<
+        [PossibleType in Type['possibleTypes']]: getPossibleTypeSelectionRec<
           Selections,
           PossibleType,
           Type,
           Introspection,
-          Fragments
+          Fragments,
+          // NOTE: This is technically incorrect as the field may not be selected. However:
+          // - The `__typename` field is reserved and we can reasonable expect a user not to alias to it
+          // - Marking the field as optional makes it clear that it cannot just be used
+          // - It protects against a very specific edge case where users forget to select `__typename`
+          //   above and below an unmasked fragment, causing TypeScript to show unmergeable types
+          { __typename?: PossibleType }
         >;
       }>
     : Type extends { kind: 'OBJECT'; name: any }
-      ? _getPossibleTypeSelectionRec<Selections, Type['name'], Type, Introspection, Fragments>
+      ? getPossibleTypeSelectionRec<Selections, Type['name'], Type, Introspection, Fragments, {}>
       : {}
 >;
 
-type _getPossibleTypeSelectionRec<
+type getPossibleTypeSelectionRec<
   Selections,
   PossibleType extends string,
   Type extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
-  SelectionAcc = {},
+  SelectionAcc,
 > = Selections extends [infer Node, ...infer Rest]
-  ? _getPossibleTypeSelectionRec<
+  ? getPossibleTypeSelectionRec<
       Rest,
       PossibleType,
       Type,
@@ -148,7 +164,7 @@ type _getPossibleTypeSelectionRec<
           ? PossibleType extends getTypenameOfType<Subtype>
             ?
                 | (isOptional<Node> extends true ? {} : never)
-                | getFragmentSelection<Node, Subtype, Introspection, Fragments>
+                | getFragmentSelection<Node, PossibleType, Subtype, Introspection, Fragments>
             : {}
           : Node extends { kind: Kind.FRAGMENT_SPREAD; name: any }
             ? makeUndefinedFragmentRef<Node['name']['value']>
