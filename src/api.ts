@@ -173,6 +173,10 @@ interface GraphQLTadaAPI<Schema extends IntrospectionLikeType, Config extends Ab
     name: Name,
     value?: getScalarType<Name, Schema>
   ): getScalarType<Name, Schema>;
+
+  persisted<const Document extends DocumentNodeLike>(
+    id: string
+  ): getPersistedDocumentNode<Document>;
 }
 
 type schemaOfSetup<Setup extends AbstractSetupSchema> = mapIntrospection<
@@ -239,6 +243,14 @@ function initGraphQLTada<const Setup extends AbstractSetupSchema>() {
     return value;
   };
 
+  graphql.persisted = function persisted(id: string): TadaPersistedDocumentNode {
+    return {
+      kind: Kind.DOCUMENT,
+      definitions: [],
+      id,
+    };
+  };
+
   return graphql as GraphQLTadaAPI<Schema, Config>;
 }
 
@@ -292,6 +304,15 @@ interface TadaDocumentNode<
 > extends DocumentNode,
     DocumentDecoration<Result, Variables>,
     makeDefinitionDecoration<Decoration> {}
+
+interface TadaPersistedDocumentNode<
+  Result = { [key: string]: any },
+  Variables = { [key: string]: any },
+> extends DocumentNode,
+    DocumentDecoration<Result, Variables> {
+  definitions: readonly [];
+  id: string;
+}
 
 /** A utility type returning the `Result` type of typed GraphQL documents.
  *
@@ -375,6 +396,11 @@ type fragmentOfTypeRec<Document extends makeDefinitionDecoration> =
   | null;
 
 type resultOfTypeRec<Data> = readonly resultOfTypeRec<Data>[] | Data | undefined | null;
+
+type getPersistedDocumentNode<Document extends DocumentNodeLike> =
+  Document extends DocumentDecoration<infer Result, infer Variables>
+    ? TadaPersistedDocumentNode<Result, Variables>
+    : never;
 
 /** Unmasks a fragment mask for a given fragment document and data.
  *
@@ -537,6 +563,7 @@ export type {
   AbstractSetupSchema,
   GraphQLTadaAPI,
   TadaDocumentNode,
+  TadaPersistedDocumentNode,
   ResultOf,
   VariablesOf,
   FragmentOf,

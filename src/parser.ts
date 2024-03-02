@@ -418,7 +418,7 @@ type parseOperation<In> = TakeOperation<skipIgnored<In>> extends [infer Node, st
 
 export type DocumentNodeLike = {
   kind: Kind.DOCUMENT;
-  definitions: any[];
+  definitions: readonly any[];
 };
 
 export type { parseConstValue, parseOperation, parseDocument, parseValue, parseType };
