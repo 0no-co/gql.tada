@@ -80,7 +80,8 @@ type getFragmentSelection<
       PossibleType,
       Type,
       Introspection,
-      Fragments
+      Fragments,
+      {}
     >
   : Node extends { kind: Kind.FRAGMENT_SPREAD; name: any }
     ? Node['name']['value'] extends keyof Fragments
@@ -91,7 +92,8 @@ type getFragmentSelection<
             PossibleType,
             Type,
             Introspection,
-            Fragments
+            Fragments,
+            {}
           >
       : {}
     : {};
@@ -128,11 +130,17 @@ type getSelection<
           PossibleType,
           Type,
           Introspection,
-          Fragments
+          Fragments,
+          // NOTE: This is technically incorrect as the field may not be selected. However:
+          // - The `__typename` field is reserved and we can reasonable expect a user not to alias to it
+          // - Marking the field as optional makes it clear that it cannot just be used
+          // - It protects against a very specific edge case where users forget to select `__typename`
+          //   above and below an unmasked fragment, causing TypeScript to show unmergeable types
+          { __typename?: PossibleType }
         >;
       }>
     : Type extends { kind: 'OBJECT'; name: any }
-      ? getPossibleTypeSelectionRec<Selections, Type['name'], Type, Introspection, Fragments>
+      ? getPossibleTypeSelectionRec<Selections, Type['name'], Type, Introspection, Fragments, {}>
       : {}
 >;
 
@@ -142,7 +150,7 @@ type getPossibleTypeSelectionRec<
   Type extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
-  SelectionAcc = {},
+  SelectionAcc,
 > = Selections extends [infer Node, ...infer Rest]
   ? getPossibleTypeSelectionRec<
       Rest,

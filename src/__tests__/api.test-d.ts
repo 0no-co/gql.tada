@@ -395,7 +395,7 @@ describe('unsafe_readResult', () => {
 
     type query = parseDocument<`
       query Test {
-        latestTodo {
+        todos {
           id
           ...Fields
         }
@@ -406,10 +406,12 @@ describe('unsafe_readResult', () => {
     type document = getDocumentNode<query, schema, getFragmentsOfDocumentsRec<[fragmentDoc]>>;
 
     const result = unsafe_readResult({} as document, {
-      latestTodo: {
-        id: 'id',
-        fields: 'id',
-      },
+      todos: [
+        {
+          id: 'id',
+          fields: 'id',
+        },
+      ],
     });
 
     expectTypeOf<typeof result>().toEqualTypeOf<ResultOf<document>>();
