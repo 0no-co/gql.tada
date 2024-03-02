@@ -6,7 +6,6 @@ import type {
   ScalarsLike,
   IntrospectionLikeType,
   mapIntrospection,
-  getScalarType,
 } from './introspection';
 
 import type {
@@ -18,8 +17,8 @@ import type {
 } from './namespace';
 
 import type { getDocumentType } from './selection';
-import type { getVariablesType } from './variables';
 import type { parseDocument, DocumentNodeLike } from './parser';
+import type { getVariablesType, getScalarType } from './variables';
 import type { stringLiteral, obj, matchOr, writable, DocumentDecoration } from './utils';
 
 /** Abstract configuration type input for your schema and scalars.
@@ -164,7 +163,7 @@ interface GraphQLTadaAPI<Schema extends IntrospectionLikeType, Config extends Ab
    */
   scalar<
     const Name extends stringLiteral<Name>,
-    const Value extends getScalarType<Schema, Name, null | undefined>,
+    const Value extends getScalarType<Name, Schema, null | undefined>,
   >(
     name: Name,
     value: Value
@@ -172,8 +171,8 @@ interface GraphQLTadaAPI<Schema extends IntrospectionLikeType, Config extends Ab
 
   scalar<const Name extends stringLiteral<Name>>(
     name: Name,
-    value?: getScalarType<Schema, Name>
-  ): getScalarType<Schema, Name>;
+    value?: getScalarType<Name, Schema>
+  ): getScalarType<Name, Schema>;
 }
 
 type schemaOfSetup<Setup extends AbstractSetupSchema> = mapIntrospection<

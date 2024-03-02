@@ -23,11 +23,16 @@ type getInputObjectTypeRec<
 type getScalarType<
   TypeName,
   Introspection extends IntrospectionLikeType,
+  OrType = never,
 > = TypeName extends keyof Introspection['types']
   ? Introspection['types'][TypeName] extends { kind: 'SCALAR' | 'ENUM'; type: any }
-    ? Introspection['types'][TypeName]['type']
+    ? Introspection['types'][TypeName]['type'] | OrType
     : Introspection['types'][TypeName] extends { kind: 'INPUT_OBJECT'; inputFields: any }
-      ? obj<getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>>
+      ?
+          | obj<
+              getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>
+            >
+          | OrType
       : never
   : unknown;
 
@@ -104,4 +109,4 @@ type getVariablesType<
   ? obj<_getVariablesRec<Document['definitions'][0]['variableDefinitions'], Introspection>>
   : {};
 
-export type { getVariablesType };
+export type { getVariablesType, getScalarType };
