@@ -26,7 +26,6 @@ type _unwrapTypeRec<
         ? SelectionSet extends { kind: Kind.SELECTION_SET; selections: any }
           ? getSelection<
               SelectionSet['selections'],
-              unknown,
               Introspection['types'][Type['name']],
               Introspection,
               Fragments
@@ -76,12 +75,18 @@ type getFragmentSelection<
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
 > = Node extends { kind: Kind.INLINE_FRAGMENT; selectionSet: any }
-  ? getSelection<Node['selectionSet']['selections'], PossibleType, Type, Introspection, Fragments>
+  ? getPossibleTypeSelectionRec<
+      Node['selectionSet']['selections'],
+      PossibleType,
+      Type,
+      Introspection,
+      Fragments
+    >
   : Node extends { kind: Kind.FRAGMENT_SPREAD; name: any }
     ? Node['name']['value'] extends keyof Fragments
       ? Fragments[Node['name']['value']] extends { [$tada.ref]: any }
         ? Fragments[Node['name']['value']][$tada.ref]
-        : getSelection<
+        : getPossibleTypeSelectionRec<
             Fragments[Node['name']['value']]['selectionSet']['selections'],
             PossibleType,
             Type,
@@ -112,27 +117,26 @@ type getTypenameOfType<Type> =
 
 type getSelection<
   Selections,
-  PossibleType,
   Type extends ObjectLikeType,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
 > = obj<
   Type extends { kind: 'UNION' | 'INTERFACE'; possibleTypes: any }
     ? objValues<{
-        [PossibleSubType in Type['possibleTypes'] & PossibleType]: _getPossibleTypeSelectionRec<
+        [PossibleType in Type['possibleTypes']]: getPossibleTypeSelectionRec<
           Selections,
-          PossibleSubType,
+          PossibleType,
           Type,
           Introspection,
           Fragments
         >;
       }>
     : Type extends { kind: 'OBJECT'; name: any }
-      ? _getPossibleTypeSelectionRec<Selections, Type['name'], Type, Introspection, Fragments>
+      ? getPossibleTypeSelectionRec<Selections, Type['name'], Type, Introspection, Fragments>
       : {}
 >;
 
-type _getPossibleTypeSelectionRec<
+type getPossibleTypeSelectionRec<
   Selections,
   PossibleType extends string,
   Type extends ObjectLikeType,
@@ -140,7 +144,7 @@ type _getPossibleTypeSelectionRec<
   Fragments extends { [name: string]: any },
   SelectionAcc = {},
 > = Selections extends [infer Node, ...infer Rest]
-  ? _getPossibleTypeSelectionRec<
+  ? getPossibleTypeSelectionRec<
       Rest,
       PossibleType,
       Type,
@@ -197,13 +201,7 @@ type getOperationSelectionType<
 }
   ? Introspection['types'][Introspection[Definition['operation']]] extends infer Type extends
       ObjectLikeType
-    ? getSelection<
-        Definition['selectionSet']['selections'],
-        unknown,
-        Type,
-        Introspection,
-        Fragments
-      >
+    ? getSelection<Definition['selectionSet']['selections'], Type, Introspection, Fragments>
     : {}
   : never;
 
@@ -218,13 +216,7 @@ type getFragmentSelectionType<
 }
   ? Introspection['types'][Definition['typeCondition']['name']['value']] extends infer Type extends
       ObjectLikeType
-    ? getSelection<
-        Definition['selectionSet']['selections'],
-        unknown,
-        Type,
-        Introspection,
-        Fragments
-      >
+    ? getSelection<Definition['selectionSet']['selections'], Type, Introspection, Fragments>
     : never
   : never;
 
