@@ -80,7 +80,7 @@ describe('getVariablesType', () => {
 });
 
 describe('getScalarType', () => {
-  it('resolves to never for invalid types', () => {
+  it('resolves to unknown for invalid types', () => {
     expectTypeOf<getScalarType<'invalid', schema>>().toEqualTypeOf<unknown>();
   });
 
@@ -90,5 +90,10 @@ describe('getScalarType', () => {
 
   it('gets the type of an enum', () => {
     expectTypeOf<getScalarType<'test', schema>>().toEqualTypeOf<'value' | 'more'>();
+  });
+
+  it('gets the type of an input object', () => {
+    type expected = { title: string; complete?: boolean | null };
+    expectTypeOf<getScalarType<'TodoPayload', schema>>().toEqualTypeOf<expected>();
   });
 });
