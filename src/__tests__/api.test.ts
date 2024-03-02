@@ -45,7 +45,7 @@ describe('graphql.persisted()', () => {
 
     expect(persisted).toMatchObject({
       definitions: [],
-      id: 'Test',
+      documentId: 'Test',
     });
   });
 });

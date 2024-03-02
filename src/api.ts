@@ -202,7 +202,7 @@ interface GraphQLTadaAPI<Schema extends IntrospectionLikeType, Config extends Ab
    * ```
    */
   persisted<Document extends DocumentNodeLike = never>(
-    id: string
+    documentId: string
   ): Document extends DocumentDecoration<infer Result, infer Variables>
     ? TadaPersistedDocumentNode<Result, Variables>
     : never;
@@ -272,11 +272,11 @@ function initGraphQLTada<const Setup extends AbstractSetupSchema>() {
     return value;
   };
 
-  graphql.persisted = function persisted(id: string): TadaPersistedDocumentNode {
+  graphql.persisted = function persisted(documentId: string): TadaPersistedDocumentNode {
     return {
       kind: Kind.DOCUMENT,
       definitions: [],
-      id,
+      documentId,
     };
   };
 
@@ -350,7 +350,7 @@ interface TadaPersistedDocumentNode<
 > extends DocumentNode,
     DocumentDecoration<Result, Variables> {
   definitions: readonly [];
-  id: string;
+  documentId: string;
 }
 
 /** A utility type returning the `Result` type of typed GraphQL documents.
