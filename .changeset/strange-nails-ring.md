@@ -2,4 +2,4 @@
 'gql.tada': patch
 ---
 
-fix(getInputObjectTypeRec): Correctly infer type of field with no default value (should be non-optional and non-nullable)
+Handle inference of input object fields with missing `defaultValue` properties in introspection.
