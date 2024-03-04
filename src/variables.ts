@@ -13,30 +13,34 @@ type getInputObjectTypeRec<
       Introspection,
       (InputField extends { name: any; type: any }
         ? InputField extends { defaultValue?: undefined | null; type: { kind: 'NON_NULL' } }
-          ? { [Name in InputField['name']]: unwrapType<InputField['type'], Introspection> }
-          : { [Name in InputField['name']]?: unwrapType<InputField['type'], Introspection> | null }
+          ? { [Name in InputField['name']]: unwrapTypeRec<InputField['type'], Introspection, true> }
+          : {
+              [Name in InputField['name']]?: unwrapTypeRec<
+                InputField['type'],
+                Introspection,
+                true
+              > | null;
+            }
         : {}) &
         InputObject
     >
   : InputObject;
 
-type _unwrapTypeRec<TypeRef, Introspection extends IntrospectionLikeType> = TypeRef extends {
-  kind: 'NON_NULL';
-  ofType: any;
-}
-  ? _unwrapTypeRec<TypeRef['ofType'], Introspection>
+type unwrapTypeRec<
+  TypeRef,
+  Introspection extends IntrospectionLikeType,
+  IsOptional,
+> = TypeRef extends { kind: 'NON_NULL'; ofType: any }
+  ? unwrapTypeRec<TypeRef['ofType'], Introspection, false>
   : TypeRef extends { kind: 'LIST'; ofType: any }
-    ? Array<unwrapType<TypeRef['ofType'], Introspection>>
+    ? IsOptional extends false
+      ? Array<unwrapTypeRec<TypeRef['ofType'], Introspection, true>>
+      : null | Array<unwrapTypeRec<TypeRef['ofType'], Introspection, true>>
     : TypeRef extends { name: any }
-      ? _getScalarType<TypeRef['name'], Introspection>
+      ? IsOptional extends false
+        ? _getScalarType<TypeRef['name'], Introspection>
+        : null | _getScalarType<TypeRef['name'], Introspection>
       : unknown;
-
-type unwrapType<Type, Introspection extends IntrospectionLikeType> = Type extends {
-  kind: 'NON_NULL';
-  ofType: any;
-}
-  ? _unwrapTypeRec<Type['ofType'], Introspection>
-  : null | _unwrapTypeRec<Type, Introspection>;
 
 type _unwrapTypeRefRec<Type, Introspection extends IntrospectionLikeType> = Type extends {
   kind: Kind.NON_NULL_TYPE;
