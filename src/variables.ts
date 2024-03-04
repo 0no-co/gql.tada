@@ -42,23 +42,21 @@ type unwrapTypeRec<
         : null | _getScalarType<TypeRef['name'], Introspection>
       : unknown;
 
-type _unwrapTypeRefRec<Type, Introspection extends IntrospectionLikeType> = Type extends {
-  kind: Kind.NON_NULL_TYPE;
-  type: any;
-}
-  ? _unwrapTypeRefRec<Type['type'], Introspection>
+type unwrapTypeRefRec<
+  Type,
+  Introspection extends IntrospectionLikeType,
+  IsOptional,
+> = Type extends { kind: Kind.NON_NULL_TYPE; type: any }
+  ? unwrapTypeRefRec<Type['type'], Introspection, false>
   : Type extends { kind: Kind.LIST_TYPE; type: any }
-    ? Array<unwrapTypeRef<Type['type'], Introspection>>
+    ? IsOptional extends false
+      ? Array<unwrapTypeRefRec<Type['type'], Introspection, true>>
+      : null | Array<unwrapTypeRefRec<Type['type'], Introspection, true>>
     : Type extends { kind: Kind.NAMED_TYPE; name: any }
-      ? _getScalarType<Type['name']['value'], Introspection>
+      ? IsOptional extends false
+        ? _getScalarType<Type['name']['value'], Introspection>
+        : null | _getScalarType<Type['name']['value'], Introspection>
       : unknown;
-
-type unwrapTypeRef<Type, Introspection extends IntrospectionLikeType> = Type extends {
-  kind: Kind.NON_NULL_TYPE;
-  type: any;
-}
-  ? _unwrapTypeRefRec<Type['type'], Introspection>
-  : null | _unwrapTypeRefRec<Type, Introspection>;
 
 type _getVariablesRec<
   Variables,
@@ -71,15 +69,17 @@ type _getVariablesRec<
       (Variable extends { kind: Kind.VARIABLE_DEFINITION; variable: any; type: any }
         ? Variable extends { defaultValue: undefined; type: { kind: Kind.NON_NULL_TYPE } }
           ? {
-              [Name in Variable['variable']['name']['value']]: unwrapTypeRef<
+              [Name in Variable['variable']['name']['value']]: unwrapTypeRefRec<
                 Variable['type'],
-                Introspection
+                Introspection,
+                true
               >;
             }
           : {
-              [Name in Variable['variable']['name']['value']]?: unwrapTypeRef<
+              [Name in Variable['variable']['name']['value']]?: unwrapTypeRefRec<
                 Variable['type'],
-                Introspection
+                Introspection,
+                true
               >;
             }
         : {}) &
