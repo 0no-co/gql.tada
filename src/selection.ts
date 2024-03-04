@@ -12,48 +12,52 @@ type ObjectLikeType = {
   fields: { [key: string]: any };
 };
 
-type _unwrapTypeRec<
+type unwrapTypeRec<
   Type,
   SelectionSet,
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any },
+  IsOptional,
 > = Type extends { readonly kind: 'NON_NULL'; readonly ofType: any }
-  ? _unwrapTypeRec<Type['ofType'], SelectionSet, Introspection, Fragments>
+  ? unwrapTypeRec<
+      Type['ofType'],
+      SelectionSet,
+      Introspection,
+      Fragments,
+      IsOptional extends void ? false : IsOptional
+    >
   : Type extends { readonly kind: 'LIST'; readonly ofType: any }
-    ? Array<unwrapType<Type['ofType'], SelectionSet, Introspection, Fragments>>
+    ? IsOptional extends false
+      ? Array<unwrapTypeRec<Type['ofType'], SelectionSet, Introspection, Fragments, void>>
+      : null | Array<unwrapTypeRec<Type['ofType'], SelectionSet, Introspection, Fragments, void>>
     : Type extends { readonly name: string }
       ? Introspection['types'][Type['name']] extends ObjectLikeType
         ? SelectionSet extends { kind: Kind.SELECTION_SET; selections: any }
-          ? getSelection<
-              SelectionSet['selections'],
-              Introspection['types'][Type['name']],
-              Introspection,
-              Fragments
-            >
+          ? IsOptional extends false
+            ? getSelection<
+                SelectionSet['selections'],
+                Introspection['types'][Type['name']],
+                Introspection,
+                Fragments
+              >
+            : null | getSelection<
+                SelectionSet['selections'],
+                Introspection['types'][Type['name']],
+                Introspection,
+                Fragments
+              >
           : unknown
-        : Introspection['types'][Type['name']]['type']
+        : IsOptional extends false
+          ? Introspection['types'][Type['name']]['type']
+          : null | Introspection['types'][Type['name']]['type']
       : unknown;
-
-type unwrapType<
-  Type,
-  SelectionSet,
-  Introspection extends IntrospectionLikeType,
-  Fragments extends { [name: string]: any },
-  TypeDirective = void,
-> = Type extends { readonly kind: 'NON_NULL'; readonly ofType: any }
-  ? TypeDirective extends 'optional'
-    ? null | _unwrapTypeRec<Type['ofType'], SelectionSet, Introspection, Fragments>
-    : _unwrapTypeRec<Type['ofType'], SelectionSet, Introspection, Fragments>
-  : TypeDirective extends 'required'
-    ? _unwrapTypeRec<Type, SelectionSet, Introspection, Fragments>
-    : null | _unwrapTypeRec<Type, SelectionSet, Introspection, Fragments>;
 
 type getTypeDirective<Node> = Node extends { directives: any[] }
   ? Node['directives'][number]['name']['value'] & ('required' | '_required') extends never
     ? Node['directives'][number]['name']['value'] & ('optional' | '_optional') extends never
       ? void
-      : 'optional'
-    : 'required'
+      : true
+    : false
   : void;
 
 type isOptional<Node> = Node extends { directives: any[] }
@@ -174,7 +178,7 @@ type getPossibleTypeSelectionRec<
             ? {
                 [Prop in getFieldAlias<Node>]?: Node['name']['value'] extends '__typename'
                   ? PossibleType
-                  : unwrapType<
+                  : unwrapTypeRec<
                       Type['fields'][Node['name']['value']]['type'],
                       Node['selectionSet'],
                       Introspection,
@@ -185,7 +189,7 @@ type getPossibleTypeSelectionRec<
             : {
                 [Prop in getFieldAlias<Node>]: Node['name']['value'] extends '__typename'
                   ? PossibleType
-                  : unwrapType<
+                  : unwrapTypeRec<
                       Type['fields'][Node['name']['value']]['type'],
                       Node['selectionSet'],
                       Introspection,

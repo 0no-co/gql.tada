@@ -13,48 +13,50 @@ type getInputObjectTypeRec<
       Introspection,
       (InputField extends { name: any; type: any }
         ? InputField extends { defaultValue?: undefined | null; type: { kind: 'NON_NULL' } }
-          ? { [Name in InputField['name']]: unwrapType<InputField['type'], Introspection> }
-          : { [Name in InputField['name']]?: unwrapType<InputField['type'], Introspection> | null }
+          ? { [Name in InputField['name']]: unwrapTypeRec<InputField['type'], Introspection, true> }
+          : {
+              [Name in InputField['name']]?: unwrapTypeRec<
+                InputField['type'],
+                Introspection,
+                true
+              > | null;
+            }
         : {}) &
         InputObject
     >
   : InputObject;
 
-type _unwrapTypeRec<TypeRef, Introspection extends IntrospectionLikeType> = TypeRef extends {
-  kind: 'NON_NULL';
-  ofType: any;
-}
-  ? _unwrapTypeRec<TypeRef['ofType'], Introspection>
+type unwrapTypeRec<
+  TypeRef,
+  Introspection extends IntrospectionLikeType,
+  IsOptional,
+> = TypeRef extends { kind: 'NON_NULL'; ofType: any }
+  ? unwrapTypeRec<TypeRef['ofType'], Introspection, false>
   : TypeRef extends { kind: 'LIST'; ofType: any }
-    ? Array<unwrapType<TypeRef['ofType'], Introspection>>
+    ? IsOptional extends false
+      ? Array<unwrapTypeRec<TypeRef['ofType'], Introspection, true>>
+      : null | Array<unwrapTypeRec<TypeRef['ofType'], Introspection, true>>
     : TypeRef extends { name: any }
-      ? _getScalarType<TypeRef['name'], Introspection>
+      ? IsOptional extends false
+        ? _getScalarType<TypeRef['name'], Introspection>
+        : null | _getScalarType<TypeRef['name'], Introspection>
       : unknown;
 
-type unwrapType<Type, Introspection extends IntrospectionLikeType> = Type extends {
-  kind: 'NON_NULL';
-  ofType: any;
-}
-  ? _unwrapTypeRec<Type['ofType'], Introspection>
-  : null | _unwrapTypeRec<Type, Introspection>;
-
-type _unwrapTypeRefRec<Type, Introspection extends IntrospectionLikeType> = Type extends {
-  kind: Kind.NON_NULL_TYPE;
-  type: any;
-}
-  ? _unwrapTypeRefRec<Type['type'], Introspection>
+type unwrapTypeRefRec<
+  Type,
+  Introspection extends IntrospectionLikeType,
+  IsOptional,
+> = Type extends { kind: Kind.NON_NULL_TYPE; type: any }
+  ? unwrapTypeRefRec<Type['type'], Introspection, false>
   : Type extends { kind: Kind.LIST_TYPE; type: any }
-    ? Array<unwrapTypeRef<Type['type'], Introspection>>
+    ? IsOptional extends false
+      ? Array<unwrapTypeRefRec<Type['type'], Introspection, true>>
+      : null | Array<unwrapTypeRefRec<Type['type'], Introspection, true>>
     : Type extends { kind: Kind.NAMED_TYPE; name: any }
-      ? _getScalarType<Type['name']['value'], Introspection>
+      ? IsOptional extends false
+        ? _getScalarType<Type['name']['value'], Introspection>
+        : null | _getScalarType<Type['name']['value'], Introspection>
       : unknown;
-
-type unwrapTypeRef<Type, Introspection extends IntrospectionLikeType> = Type extends {
-  kind: Kind.NON_NULL_TYPE;
-  type: any;
-}
-  ? _unwrapTypeRefRec<Type['type'], Introspection>
-  : null | _unwrapTypeRefRec<Type, Introspection>;
 
 type _getVariablesRec<
   Variables,
@@ -67,15 +69,17 @@ type _getVariablesRec<
       (Variable extends { kind: Kind.VARIABLE_DEFINITION; variable: any; type: any }
         ? Variable extends { defaultValue: undefined; type: { kind: Kind.NON_NULL_TYPE } }
           ? {
-              [Name in Variable['variable']['name']['value']]: unwrapTypeRef<
+              [Name in Variable['variable']['name']['value']]: unwrapTypeRefRec<
                 Variable['type'],
-                Introspection
+                Introspection,
+                true
               >;
             }
           : {
-              [Name in Variable['variable']['name']['value']]?: unwrapTypeRef<
+              [Name in Variable['variable']['name']['value']]?: unwrapTypeRefRec<
                 Variable['type'],
-                Introspection
+                Introspection,
+                true
               >;
             }
         : {}) &
