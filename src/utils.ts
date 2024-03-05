@@ -14,18 +14,7 @@ export type matchOr<Constraint, T, Fallback> = Constraint extends T
  * This is typically used to make a TypeScript type appear as a flat object,
  * both in terms of type checking and for type hints and the tsserver output.
  */
-export type obj<T> = T extends { [key: string | number]: any }
-  ? T extends infer U
-    ? { [K in keyof U]: U[K] }
-    : never
-  : never;
-
-/** Retrieves all non-nullish value types of an object dictionary. */
-export type objValues<T> = T[keyof T] extends infer U
-  ? U extends null | undefined | never | void
-    ? never
-    : U
-  : never;
+export type obj<T> = T extends { [key: string | number]: any } ? { [K in keyof T]: T[K] } : never;
 
 /** Marks all properties as writable */
 export type writable<T> = { -readonly [K in keyof T]: T[K] };
