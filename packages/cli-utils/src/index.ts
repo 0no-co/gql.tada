@@ -53,7 +53,7 @@ function hasGraphQLSP(tsconfig: TsConfigJson): boolean {
 
 async function main() {
   prog
-    .command('generate')
+    .command('generate-output')
     .describe(
       'Generate the gql.tada types file, this will look for your "tsconfig.json" and use the "@0no-co/graphqlsp" configuration to generate the file.'
     )
