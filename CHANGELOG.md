@@ -1,5 +1,39 @@
 # gql.tada
 
+## 1.3.0
+
+### Minor Changes
+
+- Add CLI entrypoint `gql-tada` capable of generating the types file without the LSP running
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#58](https://github.com/0no-co/gql.tada/pull/58))
+- Add `graphql.persisted()` to create an API for persisted documents that omits a query’s definitions from the output bundle
+  Submitted by [@kitten](https://github.com/kitten) (See [#98](https://github.com/0no-co/gql.tada/pull/98))
+
+### Patch Changes
+
+- Allow `graphql.scalar` to resolve types for input objects
+  Submitted by [@kitten](https://github.com/kitten) (See [#97](https://github.com/0no-co/gql.tada/pull/97))
+- Address performance cliff for `getDocumentNode` inference and object-flattening utilities
+  Submitted by [@kitten](https://github.com/kitten) (See [#107](https://github.com/0no-co/gql.tada/pull/107))
+- Refactor type unwrapping for `NON_NULL` field types (with `@_optional` and `@_required`), input types, and variable types
+  Submitted by [@kitten](https://github.com/kitten) (See [#104](https://github.com/0no-co/gql.tada/pull/104))
+- ⚠️ Fix `$tada` not being exported, which can cause projects with `isolatedModules: true` set from building
+  Submitted by [@kitten](https://github.com/kitten) (See [#99](https://github.com/0no-co/gql.tada/pull/99))
+- ⚠️ Fix schema pathname resolution in CLI
+  Submitted by [@wyattades](https://github.com/wyattades) (See [#82](https://github.com/0no-co/gql.tada/pull/82))
+- Add `disableMasking` flag to allow fragment masking to be disabled. When this is set to `true` on the `setupSchema` interface, fragments won’t be masked, which imitates the behaviour you’d see when adding `@_unmask` to every single one of your fragments. This is currently considered a preview feature
+  Submitted by [@kitten](https://github.com/kitten) (See [#69](https://github.com/0no-co/gql.tada/pull/69))
+- Keep the possible types that are iterated through narrow through repeated abstract type fragment spreads, and provide an optional `__typename?: PossibleType` field by default so the type checker has an exact property to merge types on
+  Submitted by [@kitten](https://github.com/kitten) (See [#102](https://github.com/0no-co/gql.tada/pull/102))
+- Handle inference of input object fields with missing `defaultValue` properties in introspection
+  Submitted by [@llllvvuu](https://github.com/llllvvuu) (See [#101](https://github.com/0no-co/gql.tada/pull/101))
+- Add missing support for input object fields with default values. Previously, input object fields with default values were still marked as required in variables
+  Submitted by [@kitten](https://github.com/kitten) (See [#73](https://github.com/0no-co/gql.tada/pull/73))
+- Refactor several internal utility types
+  Submitted by [@kitten](https://github.com/kitten) (See [#68](https://github.com/0no-co/gql.tada/pull/68))
+- Updated dependencies (See [#58](https://github.com/0no-co/gql.tada/pull/58))
+  - @gql.tada/cli-utils@0.1.0
+
 ## 1.2.1
 
 ### Patch Changes
