@@ -13,9 +13,7 @@ type skipIgnored<In> = In extends `#${infer _}\n${infer In}`
   ? skipIgnored<In>
   : In extends `${' ' | '\n' | '\t' | '\r' | ',' | '\ufeff'}${infer In}`
     ? skipIgnored<In>
-    : In extends string
-      ? In
-      : never;
+    : In;
 
 type skipDigits<In> = In extends `${digit}${infer In}` ? skipDigits<In> : In;
 type skipInt<In> = In extends `${'-'}${digit}${infer In}`
