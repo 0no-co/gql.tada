@@ -302,15 +302,13 @@ export type getDocumentNode<
   Introspection extends IntrospectionLikeType,
   Fragments extends { [name: string]: any } = {},
   isMaskingDisabled = false,
-> = getDocumentType<Document, Introspection, Fragments> extends infer Result
-  ? Result extends never
-    ? never
-    : TadaDocumentNode<
-        Result,
-        getVariablesType<Document, Introspection>,
-        decorateFragmentDef<Document, isMaskingDisabled>
-      >
-  : never;
+> = getDocumentType<Document, Introspection, Fragments> extends never
+  ? never
+  : TadaDocumentNode<
+      getDocumentType<Document, Introspection, Fragments>,
+      getVariablesType<Document, Introspection>,
+      decorateFragmentDef<Document, isMaskingDisabled>
+    >;
 
 /** A GraphQL `DocumentNode` with attached types for results and variables.
  *
