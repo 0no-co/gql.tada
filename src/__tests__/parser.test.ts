@@ -12,6 +12,7 @@ testTypeHost('parses kitchen sink query (%o)', (options) => {
     ...ts.readVirtualModule('@0no-co/graphql.web'),
     'kitchensinkQuery.ts': ts.readFileFromRoot('src/__tests__/fixtures/kitchensinkQuery.ts'),
     'parser.ts': ts.readFileFromRoot('src/parser.ts'),
+    'tokenizer.ts': ts.readFileFromRoot('src/tokenizer.ts'),
     'index.ts': `
       import { expectTypeOf } from 'expect-type';
       import { kitchensinkQuery, kitchensinkDocument } from './kitchensinkQuery';

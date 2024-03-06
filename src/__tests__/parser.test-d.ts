@@ -1,7 +1,9 @@
 import { describe, it, expectTypeOf } from 'vitest';
 import type { Kind, OperationTypeNode, DocumentNode } from '@0no-co/graphql.web';
+import type { Token, tokenize } from '../tokenizer';
 
 import type {
+  _match,
   parseDocument,
   takeValue,
   takeType,
@@ -17,7 +19,7 @@ import type {
 
 describe('takeValue', () => {
   it('parses variable inline values', () => {
-    type expected = [
+    type expected = _match<
       {
         kind: Kind.OBJECT;
         fields: [
@@ -54,16 +56,17 @@ describe('takeValue', () => {
           },
         ];
       },
-      '',
-    ];
+      []
+    >;
 
-    expectTypeOf<takeValue<'{ a: { b: [ $var ] } }', false>>().toEqualTypeOf<expected>();
+    type actual = takeValue<tokenize<'{ a: { b: [ $var ] } }'>, false>;
+    expectTypeOf<actual>().toEqualTypeOf<expected>();
   });
 });
 
 describe('takeVarDefinitions', () => {
   it('parses single variable definition', () => {
-    type expected = [
+    type expected = _match<
       [
         {
           kind: Kind.VARIABLE_DEFINITION;
@@ -85,14 +88,15 @@ describe('takeVarDefinitions', () => {
           directives: [];
         },
       ],
-      '',
-    ];
+      []
+    >;
 
-    expectTypeOf<takeVarDefinitions<'($x: A)'>>().toEqualTypeOf<expected>();
+    type actual = takeVarDefinitions<tokenize<'($x: A)'>>;
+    expectTypeOf<actual>().toEqualTypeOf<expected>();
   });
 
   it('parses multiple variable definitions', () => {
-    type expected = [
+    type expected = _match<
       [
         {
           kind: Kind.VARIABLE_DEFINITION;
@@ -133,14 +137,15 @@ describe('takeVarDefinitions', () => {
           directives: [];
         },
       ],
-      '',
-    ];
+      []
+    >;
 
-    expectTypeOf<takeVarDefinitions<'($x: A, $y: B)'>>().toEqualTypeOf<expected>();
+    type actual = takeVarDefinitions<tokenize<'($x: A, $y: B)'>>;
+    expectTypeOf<actual>().toEqualTypeOf<expected>();
   });
 
   it('parses constant default values', () => {
-    type expected = [
+    type expected = _match<
       {
         kind: Kind.VARIABLE_DEFINITION;
         variable: {
@@ -164,15 +169,15 @@ describe('takeVarDefinitions', () => {
         };
         directives: [];
       },
-      '',
-    ];
+      []
+    >;
 
-    expectTypeOf<takeVarDefinition<'$x: Complex = "42"'>>().toEqualTypeOf<expected>();
-    expectTypeOf<takeVarDefinition<'$x: Complex = $var'>>().toEqualTypeOf<void>();
+    expectTypeOf<takeVarDefinition<tokenize<'$x: Complex = "42"'>>>().toEqualTypeOf<expected>();
+    expectTypeOf<takeVarDefinition<tokenize<'$x: Complex = $var'>>>().toEqualTypeOf<void>();
   });
 
   it('parses variable definition directives', () => {
-    type expected = [
+    type expected = _match<
       {
         kind: Kind.VARIABLE_DEFINITION;
         variable: {
@@ -204,16 +209,17 @@ describe('takeVarDefinitions', () => {
           },
         ];
       },
-      '',
-    ];
+      []
+    >;
 
-    expectTypeOf<takeVarDefinition<'$x: Boolean = false @bar'>>().toEqualTypeOf<expected>();
+    type actual = takeVarDefinition<tokenize<'$x: Boolean = false @bar'>>;
+    expectTypeOf<actual>().toEqualTypeOf<expected>();
   });
 });
 
 describe('takeSelectionSet', () => {
   it('does not accept fragment spread of "on"', () => {
-    type expected = [
+    type expected = _match<
       {
         kind: Kind.SELECTION_SET;
         selections: [
@@ -227,17 +233,17 @@ describe('takeSelectionSet', () => {
           },
         ];
       },
-      '',
-    ];
+      []
+    >;
 
-    expectTypeOf<takeSelectionSet<'{ ...On }'>>().toEqualTypeOf<expected>();
-    expectTypeOf<takeSelectionSet<'{ ...on }'>>().toEqualTypeOf<void>();
+    expectTypeOf<takeSelectionSet<tokenize<'{ ...On }'>>>().toEqualTypeOf<expected>();
+    expectTypeOf<takeSelectionSet<tokenize<'{ ...on }'>>>().toEqualTypeOf<void>();
   });
 });
 
 describe('takeOperationDefinition', () => {
   it('parses anonymous mutation operations', () => {
-    type expected = [
+    type expected = _match<
       {
         kind: Kind.OPERATION_DEFINITION;
         operation: OperationTypeNode.MUTATION;
@@ -261,14 +267,16 @@ describe('takeOperationDefinition', () => {
           ];
         };
       },
-      '',
-    ];
+      []
+    >;
 
-    expectTypeOf<takeOperationDefinition<'mutation { mutationField }'>>().toEqualTypeOf<expected>();
+    expectTypeOf<
+      takeOperationDefinition<tokenize<'mutation { mutationField }'>>
+    >().toEqualTypeOf<expected>();
   });
 
   it('parses named mutation operations', () => {
-    type expected = [
+    type expected = _match<
       {
         kind: Kind.OPERATION_DEFINITION;
         operation: OperationTypeNode.MUTATION;
@@ -295,16 +303,16 @@ describe('takeOperationDefinition', () => {
           ];
         };
       },
-      '',
-    ];
+      []
+    >;
 
     expectTypeOf<
-      takeOperationDefinition<'mutation Foo { mutationField }'>
+      takeOperationDefinition<tokenize<'mutation Foo { mutationField }'>>
     >().toEqualTypeOf<expected>();
   });
 
   it('parses fragment definitions', () => {
-    type expected = [
+    type expected = _match<
       {
         kind: Kind.FRAGMENT_DEFINITION;
         name: {
@@ -336,22 +344,24 @@ describe('takeOperationDefinition', () => {
           ];
         };
       },
-      '',
-    ];
+      []
+    >;
 
-    expectTypeOf<takeFragmentDefinition<'fragment { test }'>>().toEqualTypeOf<void>();
-    expectTypeOf<takeFragmentDefinition<'fragment name { test }'>>().toEqualTypeOf<void>();
-    expectTypeOf<takeFragmentDefinition<'fragment name on name'>>().toEqualTypeOf<void>();
+    expectTypeOf<takeFragmentDefinition<tokenize<'fragment { test }'>>>().toEqualTypeOf<void>();
+    expectTypeOf<
+      takeFragmentDefinition<tokenize<'fragment name { test }'>>
+    >().toEqualTypeOf<void>();
+    expectTypeOf<takeFragmentDefinition<tokenize<'fragment name on name'>>>().toEqualTypeOf<void>();
 
     expectTypeOf<
-      takeFragmentDefinition<'fragment name on Type { field }'>
+      takeFragmentDefinition<tokenize<'fragment name on Type { field }'>>
     >().toEqualTypeOf<expected>();
   });
 });
 
 describe('takeField', () => {
   it('parses fields', () => {
-    type expected = [
+    type expected = _match<
       {
         kind: Kind.FIELD;
         arguments: [];
@@ -401,17 +411,19 @@ describe('takeField', () => {
           ];
         };
       },
-      '',
-    ];
+      []
+    >;
 
-    expectTypeOf<takeField<'field: '>>().toEqualTypeOf<void>();
-    expectTypeOf<takeField<'alias: field()'>>().toEqualTypeOf<void>();
+    expectTypeOf<takeField<tokenize<'field: '>>>().toEqualTypeOf<void>();
+    expectTypeOf<takeField<tokenize<'alias: field('>>>().toEqualTypeOf<void>();
 
-    expectTypeOf<takeField<'alias: field @test(arg: null) { child }'>>().toEqualTypeOf<expected>();
+    expectTypeOf<
+      takeField<tokenize<'alias: field @test(arg: null) { child }'>>
+    >().toEqualTypeOf<expected>();
   });
 
   it('parses arguments', () => {
-    type expected = [
+    type expected = _match<
       {
         kind: Kind.FIELD;
         alias: undefined;
@@ -444,21 +456,21 @@ describe('takeField', () => {
         directives: [];
         selectionSet: undefined;
       },
-      '',
-    ];
+      []
+    >;
 
-    expectTypeOf<takeField<'field()'>>().toEqualTypeOf<void>();
-    expectTypeOf<takeField<'field(name)'>>().toEqualTypeOf<void>();
-    expectTypeOf<takeField<'field(name:)'>>().toEqualTypeOf<void>();
-    expectTypeOf<takeField<'field(name: null'>>().toEqualTypeOf<void>();
+    expectTypeOf<takeField<tokenize<'field('>>>().toEqualTypeOf<void>();
+    expectTypeOf<takeField<tokenize<'field(name)'>>>().toEqualTypeOf<void>();
+    expectTypeOf<takeField<tokenize<'field(name:)'>>>().toEqualTypeOf<void>();
+    expectTypeOf<takeField<tokenize<'field(name: null'>>>().toEqualTypeOf<void>();
 
-    expectTypeOf<takeField<'field(a: null, b: null)'>>().toEqualTypeOf<expected>();
+    expectTypeOf<takeField<tokenize<'field(a: null, b: null)'>>>().toEqualTypeOf<expected>();
   });
 });
 
 describe('takeDirective', () => {
   it('parses directives', () => {
-    type expected = [
+    type expected = _match<
       {
         kind: Kind.DIRECTIVE;
         name: {
@@ -478,19 +490,19 @@ describe('takeDirective', () => {
           },
         ];
       },
-      '',
-    ];
+      []
+    >;
 
-    expectTypeOf<takeDirective<'@', false>>().toEqualTypeOf<void>();
-    expectTypeOf<takeDirective<'@(test: null)', false>>().toEqualTypeOf<void>();
+    expectTypeOf<takeDirective<tokenize<'@'>, false>>().toEqualTypeOf<void>();
+    expectTypeOf<takeDirective<tokenize<'@(test: null)'>, false>>().toEqualTypeOf<void>();
 
-    expectTypeOf<takeDirective<'@test(name: null)', false>>().toEqualTypeOf<expected>();
+    expectTypeOf<takeDirective<tokenize<'@test(name: null)'>, false>>().toEqualTypeOf<expected>();
   });
 });
 
 describe('takeFragmentSpread', () => {
   it('parses inline fragments', () => {
-    type expected = [
+    type expected = _match<
       {
         kind: Kind.INLINE_FRAGMENT;
         typeCondition: {
@@ -518,16 +530,16 @@ describe('takeFragmentSpread', () => {
           ];
         };
       },
-      '',
-    ];
+      []
+    >;
 
-    expectTypeOf<takeFragmentSpread<'... on Test'>>().toEqualTypeOf<void>();
-    expectTypeOf<takeFragmentSpread<'...'>>().toEqualTypeOf<void>();
-    expectTypeOf<takeFragmentSpread<'... on Test { field }'>>().toEqualTypeOf<expected>();
+    expectTypeOf<takeFragmentSpread<tokenize<'... on Test'>>>().toEqualTypeOf<void>();
+    expectTypeOf<takeFragmentSpread<tokenize<'...'>>>().toEqualTypeOf<void>();
+    expectTypeOf<takeFragmentSpread<tokenize<'... on Test { field }'>>>().toEqualTypeOf<expected>();
   });
 
   it('parses conditionless inline fragments', () => {
-    type expected = [
+    type expected = _match<
       {
         kind: Kind.INLINE_FRAGMENT;
         typeCondition: undefined;
@@ -549,36 +561,37 @@ describe('takeFragmentSpread', () => {
           ];
         };
       },
-      '',
-    ];
+      []
+    >;
 
-    expectTypeOf<takeFragmentSpread<'... on Test'>>().toEqualTypeOf<void>();
-    expectTypeOf<takeFragmentSpread<'...'>>().toEqualTypeOf<void>();
+    expectTypeOf<takeFragmentSpread<tokenize<'... on Test'>>>().toEqualTypeOf<void>();
+    expectTypeOf<takeFragmentSpread<tokenize<'...'>>>().toEqualTypeOf<void>();
 
-    expectTypeOf<takeFragmentSpread<'... { field }'>>().toEqualTypeOf<expected>();
+    expectTypeOf<takeFragmentSpread<tokenize<'... { field }'>>>().toEqualTypeOf<expected>();
   });
 });
 
 describe('takeValue', () => {
   it('parses basic values', () => {
-    expectTypeOf<takeValue<'', false>>().toEqualTypeOf<void>();
-    expectTypeOf<takeValue<'$', false>>().toEqualTypeOf<void>();
-    expectTypeOf<takeValue<':', false>>().toEqualTypeOf<void>();
+    expectTypeOf<takeValue<tokenize<''>, false>>().toEqualTypeOf<void>();
+    expectTypeOf<takeValue<tokenize<':'>, false>>().toEqualTypeOf<void>();
 
-    expectTypeOf<takeValue<'null', false>>().toEqualTypeOf<[{ kind: Kind.NULL }, '']>();
-    expectTypeOf<takeValue<'true', false>>().toEqualTypeOf<
-      [{ kind: Kind.BOOLEAN; value: boolean }, '']
+    expectTypeOf<takeValue<tokenize<'null'>, false>>().toEqualTypeOf<
+      _match<{ kind: Kind.NULL }, []>
     >();
-    expectTypeOf<takeValue<'false', false>>().toEqualTypeOf<
-      [{ kind: Kind.BOOLEAN; value: boolean }, '']
+    expectTypeOf<takeValue<tokenize<'true'>, false>>().toEqualTypeOf<
+      _match<{ kind: Kind.BOOLEAN; value: boolean }, []>
     >();
-    expectTypeOf<takeValue<'VAL', false>>().toEqualTypeOf<
-      [{ kind: Kind.ENUM; value: 'VAL' }, '']
+    expectTypeOf<takeValue<tokenize<'false'>, false>>().toEqualTypeOf<
+      _match<{ kind: Kind.BOOLEAN; value: boolean }, []>
+    >();
+    expectTypeOf<takeValue<tokenize<'VAL'>, false>>().toEqualTypeOf<
+      _match<{ kind: Kind.ENUM; value: 'VAL' }, []>
     >();
   });
 
   it('parses list values', () => {
-    type expected = [
+    type expected = _match<
       {
         kind: Kind.LIST;
         values: [
@@ -593,64 +606,73 @@ describe('takeValue', () => {
           },
         ];
       },
-      '',
-    ];
+      []
+    >;
 
-    expectTypeOf<takeValue<'[123 "abc"]', false>>().toEqualTypeOf<expected>();
+    type actual = takeValue<tokenize<'[123 "abc"]'>, false>;
+    expectTypeOf<actual>().toEqualTypeOf<expected>();
   });
 
   it('parses integers', () => {
-    type expected = [{ kind: Kind.INT; value: string }, ''];
+    type expected = _match<{ kind: Kind.INT; value: string }, []>;
 
-    expectTypeOf<takeValue<'-', false>>().toEqualTypeOf<void>();
+    expectTypeOf<takeValue<tokenize<'-'>, false>>().toEqualTypeOf<void>();
 
-    expectTypeOf<takeValue<'12', false>>().toEqualTypeOf<expected>();
-    expectTypeOf<takeValue<'-12', false>>().toEqualTypeOf<expected>();
+    expectTypeOf<takeValue<tokenize<'12'>, false>>().toEqualTypeOf<expected>();
+    expectTypeOf<takeValue<tokenize<'-12'>, false>>().toEqualTypeOf<expected>();
   });
 
   it('parses floats', () => {
-    type expected = [{ kind: Kind.FLOAT; value: string }, ''];
+    type expected = _match<{ kind: Kind.FLOAT; value: string }, []>;
 
-    expectTypeOf<takeValue<'-.0e', false>>().toEqualTypeOf<void>();
+    expectTypeOf<takeValue<tokenize<'-.0e'>, false>>().toEqualTypeOf<void>();
 
-    expectTypeOf<takeValue<'12e2', false>>().toEqualTypeOf<expected>();
-    expectTypeOf<takeValue<'0.2E3', false>>().toEqualTypeOf<expected>();
-    expectTypeOf<takeValue<'-1.2e+3', false>>().toEqualTypeOf<expected>();
+    expectTypeOf<takeValue<tokenize<'12e2'>, false>>().toEqualTypeOf<expected>();
+    expectTypeOf<takeValue<tokenize<'0.2E3'>, false>>().toEqualTypeOf<expected>();
+    expectTypeOf<takeValue<tokenize<'-1.2e+3'>, false>>().toEqualTypeOf<expected>();
   });
 
   it('parses strings', () => {
     type expected = { kind: Kind.STRING; value: string; block: false };
 
-    expectTypeOf<takeValue<'""', false>>().toEqualTypeOf<[expected, '']>();
-    expectTypeOf<takeValue<'"\\t\\t"', false>>().toEqualTypeOf<[expected, '']>();
-    expectTypeOf<takeValue<'" \\" "', false>>().toEqualTypeOf<[expected, '']>();
-    expectTypeOf<takeValue<'"x" "x"', false>>().toEqualTypeOf<[expected, ' "x"']>();
-    expectTypeOf<takeValue<'"" ""', false>>().toEqualTypeOf<[expected, ' ""']>();
-    expectTypeOf<takeValue<'" \\" " ""', false>>().toEqualTypeOf<[expected, ' ""']>();
+    expectTypeOf<takeValue<tokenize<'""'>, false>>().toEqualTypeOf<_match<expected, []>>();
+    expectTypeOf<takeValue<tokenize<'"\\t\\t"'>, false>>().toEqualTypeOf<_match<expected, []>>();
+    expectTypeOf<takeValue<tokenize<'" \\" "'>, false>>().toEqualTypeOf<_match<expected, []>>();
+    expectTypeOf<takeValue<tokenize<'"x" ""'>, false>>().toEqualTypeOf<
+      _match<expected, [Token.String]>
+    >();
+    expectTypeOf<takeValue<tokenize<'"" ""'>, false>>().toEqualTypeOf<
+      _match<expected, [Token.String]>
+    >();
+    expectTypeOf<takeValue<tokenize<'" \\" " ""'>, false>>().toEqualTypeOf<
+      _match<expected, [Token.String]>
+    >();
   });
 
   it('parses block strings', () => {
-    type expected = [{ kind: Kind.STRING; value: string; block: true }, ''];
+    type expected = _match<{ kind: Kind.STRING; value: string; block: true }, []>;
 
     const x = `""" 
       \\"""
     """` as const;
 
-    expectTypeOf<takeValue<'""""""', false>>().toEqualTypeOf<expected>();
-    expectTypeOf<takeValue<'"""\n"""', false>>().toEqualTypeOf<expected>();
-    expectTypeOf<takeValue<'""" \\""" """', false>>().toEqualTypeOf<expected>();
-    expectTypeOf<takeValue<typeof x, false>>().toEqualTypeOf<expected>();
+    expectTypeOf<takeValue<tokenize<'""""""'>, false>>().toEqualTypeOf<expected>();
+    expectTypeOf<takeValue<tokenize<'"""\n"""'>, false>>().toEqualTypeOf<expected>();
+    expectTypeOf<takeValue<tokenize<'""" \\""" """'>, false>>().toEqualTypeOf<expected>();
+    expectTypeOf<takeValue<tokenize<typeof x>, false>>().toEqualTypeOf<expected>();
   });
 
   it('parses objects', () => {
-    expectTypeOf<takeValue<'{}', false>>().toEqualTypeOf<[{ kind: Kind.OBJECT; fields: [] }, '']>();
+    expectTypeOf<takeValue<tokenize<'{}'>, false>>().toEqualTypeOf<
+      _match<{ kind: Kind.OBJECT; fields: [] }, []>
+    >();
 
-    expectTypeOf<takeValue<'{name}', false>>().toEqualTypeOf<void>();
-    expectTypeOf<takeValue<'{name:}', false>>().toEqualTypeOf<void>();
-    expectTypeOf<takeValue<'{name:null', false>>().toEqualTypeOf<void>();
+    expectTypeOf<takeValue<tokenize<'{name}'>, false>>().toEqualTypeOf<void>();
+    expectTypeOf<takeValue<tokenize<'{name:}'>, false>>().toEqualTypeOf<void>();
+    expectTypeOf<takeValue<tokenize<'{name:null'>, false>>().toEqualTypeOf<void>();
 
-    expectTypeOf<takeValue<'{name:null}', false>>().toEqualTypeOf<
-      [
+    expectTypeOf<takeValue<tokenize<'{name:null}'>, false>>().toEqualTypeOf<
+      _match<
         {
           kind: Kind.OBJECT;
           fields: [
@@ -666,12 +688,12 @@ describe('takeValue', () => {
             },
           ];
         },
-        '',
-      ]
+        []
+      >
     >();
 
-    expectTypeOf<takeValue<'{a:"a"}', false>>().toEqualTypeOf<
-      [
+    expectTypeOf<takeValue<tokenize<'{a:"a"}'>, false>>().toEqualTypeOf<
+      _match<
         {
           kind: Kind.OBJECT;
           fields: [
@@ -689,12 +711,12 @@ describe('takeValue', () => {
             },
           ];
         },
-        '',
-      ]
+        []
+      >
     >();
 
-    expectTypeOf<takeValue<'{a:"a"\nb: """\n\\"""\n"""}', false>>().toEqualTypeOf<
-      [
+    expectTypeOf<takeValue<tokenize<'{a:"a"\nb: """\n\\"""\n"""}'>, false>>().toEqualTypeOf<
+      _match<
         {
           kind: Kind.OBJECT;
           fields: [
@@ -724,31 +746,33 @@ describe('takeValue', () => {
             },
           ];
         },
-        '',
-      ]
+        []
+      >
     >();
   });
 
   it('parses lists', () => {
-    expectTypeOf<takeValue<'[]', false>>().toEqualTypeOf<[{ kind: Kind.LIST; values: [] }, '']>();
+    expectTypeOf<takeValue<tokenize<'[]'>, false>>().toEqualTypeOf<
+      _match<{ kind: Kind.LIST; values: [] }, []>
+    >();
 
-    expectTypeOf<takeValue<'[', false>>().toEqualTypeOf<void>();
-    expectTypeOf<takeValue<'[null', false>>().toEqualTypeOf<void>();
+    expectTypeOf<takeValue<tokenize<'['>, false>>().toEqualTypeOf<void>();
+    expectTypeOf<takeValue<tokenize<'[null'>, false>>().toEqualTypeOf<void>();
 
-    expectTypeOf<takeValue<'[null]', false>>().toEqualTypeOf<
-      [
+    expectTypeOf<takeValue<tokenize<'[null]'>, false>>().toEqualTypeOf<
+      _match<
         {
           kind: Kind.LIST;
           values: [{ kind: Kind.NULL }];
         },
-        '',
-      ]
+        []
+      >
     >();
   });
 
   it('parses variables', () => {
-    expectTypeOf<takeValue<'$var', false>>().toEqualTypeOf<
-      [
+    expectTypeOf<takeValue<tokenize<'$var'>, false>>().toEqualTypeOf<
+      _match<
         {
           kind: Kind.VARIABLE;
           name: {
@@ -756,22 +780,22 @@ describe('takeValue', () => {
             value: 'var';
           };
         },
-        '',
-      ]
+        []
+      >
     >();
 
-    expectTypeOf<takeValue<'$var', true>>().toEqualTypeOf<void>();
+    expectTypeOf<takeValue<tokenize<'$var'>, true>>().toEqualTypeOf<void>();
   });
 });
 
 describe('takeType', () => {
   it('parses basic types', () => {
-    expectTypeOf<takeType<''>>().toEqualTypeOf<void>();
-    expectTypeOf<takeType<'['>>().toEqualTypeOf<void>();
-    expectTypeOf<takeType<'!'>>().toEqualTypeOf<void>();
+    expectTypeOf<takeType<tokenize<''>>>().toEqualTypeOf<void>();
+    expectTypeOf<takeType<tokenize<'['>>>().toEqualTypeOf<void>();
+    expectTypeOf<takeType<tokenize<'!'>>>().toEqualTypeOf<void>();
 
-    expectTypeOf<takeType<'Type'>>().toEqualTypeOf<
-      [
+    expectTypeOf<takeType<tokenize<'Type'>>>().toEqualTypeOf<
+      _match<
         {
           kind: Kind.NAMED_TYPE;
           name: {
@@ -779,12 +803,12 @@ describe('takeType', () => {
             value: 'Type';
           };
         },
-        '',
-      ]
+        []
+      >
     >();
 
-    expectTypeOf<takeType<'Type!'>>().toEqualTypeOf<
-      [
+    expectTypeOf<takeType<tokenize<'Type!'>>>().toEqualTypeOf<
+      _match<
         {
           kind: Kind.NON_NULL_TYPE;
           type: {
@@ -795,12 +819,12 @@ describe('takeType', () => {
             };
           };
         },
-        '',
-      ]
+        []
+      >
     >();
 
-    expectTypeOf<takeType<'[Type!]'>>().toEqualTypeOf<
-      [
+    expectTypeOf<takeType<tokenize<'[Type!]'>>>().toEqualTypeOf<
+      _match<
         {
           kind: Kind.LIST_TYPE;
           type: {
@@ -814,12 +838,12 @@ describe('takeType', () => {
             };
           };
         },
-        '',
-      ]
+        []
+      >
     >();
 
-    expectTypeOf<takeType<'[Type!]!'>>().toEqualTypeOf<
-      [
+    expectTypeOf<takeType<tokenize<'[Type!]!'>>>().toEqualTypeOf<
+      _match<
         {
           kind: Kind.NON_NULL_TYPE;
           type: {
@@ -836,8 +860,8 @@ describe('takeType', () => {
             };
           };
         },
-        '',
-      ]
+        []
+      >
     >();
   });
 });
