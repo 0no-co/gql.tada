@@ -64,43 +64,37 @@ type takeNameLiteralRec<PrevMatch extends string, In> = In extends `${infer Matc
     : [Match, In]
   : [PrevMatch, In];
 
-export interface AnonymousTokenNode<
-  Kind extends Exclude<Token, Token.Name> = Exclude<Token, Token.Name>,
-> {
-  kind: Kind;
-}
-
 export interface NameTokenNode<Name extends string = string> {
   kind: Token.Name;
   name: Name;
 }
 
-export type TokenNode = AnonymousTokenNode | NameTokenNode;
+export type TokenNode = Token | NameTokenNode;
 
 // prettier-ignore
 type tokenizeRec<In extends string, Out extends TokenNode[]> =
-  In extends `...${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, AnonymousTokenNode<Token.Spread>]>
-  : In extends `!${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, AnonymousTokenNode<Token.Exclam>]>
-  : In extends `=${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, AnonymousTokenNode<Token.Equal>]>
-  : In extends `:${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, AnonymousTokenNode<Token.Colon>]>
-  : In extends `$${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, AnonymousTokenNode<Token.Dollar>]>
-  : In extends `@${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, AnonymousTokenNode<Token.AtSign>]>
-  : In extends `{${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, AnonymousTokenNode<Token.BraceOpen>]>
-  : In extends `}${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, AnonymousTokenNode<Token.BraceClose>]>
-  : In extends `(${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, AnonymousTokenNode<Token.ParenOpen>]>
-  : In extends `)${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, AnonymousTokenNode<Token.ParenClose>]>
-  : In extends `[${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, AnonymousTokenNode<Token.BracketOpen>]>
-  : In extends `]${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, AnonymousTokenNode<Token.BracketClose>]>
-  : In extends `"""${infer In}` ? tokenizeRec<skipBlockString<In>, [...Out, AnonymousTokenNode<Token.BlockString>]>
-  : In extends `"${infer In}` ? tokenizeRec<skipString<In>, [...Out, AnonymousTokenNode<Token.String>]>
+  In extends `...${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, Token.Spread]>
+  : In extends `!${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, Token.Exclam]>
+  : In extends `=${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, Token.Equal]>
+  : In extends `:${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, Token.Colon]>
+  : In extends `$${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, Token.Dollar]>
+  : In extends `@${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, Token.AtSign]>
+  : In extends `{${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, Token.BraceOpen]>
+  : In extends `}${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, Token.BraceClose]>
+  : In extends `(${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, Token.ParenOpen]>
+  : In extends `)${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, Token.ParenClose]>
+  : In extends `[${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, Token.BracketOpen]>
+  : In extends `]${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, Token.BracketClose]>
+  : In extends `"""${infer In}` ? tokenizeRec<skipBlockString<In>, [...Out, Token.BlockString]>
+  : In extends `"${infer In}` ? tokenizeRec<skipString<In>, [...Out, Token.String]>
   : In extends `-${digit}${infer In}` ?
     (skipFloat<skipDigits<In>> extends `${infer In}`
-      ? tokenizeRec<skipIgnored<In>, [...Out, AnonymousTokenNode<Token.Float>]>
-      : tokenizeRec<skipIgnored<skipDigits<In>>, [...Out, AnonymousTokenNode<Token.Integer>]>)
+      ? tokenizeRec<skipIgnored<In>, [...Out, Token.Float]>
+      : tokenizeRec<skipIgnored<skipDigits<In>>, [...Out, Token.Integer]>)
   : In extends `${digit}${infer In}` ?
     (skipFloat<skipDigits<In>> extends `${infer In}`
-      ? tokenizeRec<skipIgnored<In>, [...Out, AnonymousTokenNode<Token.Float>]>
-      : tokenizeRec<skipIgnored<In>, [...Out, AnonymousTokenNode<Token.Integer>]>)
+      ? tokenizeRec<skipIgnored<In>, [...Out, Token.Float]>
+      : tokenizeRec<skipIgnored<In>, [...Out, Token.Integer]>)
   : In extends `${infer Match}${infer In}` ?
     (Match extends letter | '_'
       ? takeNameLiteralRec<Match, In> extends [`${infer Match}`, infer In]
