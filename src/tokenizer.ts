@@ -61,7 +61,7 @@ type skipString<In> = In extends `${infer Hd}${'"'}${infer In}`
 type takeNameLiteralRec<PrevMatch extends string, In> = In extends `${infer Match}${infer Out}`
   ? Match extends letter | digit | '_'
     ? takeNameLiteralRec<`${PrevMatch}${Match}`, Out>
-    : [Match, In]
+    : [PrevMatch, In]
   : [PrevMatch, In];
 
 export interface NameTokenNode<Name extends string = string> {
@@ -95,12 +95,10 @@ type tokenizeRec<In extends string, Out extends TokenNode[]> =
     (skipFloat<skipDigits<In>> extends `${infer In}`
       ? tokenizeRec<skipIgnored<In>, [...Out, Token.Float]>
       : tokenizeRec<skipIgnored<In>, [...Out, Token.Integer]>)
-  : In extends `${infer Match}${infer In}` ?
-    (Match extends letter | '_'
-      ? takeNameLiteralRec<Match, In> extends [`${infer Match}`, infer In]
-        ? tokenizeRec<skipIgnored<In>, [...Out, NameTokenNode<Match>]>
-        : Out
+  : In extends `${letter | '_'}${string}` ?
+    (takeNameLiteralRec<'', In> extends [`${infer Match}`, infer In]
+      ? tokenizeRec<skipIgnored<In>, [...Out, NameTokenNode<Match>]>
       : Out)
   : Out;
 
-export type tokenize<In extends string> = tokenizeRec<skipIgnored<In>, []>;
+export type tokenize<In> = tokenizeRec<skipIgnored<In>, []>;

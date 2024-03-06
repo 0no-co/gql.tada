@@ -48,7 +48,7 @@ describe('tokenize', () => {
   });
 
   it('tokenizes names', () => {
-    type actual = tokenize<'test'>;
+    type actual = tokenize<'test x'>;
     type expected = [{ kind: Token.Name; name: 'test' }];
     expectTypeOf<actual>().toEqualTypeOf<expected>();
   });
