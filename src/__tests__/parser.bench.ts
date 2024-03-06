@@ -5,6 +5,7 @@ describe('Document', () => {
   (() => {
     const virtualHost = ts.createVirtualHost({
       ...ts.readVirtualModule('@0no-co/graphql.web'),
+      'tokenizer.ts': ts.readFileFromRoot('src/tokenizer.ts'),
       'parser.ts': ts.readFileFromRoot('src/parser.ts'),
       'index.ts': `
         import { parseDocument } from './parser';
@@ -27,6 +28,7 @@ describe('Document', () => {
     const virtualHost = ts.createVirtualHost({
       ...ts.readVirtualModule('@0no-co/graphql.web'),
       'kitchensinkQuery.ts': ts.readFileFromRoot('src/__tests__/fixtures/kitchensinkQuery.ts'),
+      'tokenizer.ts': ts.readFileFromRoot('src/tokenizer.ts'),
       'parser.ts': ts.readFileFromRoot('src/parser.ts'),
       'index.ts': `
         import { parseDocument } from './parser';
