@@ -3,14 +3,13 @@ import type { Token, tokenize } from '../tokenizer';
 
 describe('tokenize', () => {
   it('tokenizes symbols', () => {
-    type actual = tokenize<'... ! = : @ { } ( ) [ ]'>;
+    type actual = tokenize<'... ! = : { } ( ) [ ]'>;
 
     type expected = [
       Token.Spread,
       Token.Exclam,
       Token.Equal,
       Token.Colon,
-      Token.AtSign,
       Token.BraceOpen,
       Token.BraceClose,
       Token.ParenOpen,
@@ -55,6 +54,12 @@ describe('tokenize', () => {
   it('tokenizes variables', () => {
     type actual = tokenize<'$test $x'>;
     type expected = [{ kind: Token.Var; name: 'test' }, { kind: Token.Var; name: 'x' }];
+    expectTypeOf<actual>().toEqualTypeOf<expected>();
+  });
+
+  it('tokenizes directives', () => {
+    type actual = tokenize<'@test @x'>;
+    type expected = [{ kind: Token.Directive; name: 'test' }, { kind: Token.Directive; name: 'x' }];
     expectTypeOf<actual>().toEqualTypeOf<expected>();
   });
 });

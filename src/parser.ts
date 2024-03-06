@@ -100,13 +100,18 @@ export type takeArguments<In extends any[], Const extends boolean> = In extends 
   : _match<[], In>;
 
 export type takeDirective<In extends any[], Const extends boolean> = In extends [
-  Token.AtSign,
+  { kind: Token.Directive; name: infer DirectiveName },
   ...infer In,
 ]
-  ? takeName<In> extends _match<infer Name, infer In>
-    ? takeArguments<In, Const> extends _match<infer Arguments, infer In>
-      ? _match<{ kind: Kind.DIRECTIVE; name: Name; arguments: Arguments }, In>
-      : void
+  ? takeArguments<In, Const> extends _match<infer Arguments, infer In>
+    ? _match<
+        {
+          kind: Kind.DIRECTIVE;
+          name: { kind: Kind.NAME; value: DirectiveName };
+          arguments: Arguments;
+        },
+        In
+      >
     : void
   : void;
 

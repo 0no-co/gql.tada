@@ -493,9 +493,6 @@ describe('takeDirective', () => {
       []
     >;
 
-    expectTypeOf<takeDirective<tokenize<'@'>, false>>().toEqualTypeOf<void>();
-    expectTypeOf<takeDirective<tokenize<'@(test: null)'>, false>>().toEqualTypeOf<void>();
-
     expectTypeOf<takeDirective<tokenize<'@test(name: null)'>, false>>().toEqualTypeOf<expected>();
   });
 });

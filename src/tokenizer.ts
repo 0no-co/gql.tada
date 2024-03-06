@@ -1,11 +1,11 @@
 export const enum Token {
   Name,
   Var,
+  Directive,
   Spread,
   Exclam,
   Equal,
   Colon,
-  AtSign,
   BraceOpen,
   BraceClose,
   ParenOpen,
@@ -80,7 +80,12 @@ export interface NameTokenNode<Name extends string = string> {
   name: Name;
 }
 
-export type TokenNode = Token | NameTokenNode | VarTokenNode;
+export interface DirectiveTokenNode<Name extends string = string> {
+  kind: Token.Directive;
+  name: Name;
+}
+
+export type TokenNode = Token | NameTokenNode | VarTokenNode | DirectiveTokenNode;
 
 // prettier-ignore
 type tokenizeRec<In extends string, Out extends TokenNode[]> =
@@ -89,7 +94,6 @@ type tokenizeRec<In extends string, Out extends TokenNode[]> =
     : In extends `!${infer In}` ? tokenizeRec<In, [...Out, Token.Exclam]>
     : In extends `=${infer In}` ? tokenizeRec<In, [...Out, Token.Equal]>
     : In extends `:${infer In}` ? tokenizeRec<In, [...Out, Token.Colon]>
-    : In extends `@${infer In}` ? tokenizeRec<In, [...Out, Token.AtSign]>
     : In extends `{${infer In}` ? tokenizeRec<In, [...Out, Token.BraceOpen]>
     : In extends `}${infer In}` ? tokenizeRec<In, [...Out, Token.BraceClose]>
     : In extends `(${infer In}` ? tokenizeRec<In, [...Out, Token.ParenOpen]>
@@ -109,6 +113,10 @@ type tokenizeRec<In extends string, Out extends TokenNode[]> =
     : In extends `$${infer In}` ?
       (takeNameLiteralRec<'', In> extends _match<infer Match, infer In>
         ? tokenizeRec<In, [...Out, VarTokenNode<Match>]>
+        : Out)
+    : In extends `@${infer In}` ?
+      (takeNameLiteralRec<'', In> extends _match<infer Match, infer In>
+        ? tokenizeRec<In, [...Out, DirectiveTokenNode<Match>]>
         : Out)
     : In extends `${letter | '_'}${string}` ?
       (takeNameLiteralRec<'', In> extends _match<infer Match, infer In>
