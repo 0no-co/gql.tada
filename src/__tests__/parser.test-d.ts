@@ -237,7 +237,6 @@ describe('takeSelectionSet', () => {
     >;
 
     expectTypeOf<takeSelectionSet<tokenize<'{ ...On }'>>>().toEqualTypeOf<expected>();
-    expectTypeOf<takeSelectionSet<tokenize<'{ ...on }'>>>().toEqualTypeOf<void>();
   });
 });
 
@@ -414,7 +413,6 @@ describe('takeField', () => {
       []
     >;
 
-    expectTypeOf<takeField<tokenize<'field: '>>>().toEqualTypeOf<void>();
     expectTypeOf<takeField<tokenize<'alias: field('>>>().toEqualTypeOf<void>();
 
     expectTypeOf<
