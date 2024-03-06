@@ -1,5 +1,12 @@
 # gql.tada
 
+## 1.3.1
+
+### Patch Changes
+
+- Refactor internal GraphQL document parser to use a tokenizer phase, which further utilizes TypeScript’s tail recursion optimization. This should help to further improve type inference performance
+  Submitted by [@kitten](https://github.com/kitten) (See [#111](https://github.com/0no-co/gql.tada/pull/111))
+
 ## 1.3.0
 
 ### Minor Changes
