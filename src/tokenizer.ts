@@ -98,7 +98,7 @@ type tokenizeRec<In extends string, Out extends TokenNode[]> =
   : In extends `${digit}${infer In}` ?
     (skipFloat<skipDigits<In>> extends `${infer In}`
       ? tokenizeRec<skipIgnored<In>, [...Out, Token.Float]>
-      : tokenizeRec<skipIgnored<In>, [...Out, Token.Integer]>)
+      : tokenizeRec<skipIgnored<skipDigits<In>>, [...Out, Token.Integer]>)
   : In extends `$${infer In}` ?
     (takeNameLiteralRec<'', In> extends [`${infer Match}`, infer In]
       ? tokenizeRec<skipIgnored<In>, [...Out, VarTokenNode<Match>]>
