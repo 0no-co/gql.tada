@@ -360,7 +360,7 @@ type _takeDocumentRec<
     ? _takeDocumentRec<[...Definitions, Definition], In>
     : _match<Definitions, In>;
 
-type parseDocument<In> = _takeDocumentRec<[], tokenize<In>> extends _match<
+type parseDocument<In extends string> = _takeDocumentRec<[], tokenize<In>> extends _match<
   [...infer Definitions],
   any
 >
@@ -369,15 +369,24 @@ type parseDocument<In> = _takeDocumentRec<[], tokenize<In>> extends _match<
     : { kind: Kind.DOCUMENT; definitions: Definitions }
   : never;
 
-type parseValue<In> = takeValue<tokenize<In>, false> extends _match<infer Node, any> ? Node : void;
-
-type parseConstValue<In> = takeValue<tokenize<In>, true> extends _match<infer Node, any>
+type parseValue<In extends string> = takeValue<tokenize<In>, false> extends _match<infer Node, any>
   ? Node
   : void;
 
-type parseType<In> = takeType<tokenize<In>> extends _match<infer Node, any> ? Node : void;
+type parseConstValue<In extends string> = takeValue<tokenize<In>, true> extends _match<
+  infer Node,
+  any
+>
+  ? Node
+  : void;
 
-type parseOperation<In> = takeOperation<tokenize<In>> extends _match<infer Node, any> ? Node : void;
+type parseType<In extends string> = takeType<tokenize<In>> extends _match<infer Node, any>
+  ? Node
+  : void;
+
+type parseOperation<In extends string> = takeOperation<tokenize<In>> extends _match<infer Node, any>
+  ? Node
+  : void;
 
 export type DocumentNodeLike = {
   kind: Kind.DOCUMENT;
