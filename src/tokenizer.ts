@@ -1,10 +1,10 @@
 export const enum Token {
   Name,
+  Var,
   Spread,
   Exclam,
   Equal,
   Colon,
-  Dollar,
   AtSign,
   BraceOpen,
   BraceClose,
@@ -64,12 +64,17 @@ type takeNameLiteralRec<PrevMatch extends string, In> = In extends `${infer Matc
     : [PrevMatch, In]
   : [PrevMatch, In];
 
+export interface VarTokenNode<Name extends string = string> {
+  kind: Token.Var;
+  name: Name;
+}
+
 export interface NameTokenNode<Name extends string = string> {
   kind: Token.Name;
   name: Name;
 }
 
-export type TokenNode = Token | NameTokenNode;
+export type TokenNode = Token | NameTokenNode | VarTokenNode;
 
 // prettier-ignore
 type tokenizeRec<In extends string, Out extends TokenNode[]> =
@@ -77,7 +82,6 @@ type tokenizeRec<In extends string, Out extends TokenNode[]> =
   : In extends `!${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, Token.Exclam]>
   : In extends `=${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, Token.Equal]>
   : In extends `:${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, Token.Colon]>
-  : In extends `$${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, Token.Dollar]>
   : In extends `@${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, Token.AtSign]>
   : In extends `{${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, Token.BraceOpen]>
   : In extends `}${infer In}` ? tokenizeRec<skipIgnored<In>, [...Out, Token.BraceClose]>
@@ -95,6 +99,10 @@ type tokenizeRec<In extends string, Out extends TokenNode[]> =
     (skipFloat<skipDigits<In>> extends `${infer In}`
       ? tokenizeRec<skipIgnored<In>, [...Out, Token.Float]>
       : tokenizeRec<skipIgnored<In>, [...Out, Token.Integer]>)
+  : In extends `$${infer In}` ?
+    (takeNameLiteralRec<'', In> extends [`${infer Match}`, infer In]
+      ? tokenizeRec<skipIgnored<In>, [...Out, VarTokenNode<Match>]>
+      : Out)
   : In extends `${letter | '_'}${string}` ?
     (takeNameLiteralRec<'', In> extends [`${infer Match}`, infer In]
       ? tokenizeRec<skipIgnored<In>, [...Out, NameTokenNode<Match>]>
