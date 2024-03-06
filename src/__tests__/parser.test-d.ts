@@ -12,9 +12,7 @@ import type {
   takeSelectionSet,
   takeOperationDefinition,
   takeFragmentDefinition,
-  takeFragmentSpread,
   takeDirective,
-  takeField,
 } from '../parser';
 
 describe('takeValue', () => {
@@ -362,107 +360,119 @@ describe('takeField', () => {
   it('parses fields', () => {
     type expected = _match<
       {
-        kind: Kind.FIELD;
-        arguments: [];
-        alias: {
-          kind: Kind.NAME;
-          value: 'alias';
-        };
-        name: {
-          kind: Kind.NAME;
-          value: 'field';
-        };
-        directives: [
+        kind: Kind.SELECTION_SET;
+        selections: [
           {
-            kind: Kind.DIRECTIVE;
+            kind: Kind.FIELD;
+            arguments: [];
+            alias: {
+              kind: Kind.NAME;
+              value: 'alias';
+            };
             name: {
               kind: Kind.NAME;
-              value: 'test';
+              value: 'field';
             };
-            arguments: [
+            directives: [
               {
-                kind: Kind.ARGUMENT;
+                kind: Kind.DIRECTIVE;
                 name: {
                   kind: Kind.NAME;
-                  value: 'arg';
+                  value: 'test';
                 };
-                value: {
-                  kind: Kind.NULL;
-                };
+                arguments: [
+                  {
+                    kind: Kind.ARGUMENT;
+                    name: {
+                      kind: Kind.NAME;
+                      value: 'arg';
+                    };
+                    value: {
+                      kind: Kind.NULL;
+                    };
+                  },
+                ];
               },
             ];
+            selectionSet: {
+              kind: Kind.SELECTION_SET;
+              selections: [
+                {
+                  kind: Kind.FIELD;
+                  name: {
+                    kind: Kind.NAME;
+                    value: 'child';
+                  };
+                  arguments: [];
+                  alias: undefined;
+                  selectionSet: undefined;
+                  directives: [];
+                },
+              ];
+            };
           },
         ];
-        selectionSet: {
-          kind: Kind.SELECTION_SET;
-          selections: [
-            {
-              kind: Kind.FIELD;
-              name: {
-                kind: Kind.NAME;
-                value: 'child';
-              };
-              arguments: [];
-              alias: undefined;
-              selectionSet: undefined;
-              directives: [];
-            },
-          ];
-        };
       },
       []
     >;
 
-    expectTypeOf<takeField<tokenize<'alias: field('>>>().toEqualTypeOf<void>();
+    expectTypeOf<takeSelectionSet<tokenize<'{ alias: field( }'>>>().toEqualTypeOf<void>();
 
     expectTypeOf<
-      takeField<tokenize<'alias: field @test(arg: null) { child }'>>
+      takeSelectionSet<tokenize<'{ alias: field @test(arg: null) { child } }'>>
     >().toEqualTypeOf<expected>();
   });
 
   it('parses arguments', () => {
     type expected = _match<
       {
-        kind: Kind.FIELD;
-        alias: undefined;
-        name: {
-          kind: Kind.NAME;
-          value: 'field';
-        };
-        arguments: [
+        kind: Kind.SELECTION_SET;
+        selections: [
           {
-            kind: Kind.ARGUMENT;
+            kind: Kind.FIELD;
+            alias: undefined;
             name: {
               kind: Kind.NAME;
-              value: 'a';
+              value: 'field';
             };
-            value: {
-              kind: Kind.NULL;
-            };
-          },
-          {
-            kind: Kind.ARGUMENT;
-            name: {
-              kind: Kind.NAME;
-              value: 'b';
-            };
-            value: {
-              kind: Kind.NULL;
-            };
+            arguments: [
+              {
+                kind: Kind.ARGUMENT;
+                name: {
+                  kind: Kind.NAME;
+                  value: 'a';
+                };
+                value: {
+                  kind: Kind.NULL;
+                };
+              },
+              {
+                kind: Kind.ARGUMENT;
+                name: {
+                  kind: Kind.NAME;
+                  value: 'b';
+                };
+                value: {
+                  kind: Kind.NULL;
+                };
+              },
+            ];
+            directives: [];
+            selectionSet: undefined;
           },
         ];
-        directives: [];
-        selectionSet: undefined;
       },
       []
     >;
 
-    expectTypeOf<takeField<tokenize<'field('>>>().toEqualTypeOf<void>();
-    expectTypeOf<takeField<tokenize<'field(name)'>>>().toEqualTypeOf<void>();
-    expectTypeOf<takeField<tokenize<'field(name:)'>>>().toEqualTypeOf<void>();
-    expectTypeOf<takeField<tokenize<'field(name: null'>>>().toEqualTypeOf<void>();
+    expectTypeOf<takeSelectionSet<tokenize<'{ field( }'>>>().toEqualTypeOf<void>();
+    expectTypeOf<takeSelectionSet<tokenize<'{ field(name) }'>>>().toEqualTypeOf<void>();
+    expectTypeOf<takeSelectionSet<tokenize<'{ field(name:) }'>>>().toEqualTypeOf<void>();
+    expectTypeOf<takeSelectionSet<tokenize<'{ field(name: null }'>>>().toEqualTypeOf<void>();
 
-    expectTypeOf<takeField<tokenize<'field(a: null, b: null)'>>>().toEqualTypeOf<expected>();
+    expectTypeOf<
+      takeSelectionSet<tokenize<'{ field(a: null, b: null) }'>>
+    >().toEqualTypeOf<expected>();
   });
 });
 
@@ -499,70 +509,82 @@ describe('takeFragmentSpread', () => {
   it('parses inline fragments', () => {
     type expected = _match<
       {
-        kind: Kind.INLINE_FRAGMENT;
-        typeCondition: {
-          kind: Kind.NAMED_TYPE;
-          name: {
-            kind: Kind.NAME;
-            value: 'Test';
-          };
-        };
-        directives: [];
-        selectionSet: {
-          kind: Kind.SELECTION_SET;
-          selections: [
-            {
-              kind: Kind.FIELD;
+        kind: Kind.SELECTION_SET;
+        selections: [
+          {
+            kind: Kind.INLINE_FRAGMENT;
+            typeCondition: {
+              kind: Kind.NAMED_TYPE;
               name: {
                 kind: Kind.NAME;
-                value: 'field';
+                value: 'Test';
               };
-              arguments: [];
-              alias: undefined;
-              selectionSet: undefined;
-              directives: [];
-            },
-          ];
-        };
+            };
+            directives: [];
+            selectionSet: {
+              kind: Kind.SELECTION_SET;
+              selections: [
+                {
+                  kind: Kind.FIELD;
+                  name: {
+                    kind: Kind.NAME;
+                    value: 'field';
+                  };
+                  arguments: [];
+                  alias: undefined;
+                  selectionSet: undefined;
+                  directives: [];
+                },
+              ];
+            };
+          },
+        ];
       },
       []
     >;
 
-    expectTypeOf<takeFragmentSpread<tokenize<'... on Test'>>>().toEqualTypeOf<void>();
-    expectTypeOf<takeFragmentSpread<tokenize<'...'>>>().toEqualTypeOf<void>();
-    expectTypeOf<takeFragmentSpread<tokenize<'... on Test { field }'>>>().toEqualTypeOf<expected>();
+    expectTypeOf<takeSelectionSet<tokenize<'{ ... on Test }'>>>().toEqualTypeOf<void>();
+    expectTypeOf<takeSelectionSet<tokenize<'{ ... }'>>>().toEqualTypeOf<void>();
+    expectTypeOf<
+      takeSelectionSet<tokenize<'{ ... on Test { field } }'>>
+    >().toEqualTypeOf<expected>();
   });
 
   it('parses conditionless inline fragments', () => {
     type expected = _match<
       {
-        kind: Kind.INLINE_FRAGMENT;
-        typeCondition: undefined;
-        directives: [];
-        selectionSet: {
-          kind: Kind.SELECTION_SET;
-          selections: [
-            {
-              kind: Kind.FIELD;
-              name: {
-                kind: Kind.NAME;
-                value: 'field';
-              };
-              arguments: [];
-              alias: undefined;
-              selectionSet: undefined;
-              directives: [];
-            },
-          ];
-        };
+        kind: Kind.SELECTION_SET;
+        selections: [
+          {
+            kind: Kind.INLINE_FRAGMENT;
+            typeCondition: undefined;
+            directives: [];
+            selectionSet: {
+              kind: Kind.SELECTION_SET;
+              selections: [
+                {
+                  kind: Kind.FIELD;
+                  name: {
+                    kind: Kind.NAME;
+                    value: 'field';
+                  };
+                  arguments: [];
+                  alias: undefined;
+                  selectionSet: undefined;
+                  directives: [];
+                },
+              ];
+            };
+          },
+        ];
       },
       []
     >;
 
-    expectTypeOf<takeFragmentSpread<tokenize<'... on Test'>>>().toEqualTypeOf<void>();
-    expectTypeOf<takeFragmentSpread<tokenize<'...'>>>().toEqualTypeOf<void>();
+    expectTypeOf<takeSelectionSet<tokenize<'{ ... on Test }'>>>().toEqualTypeOf<void>();
+    expectTypeOf<takeSelectionSet<tokenize<'{ ... }'>>>().toEqualTypeOf<void>();
 
-    expectTypeOf<takeFragmentSpread<tokenize<'... { field }'>>>().toEqualTypeOf<expected>();
+    expectTypeOf<takeSelectionSet<tokenize<'{ ... { field } }'>>>().toEqualTypeOf<expected>();
   });
 });
 
