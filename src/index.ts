@@ -19,5 +19,7 @@ export type {
   FragmentOf,
 } from './api';
 
+export type { DocumentDecoration } from './utils';
+
 // NOTE: This must be exported for `isolatedModules: true`
 export type { $tada } from './namespace';
