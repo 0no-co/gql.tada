@@ -266,10 +266,10 @@ To work around this, we’ll create a file that uses the introspection data manu
 
 ```ts title="src/graphql.ts" {4-6}
 import { initGraphQLTada } from 'gql.tada';
-import type { introspection } from './graphql-env.d.ts';
+import { introspection } from './graphql-env.d.ts';
 
 export const graphql = initGraphQLTada<{
-  introspection: introspection;
+  introspection: typeof introspection;
 }>();
 
 export type { FragmentOf, ResultOf, VariablesOf } from 'gql.tada';
