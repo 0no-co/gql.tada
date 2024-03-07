@@ -205,7 +205,7 @@ const result: ResultOf<typeof TodosQuery> = {
 };
 
 
-const todos: ResultOf<typof TodoItem>[] = readFragment(
+const todos: ResultOf<typeof TodoItem>[] = readFragment(
   TodoItem,
   result.todos,
 );
