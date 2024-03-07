@@ -296,10 +296,10 @@ is a string.
 
 ```ts {"Define scalar types here:":6-10} title="src/graphql.ts"
 import { initGraphQLTada } from 'gql.tada';
-import type { introspection } from './graphql-env.d.ts';
+import { introspection } from './graphql-env.d.ts';
 
 export const graphql = initGraphQLTada<{
-  introspection: introspection;
+  introspection: typeof introspection;
 
   scalars: {
     DateTime: string,
