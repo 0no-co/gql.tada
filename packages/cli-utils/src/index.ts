@@ -18,14 +18,18 @@ prog.version(process.env.npm_package_version || '0.0.0');
 
 async function main() {
   prog
-    .command('generate-schema <target> <dest>')
+    .command('generate-schema <target>')
     .describe(
       'Generate a GraphQL schema from a URL or introspection file, this will be generated from the parameters to this command.'
     )
     .option('--header', 'Pass a header to be used when fetching the introspection.')
+    .option(
+      '--output',
+      'A specialised location to output the schema to, by default we\'ll output the schema to the "schema" defined in your "tsconfig".'
+    )
     .example("generate-schema https://example.com --header 'Authorization: Bearer token'")
     .example('generate-schema ./introspection.json')
-    .action(async (target, destination, options) => {
+    .action(async (target, options) => {
       const cwd = process.cwd();
       let url: URL | undefined;
 
@@ -94,6 +98,43 @@ async function main() {
       }
 
       const schema = buildClientSchema(introspection!);
+
+      let destination = options.output;
+      if (!destination) {
+        const cwd = process.cwd();
+        const tsconfigpath = path.resolve(cwd, 'tsconfig.json');
+        const hasTsConfig = existsSync(tsconfigpath);
+        if (!hasTsConfig) {
+          console.error(`Could not find a tsconfig in the working-directory.`);
+          return;
+        }
+
+        const tsconfigContents = await fs.readFile(tsconfigpath, 'utf-8');
+        let tsConfig: TsConfigJson;
+        try {
+          tsConfig = parse(tsconfigContents) as TsConfigJson;
+        } catch (err) {
+          console.error(err);
+          return;
+        }
+
+        if (!hasGraphQLSP(tsConfig)) {
+          console.error(`Could not find a "@0no-co/graphqlsp" plugin in your tsconfig.`);
+          return;
+        }
+
+        const foundPlugin = tsConfig.compilerOptions!.plugins!.find(
+          (plugin) => plugin.name === '@0no-co/graphqlsp'
+        ) as GraphQLSPConfig;
+
+        destination = foundPlugin.schema;
+
+        if (!foundPlugin.schema.endsWith('.graphql')) {
+          console.error(`Found "${foundPlugin.schema}" which is not a path to a GraphQL Schema.`);
+          return;
+        }
+      }
+
       await fs.writeFile(resolve(cwd, destination), printSchema(schema), 'utf-8');
     })
     .command('generate-output')
