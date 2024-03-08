@@ -308,6 +308,21 @@ describe('readFragment', () => {
     expectTypeOf<typeof result>().toEqualTypeOf<ResultOf<document>>();
   });
 
+  it('should be callable on already unmasked fragments', () => {
+    type fragment = parseDocument<`
+      fragment Fields on Todo {
+        id
+      }
+    `>;
+
+    type document = getDocumentNode<fragment, schema>;
+    const result = readFragment({} as document, {} as FragmentOf<document>);
+    const result2 = readFragment({} as document, result);
+    expectTypeOf<typeof result>().toEqualTypeOf<ResultOf<document>>();
+    expectTypeOf<typeof result2>().toEqualTypeOf<ResultOf<document>>();
+    expectTypeOf<typeof result2>().toEqualTypeOf<typeof result>();
+  });
+
   it('unmasks fragments with optional spreads', () => {
     type fragment = parseDocument<`
       fragment Fields on Todo {
