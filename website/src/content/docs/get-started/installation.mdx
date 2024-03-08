@@ -266,7 +266,7 @@ To work around this, we’ll create a file that uses the introspection data manu
 
 ```ts title="src/graphql.ts" {4-6}
 import { initGraphQLTada } from 'gql.tada';
-import { introspection } from './graphql-env.d.ts';
+import { introspection } from './graphql-env.ts';
 
 export const graphql = initGraphQLTada<{
   introspection: typeof introspection;
@@ -296,7 +296,7 @@ is a string.
 
 ```ts {"Define scalar types here:":6-10} title="src/graphql.ts"
 import { initGraphQLTada } from 'gql.tada';
-import { introspection } from './graphql-env.d.ts';
+import { introspection } from './graphql-env.ts';
 
 export const graphql = initGraphQLTada<{
   introspection: typeof introspection;
