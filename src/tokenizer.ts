@@ -34,6 +34,12 @@ type letter =
   | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm'
   | 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z';
 
+type skipIgnored<In> = In extends `#${infer _}\n${infer In}`
+  ? skipIgnored<In>
+  : In extends `${ignored}${infer In}`
+    ? skipIgnored<In>
+    : In;
+
 type skipDigits<In> = In extends `${digit}${infer In}` ? skipDigits<In> : In;
 
 type skipFloat<In> = In extends `${'.'}${infer In}`
@@ -96,7 +102,7 @@ type tokenizeRec<State> =
     : State extends _state<infer In, infer Out>
     ? tokenizeRec<
         In extends `#${string}\n${infer In}` ? _state<In, Out>
-          : In extends `${ignored}${infer In}` ? _state<In, Out>
+          : In extends `${ignored}${infer In}` ? _state<skipIgnored<In>, Out>
           : In extends `...${infer In}` ? _state<In, [...Out, Token.Spread]>
           : In extends `!${infer In}` ? _state<In, [...Out, Token.Exclam]>
           : In extends `=${infer In}` ? _state<In, [...Out, Token.Equal]>
