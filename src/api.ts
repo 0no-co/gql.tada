@@ -434,6 +434,22 @@ type fragmentOfTypeRec<Document extends makeDefinitionDecoration> =
 
 type resultOfTypeRec<Data> = readonly resultOfTypeRec<Data>[] | Data | undefined | null;
 
+function readFragment<
+  const Document extends makeDefinitionDecoration & DocumentDecoration<any, any>,
+  const Fragment extends fragmentOfTypeRec<Document>,
+>(
+  _document: Document,
+  fragment: Fragment
+): fragmentOfTypeRec<Document> extends Fragment
+  ? never
+  : mirrorFragmentTypeRec<Fragment, ResultOf<Document>>;
+
+// NOTE: Variant for already unmasked fragments
+function readFragment<
+  const Document extends makeDefinitionDecoration & DocumentDecoration<any, any>,
+  const Data extends resultOfTypeRec<ResultOf<Document>>,
+>(_document: Document, data: Data): Data;
+
 /** Unmasks a fragment mask for a given fragment document and data.
  *
  * @param _document - A GraphQL document of a fragment, created using {@link graphql}.
@@ -482,16 +498,8 @@ type resultOfTypeRec<Data> = readonly resultOfTypeRec<Data>[] | Data | undefined
  *
  * @see {@link readFragment} for how to read from fragment masks.
  */
-function readFragment<
-  const Document extends makeDefinitionDecoration & DocumentDecoration<any, any>,
-  const Fragment extends fragmentOfTypeRec<Document>,
->(
-  _document: Document,
-  fragment: Fragment
-): fragmentOfTypeRec<Document> extends Fragment
-  ? never
-  : mirrorFragmentTypeRec<Fragment, ResultOf<Document>> {
-  return fragment as any;
+function readFragment(_document: unknown, fragment: unknown) {
+  return fragment;
 }
 
 /** For testing, masks fragment data for given data and fragments.
