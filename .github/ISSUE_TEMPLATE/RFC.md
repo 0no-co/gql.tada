@@ -8,7 +8,7 @@ labels: "future \U0001F52E"
 <!--
   🚨 RFCs are for proposed changes (not bugs or questions)
   Specifically they are whenever you'd like to see new features
-  being added to urql, or enable new use-cases.
+  being added to gql.tada, or enable new use-cases.
 
   Please open a Bug Report for issues/bugs, and use GitHub Discussions
   or the Discord channel for questions instead.
