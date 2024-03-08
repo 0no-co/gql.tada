@@ -410,7 +410,7 @@ export type mirrorFragmentTypeRec<Fragment, Data> = Fragment extends (infer Valu
       ? null
       : Fragment extends undefined
         ? undefined
-        : Data;
+        : Data & Fragment;
 
 type fragmentRefsOfFragmentsRec<
   Fragments extends readonly any[],
