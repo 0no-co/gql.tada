@@ -1,5 +1,18 @@
 # gql.tada
 
+## 1.3.2
+
+### Patch Changes
+
+- ⚠️ Fix tokenizer hitting tail recursion limit by recursing on each ignored token
+  Submitted by [@kitten](https://github.com/kitten) (See [#125](https://github.com/0no-co/gql.tada/pull/125))
+- Allow `readFragment` to be called again on an already unmasked fragment
+  Submitted by [@kitten](https://github.com/kitten) (See [#124](https://github.com/0no-co/gql.tada/pull/124))
+- Re-export `DocumentDecoration`
+  Submitted by [@kitten](https://github.com/kitten) (See [#113](https://github.com/0no-co/gql.tada/pull/113))
+- Updated dependencies (See [#120](https://github.com/0no-co/gql.tada/pull/120))
+  - @gql.tada/cli-utils@0.1.1
+
 ## 1.3.1
 
 ### Patch Changes
