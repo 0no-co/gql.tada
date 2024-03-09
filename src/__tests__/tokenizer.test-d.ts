@@ -1,5 +1,12 @@
 import { describe, it, expectTypeOf } from 'vitest';
-import type { Token, tokenize } from '../tokenizer';
+
+import type {
+  Token,
+  DirectiveTokenNode,
+  NameTokenNode,
+  VarTokenNode,
+  tokenize,
+} from '../tokenizer';
 
 describe('tokenize', () => {
   it('tokenizes symbols', () => {
@@ -47,19 +54,22 @@ describe('tokenize', () => {
 
   it('tokenizes names', () => {
     type actual = tokenize<'test x'>;
-    type expected = [{ kind: Token.Name; name: 'test' }, { kind: Token.Name; name: 'x' }];
+    type expected = [NameTokenNode<'test'>, NameTokenNode<'x'>];
     expectTypeOf<actual>().toEqualTypeOf<expected>();
   });
 
   it('tokenizes variables', () => {
     type actual = tokenize<'$test $x'>;
-    type expected = [{ kind: Token.Var; name: 'test' }, { kind: Token.Var; name: 'x' }];
+    type expected = [VarTokenNode<NameTokenNode<'test'>>, VarTokenNode<NameTokenNode<'x'>>];
     expectTypeOf<actual>().toEqualTypeOf<expected>();
   });
 
   it('tokenizes directives', () => {
     type actual = tokenize<'@test @x'>;
-    type expected = [{ kind: Token.Directive; name: 'test' }, { kind: Token.Directive; name: 'x' }];
+    type expected = [
+      DirectiveTokenNode<NameTokenNode<'test'>>,
+      DirectiveTokenNode<NameTokenNode<'x'>>,
+    ];
     expectTypeOf<actual>().toEqualTypeOf<expected>();
   });
 });

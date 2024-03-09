@@ -1,7 +1,6 @@
+import type { Kind } from '@0no-co/graphql.web';
+
 export const enum Token {
-  Name,
-  Var,
-  Directive,
   Spread,
   Exclam,
   Equal,
@@ -71,18 +70,18 @@ type takeNameLiteralRec<
     : _match<PrevMatch, In>
   : _match<PrevMatch, In>;
 
-export interface VarTokenNode<Name extends string = string> {
-  kind: Token.Var;
-  name: Name;
-}
-
 export interface NameTokenNode<Name extends string = string> {
-  kind: Token.Name;
+  kind: Kind.NAME;
+  value: Name;
+}
+
+export interface VarTokenNode<Name extends NameTokenNode = NameTokenNode> {
+  kind: Kind.VARIABLE;
   name: Name;
 }
 
-export interface DirectiveTokenNode<Name extends string = string> {
-  kind: Token.Directive;
+export interface DirectiveTokenNode<Name extends NameTokenNode = NameTokenNode> {
+  kind: Kind.DIRECTIVE;
   name: Name;
 }
 
@@ -124,11 +123,11 @@ type tokenizeRec<State> =
               : _state<skipDigits<In>, [...Out, Token.Integer]>)
           : In extends `$${infer In}` ?
             (takeNameLiteralRec<'', In> extends _match<infer Match, infer In>
-              ? _state<In, [...Out, VarTokenNode<Match>]>
+              ? _state<In, [...Out, VarTokenNode<NameTokenNode<Match>>]>
               : void)
           : In extends `@${infer In}` ?
             (takeNameLiteralRec<'', In> extends _match<infer Match, infer In>
-              ? _state<In, [...Out, DirectiveTokenNode<Match>]>
+              ? _state<In, [...Out, DirectiveTokenNode<NameTokenNode<Match>>]>
               : void)
           : In extends `${letter | '_'}${string}` ?
             (takeNameLiteralRec<'', In> extends _match<infer Match, infer In>

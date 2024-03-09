@@ -2,6 +2,8 @@ import type { Kind, OperationTypeNode } from '@0no-co/graphql.web';
 
 import type { Token, tokenize, VarTokenNode, NameTokenNode, DirectiveTokenNode } from './tokenizer';
 
+type _self<U, T extends U> = T;
+
 export interface _match<Out, In extends any[]> {
   out: Out;
   in: In;
@@ -13,8 +15,8 @@ export interface _match2<Out1, Out2, In extends any[]> {
   in: In;
 }
 
-type takeOptionalName<In extends any[]> = In extends [NameTokenNode<infer Name>, ...infer In]
-  ? _match<{ kind: Kind.NAME; value: Name }, In>
+type takeOptionalName<In extends any[]> = In extends [_self<NameTokenNode, infer Name>, ...infer In]
+  ? _match<Name, In>
   : _match<undefined, In>;
 
 // prettier-ignore
@@ -22,14 +24,14 @@ export type takeValue<In extends any[], Const extends boolean> =
   In extends [Token.Float, ...infer In] ? _match<{ kind: Kind.FLOAT; value: string }, In>
   : In extends [Token.Integer, ...infer In] ? _match<{ kind: Kind.INT; value: string }, In>
   : In extends [Token.String, ...infer In] ? _match<{ kind: Kind.STRING; value: string, block: boolean }, In>
+  : In extends [Token.BracketOpen, ...infer In] ? takeListRec<[], In, Const>
+  : In extends [Token.BraceOpen, ...infer In] ? takeObjectRec<[], In, Const>
   : In extends [NameTokenNode<'null'>, ...infer In] ? _match<{ kind: Kind.NULL }, In>
   : In extends [NameTokenNode<'true' | 'false'>, ...infer In] ? _match<{ kind: Kind.BOOLEAN; value: boolean }, In>
   : In extends [NameTokenNode<infer Name>, ...infer In] ? _match<{ kind: Kind.ENUM; value: Name }, In>
-  : In extends [Token.BracketOpen, ...infer In] ? takeListRec<[], In, Const>
-  : In extends [Token.BraceOpen, ...infer In] ? takeObjectRec<[], In, Const>
   : Const extends false
-    ? In extends [VarTokenNode<infer Name>, ...infer In]
-      ? _match<{ kind: Kind.VARIABLE; name: { kind: Kind.NAME; value: Name } }, In>
+    ? In extends [_self<VarTokenNode, infer Variable>, ...infer In]
+      ? _match<Variable, In>
       : void
     : void;
 
@@ -43,15 +45,12 @@ type takeListRec<Nodes extends any[], In extends any[], Const extends boolean> =
     : void;
 
 type takeObjectField<In extends any[], Const extends boolean> = In extends [
-  NameTokenNode<infer FieldName>,
+  _self<NameTokenNode, infer FieldName>,
   Token.Colon,
   ...infer In,
 ]
   ? takeValue<In, Const> extends _match<infer Value, infer In>
-    ? _match<
-        { kind: Kind.OBJECT_FIELD; name: { kind: Kind.NAME; value: FieldName }; value: Value },
-        In
-      >
+    ? _match<{ kind: Kind.OBJECT_FIELD; name: FieldName; value: Value }, In>
     : void
   : void;
 
@@ -66,12 +65,12 @@ export type takeObjectRec<
     : void;
 
 type takeArgument<In extends any[], Const extends boolean> = In extends [
-  NameTokenNode<infer ArgName>,
+  _self<NameTokenNode, infer ArgName>,
   Token.Colon,
   ...infer In,
 ]
   ? takeValue<In, Const> extends _match<infer Value, infer In>
-    ? _match<{ kind: Kind.ARGUMENT; name: { kind: Kind.NAME; value: ArgName }; value: Value }, In>
+    ? _match<{ kind: Kind.ARGUMENT; name: ArgName; value: Value }, In>
     : void
   : void;
 
@@ -99,7 +98,7 @@ export type takeDirective<In extends any[], Const extends boolean> = In extends 
     ? _match<
         {
           kind: Kind.DIRECTIVE;
-          name: { kind: Kind.NAME; value: DirectiveName };
+          name: DirectiveName;
           arguments: Arguments;
         },
         In
@@ -115,10 +114,13 @@ export type takeDirectives<
   ? takeDirectives<In, Const, [...Directives, Directive]>
   : _match<Directives, In>;
 
-type _takeFieldName<In extends any[]> = In extends [NameTokenNode<infer MaybeAlias>, ...infer In]
-  ? In extends [Token.Colon, NameTokenNode<infer Name>, ...infer In]
-    ? _match2<{ kind: Kind.NAME; value: MaybeAlias }, { kind: Kind.NAME; value: Name }, In>
-    : _match2<undefined, { kind: Kind.NAME; value: MaybeAlias }, In>
+type _takeFieldName<In extends any[]> = In extends [
+  _self<NameTokenNode, infer MaybeAlias>,
+  ...infer In,
+]
+  ? In extends [Token.Colon, _self<NameTokenNode, infer Name>, ...infer In]
+    ? _match2<MaybeAlias, Name, In>
+    : _match2<undefined, MaybeAlias, In>
   : void;
 
 type _takeField<In extends any[]> = _takeFieldName<In> extends _match2<
@@ -163,22 +165,22 @@ export type takeType<In extends any[]> = In extends [Token.BracketOpen, ...infer
         : _match<{ kind: Kind.LIST_TYPE; type: Subtype }, In>
       : void
     : void
-  : In extends [NameTokenNode<infer Name>, ...infer In]
+  : In extends [_self<NameTokenNode, infer Name>, ...infer In]
     ? In extends [Token.Exclam, ...infer In]
       ? _match<
           {
             kind: Kind.NON_NULL_TYPE;
-            type: { kind: Kind.NAMED_TYPE; name: { kind: Kind.NAME; value: Name } };
+            type: { kind: Kind.NAMED_TYPE; name: Name };
           },
           In
         >
-      : _match<{ kind: Kind.NAMED_TYPE; name: { kind: Kind.NAME; value: Name } }, In>
+      : _match<{ kind: Kind.NAMED_TYPE; name: Name }, In>
     : void;
 
 type _takeFragmentSpread<In extends any[]> = In extends [
   Token.Spread,
   NameTokenNode<'on'>,
-  NameTokenNode<infer Type>,
+  _self<NameTokenNode, infer Type>,
   ...infer In,
 ]
   ? takeDirectives<In, false> extends _match<infer Directives, infer In>
@@ -186,7 +188,7 @@ type _takeFragmentSpread<In extends any[]> = In extends [
       ? _match<
           {
             kind: Kind.INLINE_FRAGMENT;
-            typeCondition: { kind: Kind.NAMED_TYPE; name: { kind: Kind.NAME; value: Type } };
+            typeCondition: { kind: Kind.NAMED_TYPE; name: Type };
             directives: Directives;
             selectionSet: SelectionSet;
           },
@@ -194,12 +196,12 @@ type _takeFragmentSpread<In extends any[]> = In extends [
         >
       : void
     : void
-  : In extends [Token.Spread, NameTokenNode<infer Name>, ...infer In]
+  : In extends [Token.Spread, _self<NameTokenNode, infer Name>, ...infer In]
     ? takeDirectives<In, false> extends _match<infer Directives, infer In>
       ? _match<
           {
             kind: Kind.FRAGMENT_SPREAD;
-            name: { kind: Kind.NAME; value: Name };
+            name: Name;
             directives: Directives;
           },
           In
@@ -237,7 +239,7 @@ export type takeSelectionSet<In extends any[]> = In extends [Token.BraceOpen, ..
   : void;
 
 export type takeVarDefinition<In extends any[]> = In extends [
-  VarTokenNode<infer VarName>,
+  _self<VarTokenNode, infer Variable>,
   Token.Colon,
   ...infer In,
 ]
@@ -248,7 +250,7 @@ export type takeVarDefinition<In extends any[]> = In extends [
           ? _match<
               {
                 kind: Kind.VARIABLE_DEFINITION;
-                variable: { kind: Kind.VARIABLE; name: { kind: Kind.NAME; value: VarName } };
+                variable: Variable;
                 type: Type;
                 defaultValue: DefaultValue;
                 directives: Directives;
@@ -261,7 +263,7 @@ export type takeVarDefinition<In extends any[]> = In extends [
         ? _match<
             {
               kind: Kind.VARIABLE_DEFINITION;
-              variable: { kind: Kind.VARIABLE; name: { kind: Kind.NAME; value: VarName } };
+              variable: Variable;
               type: Type;
               defaultValue: undefined;
               directives: Directives;
@@ -286,9 +288,9 @@ export type takeVarDefinitions<In extends any[]> = In extends [Token.ParenOpen, 
 
 export type takeFragmentDefinition<In extends any[]> = In extends [
   NameTokenNode<'fragment'>,
-  NameTokenNode<infer Name>,
+  _self<NameTokenNode, infer Name>,
   NameTokenNode<'on'>,
-  NameTokenNode<infer Type>,
+  _self<NameTokenNode, infer Type>,
   ...infer In,
 ]
   ? takeDirectives<In, true> extends _match<infer Directives, infer In>
@@ -296,8 +298,8 @@ export type takeFragmentDefinition<In extends any[]> = In extends [
       ? _match<
           {
             kind: Kind.FRAGMENT_DEFINITION;
-            name: { kind: Kind.NAME; value: Name };
-            typeCondition: { kind: Kind.NAMED_TYPE; name: { kind: Kind.NAME; value: Type } };
+            name: Name;
+            typeCondition: { kind: Kind.NAMED_TYPE; name: Type };
             directives: Directives;
             selectionSet: SelectionSet;
           },
