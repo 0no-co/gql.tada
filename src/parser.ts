@@ -1,5 +1,6 @@
 import type { Kind, OperationTypeNode } from '@0no-co/graphql.web';
-import type { Token, tokenize } from './tokenizer';
+
+import type { Token, tokenize, VarTokenNode, NameTokenNode, DirectiveTokenNode } from './tokenizer';
 
 export interface _match<Out, In extends any[]> {
   out: Out;
@@ -12,10 +13,7 @@ export interface _match2<Out1, Out2, In extends any[]> {
   in: In;
 }
 
-type takeOptionalName<In extends any[]> = In extends [
-  { kind: Token.Name; name: infer Name },
-  ...infer In,
-]
+type takeOptionalName<In extends any[]> = In extends [NameTokenNode<infer Name>, ...infer In]
   ? _match<{ kind: Kind.NAME; value: Name }, In>
   : _match<undefined, In>;
 
@@ -24,13 +22,13 @@ export type takeValue<In extends any[], Const extends boolean> =
   In extends [Token.Float, ...infer In] ? _match<{ kind: Kind.FLOAT; value: string }, In>
   : In extends [Token.Integer, ...infer In] ? _match<{ kind: Kind.INT; value: string }, In>
   : In extends [Token.String, ...infer In] ? _match<{ kind: Kind.STRING; value: string, block: boolean }, In>
-  : In extends [{ kind: Token.Name, name: 'null' }, ...infer In] ? _match<{ kind: Kind.NULL }, In>
-  : In extends [{ kind: Token.Name, name: 'true' | 'false' }, ...infer In] ? _match<{ kind: Kind.BOOLEAN; value: boolean }, In>
-  : In extends [{ kind: Token.Name, name: infer Name }, ...infer In] ? _match<{ kind: Kind.ENUM; value: Name }, In>
+  : In extends [NameTokenNode<'null'>, ...infer In] ? _match<{ kind: Kind.NULL }, In>
+  : In extends [NameTokenNode<'true' | 'false'>, ...infer In] ? _match<{ kind: Kind.BOOLEAN; value: boolean }, In>
+  : In extends [NameTokenNode<infer Name>, ...infer In] ? _match<{ kind: Kind.ENUM; value: Name }, In>
   : In extends [Token.BracketOpen, ...infer In] ? takeListRec<[], In, Const>
   : In extends [Token.BraceOpen, ...infer In] ? takeObjectRec<[], In, Const>
   : Const extends false
-    ? In extends [{ kind: Token.Var, name: infer Name }, ...infer In]
+    ? In extends [VarTokenNode<infer Name>, ...infer In]
       ? _match<{ kind: Kind.VARIABLE; name: { kind: Kind.NAME; value: Name } }, In>
       : void
     : void;
@@ -45,7 +43,7 @@ type takeListRec<Nodes extends any[], In extends any[], Const extends boolean> =
     : void;
 
 type takeObjectField<In extends any[], Const extends boolean> = In extends [
-  { kind: Token.Name; name: infer FieldName },
+  NameTokenNode<infer FieldName>,
   Token.Colon,
   ...infer In,
 ]
@@ -68,7 +66,7 @@ export type takeObjectRec<
     : void;
 
 type takeArgument<In extends any[], Const extends boolean> = In extends [
-  { kind: Token.Name; name: infer ArgName },
+  NameTokenNode<infer ArgName>,
   Token.Colon,
   ...infer In,
 ]
@@ -94,7 +92,7 @@ export type takeArguments<In extends any[], Const extends boolean> = In extends 
   : _match<[], In>;
 
 export type takeDirective<In extends any[], Const extends boolean> = In extends [
-  { kind: Token.Directive; name: infer DirectiveName },
+  DirectiveTokenNode<infer DirectiveName>,
   ...infer In,
 ]
   ? takeArguments<In, Const> extends _match<infer Arguments, infer In>
@@ -117,11 +115,8 @@ export type takeDirectives<
   ? takeDirectives<In, Const, [...Directives, Directive]>
   : _match<Directives, In>;
 
-type _takeFieldName<In extends any[]> = In extends [
-  { kind: Token.Name; name: infer MaybeAlias },
-  ...infer In,
-]
-  ? In extends [Token.Colon, { kind: Token.Name; name: infer Name }, ...infer In]
+type _takeFieldName<In extends any[]> = In extends [NameTokenNode<infer MaybeAlias>, ...infer In]
+  ? In extends [Token.Colon, NameTokenNode<infer Name>, ...infer In]
     ? _match2<{ kind: Kind.NAME; value: MaybeAlias }, { kind: Kind.NAME; value: Name }, In>
     : _match2<undefined, { kind: Kind.NAME; value: MaybeAlias }, In>
   : void;
@@ -168,7 +163,7 @@ export type takeType<In extends any[]> = In extends [Token.BracketOpen, ...infer
         : _match<{ kind: Kind.LIST_TYPE; type: Subtype }, In>
       : void
     : void
-  : In extends [{ kind: Token.Name; name: infer Name }, ...infer In]
+  : In extends [NameTokenNode<infer Name>, ...infer In]
     ? In extends [Token.Exclam, ...infer In]
       ? _match<
           {
@@ -182,8 +177,8 @@ export type takeType<In extends any[]> = In extends [Token.BracketOpen, ...infer
 
 type _takeFragmentSpread<In extends any[]> = In extends [
   Token.Spread,
-  { kind: Token.Name; name: 'on' },
-  { kind: Token.Name; name: infer Type },
+  NameTokenNode<'on'>,
+  NameTokenNode<infer Type>,
   ...infer In,
 ]
   ? takeDirectives<In, false> extends _match<infer Directives, infer In>
@@ -199,7 +194,7 @@ type _takeFragmentSpread<In extends any[]> = In extends [
         >
       : void
     : void
-  : In extends [Token.Spread, { kind: Token.Name; name: infer Name }, ...infer In]
+  : In extends [Token.Spread, NameTokenNode<infer Name>, ...infer In]
     ? takeDirectives<In, false> extends _match<infer Directives, infer In>
       ? _match<
           {
@@ -242,7 +237,7 @@ export type takeSelectionSet<In extends any[]> = In extends [Token.BraceOpen, ..
   : void;
 
 export type takeVarDefinition<In extends any[]> = In extends [
-  { kind: Token.Var; name: infer VarName },
+  VarTokenNode<infer VarName>,
   Token.Colon,
   ...infer In,
 ]
@@ -290,10 +285,10 @@ export type takeVarDefinitions<In extends any[]> = In extends [Token.ParenOpen, 
   : _match<[], In>;
 
 export type takeFragmentDefinition<In extends any[]> = In extends [
-  { kind: Token.Name; name: 'fragment' },
-  { kind: Token.Name; name: infer Name },
-  { kind: Token.Name; name: 'on' },
-  { kind: Token.Name; name: infer Type },
+  NameTokenNode<'fragment'>,
+  NameTokenNode<infer Name>,
+  NameTokenNode<'on'>,
+  NameTokenNode<infer Type>,
   ...infer In,
 ]
   ? takeDirectives<In, true> extends _match<infer Directives, infer In>
@@ -312,11 +307,11 @@ export type takeFragmentDefinition<In extends any[]> = In extends [
     : void
   : void;
 
-type takeOperation<In extends any[]> = In extends [{ kind: Token.Name; name: 'query' }, ...infer In]
+type takeOperation<In extends any[]> = In extends [NameTokenNode<'query'>, ...infer In]
   ? _match<OperationTypeNode.QUERY, In>
-  : In extends [{ kind: Token.Name; name: 'mutation' }, ...infer In]
+  : In extends [NameTokenNode<'mutation'>, ...infer In]
     ? _match<OperationTypeNode.MUTATION, In>
-    : In extends [{ kind: Token.Name; name: 'subscription' }, ...infer In]
+    : In extends [NameTokenNode<'subscription'>, ...infer In]
       ? _match<OperationTypeNode.SUBSCRIPTION, In>
       : void;
 
