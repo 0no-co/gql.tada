@@ -12,7 +12,6 @@ export const enum Token {
   ParenClose,
   BracketOpen,
   BracketClose,
-  BlockString,
   String,
   Integer,
   Float,
@@ -113,7 +112,7 @@ type tokenizeRec<State> =
           : In extends `)${infer In}` ? _state<In, [...Out, Token.ParenClose]>
           : In extends `[${infer In}` ? _state<In, [...Out, Token.BracketOpen]>
           : In extends `]${infer In}` ? _state<In, [...Out, Token.BracketClose]>
-          : In extends `"""${infer In}` ? _state<skipBlockString<In>, [...Out, Token.BlockString]>
+          : In extends `"""${infer In}` ? _state<skipBlockString<In>, [...Out, Token.String]>
           : In extends `"${infer In}` ? _state<skipString<In>, [...Out, Token.String]>
           : In extends `-${digit}${infer In}` ?
             (skipFloat<skipDigits<In>> extends `${infer In}`

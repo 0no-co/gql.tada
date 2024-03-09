@@ -23,8 +23,7 @@ type takeOptionalName<In extends any[]> = In extends [
 export type takeValue<In extends any[], Const extends boolean> =
   In extends [Token.Float, ...infer In] ? _match<{ kind: Kind.FLOAT; value: string }, In>
   : In extends [Token.Integer, ...infer In] ? _match<{ kind: Kind.INT; value: string }, In>
-  : In extends [Token.String, ...infer In] ? _match<{ kind: Kind.STRING; value: string, block: false }, In>
-  : In extends [Token.BlockString, ...infer In] ? _match<{ kind: Kind.STRING; value: string, block: true }, In>
+  : In extends [Token.String, ...infer In] ? _match<{ kind: Kind.STRING; value: string, block: boolean }, In>
   : In extends [{ kind: Token.Name, name: 'null' }, ...infer In] ? _match<{ kind: Kind.NULL }, In>
   : In extends [{ kind: Token.Name, name: 'true' | 'false' }, ...infer In] ? _match<{ kind: Kind.BOOLEAN; value: boolean }, In>
   : In extends [{ kind: Token.Name, name: infer Name }, ...infer In] ? _match<{ kind: Kind.ENUM; value: Name }, In>

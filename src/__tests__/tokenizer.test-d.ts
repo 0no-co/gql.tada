@@ -41,7 +41,7 @@ describe('tokenize', () => {
 
   it('tokenizes block strings', () => {
     type actual = tokenize<'"""x""" """\\""""""'>;
-    type expected = [Token.BlockString, Token.BlockString];
+    type expected = [Token.String, Token.String];
     expectTypeOf<actual>().toEqualTypeOf<expected>();
   });
 

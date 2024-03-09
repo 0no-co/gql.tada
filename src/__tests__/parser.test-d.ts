@@ -163,7 +163,7 @@ describe('takeVarDefinitions', () => {
         defaultValue: {
           kind: Kind.STRING;
           value: string;
-          block: false;
+          block: boolean;
         };
         directives: [];
       },
@@ -619,7 +619,7 @@ describe('takeValue', () => {
           {
             kind: Kind.STRING;
             value: string;
-            block: false;
+            block: boolean;
           },
         ];
       },
@@ -650,7 +650,7 @@ describe('takeValue', () => {
   });
 
   it('parses strings', () => {
-    type expected = { kind: Kind.STRING; value: string; block: false };
+    type expected = { kind: Kind.STRING; value: string; block: boolean };
 
     expectTypeOf<takeValue<tokenize<'""'>, false>>().toEqualTypeOf<_match<expected, []>>();
     expectTypeOf<takeValue<tokenize<'"\\t\\t"'>, false>>().toEqualTypeOf<_match<expected, []>>();
@@ -667,7 +667,7 @@ describe('takeValue', () => {
   });
 
   it('parses block strings', () => {
-    type expected = _match<{ kind: Kind.STRING; value: string; block: true }, []>;
+    type expected = _match<{ kind: Kind.STRING; value: string; block: boolean }, []>;
 
     const x = `""" 
       \\"""
@@ -723,7 +723,7 @@ describe('takeValue', () => {
               value: {
                 kind: Kind.STRING;
                 value: string;
-                block: false;
+                block: boolean;
               };
             },
           ];
@@ -746,7 +746,7 @@ describe('takeValue', () => {
               value: {
                 kind: Kind.STRING;
                 value: string;
-                block: false;
+                block: boolean;
               };
             },
             {
@@ -758,7 +758,7 @@ describe('takeValue', () => {
               value: {
                 kind: Kind.STRING;
                 value: string;
-                block: true;
+                block: boolean;
               };
             },
           ];

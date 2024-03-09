@@ -718,7 +718,7 @@ export type kitchensinkDocument = {
                       value: {
                         kind: Kind.STRING;
                         value: string;
-                        block: false;
+                        block: boolean;
                       };
                     },
                     {
@@ -730,7 +730,7 @@ export type kitchensinkDocument = {
                       value: {
                         kind: Kind.STRING;
                         value: string;
-                        block: true;
+                        block: boolean;
                       };
                     },
                   ];
