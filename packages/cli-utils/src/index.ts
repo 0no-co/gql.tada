@@ -39,8 +39,10 @@ async function main() {
 
       let introspection: IntrospectionQuery;
       if (url) {
-        const headers = (Array.isArray(options.header) ? options.header : []).reduce(
+        const headers = (Array.isArray(options.header) ? options.header : [options.header]).reduce(
           (acc, item) => {
+            if (!item) return acc;
+
             const parts = item.split(':');
             return {
               ...acc,
