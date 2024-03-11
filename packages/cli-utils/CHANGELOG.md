@@ -1,5 +1,12 @@
 # @gql.tada/cli-utils
 
+## 0.1.2
+
+### Patch Changes
+
+- ⚠️ Fix generate-schema not forwarding single header
+  Submitted by [@deini](https://github.com/deini) (See [#131](https://github.com/0no-co/gql.tada/pull/131))
+
 ## 0.1.1
 
 ### Patch Changes

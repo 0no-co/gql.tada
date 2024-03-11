@@ -1,6 +1,6 @@
 {
   "name": "@gql.tada/cli-utils",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "public": true,
   "description": "Main logic for gql.tada’s CLI tool.",
   "author": "0no.co <hi@0no.co>",
