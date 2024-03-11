@@ -37,7 +37,7 @@ describe('graphql()', () => {
 
     expectTypeOf<FragmentOf<typeof fragment>>().toEqualTypeOf<{
       [$tada.fragmentRefs]: {
-        Fields: $tada.ref;
+        Fields: 'Todo';
       };
     }>();
 
@@ -45,7 +45,7 @@ describe('graphql()', () => {
       todos:
         | ({
             [$tada.fragmentRefs]: {
-              Fields: $tada.ref;
+              Fields: 'Todo';
             };
           } | null)[]
         | null;
@@ -148,6 +148,54 @@ describe('graphql()', () => {
   });
 });
 
+describe('graphql() with custom scalars', () => {
+  const graphql = initGraphQLTada<{
+    introspection: simpleIntrospection;
+    scalars: {
+      ID: [string];
+      String: { value: string };
+    };
+  }>();
+
+  it('should create a unmasked fragment type with custom scalars', () => {
+    const fragment = graphql(`
+      fragment Fields on Todo @_unmask {
+        id
+        text
+      }
+    `);
+
+    const query = graphql(
+      `
+        query Test($limit: Int) {
+          todos(limit: $limit) {
+            ...Fields
+          }
+        }
+      `,
+      [fragment]
+    );
+
+    expectTypeOf<FragmentOf<typeof fragment>>().toEqualTypeOf<{
+      id: [string];
+      text: { value: string };
+    }>();
+
+    expectTypeOf<ResultOf<typeof query>>().toEqualTypeOf<{
+      todos:
+        | ({
+            id: [string];
+            text: { value: string };
+          } | null)[]
+        | null;
+    }>();
+
+    expectTypeOf<VariablesOf<typeof query>>().toEqualTypeOf<{
+      limit?: number | null;
+    }>();
+  });
+});
+
 describe('graphql() with `disableMasking: true`', () => {
   const graphql = initGraphQLTada<{ introspection: simpleIntrospection; disableMasking: true }>();
   it('should support unmasked fragments via the `disableMasking` option', () => {
@@ -230,6 +278,26 @@ describe('graphql.scalar()', () => {
   it('should reject invalid names of types', () => {
     // @ts-expect-error
     const actual = graphql.scalar('what', null);
+  });
+});
+
+describe('graphql.scalar() with custom scalars', () => {
+  const graphql = initGraphQLTada<{
+    introspection: simpleIntrospection;
+    scalars: {
+      ID: [string];
+      String: { value: string };
+    };
+  }>();
+
+  it('should return the type of custom ID type', () => {
+    type actual = ReturnType<typeof graphql.scalar<'ID'>>;
+    expectTypeOf<actual>().toEqualTypeOf<[string]>();
+  });
+
+  it('should return the type of custom String type', () => {
+    type actual = ReturnType<typeof graphql.scalar<'String'>>;
+    expectTypeOf<actual>().toEqualTypeOf<{ value: string }>();
   });
 });
 

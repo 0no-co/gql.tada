@@ -65,7 +65,7 @@ describe('getFragmentsOfDocumentsRec', () => {
       };
       [$tada.ref]: {
         [$tada.fragmentRefs]: {
-          TodoFragment: $tada.ref;
+          TodoFragment: 'Todo';
         };
       };
     };
