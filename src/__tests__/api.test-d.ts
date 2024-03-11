@@ -271,6 +271,18 @@ describe('readFragment', () => {
     expectTypeOf<typeof result>().toEqualTypeOf<ResultOf<document>>();
   });
 
+  it('unmasks regular fragments passed as generics', () => {
+    type fragment = parseDocument<`
+      fragment Fields on Todo {
+        id
+      }
+    `>;
+
+    type document = getDocumentNode<fragment, schema>;
+    const result = readFragment<document>({} as FragmentOf<document>);
+    expectTypeOf<typeof result>().toEqualTypeOf<ResultOf<document>>();
+  });
+
   it('should be callable on already unmasked fragments', () => {
     type fragment = parseDocument<`
       fragment Fields on Todo {
