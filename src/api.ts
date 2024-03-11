@@ -402,15 +402,19 @@ type VariablesOf<Document> = Document extends DocumentDecoration<any, infer Vari
  */
 type FragmentOf<Document extends makeDefinitionDecoration> = makeFragmentRef<Document>;
 
-export type mirrorFragmentTypeRec<Fragment, Data> = Fragment extends (infer Value)[]
-  ? mirrorFragmentTypeRec<Value, Data>[]
-  : Fragment extends readonly (infer Value)[]
-    ? readonly mirrorFragmentTypeRec<Value, Data>[]
-    : Fragment extends null
+type resultOrFragmentOf<Document extends makeDefinitionDecoration> =
+  | FragmentOf<Document>
+  | ResultOf<Document>;
+
+export type mirrorTypeRec<From, To> = From extends (infer Value)[]
+  ? mirrorTypeRec<Value, To>[]
+  : From extends readonly (infer Value)[]
+    ? readonly mirrorTypeRec<Value, To>[]
+    : From extends null
       ? null
-      : Fragment extends undefined
+      : From extends undefined
         ? undefined
-        : Data;
+        : To;
 
 type fragmentRefsOfFragmentsRec<
   Fragments extends readonly any[],
@@ -426,29 +430,41 @@ type resultOfFragmentsRec<
   ? resultOfFragmentsRec<Rest, ResultOf<Fragment> & Result>
   : Result;
 
-type fragmentOfTypeRec<Document extends makeDefinitionDecoration> =
-  | readonly fragmentOfTypeRec<Document>[]
-  | FragmentOf<Document>
-  | undefined
-  | null;
-
 type resultOfTypeRec<Data> = readonly resultOfTypeRec<Data>[] | Data | undefined | null;
 
-function readFragment<
-  const Document extends makeDefinitionDecoration & DocumentDecoration<any, any>,
-  const Fragment extends fragmentOfTypeRec<Document>,
->(
+function readFragment<const Document extends makeDefinitionDecoration>(
   _document: Document,
-  fragment: Fragment
-): fragmentOfTypeRec<Document> extends Fragment
-  ? never
-  : mirrorFragmentTypeRec<Fragment, ResultOf<Document>>;
+  fragment: resultOrFragmentOf<Document>
+): ResultOf<Document>;
+function readFragment<const Document extends makeDefinitionDecoration>(
+  _document: Document,
+  fragment: resultOrFragmentOf<Document> | null
+): ResultOf<Document> | null;
+function readFragment<const Document extends makeDefinitionDecoration>(
+  _document: Document,
+  fragment: resultOrFragmentOf<Document> | undefined
+): ResultOf<Document> | undefined;
+function readFragment<const Document extends makeDefinitionDecoration>(
+  _document: Document,
+  fragment: resultOrFragmentOf<Document> | null | undefined
+): ResultOf<Document> | null | undefined;
 
-// NOTE: Variant for already unmasked fragments
-function readFragment<
-  const Document extends makeDefinitionDecoration & DocumentDecoration<any, any>,
-  const Data extends resultOfTypeRec<ResultOf<Document>>,
->(_document: Document, data: Data): Data;
+function readFragment<const Document extends makeDefinitionDecoration>(
+  _document: Document,
+  fragment: readonly resultOrFragmentOf<Document>[]
+): readonly ResultOf<Document>[];
+function readFragment<const Document extends makeDefinitionDecoration>(
+  _document: Document,
+  fragment: readonly (resultOrFragmentOf<Document> | null)[]
+): readonly (ResultOf<Document> | null)[];
+function readFragment<const Document extends makeDefinitionDecoration>(
+  _document: Document,
+  fragment: readonly (resultOrFragmentOf<Document> | undefined)[]
+): readonly (ResultOf<Document> | undefined)[];
+function readFragment<const Document extends makeDefinitionDecoration>(
+  _document: Document,
+  fragment: readonly (resultOrFragmentOf<Document> | null | undefined)[]
+): readonly (ResultOf<Document> | null | undefined)[];
 
 /** Unmasks a fragment mask for a given fragment document and data.
  *
@@ -539,7 +555,7 @@ function maskFragments<
   data: Data
 ): resultOfTypeRec<resultOfFragmentsRec<Fragments>> extends Data
   ? never
-  : mirrorFragmentTypeRec<Data, fragmentRefsOfFragmentsRec<Fragments>> {
+  : mirrorTypeRec<Data, fragmentRefsOfFragmentsRec<Fragments>> {
   return data as any;
 }
 

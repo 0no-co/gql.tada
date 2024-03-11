@@ -9,13 +9,7 @@ import type { obj } from '../utils';
 
 import { readFragment, maskFragments, unsafe_readResult, initGraphQLTada } from '../api';
 
-import type {
-  ResultOf,
-  VariablesOf,
-  FragmentOf,
-  mirrorFragmentTypeRec,
-  getDocumentNode,
-} from '../api';
+import type { ResultOf, VariablesOf, FragmentOf, mirrorTypeRec, getDocumentNode } from '../api';
 
 type schema = simpleSchema;
 type value = { __value: true };
@@ -241,30 +235,28 @@ describe('graphql.scalar()', () => {
   });
 });
 
-describe('mirrorFragmentTypeRec', () => {
+describe('mirrorTypeRec', () => {
   it('mirrors null and undefined', () => {
-    expectTypeOf<mirrorFragmentTypeRec<value, data>>().toEqualTypeOf<data>();
-    expectTypeOf<mirrorFragmentTypeRec<value | null, data>>().toEqualTypeOf<data | null>();
-    expectTypeOf<mirrorFragmentTypeRec<value | undefined, data>>().toEqualTypeOf<
-      data | undefined
-    >();
-    expectTypeOf<mirrorFragmentTypeRec<value | null | undefined, data>>().toEqualTypeOf<
+    expectTypeOf<mirrorTypeRec<value, data>>().toEqualTypeOf<data>();
+    expectTypeOf<mirrorTypeRec<value | null, data>>().toEqualTypeOf<data | null>();
+    expectTypeOf<mirrorTypeRec<value | undefined, data>>().toEqualTypeOf<data | undefined>();
+    expectTypeOf<mirrorTypeRec<value | null | undefined, data>>().toEqualTypeOf<
       data | null | undefined
     >();
   });
 
   it('mirrors nested arrays', () => {
-    expectTypeOf<mirrorFragmentTypeRec<value[], data>>().toEqualTypeOf<data[]>();
-    expectTypeOf<mirrorFragmentTypeRec<value[] | null, data>>().toEqualTypeOf<data[] | null>();
-    expectTypeOf<mirrorFragmentTypeRec<(value | null)[] | null, data>>().toEqualTypeOf<
+    expectTypeOf<mirrorTypeRec<value[], data>>().toEqualTypeOf<data[]>();
+    expectTypeOf<mirrorTypeRec<value[] | null, data>>().toEqualTypeOf<data[] | null>();
+    expectTypeOf<mirrorTypeRec<(value | null)[] | null, data>>().toEqualTypeOf<
       (data | null)[] | null
     >();
-    expectTypeOf<mirrorFragmentTypeRec<readonly value[], data>>().toEqualTypeOf<readonly data[]>();
+    expectTypeOf<mirrorTypeRec<readonly value[], data>>().toEqualTypeOf<readonly data[]>();
   });
 
   it('mirrors complex types', () => {
     type complex = { a: true } | { b: true };
-    type actual = mirrorFragmentTypeRec<value, complex>;
+    type actual = mirrorTypeRec<value, complex>;
     expectTypeOf<actual>().toEqualTypeOf<complex>();
   });
 });
@@ -283,7 +275,7 @@ describe('readFragment', () => {
     expectTypeOf<typeof result>().toBeNever();
   });
 
-  it('should not unmask empty objects', () => {
+  it('should not accept empty objects', () => {
     type fragment = parseDocument<`
       fragment Fields on Todo {
         id
@@ -292,8 +284,7 @@ describe('readFragment', () => {
 
     type document = getDocumentNode<fragment, schema>;
     // @ts-expect-error
-    const result = readFragment({} as document, {});
-    expectTypeOf<typeof result>().toBeNever();
+    const _result = readFragment({} as document, {});
   });
 
   it('unmasks regular fragments', () => {
