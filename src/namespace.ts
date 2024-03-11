@@ -94,12 +94,12 @@ type makeFragmentRef<Document> = Document extends { [$tada.definition]?: infer D
         ? Result
         : {
             [$tada.fragmentRefs]: {
-              [Name in Definition['fragment']]: $tada.ref;
+              [Name in Definition['fragment']]: Definition['on'];
             };
           }
       : {
           [$tada.fragmentRefs]: {
-            [Name in Definition['fragment']]: $tada.ref;
+            [Name in Definition['fragment']]: Definition['on'];
           };
         }
     : never
