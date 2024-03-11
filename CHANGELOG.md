@@ -1,5 +1,14 @@
 # gql.tada
 
+## 1.3.3
+
+### Patch Changes
+
+- Replace redundant `$tada.ref` value on `$tada.fragmentRefs` definitions for masked fragments with typename string literal. The record for fragment masks is already namespaced, so there wasn't a need to use a symbol value here, and this further increases readability and usefulness
+  Submitted by [@kitten](https://github.com/kitten) (See [#126](https://github.com/0no-co/gql.tada/pull/126))
+- Allow `readFragment()` to accept the document as a generic rather than a (runtime value) argument. This replaces the complex mapping type for input arguments, and hence drops the (undocumented) support for nested arrays being passed to it
+  Submitted by [@kitten](https://github.com/kitten) (See [#128](https://github.com/0no-co/gql.tada/pull/128))
+
 ## 1.3.2
 
 ### Patch Changes
