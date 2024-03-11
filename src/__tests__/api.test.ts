@@ -95,7 +95,7 @@ describe('declare setupSchema configuration', () => {
             id: string | number;
             complete: boolean | null;
             [$tada.fragmentRefs]: {
-              TodoData: $tada.ref;
+              TodoData: 'Todo';
             };
           } | null)[] | null;
         }>();
@@ -160,7 +160,7 @@ describe('initGraphQLTada configuration', () => {
             id: string | number;
             complete: boolean | null;
             [$tada.fragmentRefs]: {
-              TodoData: $tada.ref;
+              TodoData: 'Todo';
             };
           } | null)[] | null;
         }>();

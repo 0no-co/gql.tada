@@ -45,7 +45,7 @@ describe('graphql()', () => {
 
     expectTypeOf<FragmentOf<typeof fragment>>().toEqualTypeOf<{
       [$tada.fragmentRefs]: {
-        Fields: $tada.ref;
+        Fields: 'Todo';
       };
     }>();
 
@@ -53,7 +53,7 @@ describe('graphql()', () => {
       todos:
         | ({
             [$tada.fragmentRefs]: {
-              Fields: $tada.ref;
+              Fields: 'Todo';
             };
           } | null)[]
         | null;
