@@ -126,23 +126,23 @@ importers:
         version: 4.0.6(graphql@16.8.1)(react@18.2.0)
     devDependencies:
       '@0no-co/graphqlsp':
-        specifier: ^1.4.2
-        version: 1.4.2
+        specifier: ^1.5.0
+        version: 1.5.0
       '@types/react':
-        specifier: ^18.2.63
-        version: 18.2.63
+        specifier: ^18.2.64
+        version: 18.2.64
       '@types/react-dom':
-        specifier: ^18.2.20
-        version: 18.2.20
+        specifier: ^18.2.21
+        version: 18.2.21
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.1.5)
+        version: 4.2.1(vite@5.1.6)
       typescript:
         specifier: ^5.4.2
         version: 5.4.2
       vite:
-        specifier: ^5.1.5
-        version: 5.1.5(@types/node@20.11.0)(terser@5.26.0)
+        specifier: ^5.1.6
+        version: 5.1.6(@types/node@20.11.0)(terser@5.26.0)
 
   packages/cli-utils:
     dependencies:
@@ -219,9 +219,10 @@ packages:
       graphql: 16.8.1
     dev: false
 
-  /@0no-co/graphqlsp@1.4.2:
-    resolution: {integrity: sha512-qgrRwrz5Q7ev7lO9XKm3mf6UefFtjIciZUKL69mZjoEPGbRzM/Mx+6YNd2dGt1uIi52T5jT+f6rR4K5lWyDS0A==}
+  /@0no-co/graphqlsp@1.5.0:
+    resolution: {integrity: sha512-NGMUwzj7m6DfIqudZxfTfUEmzKR2n9xphPssCKqkGsMEKe9qIzrNqLpXXwzXTWrGBS5FBELW+TXGUyTa0v1LAw==}
     dependencies:
+      json5: 2.2.3
       node-fetch: 2.7.0
     transitivePeerDependencies:
       - encoding
@@ -2247,14 +2248,14 @@ packages:
     resolution: {integrity: sha512-ga8y9v9uyeiLdpKddhxYQkxNDrfvuPrlFb0N1qnZZByvcElJaXthF1UhvCh9TLWJBEHeNtdnbysW7Y6Uq8CVng==}
     dev: true
 
-  /@types/react-dom@18.2.20:
-    resolution: {integrity: sha512-HXN/biJY8nv20Cn9ZbCFq3liERd4CozVZmKbaiZ9KiKTrWqsP7eoGDO6OOGvJQwoVFuiXaiJ7nBBjiFFbRmQMQ==}
+  /@types/react-dom@18.2.21:
+    resolution: {integrity: sha512-gnvBA/21SA4xxqNXEwNiVcP0xSGHh/gi1VhWv9Bl46a0ItbTT5nFY+G9VSQpaG/8N/qdJpJ+vftQ4zflTtnjLw==}
     dependencies:
-      '@types/react': 18.2.63
+      '@types/react': 18.2.64
     dev: true
 
-  /@types/react@18.2.63:
-    resolution: {integrity: sha512-ppaqODhs15PYL2nGUOaOu2RSCCB4Difu4UFrP4I3NHLloXC/ESQzQMi9nvjfT1+rudd0d2L3fQPJxRSey+rGlQ==}
+  /@types/react@18.2.64:
+    resolution: {integrity: sha512-MlmPvHgjj2p3vZaxbQgFUQFvD8QiZwACfGqEdDSWou5yISWxDQ4/74nCAwsUiX7UFLKZz3BbVSPj+YxeoGGCfg==}
     dependencies:
       '@types/prop-types': 15.7.11
       '@types/scheduler': 0.16.8
@@ -2439,7 +2440,7 @@ packages:
       graphql: 16.8.1
     dev: false
 
-  /@vitejs/plugin-react@4.2.1(vite@5.1.5):
+  /@vitejs/plugin-react@4.2.1(vite@5.1.6):
     resolution: {integrity: sha512-oojO9IDc4nCUUi8qIR11KoQm0XFFLIwsRBwHRR4d/88IWghn1y6ckz/bJ8GHDCsYEJee8mDzqtJxh15/cisJNQ==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
@@ -2450,7 +2451,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.23.3(@babel/core@7.23.7)
       '@types/babel__core': 7.20.5
       react-refresh: 0.14.0
-      vite: 5.1.5(@types/node@20.11.0)(terser@5.26.0)
+      vite: 5.1.6(@types/node@20.11.0)(terser@5.26.0)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -2800,8 +2801,8 @@ packages:
       tsconfck: 3.0.1(typescript@5.4.2)
       unist-util-visit: 5.0.0
       vfile: 6.0.1
-      vite: 5.1.5(@types/node@20.11.0)(terser@5.26.0)
-      vitefu: 0.2.5(vite@5.1.5)
+      vite: 5.1.6(@types/node@20.11.0)(terser@5.26.0)
+      vitefu: 0.2.5(vite@5.1.6)
       which-pm: 2.1.1
       yargs-parser: 21.1.1
       zod: 3.22.4
@@ -8173,7 +8174,7 @@ packages:
       debug: 4.3.4
       pathe: 1.1.2
       picocolors: 1.0.0
-      vite: 5.1.5(@types/node@20.11.0)(terser@5.26.0)
+      vite: 5.1.6(@types/node@20.11.0)(terser@5.26.0)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -8185,8 +8186,8 @@ packages:
       - terser
     dev: true
 
-  /vite@5.1.5(@types/node@20.11.0)(terser@5.26.0):
-    resolution: {integrity: sha512-BdN1xh0Of/oQafhU+FvopafUp6WaYenLU/NFoL5WyJL++GxkNfieKzBhM24H3HVsPQrlAqB7iJYTHabzaRed5Q==}
+  /vite@5.1.6(@types/node@20.11.0)(terser@5.26.0):
+    resolution: {integrity: sha512-yYIAZs9nVfRJ/AiOLCA91zzhjsHUgMjB+EigzFb6W2XTLO8JixBCKCjvhKZaye+NKYHCrkv3Oh50dH9EdLU2RA==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
     peerDependencies:
@@ -8221,7 +8222,7 @@ packages:
     optionalDependencies:
       fsevents: 2.3.3
 
-  /vitefu@0.2.5(vite@5.1.5):
+  /vitefu@0.2.5(vite@5.1.6):
     resolution: {integrity: sha512-SgHtMLoqaeeGnd2evZ849ZbACbnwQCIwRH57t18FxcXoZop0uQu0uzlIhJBlF/eWVzuce0sHeqPcDo+evVcg8Q==}
     peerDependencies:
       vite: ^3.0.0 || ^4.0.0 || ^5.0.0
@@ -8229,7 +8230,7 @@ packages:
       vite:
         optional: true
     dependencies:
-      vite: 5.1.5(@types/node@20.11.0)(terser@5.26.0)
+      vite: 5.1.6(@types/node@20.11.0)(terser@5.26.0)
     dev: false
 
   /vitest@1.1.3(@types/node@20.11.0)(terser@5.26.0):
@@ -8276,7 +8277,7 @@ packages:
       strip-literal: 1.3.0
       tinybench: 2.5.1
       tinypool: 0.8.1
-      vite: 5.1.5(@types/node@20.11.0)(terser@5.26.0)
+      vite: 5.1.6(@types/node@20.11.0)(terser@5.26.0)
       vite-node: 1.1.3(@types/node@20.11.0)(terser@5.26.0)
       why-is-node-running: 2.2.2
     transitivePeerDependencies:
