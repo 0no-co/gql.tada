@@ -9,11 +9,9 @@ import type { obj } from '../utils';
 
 import { readFragment, maskFragments, unsafe_readResult, initGraphQLTada } from '../api';
 
-import type { ResultOf, VariablesOf, FragmentOf, mirrorTypeRec, getDocumentNode } from '../api';
+import type { ResultOf, VariablesOf, FragmentOf, getDocumentNode } from '../api';
 
 type schema = simpleSchema;
-type value = { __value: true };
-type data = { __data: true };
 
 describe('graphql()', () => {
   const graphql = initGraphQLTada<{ introspection: simpleIntrospection }>();
@@ -232,32 +230,6 @@ describe('graphql.scalar()', () => {
   it('should reject invalid names of types', () => {
     // @ts-expect-error
     const actual = graphql.scalar('what', null);
-  });
-});
-
-describe('mirrorTypeRec', () => {
-  it('mirrors null and undefined', () => {
-    expectTypeOf<mirrorTypeRec<value, data>>().toEqualTypeOf<data>();
-    expectTypeOf<mirrorTypeRec<value | null, data>>().toEqualTypeOf<data | null>();
-    expectTypeOf<mirrorTypeRec<value | undefined, data>>().toEqualTypeOf<data | undefined>();
-    expectTypeOf<mirrorTypeRec<value | null | undefined, data>>().toEqualTypeOf<
-      data | null | undefined
-    >();
-  });
-
-  it('mirrors nested arrays', () => {
-    expectTypeOf<mirrorTypeRec<value[], data>>().toEqualTypeOf<data[]>();
-    expectTypeOf<mirrorTypeRec<value[] | null, data>>().toEqualTypeOf<data[] | null>();
-    expectTypeOf<mirrorTypeRec<(value | null)[] | null, data>>().toEqualTypeOf<
-      (data | null)[] | null
-    >();
-    expectTypeOf<mirrorTypeRec<readonly value[], data>>().toEqualTypeOf<readonly data[]>();
-  });
-
-  it('mirrors complex types', () => {
-    type complex = { a: true } | { b: true };
-    type actual = mirrorTypeRec<value, complex>;
-    expectTypeOf<actual>().toEqualTypeOf<complex>();
   });
 });
 

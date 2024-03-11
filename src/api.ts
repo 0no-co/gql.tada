@@ -420,16 +420,6 @@ type fragmentRefsOfFragmentsRec<
   ? fragmentRefsOfFragmentsRec<Rest, makeFragmentRef<Fragment> & FragmentRefs>
   : obj<FragmentRefs>;
 
-export type mirrorTypeRec<From, To> = From extends (infer Value)[]
-  ? mirrorTypeRec<Value, To>[]
-  : From extends readonly (infer Value)[]
-    ? readonly mirrorTypeRec<Value, To>[]
-    : From extends null
-      ? null
-      : From extends undefined
-        ? undefined
-        : To;
-
 /** Unmasks a fragment mask for a given fragment document and data.
  *
  * @param _document - A GraphQL document of a fragment, created using {@link graphql}.
