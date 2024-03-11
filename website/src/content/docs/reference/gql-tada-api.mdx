@@ -85,7 +85,7 @@ type Media = ReturnType<typeof graphql.scalar<'Media'>>;
 
 | | Description |
 | ----------- | ----------- |
-| `_document` argument | A GraphQL document of a fragment, created using [`graphql()`](#graphql). |
+| `_document` optional argument | A GraphQL document of a fragment, created using [`graphql()`](#graphql). |
 | `fragment` argument | A mask of the fragment, which can be wrapped in arrays, or nullable. |
 | returns | The unmasked data of the fragment. | 
 
@@ -95,10 +95,21 @@ fragment. This encourages isolation and is known as “fragment masking.”
 
 This means that you must use `readFragment()` to unmask these fragment masks
 and get to the data. This encourages isolation and only using the data you define
-a part of your codebase to require.
+a part of your codebase to require:
+
+```ts
+const unmaskedData = readFragment(Fragment, maskedData);
+```
 
 When passing `fragment` masks to `readFragment()`, you may also pass nullable, optional data, or data
 wrapped in arrays to `readFragment()` and the result type will be unwrapped and inferred accordingly.
+
+Instead of passing the fragment document as the first argument, you may also pass it as a generic,
+since it's not used as a runtime value anyway:
+
+```ts
+const unmaskedData = readFragment<typeof Fragment>(maskedData);
+```
 
 [Read more about fragment masking on the “Writing GraphQL” page.](../../get-started/writing-graphql/#fragment-masking)
 

@@ -9,17 +9,9 @@ import type { obj } from '../utils';
 
 import { readFragment, maskFragments, unsafe_readResult, initGraphQLTada } from '../api';
 
-import type {
-  ResultOf,
-  VariablesOf,
-  FragmentOf,
-  mirrorFragmentTypeRec,
-  getDocumentNode,
-} from '../api';
+import type { ResultOf, VariablesOf, FragmentOf, getDocumentNode } from '../api';
 
 type schema = simpleSchema;
-type value = { __value: true };
-type data = { __data: true };
 
 describe('graphql()', () => {
   const graphql = initGraphQLTada<{ introspection: simpleIntrospection }>();
@@ -309,34 +301,6 @@ describe('graphql.scalar() with custom scalars', () => {
   });
 });
 
-describe('mirrorFragmentTypeRec', () => {
-  it('mirrors null and undefined', () => {
-    expectTypeOf<mirrorFragmentTypeRec<value, data>>().toEqualTypeOf<data>();
-    expectTypeOf<mirrorFragmentTypeRec<value | null, data>>().toEqualTypeOf<data | null>();
-    expectTypeOf<mirrorFragmentTypeRec<value | undefined, data>>().toEqualTypeOf<
-      data | undefined
-    >();
-    expectTypeOf<mirrorFragmentTypeRec<value | null | undefined, data>>().toEqualTypeOf<
-      data | null | undefined
-    >();
-  });
-
-  it('mirrors nested arrays', () => {
-    expectTypeOf<mirrorFragmentTypeRec<value[], data>>().toEqualTypeOf<data[]>();
-    expectTypeOf<mirrorFragmentTypeRec<value[] | null, data>>().toEqualTypeOf<data[] | null>();
-    expectTypeOf<mirrorFragmentTypeRec<(value | null)[] | null, data>>().toEqualTypeOf<
-      (data | null)[] | null
-    >();
-    expectTypeOf<mirrorFragmentTypeRec<readonly value[], data>>().toEqualTypeOf<readonly data[]>();
-  });
-
-  it('mirrors complex types', () => {
-    type complex = { a: true } | { b: true };
-    type actual = mirrorFragmentTypeRec<value, complex>;
-    expectTypeOf<actual>().toEqualTypeOf<complex>();
-  });
-});
-
 describe('readFragment', () => {
   it('should not accept a non-fragment document', () => {
     type query = parseDocument<`
@@ -351,7 +315,7 @@ describe('readFragment', () => {
     expectTypeOf<typeof result>().toBeNever();
   });
 
-  it('should not unmask empty objects', () => {
+  it('should not accept empty objects', () => {
     type fragment = parseDocument<`
       fragment Fields on Todo {
         id
@@ -360,8 +324,7 @@ describe('readFragment', () => {
 
     type document = getDocumentNode<fragment, schema>;
     // @ts-expect-error
-    const result = readFragment({} as document, {});
-    expectTypeOf<typeof result>().toBeNever();
+    const _result = readFragment({} as document, {});
   });
 
   it('unmasks regular fragments', () => {
@@ -373,6 +336,18 @@ describe('readFragment', () => {
 
     type document = getDocumentNode<fragment, schema>;
     const result = readFragment({} as document, {} as FragmentOf<document>);
+    expectTypeOf<typeof result>().toEqualTypeOf<ResultOf<document>>();
+  });
+
+  it('unmasks regular fragments passed as generics', () => {
+    type fragment = parseDocument<`
+      fragment Fields on Todo {
+        id
+      }
+    `>;
+
+    type document = getDocumentNode<fragment, schema>;
+    const result = readFragment<document>({} as FragmentOf<document>);
     expectTypeOf<typeof result>().toEqualTypeOf<ResultOf<document>>();
   });
 
@@ -451,7 +426,7 @@ describe('readFragment', () => {
 });
 
 describe('maskFragments', () => {
-  it('should not mask empty objects', () => {
+  it('should not accept empty objects', () => {
     type fragment = parseDocument<`
       fragment Fields on Todo {
         id
@@ -460,8 +435,7 @@ describe('maskFragments', () => {
 
     type document = getDocumentNode<fragment, schema>;
     // @ts-expect-error
-    const result = maskFragments([{} as document], {});
-    expectTypeOf<typeof result>().toBeNever();
+    const _result = maskFragments([{} as document], {});
   });
 
   it('masks fragments', () => {
