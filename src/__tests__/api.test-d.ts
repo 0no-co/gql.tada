@@ -374,7 +374,7 @@ describe('readFragment', () => {
 });
 
 describe('maskFragments', () => {
-  it('should not mask empty objects', () => {
+  it('should not accept empty objects', () => {
     type fragment = parseDocument<`
       fragment Fields on Todo {
         id
@@ -383,8 +383,7 @@ describe('maskFragments', () => {
 
     type document = getDocumentNode<fragment, schema>;
     // @ts-expect-error
-    const result = maskFragments([{} as document], {});
-    expectTypeOf<typeof result>().toBeNever();
+    const _result = maskFragments([{} as document], {});
   });
 
   it('masks fragments', () => {

@@ -406,6 +406,20 @@ type resultOrFragmentOf<Document extends makeDefinitionDecoration> =
   | FragmentOf<Document>
   | ResultOf<Document>;
 
+type resultOfFragmentsRec<
+  Fragments extends readonly any[],
+  Result = {},
+> = Fragments extends readonly [infer Fragment, ...infer Rest]
+  ? resultOfFragmentsRec<Rest, ResultOf<Fragment> & Result>
+  : Result;
+
+type fragmentRefsOfFragmentsRec<
+  Fragments extends readonly any[],
+  FragmentRefs = {},
+> = Fragments extends readonly [infer Fragment, ...infer Rest]
+  ? fragmentRefsOfFragmentsRec<Rest, makeFragmentRef<Fragment> & FragmentRefs>
+  : obj<FragmentRefs>;
+
 export type mirrorTypeRec<From, To> = From extends (infer Value)[]
   ? mirrorTypeRec<Value, To>[]
   : From extends readonly (infer Value)[]
@@ -415,22 +429,6 @@ export type mirrorTypeRec<From, To> = From extends (infer Value)[]
       : From extends undefined
         ? undefined
         : To;
-
-type fragmentRefsOfFragmentsRec<
-  Fragments extends readonly any[],
-  FragmentRefs = {},
-> = Fragments extends readonly [infer Fragment, ...infer Rest]
-  ? fragmentRefsOfFragmentsRec<Rest, makeFragmentRef<Fragment> & FragmentRefs>
-  : obj<FragmentRefs>;
-
-type resultOfFragmentsRec<
-  Fragments extends readonly any[],
-  Result = {},
-> = Fragments extends readonly [infer Fragment, ...infer Rest]
-  ? resultOfFragmentsRec<Rest, ResultOf<Fragment> & Result>
-  : Result;
-
-type resultOfTypeRec<Data> = readonly resultOfTypeRec<Data>[] | Data | undefined | null;
 
 function readFragment<const Document extends makeDefinitionDecoration>(
   _document: Document,
@@ -518,6 +516,40 @@ function readFragment(_document: unknown, fragment: unknown) {
   return fragment;
 }
 
+function maskFragments<const Fragments extends readonly [...makeDefinitionDecoration[]]>(
+  _fragments: Fragments,
+  fragment: resultOfFragmentsRec<Fragments>
+): fragmentRefsOfFragmentsRec<Fragments>;
+function maskFragments<const Fragments extends readonly [...makeDefinitionDecoration[]]>(
+  _fragments: Fragments,
+  fragment: resultOfFragmentsRec<Fragments> | null
+): fragmentRefsOfFragmentsRec<Fragments> | null;
+function maskFragments<const Fragments extends readonly [...makeDefinitionDecoration[]]>(
+  _fragments: Fragments,
+  fragment: resultOfFragmentsRec<Fragments> | undefined
+): fragmentRefsOfFragmentsRec<Fragments> | undefined;
+function maskFragments<const Fragments extends readonly [...makeDefinitionDecoration[]]>(
+  _fragments: Fragments,
+  fragment: resultOfFragmentsRec<Fragments> | null | undefined
+): fragmentRefsOfFragmentsRec<Fragments> | null | undefined;
+
+function maskFragments<const Fragments extends readonly [...makeDefinitionDecoration[]]>(
+  _fragments: Fragments,
+  fragment: readonly resultOfFragmentsRec<Fragments>[]
+): readonly fragmentRefsOfFragmentsRec<Fragments>[];
+function maskFragments<const Fragments extends readonly [...makeDefinitionDecoration[]]>(
+  _fragments: Fragments,
+  fragment: readonly (resultOfFragmentsRec<Fragments> | null)[]
+): readonly (fragmentRefsOfFragmentsRec<Fragments> | null)[];
+function maskFragments<const Fragments extends readonly [...makeDefinitionDecoration[]]>(
+  _fragments: Fragments,
+  fragment: readonly (resultOfFragmentsRec<Fragments> | undefined)[]
+): readonly (fragmentRefsOfFragmentsRec<Fragments> | undefined)[];
+function maskFragments<const Fragments extends readonly [...makeDefinitionDecoration[]]>(
+  _fragments: Fragments,
+  fragment: readonly (resultOfFragmentsRec<Fragments> | null | undefined)[]
+): readonly (fragmentRefsOfFragmentsRec<Fragments> | null | undefined)[];
+
 /** For testing, masks fragment data for given data and fragments.
  *
  * @param _fragments - A list of GraphQL documents of fragments, created using {@link graphql}.
@@ -547,16 +579,8 @@ function readFragment(_document: unknown, fragment: unknown) {
  *
  * @see {@link readFragment} for how to read from fragment masks (i.e. the reverse)
  */
-function maskFragments<
-  const Fragments extends readonly [...makeDefinitionDecoration[]],
-  const Data extends resultOfTypeRec<resultOfFragmentsRec<Fragments>>,
->(
-  _fragments: Fragments,
-  data: Data
-): resultOfTypeRec<resultOfFragmentsRec<Fragments>> extends Data
-  ? never
-  : mirrorTypeRec<Data, fragmentRefsOfFragmentsRec<Fragments>> {
-  return data as any;
+function maskFragments(_fragments: unknown, data: unknown) {
+  return data;
 }
 
 /** For testing, converts document data without fragment refs to their result type.
