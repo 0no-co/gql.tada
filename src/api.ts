@@ -479,6 +479,30 @@ export type mirrorTypeRec<From, To> = From extends (infer Value)[]
  * @see {@link readFragment} for how to read from fragment masks.
  */
 function readFragment<const Document extends makeDefinitionDecoration>(
+  fragment: resultOrFragmentOf<Document>
+): ResultOf<Document>;
+function readFragment<const Document extends makeDefinitionDecoration>(
+  fragment: resultOrFragmentOf<Document> | null
+): ResultOf<Document> | null;
+function readFragment<const Document extends makeDefinitionDecoration>(
+  fragment: resultOrFragmentOf<Document> | undefined
+): ResultOf<Document> | undefined;
+function readFragment<const Document extends makeDefinitionDecoration>(
+  fragment: resultOrFragmentOf<Document> | null | undefined
+): ResultOf<Document> | null | undefined;
+function readFragment<const Document extends makeDefinitionDecoration>(
+  fragment: readonly resultOrFragmentOf<Document>[]
+): readonly ResultOf<Document>[];
+function readFragment<const Document extends makeDefinitionDecoration>(
+  fragment: readonly (resultOrFragmentOf<Document> | null)[]
+): readonly (ResultOf<Document> | null)[];
+function readFragment<const Document extends makeDefinitionDecoration>(
+  fragment: readonly (resultOrFragmentOf<Document> | undefined)[]
+): readonly (ResultOf<Document> | undefined)[];
+function readFragment<const Document extends makeDefinitionDecoration>(
+  fragment: readonly (resultOrFragmentOf<Document> | null | undefined)[]
+): readonly (ResultOf<Document> | null | undefined)[];
+function readFragment<const Document extends makeDefinitionDecoration>(
   _document: Document,
   fragment: resultOrFragmentOf<Document>
 ): ResultOf<Document>;
@@ -510,8 +534,8 @@ function readFragment<const Document extends makeDefinitionDecoration>(
   _document: Document,
   fragment: readonly (resultOrFragmentOf<Document> | null | undefined)[]
 ): readonly (ResultOf<Document> | null | undefined)[];
-function readFragment(_document: unknown, fragment: unknown) {
-  return fragment;
+function readFragment(...args: [unknown] | [unknown, unknown]) {
+  return args.length === 2 ? args[1] : args[0];
 }
 
 /** For testing, masks fragment data for given data and fragments.
