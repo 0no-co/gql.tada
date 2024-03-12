@@ -357,6 +357,12 @@
   overflow: hidden;
 }
 
+@media (max-width: 768px) {
+  :root .VPContent .vp-doc .vp-adaptive-theme:not(.blocks > *) {
+    margin: 0;
+  }
+}
+
 :root .VPContent .vp-doc .vp-adaptive-theme .copy {
   background-color: var(--vp-c-bg-alt);
 }
@@ -377,6 +383,12 @@
 
 :root .VPContent .vp-doc .vp-code-group .tabs label:only-of-type {
   cursor: unset;
+}
+
+@media (max-width: 768px) {
+  :root .VPContent .vp-doc .vp-code-group .tabs {
+    padding: 0 2rem;
+  }
 }
 
 :root .VPContent .vp-doc .vp-code-group .tabs label {
