@@ -2,6 +2,7 @@ import { defineConfig } from 'vitepress';
 import { defaultTwoslashOptions } from 'shikiji-twoslash';
 import { transformerTwoslash } from 'vitepress-plugin-twoslash';
 import type { JsxEmit } from 'typescript';
+import { JsxElement } from 'typescript';
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -21,6 +22,39 @@ export default defineConfig({
         twoslashOptions: {
           ...defaultTwoslashOptions(),
           vfsRoot: `${import.meta.dirname}/../twoslash/`,
+          shouldGetHoverInfo: (() => {
+            let lastIdentifier: string | undefined;
+            return (identifier, _start, _filename) => {
+              try {
+                switch (identifier) {
+                  case 'li':
+                  case 'ul':
+                  case 'div':
+                  case 'p':
+                  case 'h1':
+                  case 'h2':
+                  case 'h3':
+                  case 'section':
+                  case 'Promise':
+                  case 'fetch':
+                  case 'JSON':
+                    return false;
+                  case 'stringify':
+                    return lastIdentifier !== 'JSON';
+                  case 'method':
+                    return lastIdentifier !== 'fetch';
+                  case 'response':
+                    return lastIdentifier !== 'Promise' && lastIdentifier !== 'fetch';
+                  case 'json':
+                    return lastIdentifier !== 'response';
+                  default:
+                    return true;
+                }
+              } finally {
+                  lastIdentifier = identifier;
+              }
+            };
+          })(),
           compilerOptions: {
             jsx: 4 as JsxEmit,
           },
