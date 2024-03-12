@@ -222,6 +222,7 @@ export const Pokemon = (props: {
   );
 };
 ```
+:::
 
 As we can see, defining reusing and composing fragments, is just as easy
 as reusing and composing components.

@@ -123,16 +123,6 @@ a scalar or enum, but not a full fragment.
 
 #### Example
 
-```ts {"Call graphql.scalar to type check a value against a scalar type:":4-5} {"Use ReturnType to get the type of a scalar directly:":8-9}
-import { graphql } from 'gql.tada';
-
-function validateMediaEnum(value: 'Book' | 'Song' | 'Video') {
-  const media = graphql.scalar('Media', value);
-}
-
-type Media = ReturnType<typeof graphql.scalar<'Media'>>;
-```
-
 ```ts twoslash
 // @filename: graphq-env.d.ts
 export type introspection = {
@@ -172,6 +162,7 @@ declare module 'gql.tada' {
 }
 
 // @filename: index.ts
+// ---cut-before---
 import { graphql } from 'gql.tada';
 
 function validateMediaEnum(value: 'Book' | 'Song' | 'Video') {

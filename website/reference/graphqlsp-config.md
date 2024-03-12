@@ -147,6 +147,7 @@ declare module 'gql.tada' {
   }
 }
 ```
+:::
 
 If we want to now customize scalars, for instance, we’ll need to create our own `graphql()` function
 by using the `introspection` type with [`gql.tada`’s `initGraphQLTada<>()` function](./gql-tada-api#initgraphqltada):
@@ -184,6 +185,7 @@ const introspection = {
 
 export { introspection };
 ```
+:::
 
 Hence, with this format it’s required to import the introspection and to create a [`graphql()` function](./gql-tada-api#graphql) using
 the [`initGraphQLTada<>()` function](./gql-tada-api#initgraphqltada). The introspection type won’t be set up project-wide, since the
