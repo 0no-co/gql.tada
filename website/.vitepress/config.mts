@@ -5,9 +5,11 @@ import type { JsxEmit } from 'typescript';
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
+  lang: 'en-US',
   title: 'gql.tada 🪄',
   description: 'Magical GraphQL query engine for TypeScript',
   cleanUrls: true,
+  lastUpdated: true,
 
   markdown: {
     theme: {
@@ -28,6 +30,9 @@ export default defineConfig({
   },
 
   themeConfig: {
+    editLink: {
+      pattern: 'https://github.com/0no-co/gql.tada/edit/main/website/:path'
+    },
     outline: {
       level: [2, 3],
     },
@@ -35,6 +40,7 @@ export default defineConfig({
       provider: 'local'
     },
     nav: [],
+
     sidebar: [
       {
         text: 'Get Started',

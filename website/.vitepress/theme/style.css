@@ -239,14 +239,14 @@
   margin-bottom: 0.5rem;
 }
 
-:root .VPDocFooter .VPLink {
+:root .VPDocFooter .pager .VPLink {
   box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 1px 0px, rgba(0, 0, 0, 0.24) 0px 2px 1px 0px;
   background: linear-gradient(180deg, #171821 0%, #0c0c11 100%);
   border: 1px solid #2e3042;
   opacity: 0.78;
 }
 
-:root:not(.dark) .VPDocFooter .VPLink {
+:root:not(.dark) .VPDocFooter .pager .VPLink {
   background: linear-gradient(180deg, #ffffff 0%, #fbfbfc 80%);
   border: 1px solid #dbdce6;
   opacity: 1.0;
@@ -297,6 +297,10 @@
 
 :root:not(.dark) .custom-block {
   box-shadow: inset 0 0 0 1px rgba(35, 35, 35, 0.15);
+}
+
+:root .VPContent .vp-doc a > code {
+  color: inherit;
 }
 
 :root .VPContent .vp-doc table {
