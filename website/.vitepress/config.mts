@@ -12,6 +12,10 @@ export default defineConfig({
   cleanUrls: true,
   lastUpdated: true,
 
+  sitemap: {
+    hostname: 'https://gql-tada.0no.co'
+  },
+
   markdown: {
     theme: {
       light: 'github-light',
