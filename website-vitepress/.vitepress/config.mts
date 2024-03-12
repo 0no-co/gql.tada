@@ -7,6 +7,10 @@ export default defineConfig({
   description: 'Magical GraphQL query engine for TypeScript',
 
   markdown: {
+    theme: {
+      light: 'github-light',
+      dark: 'github-dark',
+    },
     codeTransformers: [
       transformerTwoslash(),
     ],

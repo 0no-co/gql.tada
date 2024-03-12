@@ -2,7 +2,8 @@
   --vp-c-white: #fff;
   --vp-c-black: hsl(240, 20%, 1%);
   --vp-c-bg: hsl(240, 20%, 1%);
-  --vp-c-bg-alt: hsl(240, 20%, 1%);
+  --vp-c-bg-alt: hsl(240, 5%, 4%);
+  --vp-sidebar-bg-color: transparent;
   --vp-nav-bg-color: rgba(0, 0, 0, 0.62);
 
   --vp-c-gray-1: hsl(235, 5%, 87%);
@@ -103,6 +104,10 @@
 
 :root .VPSidebarItem .item .text {
   flex-grow: 0;
+}
+
+:root .VPSidebarItem .item a > code {
+  color: inherit;
 }
 
 :root .VPSidebarItem .items {
@@ -233,6 +238,11 @@
   margin: 0;
 }
 
+:root .VPContent .vp-doc .custom-block a {
+  text-decoration: underline;
+  color: inherit;
+}
+
 :root .VPContent .vp-doc .custom-block.note {
   background: #0d2d5c;
 }
@@ -257,3 +267,21 @@
   background: hsl(235, 5%, 4%);
 }
 
+:root .VPContent .vp-doc .vp-adaptive-theme:not(.blocks > *) {
+  border: 1px solid var(--vp-c-gray-soft);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+:root .VPContent .vp-doc .vp-code-group {
+  display: flex;
+  flex-direction: column;
+}
+
+:root .VPContent .vp-doc .vp-code-group div {
+  margin: 0;
+}
+
+:root .VPContent .vp-doc .vp-code-group .tabs label {
+  line-height: 2.7rem;
+}

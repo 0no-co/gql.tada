@@ -52,7 +52,7 @@ provides to create typings for GraphQL result and variables types.
 
 This means, all we see in our code is the plain GraphQL documents with no annotations or distractions:
 
-```ts title="example.ts"
+```ts
 import { graphql } from 'gql.tada';
 
 const fragment = graphql(`
