@@ -1,0 +1,17 @@
+{
+  "name": "@gql.tada/website-vitepress",
+  "version": "0.0.2",
+  "private": true,
+  "devDependencies": {
+    "vitepress": "1.0.0-rc.45",
+    "vitepress-plugin-twoslash": "^0.10.2"
+  },
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview"
+  },
+  "dependencies": {
+    "vue": "^3.4.21"
+  }
+}
