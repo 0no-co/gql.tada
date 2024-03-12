@@ -240,3 +240,20 @@
 :root:not(.dark) .custom-block {
   box-shadow: inset 0 0 0 1px rgba(35, 35, 35, 0.15);
 }
+
+:root .VPContent .vp-doc table {
+  width: 100%;
+}
+
+:root .VPContent .vp-doc table th {
+  text-align: center;
+}
+
+:root .VPContent .vp-doc table :where(th, tr) {
+  background: var(--vp-c-bg);
+}
+
+:root .VPContent .vp-doc table tr:nth-child(2n) {
+  background: hsl(235, 5%, 4%);
+}
+
