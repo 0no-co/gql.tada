@@ -159,6 +159,13 @@
   border: none;
 }
 
+:root .VPContent .vp-doc :where(h1, h2, h3, h4, h5) .header-anchor {
+  font-weight: 400;
+  color: var(--vp-c-gray-soft);
+  text-decoration: none !important;
+  top: 0;
+}
+
 :root .VPContent .vp-doc h1 {
   font-size: 2.625rem;
   margin-bottom: 1.6rem;
