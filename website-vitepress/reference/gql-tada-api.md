@@ -64,11 +64,10 @@ or to retrieve the type of a scalar or enum.
 This is useful if you’re writing a function or component that only accepts
 a scalar or enum, but not a full fragment.
 
-:::note
-It’s not recommended to use this utiliy to replace fragments, i.e. to
-create your own object types. Try to use fragments where appropriate
-instead.
-:::
+> [!NOTE]
+> It’s not recommended to use this utiliy to replace fragments, i.e. to
+> create your own object types. Try to use fragments where appropriate
+> instead.
 
 #### Example
 
@@ -157,12 +156,11 @@ const getQuery = (data: ResultOf<typeof bookQuery>) => {
 | `data` argument       | The combined result data of the fragments, which can be wrapped in arrays.       |
 | returns               | The masked data of the fragments.                                                |
 
-:::note
-While useful, `maskFragments()` is mostly meant to be used in tests or as
-an escape hatch to convert data to masked fragments.
-
-You shouldn’t have to use it in your regular component code.
-:::
+> [!NOTE]
+> While useful, `maskFragments()` is mostly meant to be used in tests or as
+> an escape hatch to convert data to masked fragments.
+>
+> You shouldn’t have to use it in your regular component code.
 
 When [`graphql()`](#graphql) is used to compose fragments into another fragment or
 operation, the resulting type will by default be masked, [unless the `@_unmask`
@@ -203,17 +201,16 @@ const data = maskFragments([bookFragment], { id: 'id', title: 'book' });
 | `data` argument      | The result data of the GraphQL document with optional fragment refs. |
 | returns              | The masked result data of the document.                              |
 
-:::caution
-Unlike, [`maskFragments()`](#maskfragments), this utility is unsafe, and
-should only be used when you know that data matches the expected shape
-of a GraphQL query you created.
-
-While useful, this utility is only a slightly safer alternative to `as any`
-and doesn’t type check the result shape against the masked fragments in your
-document.
-
-You shouldn’t have to use it in your regular app code.
-:::
+> [!CAUTION]
+> Unlike, [`maskFragments()`](#maskfragments), this utility is unsafe, and
+> should only be used when you know that data matches the expected shape
+> of a GraphQL query you created.
+>
+> While useful, this utility is only a slightly safer alternative to `as any`
+> and doesn’t type check the result shape against the masked fragments in your
+> document.
+>
+> You shouldn’t have to use it in your regular app code.
 
 When [`graphql()`](#graphql) is used to compose fragments into a document,
 the resulting type will by default be masked, [unless the `@_unmask`
@@ -283,12 +280,11 @@ export const graphql = initGraphQLTada<{
   };
 }>();
 
-const query =
-  graphql(`
-    {
-      __typename
-    }
-  `);
+const query = graphql(`
+  {
+    __typename
+  }
+`);
 ```
 
 ## Types

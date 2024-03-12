@@ -4,10 +4,10 @@ title: Introduction
 
 # Introduction
 
-:::note
-`gql.tada`’s documentation is still a work in progress.
-If you have any feedback, feel free to let us know what you’d like to see explained or changed.
-:::
+> [!NOTE]
+>
+> `gql.tada`’s documentation is still a work in progress.
+> If you have any feedback, feel free to let us know what you’d like to see explained or changed.
 
 The `gql.tada` project aims to improve the experience of writing and using GraphQL
 with TypeScript on the client-side by providing more feedback when writing GraphQL,

@@ -88,11 +88,10 @@ We may use fragments to conditionally apply a selection set
 to either of these types, which is like “Type Narrowing” in
 GraphQL.
 
-:::note
-The above example uses an inline fragment spread, however, the
-same principle of type conditions applies to regular fragments
-and fragment spreads.
-:::
+> [!TIP]
+> The above example uses an inline fragment spread, however, the
+> same principle of type conditions applies to regular fragments
+> and fragment spreads.
 
 ### `@include` & `@skip` Conditions
 
@@ -270,13 +269,12 @@ export const AuthorLabel = (props: { data: FragmentOf<typeof authorLabelFragment
 };
 ```
 
-:::note
-This is the default behaviour in `gql.tada`, and happens unless you add `@_unmask`
-to a fragment.
-
-However, by default, we recommend you not to disable Fragment Masking unless you
-absolutely have to, to enforce fragment composition.
-:::
+> [!TIP]
+> This is the default behaviour in `gql.tada`, and happens unless you add `@_unmask`
+> to a fragment.
+>
+> However, by default, we recommend you not to disable Fragment Masking unless you
+> absolutely have to, to enforce fragment composition.
 
 Inside the inferred TypeScript types, when fragment masking _isn’t disabled_ using
 `@_unmask`, then `gql.tada` will infer masked types. In TypeScript, the type that

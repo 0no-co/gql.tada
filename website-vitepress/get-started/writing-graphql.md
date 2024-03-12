@@ -6,13 +6,12 @@ description: How to get set up and ready
 In `gql.tada`, we write our GraphQL documents using the `graphql()`
 function.
 
-:::note
-In the following examples, we’ll import `graphql()` from `gql.tada`.
-However, if you’ve previously followed the steps on the “Installation” page
-[to initialize `gql.tada` manually](../installation/#initializing-gqltada-manually),
-you’ll instead have to import your custom `graphql()` function, as
-returned by `initGraphQLTada()`.
-:::
+> [!NOTE]
+> In the following examples, we’ll import `graphql()` from `gql.tada`.
+> However, if you’ve previously followed the steps on the “Installation” page
+> [to initialize `gql.tada` manually](../installation/#initializing-gqltada-manually),
+> you’ll instead have to import your custom `graphql()` function, as
+> returned by `initGraphQLTada()`.
 
 ## Queries
 

@@ -240,16 +240,15 @@ if we wanted to name a function `parseGraphQL` instead, we may set the option to
 }
 ```
 
-:::note
-It is not recommended to change the default template name to anything but `gql` or `graphql` for
-editor support. Many editors, including VSCode, will syntax highlight GraphQL syntax inside strings
-based on function names, and naming the functions anything but `gql` and `graphql` may break syntax
-highlighting for you.
-
-In VSCode however, it may be possible to restore syntax highlighting by prefixing strings inside
-custom tag functions with an inline `/* GraphQL */` comment.
-However, this won’t work in every editor either!
-:::
+> [!NOTE]
+> It is not recommended to change the default template name to anything but `gql` or `graphql` for
+> editor support. Many editors, including VSCode, will syntax highlight GraphQL syntax inside strings
+> based on function names, and naming the functions anything but `gql` and `graphql` may break syntax
+> highlighting for you.
+>
+> In VSCode however, it may be possible to restore syntax highlighting by prefixing strings inside
+> custom tag functions with an inline `/* GraphQL */` comment.
+> However, this won’t work in every editor either!
 
 ### `templateIsCallExpression`
 
@@ -257,12 +256,11 @@ By default, this option is `true`.
 When `templateIsCallExpression: false` is set, `@0no-co/graphqlsp` will instead look for tagged
 template literals.
 
-:::caution
-Using tagged template literals is incompatible with `gql.tada`!
-
-TypeScript doesn’t currently support constant string literal types to be inferred
-from tagged template literals. (See [`microsoft/typescript#49552`](https://github.com/microsoft/TypeScript/pull/49552))
-:::
+> [!WARNING]
+> Using tagged template literals is incompatible with `gql.tada`!
+>
+> TypeScript doesn’t currently support constant string literal types to be inferred
+> from tagged template literals. (See [`microsoft/typescript#49552`](https://github.com/microsoft/TypeScript/pull/49552))
 
 ### `trackFieldUsage`
 

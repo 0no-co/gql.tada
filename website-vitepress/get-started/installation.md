@@ -77,21 +77,20 @@ in our IDE or editor.
 `gql.tada` on its own won’t provide you with editor hints, diagnostics, or errors, so `@0no-co/graphqlsp` is crucial
 in providing you feedback and help when writing GraphQL documents.
 
-:::note
-If you’re using VSCode, you may also want to update your `.vscode/settings.json` file to prompt you
-[to use the workspace version of TypeScript](https://code.visualstudio.com/docs/typescript/typescript-compiling#_using-the-workspace-version-of-typescript).
-Otherwise, the `@0no-co/graphqlsp` plugin won’t work!
-
-```js title=".vscode/settings.json" ins={2-3}
-{
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true
-}
-```
-
-To enable syntax highlighting for GraphQL, you can install the official
-[“GraphQL: Syntax Highlighting” VSCode extension.](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql-syntax)
-:::
+> [!NOTE]
+> If you’re using VSCode, you may also want to update your `.vscode/settings.json` file to prompt you
+> [to use the workspace version of TypeScript](https://code.visualstudio.com/docs/typescript/typescript-compiling#_using-the-workspace-version-of-typescript).
+> Otherwise, the `@0no-co/graphqlsp` plugin won’t work!
+>
+> ```js title=".vscode/settings.json" ins={2-3}
+> {
+>   "typescript.tsdk": "node_modules/typescript/lib",
+>   "typescript.enablePromptUseWorkspaceTsdk": true
+> }
+> ```
+>
+> To enable syntax highlighting for GraphQL, you can install the official
+> [“GraphQL: Syntax Highlighting” VSCode extension.](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql-syntax)
 
 ## Step 2 — Configuring a schema
 

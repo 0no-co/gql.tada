@@ -209,3 +209,34 @@
   border: 1px solid #dbdce6;
   opacity: 1.0;
 }
+
+:root .VPContent .vp-doc p:empty {
+  display: none;
+}
+
+:root .VPContent .vp-doc .custom-block {
+  padding: 1rem;
+  box-shadow: inset 0 0 0 1px rgba(235, 235, 235, 0.2);
+  border: none;
+  border-radius: 7px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+:root .VPContent .vp-doc .custom-block .custom-block-title {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+:root .VPContent .vp-doc .custom-block > * {
+  margin: 0;
+}
+
+:root .VPContent .vp-doc .custom-block.note {
+  background: #0d2d5c;
+}
+
+:root:not(.dark) .custom-block {
+  box-shadow: inset 0 0 0 1px rgba(35, 35, 35, 0.15);
+}
