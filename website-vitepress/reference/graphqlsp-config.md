@@ -2,6 +2,8 @@
 title: GraphQLSP Config
 ---
 
+# GraphQLSP Config
+
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 `@0no-co/graphqlsp` is set up as a plugin in our TypeScript configuration:

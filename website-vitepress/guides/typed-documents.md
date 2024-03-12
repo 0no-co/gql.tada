@@ -3,6 +3,8 @@ title: Typed Documents
 description: How GraphQL documents and TypeScript come together
 ---
 
+# Typed Documents
+
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 Although GraphQL defines conventions and guarantees for the

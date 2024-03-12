@@ -3,6 +3,8 @@ title: Writing GraphQL
 description: How to get set up and ready
 ---
 
+# Writing GraphQL
+
 In `gql.tada`, we write our GraphQL documents using the `graphql()`
 function.
 

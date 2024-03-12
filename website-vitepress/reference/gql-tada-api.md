@@ -2,6 +2,8 @@
 title: gql.tada API
 ---
 
+# `gql.tada` API
+
 ## Functions
 
 ### `graphql()`

@@ -3,6 +3,8 @@ title: Fragment Colocation
 description: How GraphQL fragments are effectively used in componentized apps.
 ---
 
+# Fragment Colocation
+
 When presenting GraphQL, its features often turn into a
 box-ticking exercise of comparing it to alternative solutions of
 server-client API design, until we may ask ourselves whether
