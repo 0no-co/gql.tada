@@ -5,8 +5,6 @@ description: How to get set up and ready
 
 # Installation
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
-
 The `gql.tada` package provides typings and the runtime API as a library,
 while `@0no-co/graphqlsp` integrates with the TypeScript language server
 to integrate with an IDE or editor.

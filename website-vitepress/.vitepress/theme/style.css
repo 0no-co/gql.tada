@@ -52,6 +52,26 @@
   --vp-c-danger-soft: var(--vp-c-red-soft);
 }
 
+:root:not(.dark) {
+  --vp-c-white: hsl(240, 20%, 1%);
+  --vp-c-black: #fff;
+  --vp-c-bg: #fff;
+  --vp-c-bg-alt: hsl(235, 5%, 99%);
+  --vp-sidebar-bg-color: transparent;
+  --vp-nav-bg-color: rgba(255, 255, 255, 0.62);
+
+  --vp-c-gray-1: hsl(235, 5%, 1%);
+  --vp-c-gray-2: hsl(235, 5%, 41%);
+  --vp-c-gray-3: hsl(235, 5%, 72%);
+  --vp-c-gray-soft: hsl(235, 5%, 87%);
+  --vp-c-default-soft: var(--vp-c-bg-alt);
+
+  --vp-c-indigo-1: #1C62CA;
+  --vp-c-indigo-2: #2973E1;
+  --vp-c-indigo-3: #2973E1;
+  --vp-c-indigo-soft: #4485E5;
+}
+
 :root .VPNavBarSearch .DocSearch.DocSearch-Button {
   border: 1px solid var(--vp-c-divider);
   max-width: 100%;
@@ -63,9 +83,17 @@
   background: var(--vp-nav-bg-color);
 }
 
+:root:not(.dark) .VPLocalSearchBox .backdrop {
+  backdrop-filter: blur(6px) saturate(250%);
+}
+
 :root .VPLocalSearchBox .shell {
   border: 1px solid var(--vp-c-divider);
   background: var(--vp-c-gray-soft);
+}
+
+:root:not(.dark) .VPLocalSearchBox .shell {
+  background: var(--vp-c-bg-alt);
 }
 
 :root .VPNavBar:not(.top) {
@@ -241,6 +269,13 @@
 :root .VPContent .vp-doc .custom-block .custom-block-title {
   font-weight: 600;
   font-size: 1rem;
+  mix-blend-mode: color-dodge;
+  color: #ccc;
+}
+
+:root:not(.dark) .VPContent .vp-doc .custom-block .custom-block-title {
+  mix-blend-mode: color-burn;
+  color: #1a1a1a;
 }
 
 :root .VPContent .vp-doc .custom-block > * {
@@ -254,6 +289,10 @@
 
 :root .VPContent .vp-doc .custom-block.note {
   background: #0d2d5c;
+}
+
+:root:not(.dark) .VPContent .vp-doc .custom-block.note {
+  background: #cfd4fc;
 }
 
 :root:not(.dark) .custom-block {
@@ -274,6 +313,14 @@
 
 :root .VPContent .vp-doc table tr:nth-child(2n) {
   background: hsl(235, 5%, 4%);
+}
+
+:root:not(.dark) .VPContent .vp-doc table tr:nth-child(2n) {
+  background: var(--vp-c-bg-alt);
+}
+
+:root:not(.dark) .VPContent .vp-doc pre {
+  font-size: 0.92em;
 }
 
 :root .VPContent .vp-doc .vp-adaptive-theme:not(.blocks > *) {
