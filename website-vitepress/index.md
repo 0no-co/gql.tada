@@ -22,7 +22,7 @@ GraphQL schema and provides immediate feedback, auto-completion, diagnostics,
 and GraphQL type hints.<br />
 This all happens on-the-fly in TypeScript.
 
-[Read on on the “Installation” page, to get started! 🪄](./get-started/installation/)
+[Read on on the “Installation” page, to get started! 🪄](./get-started/installation)
 
 ### A demo in 128 seconds
 
@@ -160,6 +160,6 @@ Currently, the list of supported features is:
 
 ## Next steps
 
-[The next page, “Installation”](./get-started/installation/), will show you how to install and set up `gql.tada` and `@0no-co/graphqlsp`.
+[The next page, “Installation”](./get-started/installation), will show you how to install and set up `gql.tada` and `@0no-co/graphqlsp`.
 
-[The following page, “Writing GraphQL”](./get-started/writing-graphql/), will show you how to use `gql.tada` and write GraphQL documents with it.
+[The following page, “Writing GraphQL”](./get-started/writing-graphql), will show you how to use `gql.tada` and write GraphQL documents with it.

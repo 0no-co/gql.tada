@@ -11,7 +11,7 @@ function.
 > [!NOTE]
 > In the following examples, we’ll import `graphql()` from `gql.tada`.
 > However, if you’ve previously followed the steps on the “Installation” page
-> [to initialize `gql.tada` manually](../installation/#initializing-gqltada-manually),
+> [to initialize `gql.tada` manually](./installation#initializing-gqltada-manually),
 > you’ll instead have to import your custom `graphql()` function, as
 > returned by `initGraphQLTada()`.
 

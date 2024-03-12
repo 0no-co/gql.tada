@@ -107,7 +107,7 @@ The `schema` option currently allows for three different formats to load a schem
 ```
 :::
 
-[Read more on how to configure the `schema` option, on the “Installation” page.](../../get-started/installation/#step-2-configuring-a-schema)
+[Read more on how to configure the `schema` option, on the “Installation” page.](../get-started/installation#step-2-configuring-a-schema)
 
 ### `tadaOutputLocation`
 
@@ -127,7 +127,7 @@ are used to save the introspection result:
 #### Format 1 — `.d.ts` file
 
 When writing a `.d.ts` file, `@0no-co/graphqlsp` will create a declaration file that automatically
-declares [a `setupSchema` interface on `gql.tada`](../gql-tada-api/#setupschema) that,
+declares [a `setupSchema` interface on `gql.tada`](./gql-tada-api#setupschema) that,
 via [declaration merging in TypeScript](https://www.typescriptlang.org/docs/handbook/declaration-merging.html),
 configures `gql.tada` to use a schema project-wide for typings.
 
@@ -149,7 +149,7 @@ declare module 'gql.tada' {
 ```
 
 If we want to now customize scalars, for instance, we’ll need to create our own `graphql()` function
-by using the `introspection` type with [`gql.tada`’s `initGraphQLTada<>()` function](../gql-tada-api/#initgraphqltada):
+by using the `introspection` type with [`gql.tada`’s `initGraphQLTada<>()` function](./gql-tada-api#initgraphqltada):
 
 ::: code-group
 ```ts [graphql.ts]
@@ -166,7 +166,7 @@ export const graphql = initGraphQLTada<{
 ```
 :::
 
-[Read more on how to configure the `tadaOutputLocation` option, on the “Installation” page.](../../get-started/installation/#step-3-configuring-typings)
+[Read more on how to configure the `tadaOutputLocation` option, on the “Installation” page.](../get-started/installation#step-3-configuring-typings)
 
 #### Format 2 — `.ts` file
 
@@ -185,11 +185,11 @@ const introspection = {
 export { introspection };
 ```
 
-Hence, with this format it’s required to import the introspection and to create a [`graphql()` function](../gql-tada-api/#graphql) using
-the [`initGraphQLTada<>()` function](../gql-tada-api/#initgraphqltada). The introspection type won’t be set up project-wide, since the
+Hence, with this format it’s required to import the introspection and to create a [`graphql()` function](./gql-tada-api#graphql) using
+the [`initGraphQLTada<>()` function](./gql-tada-api#initgraphqltada). The introspection type won’t be set up project-wide, since the
 `.ts` output from `@0no-co/graphqlsp` doesn’t contain a `declare module` declaration.
 
-[Read more on how to configure the `tadaOutputLocation` option, on the “Installation” page.](../../get-started/installation/#initializing-gqltada-manually)
+[Read more on how to configure the `tadaOutputLocation` option, on the “Installation” page.](../get-started/installation#initializing-gqltada-manually)
 
 ### `template`
 

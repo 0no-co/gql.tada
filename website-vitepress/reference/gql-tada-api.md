@@ -211,7 +211,7 @@ since it's not used as a runtime value anyway:
 const unmaskedData = readFragment<typeof Fragment>(maskedData);
 ```
 
-[Read more about fragment masking on the “Writing GraphQL” page.](../../get-started/writing-graphql/#fragment-masking)
+[Read more about fragment masking on the “Writing GraphQL” page.](../get-started/writing-graphql#fragment-masking)
 
 #### Example
 
@@ -265,7 +265,7 @@ const getQuery = (data: ResultOf<typeof pokemonQuery>) => {
 
 When [`graphql()`](#graphql) is used to compose fragments into another fragment or
 operation, the resulting type will by default be masked, [unless the `@_unmask`
-directive is used.](../../guides/fragment-colocation/#fragment-masking)
+directive is used.](../guides/fragment-colocation#fragment-masking)
 
 This means that when we’re writing tests or are creating “fake data” without
 inferring types from a full document, the types in TypeScript may not match,
@@ -275,7 +275,7 @@ of the fragments.
 To address this, the `maskFragments` utility takes a list of fragments and masks data (or an array of data)
 to match the masked fragment types of the fragments.
 
-- [Read more about fragment masking on the “Writing GraphQL” page.](../../get-started/writing-graphql/#fragment-masking)
+- [Read more about fragment masking on the “Writing GraphQL” page.](../get-started/writing-graphql#fragment-masking)
 - [For the reverse operation, see `readFragment()`.](#readfragment)
 
 #### Example
@@ -319,7 +319,7 @@ const data = maskFragments([pokemonItemFragment], {
 
 When [`graphql()`](#graphql) is used to compose fragments into a document,
 the resulting type will by default be masked, [unless the `@_unmask`
-directive is used.](../../guides/fragment-colocation/#fragment-masking)
+directive is used.](../guides/fragment-colocation#fragment-masking)
 
 This means that when we’re writing tests and are creating “fake data”,
 for instance for a query, that we cannot convert this data to the query’s
@@ -371,7 +371,7 @@ GraphQL schema.
 You should use and re-export the resulting function named as `graphql` or `gql` for your
 editor and the TypeScript language server to recognize your GraphQL documents correctly.
 
-[Read more about how to use `initGraphQLTada()` on the “Installation” page.](../../get-started/installation/#initializing-gqltada-manually)
+[Read more about how to use `initGraphQLTada()` on the “Installation” page.](../get-started/installation#initializing-gqltada-manually)
 
 #### Example
 
@@ -430,7 +430,7 @@ While [`readFragment()`](#readfragment) is used to unmask these fragment masks, 
 creates a fragment mask, so you can accept the masked data in the part of your
 codebase that defines a fragment.
 
-[Read more about fragment masking on the “Writing GraphQL” page.](../../get-started/writing-graphql/#fragment-masking)
+[Read more about fragment masking on the “Writing GraphQL” page.](../get-started/writing-graphql#fragment-masking)
 
 #### Example
 
@@ -481,7 +481,7 @@ This will configure the default `graphql()` export to infer types from your sche
 Alternatively, if you don’t want to define your schema project-wide,
 you may call [`initGraphQLTada()`](#initgraphqltada) instead.
 
-[Read more about setting up your schema on the “Installation” page.](../../get-started/installation/#step-3-configuring-typings)
+[Read more about setting up your schema on the “Installation” page.](../get-started/installation#step-3-configuring-typings)
 
 #### Example
 
