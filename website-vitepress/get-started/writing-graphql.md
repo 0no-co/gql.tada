@@ -20,21 +20,22 @@ function.
 When passing a query to `graphql()`, it will be parsed in TypeScript’s type system
 and the schema that’s set up is used to map this document over to a type.
 
-```ts
+```ts twoslash
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
 import { graphql } from 'gql.tada';
 
-const TodosQuery = graphql(`
-  query Todos($limit: Int = 10) {
-    todos(limit: $limit) {
+const PokemonsQuery = graphql(`
+  query PokemonsList($limit: Int = 10) {
+    pokemons(limit: $limit) {
       id
-      title
-      completed
+      name
     }
   }
 `);
 ```
 
-The `TodosQuery` variable will have an inferred type that defines the
+The `PokemonsQuery` variable will have an inferred type that defines the
 type of the data result of the query. When adding variables, the types of variables
 are added to the inferred type as well.
 The resulting type is known as a [`TypedDocumentNode`](https://github.com/dotansimha/graphql-typed-document-node)
@@ -44,27 +45,38 @@ When passing a `gql.tada` query to a GraphQL client, the type
 of input variables and result data are inferred automatically.
 For example, with `urql` and React, this may look like the following:
 
-```tsx {"TodosQuery carries a type for data and variables:":4-10} {"Types for result and variables are applied from TodosQuery:":16-20}
+```tsx twoslash
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
 import { useQuery } from 'urql';
 import { graphql } from 'gql.tada';
 
-const TodosQuery = graphql(`
-  query Todos($limit: Int = 10) {
-    todos(limit: $limit) {
+// @annotate: PokemonsQuery carries a type for data and variables:
+
+const PokemonsQuery = graphql(`
+  query PokemonsList($limit: Int = 10) {
+    pokemons(limit: $limit) {
       id
-      title
-      completed
+      name
     }
   }
 `);
 
-const TodosListComponent = () => {
+const PokemonsListComponent = () => {
+// @annotate: Types for data and variables are applied from PokemonsQuery:
+
   const [result] = useQuery({
-    query: TodosQuery,
+    query: PokemonsQuery,
     variables: { limit: 5 },
   });
 
-  return <ul />; // ...
+  return (
+    <ul>
+      {result.data?.pokemons?.map((pokemon) => (
+        <li key={pokemon?.id}>{pokemon?.name}</li>
+      ))}
+    </ul>
+  );
 };
 ```
 
@@ -73,28 +85,30 @@ The same applies to mutation operations, subscription operations, and fragment d
 The `graphql()` function will parse your GraphQL definitions, take the first definition it
 finds and infers its type automatically.
 
-```ts {"The first definition’s types are inferred:":3-11} {"Inferring the definition’s variables…":13-16} {"…and the definition’s result type.":18-24}
+```ts twoslash
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
 import { graphql, ResultOf, VariablesOf } from 'gql.tada';
 
-const MarkCompletedMutation = graphql(`
-  mutation MarkCompleted($id: ID!) {
-    markCompleted(id: $id) {
+// @annotate: The first definition’s types are inferred:
+
+const MarkCollectedMutation = graphql(`
+  mutation MarkCollected($id: ID!) {
+    markCollected(id: $id) {
       id
-      completed
+      name
+      collected
     }
   }
 `);
 
-const variables: VariablesOf<typeof MarkCompletedMutation> = {
-  id: 'ExampleID',
-};
+// @annotate: Inferring the definition’s variables…
 
-const result: ResultOf<typeof MarkCompletedMutation> = {
-  markCompleted: {
-    id: 'ExampleID',
-    completed: true,
-  },
-};
+type variables = VariablesOf<typeof MarkCollectedMutation>;
+
+// @annotate: …and the definition’s result type.
+
+type result = ResultOf<typeof MarkCollectedMutation>;
 ```
 
 The above example uses the `ResultOf` and `VariablesOf` types for illustrative purposes.
@@ -110,14 +124,16 @@ Creating a fragment is the same as any other operation definition.
 The type of the first definition, in this case a fragment, will be used
 to infer the result type of the returned document:
 
-```ts
+```ts twoslash
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
 import { graphql } from 'gql.tada';
 
-const TodoItemFragment = graphql(`
-  fragment TodoItem on Todo {
+const PokemonFragment = graphql(`
+  fragment Pokemon on Pokemon {
     id
-    title
-    completed
+    name
+    collected
   }
 `);
 ```
@@ -125,63 +141,75 @@ const TodoItemFragment = graphql(`
 Spreading this fragment into another fragment or operation definition requires us
 to pass the fragment into a tuple array on the `graphql()` function’s second argument.
 
-```ts
-const TodosQuery = graphql(
-  `
-    query Todos {
-      todos {
-        id
-        ...TodoItem
-      }
+```ts twoslash
+import './graphql/graphql-env.d.ts';
+import { graphql } from 'gql.tada';
+
+const PokemonFragment = graphql(`
+  fragment Pokemon on Pokemon {
+    id
+    name
+    collected
+  }
+`);
+
+// ---cut-before---
+const PokemonsList = graphql(`
+  query PokemonsList {
+    pokemons(limit: 10) {
+      id
+      ...Pokemon
     }
-  `,
-  [TodoItemFragment]
-);
+  }
+`, [PokemonFragment]);
 ```
 
-Here we spread our `TodoItemFragment` into into `TodosQuery` by passing it into
+Here we spread our `PokemonFragment` into `PokemonsList` by passing it into
 the `graphql()` function and then using its name in the GraphQL document.
 
 ### Fragment Masking
 
 However, in `gql.tada` a pattern called **“Fragment Masking”** applies.
-`TodosQuery`’s result type does not contain the `title` and `comleted` field
-from the spread fragment and instead contains a reference to the `TodoItemFragment`.
+`PokemonsList`’s result type does not contain the `name` and `collected` field
+from the spread fragment and instead contains a reference to the `PokemonFragment`.
 
 This forces us to unwrap, or rather “unmask”, the fragment first.
 
-```tsx {"The data type here does not contain our TodoItemFragment fields:":24-25} {"Calling readFragment() unwraps the type of the fragment:":27-31}
+```tsx twoslash
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
 import { useQuery } from 'urql';
 import { graphql, readFragment } from 'gql.tada';
 
-const TodoItemFragment = graphql(`
-  fragment TodoItem on Todo {
+const PokemonFragment = graphql(`
+  fragment Pokemon on Pokemon {
     id
-    title
-    completed
+    name
+    collected
   }
 `);
 
-const TodosQuery = graphql(
-  `
-    query Todos {
-      todos {
-        id
-        ...TodoItem
-      }
+const PokemonsList = graphql(`
+  query PokemonsList {
+    pokemons(limit: 10) {
+      id
+      ...Pokemon
     }
-  `,
-  [TodoItemFragment]
-);
+  }
+`, [PokemonFragment]);
 
-const TodosListComponent = () => {
-  const [result] = useQuery({ query: TodosQuery });
+const PokemonsListComponent = () => {
+  const [result] = useQuery({ query: PokemonsList });
 
-  const data = result.data!;
+// @annotate: The data here does not contain our fragment’s fields:
 
-  return data.todos!.map((item) => {
-    const todo = readFragment(TodoItemFragment, item);
-    return null; // ...
+const { pokemons } = result.data!;
+
+  return pokemons?.map((item) => {
+// @annotate: Calling readFragment() unwraps the type of the fragment:
+
+    const pokemon = readFragment(PokemonFragment, item);
+    return pokemon?.name;
   });
 };
 ```
@@ -190,30 +218,38 @@ When spreading a fragment into a parent definition, the parent only contains a r
 This means that we’re isolating fragments. Any spread fragment data cannot be accessed directly until
 the fragment is unmasked.
 
-```ts {"TodoItem’s data is only accessible once unmasked with readFragment():":14-18}
-import { ResultOf, readFragment } from 'gql.tada';
+```ts twoslash
+import './graphql/graphql-env.d.ts';
+declare var client: import('@urql/core').Client;
 
-const result: ResultOf<typeof TodosQuery> = {
-  todos: [
-    {
-      id: 'ExampleID',
-      [$tada.fragmentRefs]: {
-        TodoItem: $tada.ref;
-      };
-    },
-  ]
-};
+// ---cut-before---
+import { graphql, readFragment } from 'gql.tada';
 
+const PokemonFragment = graphql(`
+  fragment Pokemon on Pokemon {
+    id
+    name
+    collected
+  }
+`);
 
-const todos: ResultOf<typeof TodoItem>[] = readFragment(
-  TodoItem,
-  result.todos,
-);
+const PokemonQuery = graphql(`
+  query Pokemon($id: ID!) {
+    pokemon(id: $id) {
+      id
+      ...Pokemon
+    }
+  }
+`, [PokemonFragment]);
+
+const result = await client.query(PokemonQuery, { id: '001' });
+// @annotate: Pokemon’s data is only accessible once unmasked with readFragment()
+const pokemon = readFragment(PokemonFragment, result.data?.pokemon);
 ```
 
-`TodoItem`’s fragment mask in `TodosQuery` is only unmasked and accessible as its plain result
+`PokemonFragment`’s fragment mask in `PokemonQuery` is only unmasked and accessible as its plain result
 type once we call `readFragment()` on the fragment mask.
-In this case, we’re passing `result.todos`, which is a list of the objects containing the fragment
+In this case, we’re passing `data.pokemon`, which is an object containing the fragment
 mask.
 
 This all only happens and is enforced at a type level, meaning that we don’t incur any overhead
@@ -230,62 +266,104 @@ other fragments or our query.
 Since all fragments are masked in our types, this colocation is enforced and we maintain our
 data requirements to UI component relationship.
 
-For example, our `TodoItemFragment` may be associated with a `TodoItem` component rendering
+For example, our `PokemonFragment` may be associated with a `Pokemon` component rendering
 individual items:
 
-```tsx title="components/TodoItem.tsx" {"The component accepts a fragment mask of TodoItemFragment:":12-13} {"In the component body we unwrap the fragment mask:":17-18}
-import { graphql, readFragment } from 'gql.tada';
+::: code-group
+```tsx twoslash [components/Pokemon.tsx]
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
+// @filename: components/Pokemon.tsx
+// ---cut---
+import { graphql, readFragment, FragmentOf } from 'gql.tada';
 
-export const TodoItemFragment = graphql(`
-  fragment TodoItem on Todo {
+export const PokemonFragment = graphql(`
+  fragment Pokemon on Pokemon {
     id
-    title
-    completed
+    name
+    collected
   }
 `);
 
 interface Props {
-  data: FragmentOf<typeof TodoItemFragment>;
+// @annotate: The component accepts a fragment mask of PokemonFragment:
+
+  data: FragmentOf<typeof PokemonFragment>;
 }
 
-export const TodoItemComponent = ({ data }: Props) => {
-  const todo = readFragment(TodoItemFragment, data);
+export const PokemonComponent = ({ data }: Props) => {
+// @annotate: In the component body we unwrap the fragment mask:
 
-  return <li />; // ...
+  const pokemon = readFragment(PokemonFragment, data);
+  return <li>{pokemon.name}</li>;
 };
 ```
+:::
 
 The `FragmentOf` type is used as an input type above. This type accepts our fragment document
 and creates the fragment mask that a fragment spread would create as well.
 
-We can then use our new `TodoItemComponent` in our `TodosListComponent` and compose its `TodoItemFragment`
+We can then use our new `PokemonComponent` in our `PokemonsListComponent` and compose its `PokemonFragment`
 into our query:
 
-```tsx title="components/TodoList.tsx" {"The masked fragment data is accepted as defined by FragmentOf:":19-20}
+::: code-group
+```tsx twoslash [components/PokemonsList.tsx]
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
+// @filename: components/Pokemon.tsx
+import { graphql, readFragment, FragmentOf } from 'gql.tada';
+
+export const PokemonFragment = graphql(`
+  fragment Pokemon on Pokemon {
+    id
+    name
+    collected
+  }
+`);
+
+interface Props {
+// @annotate: The component accepts a fragment mask of PokemonFragment:
+
+  data: FragmentOf<typeof PokemonFragment>;
+}
+
+export const PokemonComponent = ({ data }: Props) => {
+// @annotate: In the component body we unwrap the fragment mask:
+
+  const pokemon = readFragment(PokemonFragment, data);
+  return <li>{pokemon.name}</li>;
+};
+
+// @filename: components/PokemonsList.tsx
+// ---cut---
 import { graphql } from 'gql.tada';
-import { TodoItemFragment, TodoItemComponent } from './TodoItem';
+import { useQuery } from 'urql';
+import { PokemonFragment, PokemonComponent } from './Pokemon';
 
-const TodosQuery = graphql(
-  `
-    query Todos {
-      todos {
-        id
-        ...TodoItem
-      }
+const PokemonsListQuery = graphql(`
+  query PokemonsList {
+    pokemons(limit: 10) {
+      id
+      ...Pokemon
     }
-  `,
-  [TodoItemFragment]
-);
+  }
+`, [PokemonFragment]);
 
-export const TodoListComponent = ({ data }: Props) => {
-  const [result] = useQuery({ query: TodosQuery });
+export const PokemonsListComponent = () => {
+  const [result] = useQuery({ query: PokemonsListQuery });
 
   return (
-    <ul>{result.data?.todos?.map((todo) => <TodoItemComponent data={todo} key={todo.id} />)}</ul>
+    <ul>
+      {result.data?.pokemons?.map((pokemon) => (
+// @annotate: The masked fragment data is accepted as defined by FragmentOf:
+
+        <PokemonComponent data={pokemon!} key={pokemon?.id} />
+      ))}
+    </ul>
   );
 };
 ```
 
-Meaning, while we can unmask and use the `TodoItemFragment`’s data in the `TodoItemComponent`,
-the `TodoListComponent` cannot access any of the data requirements defined by and meant for the
-`TodoItemComponent`.
+Meaning, while we can unmask and use the `PokemonFragment`’s data in the `PokemonComponent`,
+the `PokemonsListComponent` cannot access any of the data requirements defined by and meant for the
+`PokemonComponent`.

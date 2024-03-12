@@ -12,7 +12,7 @@
     "noUnusedLocals": true,
     "allowJs": true,
     "lib": ["dom", "esnext"],
-    "jsx": "react",
+    "jsx": "react-jsx",
     "declaration": false,
     "module": "es2015",
     "moduleResolution": "node",

@@ -53,10 +53,8 @@ configuration.
 {
   "compilerOptions": {
     "strict": true,
-    "plugins": [
-      // [!code ++]
-      {
-        // [!code ++]
+    "plugins": [ // [!code ++]
+      { // [!code ++]
         "name": "@0no-co/graphqlsp", // [!code ++]
         "schema": "./schema.graphql", // [!code ++]
         "tadaOutputLocation": "./src/graphql-env.d.ts" // [!code ++]
@@ -101,13 +99,14 @@ The schema provides it with the types, fields, and description information of a 
 We can set `@0no-co/graphqlsp` up with our schema in our `tsconfig.json` file.
 In the plugin options we’ll update the `schema` key.
 
-```json {"Configure a schema here:":6-7} title="tsconfig.json"
+::: code-group
+```json twoslash [tsconfig.json] {6-7}
 {
   "compilerOptions": {
     "plugins": [
       {
+// @annotate: Configure your schema here
         "name": "@0no-co/graphqlsp",
-
         "schema": "./schema.graphql",
         "tadaOutputLocation": "./src/graphql-env.d.ts"
       }
@@ -115,6 +114,7 @@ In the plugin options we’ll update the `schema` key.
   }
 }
 ```
+:::
 
 The `schema` option currently allows for three different formats to load a schema. It accepts either:
 
@@ -122,10 +122,8 @@ The `schema` option currently allows for three different formats to load a schem
 - a path to a `.json` file containing a schema’s introspection query data
 - a URL to a GraphQL API that can be introspected
 
-<Tabs>
-<TabItem label=".graphql file">
-
-```json {6}
+::: code-group
+```json [.graphql file] {6}
 {
   "compilerOptions": {
     "plugins": [
@@ -138,10 +136,7 @@ The `schema` option currently allows for three different formats to load a schem
 }
 ```
 
-</TabItem>
-<TabItem label=".json file">
-
-```json {6}
+```json [.json file] {6}
 {
   "compilerOptions": {
     "plugins": [
@@ -154,10 +149,7 @@ The `schema` option currently allows for three different formats to load a schem
 }
 ```
 
-</TabItem>
-<TabItem label="URL">
-
-```json {6}
+```json [URL] {6}
 {
   "compilerOptions": {
     "plugins": [
@@ -170,10 +162,7 @@ The `schema` option currently allows for three different formats to load a schem
 }
 ```
 
-</TabItem>
-<TabItem label="URL with headers">
-
-```json {6-11}
+```json [URL with headers] {6-11}
 {
   "compilerOptions": {
     "plugins": [
@@ -190,9 +179,7 @@ The `schema` option currently allows for three different formats to load a schem
   }
 }
 ```
-
-</TabItem>
-</Tabs>
+:::
 
 ## Step 3 — Configuring typings
 
@@ -203,20 +190,22 @@ GraphQL documents automatically.
 This is configured by providing an output location to `@0no-co/graphqlsp` in our `tsconfig.json` file.
 In the plugin options we’ll update the `tadaOutputLocation` key.
 
-```json {"Add typings output location here:":7-8} title="tsconfig.json"
+::: code-group
+```json twoslash [tsconfig.json] {6-7}
 {
   "compilerOptions": {
     "plugins": [
       {
+// @annotate: Configure your schema here
         "name": "@0no-co/graphqlsp",
         "schema": "./schema.graphql",
-
         "tadaOutputLocation": "./src/graphql-env.d.ts"
       }
     ]
   }
 }
 ```
+:::
 
 The `tadaOutputLocation` path can either be a `.ts` file, a `.d.ts` file, or
 a folder, in which case a `introspection.d.ts` file will be created.
@@ -225,18 +214,10 @@ Once we start up our editor, `@0no-co/graphqlsp` will run and will create
 the output file. In this example, we’ve created a `src/graphql-env.d.ts` file.
 When opening this file we should see code that looks like the following:
 
-```ts title="graphql-env.d.ts" collapse={2-11}
+::: code-group
+```ts [graphql-env.d.ts]
 declare const introspection: {
-  __schema: {
-    queryType: {
-      name: 'Query';
-    };
-    mutationType: null;
-    subscriptionType: null;
-    types: [
-      // ...
-    ];
-  };
+  __schema: { /*...*/ };
 };
 
 import * as gqlTada from 'gql.tada';
@@ -247,6 +228,7 @@ declare module 'gql.tada' {
   }
 }
 ```
+:::
 
 This file declares our schema’s introspection data in `gql.tada`. After this file
 is created by `@0no-co/graphqlsp` automatically, `gql.tada` is set up project-wide
@@ -265,9 +247,10 @@ since the declaration in `graphql-env.d.ts` sets a schema up project-wide.
 To work around this, we’ll create a file that uses the introspection data manually with the
 `initGraphQLTada()` function to create our own `graphql()` function:
 
-```ts title="src/graphql.ts" {4-6}
+:::code-group
+```ts twoslash [src/graphql.ts] {4-6}
 import { initGraphQLTada } from 'gql.tada';
-import type { introspection } from './graphql-env.d.ts';
+import type { introspection } from './graphql/graphql-env.d.ts';
 
 export const graphql = initGraphQLTada<{
   introspection: introspection;
@@ -276,6 +259,7 @@ export const graphql = initGraphQLTada<{
 export type { FragmentOf, ResultOf, VariablesOf } from 'gql.tada';
 export { readFragment } from 'gql.tada';
 ```
+:::
 
 Instead of declaring our schema project-wide, we now have created a `graphql` function
 that specifically uses the introspection inside the `graphql-env.d.ts` file that
@@ -295,21 +279,25 @@ For instance, our schema may contain a `DateTime` scalar which, when queried, be
 a string of `new Date().toISOString()`, however, `gql.tada` won’t know that this type
 is a string.
 
-```ts {"Define scalar types here:":6-10} title="src/graphql.ts"
+:::code-group
+```ts twoslash [src/graphql.ts] {3-6}
 import { initGraphQLTada } from 'gql.tada';
-import type { introspection } from './graphql-env.d.ts';
+import type { introspection } from './graphql/graphql-env.d.ts';
 
+// ---cut-before---
 export const graphql = initGraphQLTada<{
+// @annotate: Define scalar types here
   introspection: introspection;
-
   scalars: {
     DateTime: string;
     JSON: any;
   };
 }>();
+// ---cut-after---
 
 export type { FragmentOf, ResultOf, VariablesOf } from 'gql.tada';
 export { readFragment } from 'gql.tada';
 ```
+:::
 
 When using these scalars, they’ll now be mapped to the types in the `scalars` object type.

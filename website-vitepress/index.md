@@ -52,7 +52,62 @@ provides to create typings for GraphQL result and variables types.
 
 This means, all we see in our code is the plain GraphQL documents with no annotations or distractions:
 
-```ts
+```ts twoslash
+// @filename: graphq-env.d.ts
+export type introspection = {
+  "__schema": {
+    "queryType": {
+      "name": "Query"
+    },
+    "mutationType": null,
+    "subscriptionType": null,
+    "types": [
+      {
+        "kind": "OBJECT",
+        "name": "Query",
+        "fields": [
+          {
+            "name": "hello",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "args": []
+          },
+          {
+            "name": "world",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "args": []
+          }
+        ],
+        "interfaces": []
+      },
+      {
+        "kind": "SCALAR",
+        "name": "String"
+      }
+    ],
+    "directives": []
+  }
+};
+
+import * as gqlTada from 'gql.tada';
+
+declare module 'gql.tada' {
+  interface setupSchema {
+    introspection: introspection
+  }
+}
+
+// @filename: index.ts
+import './graphql-env.d.ts';
+// ---cut---
+
 import { graphql } from 'gql.tada';
 
 const fragment = graphql(`
@@ -62,15 +117,12 @@ const fragment = graphql(`
   }
 `);
 
-const query = graphql(
-  `
-    query HelloQuery {
-      hello
-      ...HelloWorld
-    }
-  `,
-  [fragment]
-);
+const query = graphql(`
+  query HelloQuery {
+    hello
+    ...HelloWorld
+  }
+`, [fragment]);
 ```
 
 ## How does it compare to other solutions?

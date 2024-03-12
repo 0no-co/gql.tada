@@ -1,10 +1,13 @@
 import { defineConfig } from 'vitepress';
+import { defaultTwoslashOptions } from 'shikiji-twoslash';
 import { transformerTwoslash } from 'vitepress-plugin-twoslash';
+import type { JsxEmit } from 'typescript';
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   title: 'gql.tada 🪄',
   description: 'Magical GraphQL query engine for TypeScript',
+  cleanUrls: true,
 
   markdown: {
     theme: {
@@ -12,7 +15,15 @@ export default defineConfig({
       dark: 'github-dark',
     },
     codeTransformers: [
-      transformerTwoslash(),
+      transformerTwoslash({
+        twoslashOptions: {
+          ...defaultTwoslashOptions(),
+          vfsRoot: `${import.meta.dirname}/../twoslash/`,
+          compilerOptions: {
+            jsx: 4 as JsxEmit,
+          },
+        },
+      }),
     ],
   },
 

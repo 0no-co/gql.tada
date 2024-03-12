@@ -1,4 +1,6 @@
 :root {
+  --vp-code-line-height: 1.53;
+
   --vp-c-white: #fff;
   --vp-c-black: hsl(240, 20%, 1%);
   --vp-c-bg: hsl(240, 20%, 1%);
@@ -273,13 +275,22 @@
   overflow: hidden;
 }
 
+:root .VPContent .vp-doc .vp-adaptive-theme .twoslash-tag-line {
+  user-select: none;
+  margin: 4px -24px;
+}
+
 :root .VPContent .vp-doc .vp-code-group {
   display: flex;
   flex-direction: column;
 }
 
-:root .VPContent .vp-doc .vp-code-group div {
+:root .VPContent .vp-doc .vp-code-group :where(.blocks, .vp-adaptive-theme) {
   margin: 0;
+}
+
+:root .VPContent .vp-doc .vp-code-group .tabs label:only-of-type {
+  cursor: unset;
 }
 
 :root .VPContent .vp-doc .vp-code-group .tabs label {
