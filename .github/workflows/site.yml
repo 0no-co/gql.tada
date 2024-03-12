@@ -51,6 +51,9 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
 
+      - name: Build
+        run: pnpm multi --include-workspace-root run build
+
       - name: Build Website
         working-directory: website
         run: pnpm run export
@@ -63,4 +66,4 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: gql-tada
           workingDirectory: website
-          directory: dist
+          directory: .vitepress/dist

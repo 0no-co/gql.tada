@@ -2,5 +2,4 @@ packages:
   - 'packages/*'
   - 'examples/*'
   - './website'
-  - './website-vitepress'
   - './'

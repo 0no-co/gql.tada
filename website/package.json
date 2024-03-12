@@ -1,27 +1,28 @@
 {
-  "name": "@gql.tada/website",
-  "type": "module",
+  "name": "@gql.tada/website-vitepress",
   "version": "0.0.2",
   "private": true,
   "scripts": {
-    "dev": "astro dev",
-    "start": "astro dev",
-    "export": "astro check && astro build",
-    "preview": "astro preview",
-    "astro": "astro"
-  },
-  "dependencies": {
-    "@astrojs/cloudflare": "^8.1.0",
-    "@astrojs/starlight": "^0.15.3",
-    "@astrojs/starlight-tailwind": "^2.0.1",
-    "@astrojs/tailwind": "^5.1.0",
-    "@expressive-code/plugin-collapsible-sections": "^0.31.0",
-    "@fontsource/inter": "^5.0.16",
-    "astro": "^4.1.2",
-    "sharp": "^0.32.5",
-    "tailwindcss": "^3.3.3"
+    "dev": "vitepress dev",
+    "export": "vitepress build",
+    "preview": "vitepress preview"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.4.1"
+    "@types/react": "^18.2.64",
+    "shikiji": "^0.10.2",
+    "shikiji-twoslash": "^0.10.2",
+    "vitepress": "1.0.0-rc.45",
+    "vitepress-plugin-twoslash": "^0.10.2"
+  },
+  "dependencies": {
+    "@apollo/client": "^3.9.6",
+    "@graphql-typed-document-node/core": "^3.2.0",
+    "@urql/core": "^4.3.0",
+    "gql.tada": "workspace:*",
+    "graphql": "^16.8.1",
+    "graphql-request": "^6.1.0",
+    "react": "^18.2.0",
+    "urql": "^4.0.6",
+    "vue": "^3.4.21"
   }
 }
