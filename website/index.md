@@ -53,7 +53,7 @@ provides to create typings for GraphQL result and variables types.
 This means, all we see in our code is the plain GraphQL documents with no annotations or distractions:
 
 ```ts twoslash
-// @filename: graphq-env.d.ts
+// @filename: graphql-env.d.ts
 export type introspection = {
   "__schema": {
     "queryType": {
@@ -107,7 +107,6 @@ declare module 'gql.tada' {
 // @filename: index.ts
 import './graphql-env.d.ts';
 // ---cut---
-
 import { graphql } from 'gql.tada';
 
 const fragment = graphql(`

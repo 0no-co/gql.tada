@@ -5,7 +5,6 @@
   --vp-c-black: hsl(240, 20%, 1%);
   --vp-c-bg: hsl(240, 20%, 1%);
   --vp-c-bg-alt: hsl(240, 5%, 4%);
-  --vp-sidebar-bg-color: transparent;
   --vp-nav-bg-color: rgba(0, 0, 0, 0.62);
 
   --vp-c-gray-1: hsl(235, 5%, 87%);
@@ -17,6 +16,9 @@
   --vp-c-indigo-2: #2973E1;
   --vp-c-indigo-3: #1C62CA;
   --vp-c-indigo-soft: #0F356C;
+
+  --vp-sidebar-bg-color: var(--vp-c-bg);
+  --twoslash-underline-color: var(--vp-c-gray-2);
 
   --vp-c-text-1: var(--vp-c-gray-1);
   --vp-c-text-2: var(--vp-c-gray-2);
@@ -57,7 +59,6 @@
   --vp-c-black: #fff;
   --vp-c-bg: #fff;
   --vp-c-bg-alt: hsl(235, 5%, 99%);
-  --vp-sidebar-bg-color: transparent;
   --vp-nav-bg-color: rgba(255, 255, 255, 0.62);
 
   --vp-c-gray-1: hsl(235, 5%, 1%);
@@ -74,16 +75,28 @@
 
 :root .VPNavBarSearch .DocSearch.DocSearch-Button {
   border: 1px solid var(--vp-c-divider);
-  max-width: 100%;
-  width: 22rem;
 }
 
-:root .VPLocalSearchBox .backdrop {
+@media (max-width: 768px) {
+  :root .VPNavBarSearch .DocSearch.DocSearch-Button {
+    height: 2.7rem;
+    width: 2.7rem;
+  }
+}
+
+@media (min-width: 768px) {
+  :root .VPNavBarSearch .DocSearch.DocSearch-Button {
+    max-width: 100%;
+    width: 22rem;
+  }
+}
+
+:root .backdrop {
   backdrop-filter: blur(12px) brightness(180%) saturate(250%);
   background: var(--vp-nav-bg-color);
 }
 
-:root:not(.dark) .VPLocalSearchBox .backdrop {
+:root:not(.dark) .backdrop {
   backdrop-filter: blur(6px) saturate(250%);
 }
 
@@ -96,10 +109,14 @@
   background: var(--vp-c-bg-alt);
 }
 
-:root .VPNavBar:not(.top) {
+:root .Layout :where(.VPNavBar:not(.top), .VPLocalNav) {
   border-bottom: 1px solid var(--vp-c-divider);
   backdrop-filter: blur(24px) saturate(250%);
   background: var(--vp-nav-bg-color);
+}
+
+:root .VPNavBar .divider {
+  display: none;
 }
 
 :root .VPNavBar:not(.top) .content-body {
@@ -188,10 +205,17 @@
 }
 
 :root .VPContent .vp-doc :where(h1, h2, h3, h4, h5) .header-anchor {
+  display: none;
   font-weight: 400;
   color: var(--vp-c-gray-soft);
   text-decoration: none !important;
   top: 0;
+}
+
+@media (min-width: 768px) {
+  :root .VPContent .vp-doc :where(h1, h2, h3, h4, h5) .header-anchor {
+    display: block;
+  }
 }
 
 :root .VPContent .vp-doc h1 {
@@ -331,6 +355,10 @@
   border: 1px solid var(--vp-c-gray-soft);
   border-radius: 8px;
   overflow: hidden;
+}
+
+:root .VPContent .vp-doc .vp-adaptive-theme .copy {
+  background-color: var(--vp-c-bg-alt);
 }
 
 :root .VPContent .vp-doc .vp-adaptive-theme .twoslash-tag-line {

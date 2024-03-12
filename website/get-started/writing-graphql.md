@@ -363,6 +363,7 @@ export const PokemonsListComponent = () => {
   );
 };
 ```
+:::
 
 Meaning, while we can unmask and use the `PokemonFragment`’s data in the `PokemonComponent`,
 the `PokemonsListComponent` cannot access any of the data requirements defined by and meant for the
