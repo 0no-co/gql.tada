@@ -28,6 +28,9 @@ export default defineConfig({
   },
 
   themeConfig: {
+    outline: {
+      level: [2, 3],
+    },
     search: {
       provider: 'local'
     },

@@ -28,26 +28,76 @@ If you instead would like to manually create a `graphql` function with an explic
 
 #### Example
 
-```ts
+```ts twoslash
+// @filename: graphq-env.d.ts
+export type introspection = {
+  "__schema": {
+    "queryType": {
+      "name": "Query"
+    },
+    "mutationType": null,
+    "subscriptionType": null,
+    "types": [
+      {
+        "kind": "OBJECT",
+        "name": "Query",
+        "fields": [
+          {
+            "name": "hello",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "args": []
+          },
+          {
+            "name": "world",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "args": []
+          }
+        ],
+        "interfaces": []
+      },
+      {
+        "kind": "SCALAR",
+        "name": "String"
+      }
+    ],
+    "directives": []
+  }
+};
+
+import * as gqlTada from 'gql.tada';
+
+declare module 'gql.tada' {
+  interface setupSchema {
+    introspection: introspection
+  }
+}
+
+// @filename: index.ts
+import './graphql-env.d.ts';
+// ---cut---
 import { graphql } from 'gql.tada';
-const bookFragment = graphql(`
-  fragment BookComponent on Book {
-    id
-    title
+
+const fragment = graphql(`
+  fragment HelloWorld on Query {
+    hello
+    world
   }
 `);
 
-const bookQuery = graphql(
-  `
-    query Book($id: ID!) {
-      book(id: $id) {
-        id
-        ...BookComponent
-      }
-    }
-  `,
-  [bookFragment]
-);
+const query = graphql(`
+  query HelloQuery {
+    hello
+    ...HelloWorld
+  }
+`, [fragment]);
 ```
 
 ### `graphql.scalar()`
@@ -74,6 +124,54 @@ a scalar or enum, but not a full fragment.
 #### Example
 
 ```ts {"Call graphql.scalar to type check a value against a scalar type:":4-5} {"Use ReturnType to get the type of a scalar directly:":8-9}
+import { graphql } from 'gql.tada';
+
+function validateMediaEnum(value: 'Book' | 'Song' | 'Video') {
+  const media = graphql.scalar('Media', value);
+}
+
+type Media = ReturnType<typeof graphql.scalar<'Media'>>;
+```
+
+```ts twoslash
+// @filename: graphq-env.d.ts
+export type introspection = {
+  "__schema": {
+    "queryType": {
+      "name": "Query"
+    },
+    "mutationType": null,
+    "subscriptionType": null,
+    "types": [
+      {
+        "kind": "OBJECT",
+        "name": "Query",
+        "fields": [],
+        "interfaces": []
+      },
+      {
+        "kind": "ENUM",
+        "name": "Media",
+        "enumValues": [
+          { "name": "Book" },
+          { "name": "Song" },
+          { "name": "Video" }
+        ]
+      }
+    ],
+    "directives": []
+  }
+};
+
+import * as gqlTada from 'gql.tada';
+
+declare module 'gql.tada' {
+  interface setupSchema {
+    introspection: introspection
+  }
+}
+
+// @filename: index.ts
 import { graphql } from 'gql.tada';
 
 function validateMediaEnum(value: 'Book' | 'Song' | 'Video') {
@@ -117,36 +215,37 @@ const unmaskedData = readFragment<typeof Fragment>(maskedData);
 
 #### Example
 
-```ts
-import { FragmentOf, graphql, readFragment } from 'gql.tada';
+```ts twoslash
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
+import { FragmentOf, ResultOf, graphql, readFragment } from 'gql.tada';
 
-const bookFragment = graphql(`
-  fragment BookComponent on Book {
+const pokemonItemFragment = graphql(`
+  fragment PokemonItem on Pokemon {
     id
-    title
+    name
   }
 `);
 
-const getBook = (data: FragmentOf<typeof bookFragment> | null) => {
-  // Unmasks the fragment and casts to the result type of `bookFragment`
-  // This is intersected with `| null` in this case, due to the input type.
-  const book = readFragment(bookFragment, data);
+const getPokemonItem = (
+  data: FragmentOf<typeof pokemonItemFragment> | null
+) => {
+// @annotate: Unmasks the fragment and casts to the result type:
+
+  const pokemon = readFragment(pokemonItemFragment, data);
 };
 
-const bookQuery = graphql(
-  `
-    query Book($id: ID!) {
-      book(id: $id) {
-        id
-        ...BookComponent
-      }
+const pokemonQuery = graphql(`
+  query Pokemon($id: ID!) {
+    pokemon(id: $id) {
+      id
+      ...PokemonItem
     }
-  `,
-  [bookFragment]
-);
+  }
+`, [pokemonItemFragment]);
 
-const getQuery = (data: ResultOf<typeof bookQuery>) => {
-  getBook(data?.book);
+const getQuery = (data: ResultOf<typeof pokemonQuery>) => {
+  getPokemonItem(data.pokemon);
 };
 ```
 
@@ -181,18 +280,22 @@ to match the masked fragment types of the fragments.
 
 #### Example
 
-```ts
+```ts twoslash
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
 import { graphql, maskFragments } from 'gql.tada';
 
-const bookFragment = graphql(`
-  fragment BookComponent on Book {
+const pokemonItemFragment = graphql(`
+  fragment PokemonItem on Pokemon {
     id
-    title
+    name
   }
 `);
 
-// `data` will be typed as the fragment mask of `bookFragment`.
-const data = maskFragments([bookFragment], { id: 'id', title: 'book' });
+const data = maskFragments([pokemonItemFragment], {
+  id: '001',
+  name: 'Bulbasaur'
+});
 ```
 
 ### `unsafe_readResult()`
@@ -227,29 +330,31 @@ converts a query’s data to masked data.
 
 #### Example
 
-```ts
+```ts twoslash
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
 import { graphql, unsafe_readResult } from 'gql.tada';
 
-const bookFragment = graphql(`
-  fragment BookComponent on Book {
+const pokemonItemFragment = graphql(`
+  fragment PokemonItem on Pokemon {
     id
-    title
+    name
   }
 `);
 
-const query = graphql(
-  `
-    query {
-      book {
-        ...BookComponent
-      }
+const query = graphql(`
+  query {
+    pokemon(id: "001") {
+      ...PokemonItem
     }
-  `,
-  [bookFragment]
-);
+  }
+`, [pokemonItemFragment]);
 
-// `data` will be cast (unsafely!) to the result type of `query`.
-const data = unsafe_readResult(query, { book: { id: 'id', title: 'book' } });
+// @warn: data will be cast (unsafely!) to the result type
+
+const data = unsafe_readResult(query, {
+  pokemon: { id: '001', name: 'Bulbasaur' },
+});
 ```
 
 ### `initGraphQLTada()`
@@ -270,9 +375,9 @@ editor and the TypeScript language server to recognize your GraphQL documents co
 
 #### Example
 
-```ts
+```ts twoslash
 import { initGraphQLTada } from 'gql.tada';
-import type { introspection } from './graphql-env.d.ts';
+import type { introspection } from './graphql/graphql-env.d.ts';
 
 export const graphql = initGraphQLTada<{
   introspection: introspection;
@@ -329,19 +434,22 @@ codebase that defines a fragment.
 
 #### Example
 
-```ts
+```ts twoslash
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
 import { FragmentOf, graphql, readFragment } from 'gql.tada';
-const bookFragment = graphql(`
-  fragment BookComponent on Book {
+
+const pokemonItemFragment = graphql(`
+  fragment PokemonItem on Pokemon {
     id
-    title
+    name
   }
 `);
 
-// May be called with any GraphQL data that contains a spread of `bookFragment`
-const getBook = (data: FragmentOf<typeof bookFragment>) => {
-  // Unmasks the fragment and casts to the result type of `bookFragment`
-  const book = readFragment(bookFragment, data);
+// May be called with any data that contains the mask
+const getPokemonItem = (data: FragmentOf<typeof pokemonItemFragment>) => {
+  // Unmasks the fragment and casts to the result type
+  const pokemon = readFragment(pokemonItemFragment, data);
 };
 ```
 
@@ -377,8 +485,8 @@ you may call [`initGraphQLTada()`](#initgraphqltada) instead.
 
 #### Example
 
-```ts
-import type { introspection } from './graphql-env.d.ts';
+```ts twoslash
+import type { introspection } from './graphql/graphql-env.d.ts';
 
 declare module 'gql.tada' {
   interface setupSchema {
