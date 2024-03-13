@@ -31,10 +31,9 @@ export { readFragment as useFragment } from 'gql.tada';
  */
 export async function ensureTadaIntrospection(
   schemaLocation: SchemaOrigin | string,
-  outputLocation: string
+  outputLocation: string,
+  base: string = process.cwd()
 ) {
-  const base = process.cwd();
-
   const writeTada = async () => {
     try {
       const schema = await loadSchema(base, schemaLocation);
