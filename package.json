@@ -73,8 +73,7 @@
   },
   "lint-staged": {
     "*.{ts,js}": "eslint -c scripts/eslint-preset.js --fix",
-    "*.json": "prettier --write",
-    "*.md": "prettier --write"
+    "*.json": "prettier --write"
   },
   "eslintConfig": {
     "root": true,

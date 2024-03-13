@@ -2,11 +2,12 @@
 title: GraphQLSP Config
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+# GraphQLSP Config
 
 `@0no-co/graphqlsp` is set up as a plugin in our TypeScript configuration:
 
-```json {4-10} title="tsconfig.json"
+::: code-group
+```json [tsconfig.json] {4-10}
 {
   "compilerOptions": {
     "strict": true,
@@ -20,6 +21,7 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
   }
 }
 ```
+:::
 
 The `name` property, in `tsconfig.json`’s plugins list, referes directly to
 the package name of the plugin.
@@ -41,14 +43,13 @@ After the schema has been loaded, the provided schema is watched and reloaded
 whenever it changes.
 
 The `schema` option currently allows for three different formats to load a schema. It accepts either:
+
 - a path to a `.graphql` file containing a schema definition (in GraphQL SDL format)
 - a path to a `.json` file containing a schema’s introspection query data
 - a URL to a GraphQL API that can be introspected
 
-<Tabs>
-<TabItem label=".graphql file">
-
-```json {6}
+::: code-group
+```json [.graphql file] {6}
 {
   "compilerOptions": {
     "plugins": [
@@ -61,10 +62,7 @@ The `schema` option currently allows for three different formats to load a schem
 }
 ```
 
-</TabItem>
-<TabItem label=".json file">
-
-```json {6}
+```json [.json file] {6}
 {
   "compilerOptions": {
     "plugins": [
@@ -77,10 +75,7 @@ The `schema` option currently allows for three different formats to load a schem
 }
 ```
 
-</TabItem>
-<TabItem label="URL">
-
-```json {6}
+```json [URL] {6}
 {
   "compilerOptions": {
     "plugins": [
@@ -93,10 +88,7 @@ The `schema` option currently allows for three different formats to load a schem
 }
 ```
 
-</TabItem>
-<TabItem label="URL with headers">
-
-```json {6-11}
+```json [URL with headers] {6-11}
 {
   "compilerOptions": {
     "plugins": [
@@ -113,11 +105,9 @@ The `schema` option currently allows for three different formats to load a schem
   }
 }
 ```
+:::
 
-</TabItem>
-</Tabs>
-
-[Read more on how to configure the `schema` option, on the “Installation” page.](../../get-started/installation/#step-2-configuring-a-schema)
+[Read more on how to configure the `schema` option, on the “Installation” page.](../get-started/installation#step-2-configuring-a-schema)
 
 ### `tadaOutputLocation`
 
@@ -137,53 +127,47 @@ are used to save the introspection result:
 #### Format 1 — `.d.ts` file
 
 When writing a `.d.ts` file, `@0no-co/graphqlsp` will create a declaration file that automatically
-declares [a `setupSchema` interface on `gql.tada`](../gql-tada-api/#setupschema) that,
+declares [a `setupSchema` interface on `gql.tada`](./gql-tada-api#setupschema) that,
 via [declaration merging in TypeScript](https://www.typescriptlang.org/docs/handbook/declaration-merging.html),
 configures `gql.tada` to use a schema project-wide for typings.
 
 The resulting file will have the following shape:
 
-```ts title="graphql-env.d.ts" collapse={2-12}
+::: code-group
+```ts [graphql-env.d.ts]
 export type introspection = {
-  "__schema": {
-    "queryType": {
-      "name": "Query"
-    },
-    "mutationType": null,
-    "subscriptionType": null,
-    "types": [
-      // ...
-    ],
-    "directives": []
-  }
+  __schema: { /*...*/ };
 };
 
 import * as gqlTada from 'gql.tada';
 
 declare module 'gql.tada' {
   interface setupSchema {
-    introspection: introspection
+    introspection: introspection;
   }
 }
 ```
+:::
 
 If we want to now customize scalars, for instance, we’ll need to create our own `graphql()` function
-by using the `introspection` type with [`gql.tada`’s `initGraphQLTada<>()` function](../gql-tada-api/#initgraphqltada):
+by using the `introspection` type with [`gql.tada`’s `initGraphQLTada<>()` function](./gql-tada-api#initgraphqltada):
 
-```ts title="graphql.ts"
+::: code-group
+```ts [graphql.ts]
 import { initGraphQLTada } from 'gql.tada';
 import type { introspection } from './graphql-env.d.ts';
 
 export const graphql = initGraphQLTada<{
   introspection: introspection;
   scalars: {
-    DateTime: string,
-    JSON: any,
-  },
+    DateTime: string;
+    JSON: any;
+  };
 }>();
 ```
+:::
 
-[Read more on how to configure the `tadaOutputLocation` option, on the “Installation” page.](../../get-started/installation/#step-3-configuring-typings)
+[Read more on how to configure the `tadaOutputLocation` option, on the “Installation” page.](../get-started/installation#step-3-configuring-typings)
 
 #### Format 2 — `.ts` file
 
@@ -193,29 +177,21 @@ data during runtime.
 
 The resulting file will have the following shape:
 
-```ts title="introspection.ts" collapse={2-12}
+::: code-group
+```ts [introspection.ts]
 const introspection = {
-  "__schema": {
-    "queryType": {
-      "name": "Query"
-    },
-    "mutationType": null,
-    "subscriptionType": null,
-    "types": [
-      // ...
-    ],
-    "directives": []
-  }
+  __schema: { /*...*/ },
 } as const;
 
 export { introspection };
 ```
+:::
 
-Hence, with this format it’s required to import the introspection and to create a [`graphql()` function](../gql-tada-api/#graphql) using
-the [`initGraphQLTada<>()` function](../gql-tada-api/#initgraphqltada). The introspection type won’t be set up project-wide, since the
+Hence, with this format it’s required to import the introspection and to create a [`graphql()` function](./gql-tada-api#graphql) using
+the [`initGraphQLTada<>()` function](./gql-tada-api#initgraphqltada). The introspection type won’t be set up project-wide, since the
 `.ts` output from `@0no-co/graphqlsp` doesn’t contain a `declare module` declaration.
 
-[Read more on how to configure the `tadaOutputLocation` option, on the “Installation” page.](../../get-started/installation/#initializing-gqltada-manually)
+[Read more on how to configure the `tadaOutputLocation` option, on the “Installation” page.](../get-started/installation#initializing-gqltada-manually)
 
 ### `template`
 
@@ -225,7 +201,8 @@ as containing GraphQL documents.
 Customizing this option allows us to give these functions another name. For example,
 if we wanted to name a function `parseGraphQL` instead, we may set the option to `"parseGraphQL"`.
 
-```json {7}
+::: code-group
+```json [tsconfig.json] {7}
 {
   "compilerOptions": {
     "plugins": [
@@ -238,17 +215,17 @@ if we wanted to name a function `parseGraphQL` instead, we may set the option to
   }
 }
 ```
-
-:::note
-It is not recommended to change the default template name to anything but `gql` or `graphql` for
-editor support. Many editors, including VSCode, will syntax highlight GraphQL syntax inside strings
-based on function names, and naming the functions anything but `gql` and `graphql` may break syntax
-highlighting for you.
-
-In VSCode however, it may be possible to restore syntax highlighting by prefixing strings inside
-custom tag functions with an inline `/* GraphQL */` comment.
-However, this won’t work in every editor either!
 :::
+
+> [!NOTE]
+> It is not recommended to change the default template name to anything but `gql` or `graphql` for
+> editor support. Many editors, including VSCode, will syntax highlight GraphQL syntax inside strings
+> based on function names, and naming the functions anything but `gql` and `graphql` may break syntax
+> highlighting for you.
+>
+> In VSCode however, it may be possible to restore syntax highlighting by prefixing strings inside
+> custom tag functions with an inline `/* GraphQL */` comment.
+> However, this won’t work in every editor either!
 
 ### `templateIsCallExpression`
 
@@ -256,12 +233,11 @@ By default, this option is `true`.
 When `templateIsCallExpression: false` is set, `@0no-co/graphqlsp` will instead look for tagged
 template literals.
 
-:::caution
-Using tagged template literals is incompatible with `gql.tada`!
-
-TypeScript doesn’t currently support constant string literal types to be inferred
-from tagged template literals. (See [`microsoft/typescript#49552`](https://github.com/microsoft/TypeScript/pull/49552))
-:::
+> [!WARNING]
+> Using tagged template literals is incompatible with `gql.tada`!
+>
+> TypeScript doesn’t currently support constant string literal types to be inferred
+> from tagged template literals. (See [`microsoft/typescript#49552`](https://github.com/microsoft/TypeScript/pull/49552))
 
 ### `trackFieldUsage`
 
@@ -271,14 +247,17 @@ When enabled, `@0no-co/graphqlsp` will track how you use the data of GraphQL doc
 and issue a warning when any fields in your selection sets aren’t actually used in
 your TypeScript code, so you can delete them.
 
-```tsx ins={"GraphQLSP warns: Field 'maxHP is not used.":7-8}
-import { FragmentOf, graphql, readFragment } from '../graphql';
+```tsx twoslash {8}
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
+import { FragmentOf, graphql, readFragment } from 'gql.tada';
+
+// @warn: GraphQLSP: Field 'maxHP is not used.
 
 export const PokemonItemFragment = graphql(`
   fragment PokemonItem on Pokemon {
     id
     name
-
     maxHP
   }
 `);
@@ -289,13 +268,12 @@ interface Props {
 
 export const PokemonItem = ({ data }: Props) => {
   const pokemon = readFragment(PokemonItemFragment, data);
-  return <li>{pokemon.name}</li>;
+  return <li></li>;
 };
 ```
 
 In the above example, we add a `maxHP` field to a fragment that the component’s
 code does not actually access, which causes a warning to be displayed.
-
 
 ### `shouldCheckForColocatedFragments`
 
@@ -305,17 +283,24 @@ When enabled, `@0no-co/graphqlsp` will scan imports for GraphQL fragments. When 
 unused fragment in a file that’s imported in the current module, it issues a warning.
 This protects us from accidentally forgetting to reuse a fragment from an imported component file.
 
-```tsx ins={"GraphQLSP warns: Unused co-located fragment definition(s)":4-5}
+```tsx twoslash {4}
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
+// @filename: ./src/PokemonItem.tsx
+export const PokemonItem = () => null;
+// @filename: ./src/PokemonsList.tsx
+// ---cut---
 import { useQuery } from 'urql';
-import { graphql } from '../graphql';
+import { graphql } from 'gql.tada';
 
-
+// @warn: GraphQLSP: Unused co-located fragment definition(s)
 import { PokemonItem } from './PokemonItem';
 
 const PokemonsQuery = graphql(`
-  query Pokemons ($limit: Int = 10) {
+  query Pokemons($limit: Int = 10) {
     pokemons(limit: $limit) {
       id
+      name
     }
   }
 `, []);

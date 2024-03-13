@@ -3,6 +3,8 @@ title: Fragment Colocation
 description: How GraphQL fragments are effectively used in componentized apps.
 ---
 
+# Fragment Colocation
+
 When presenting GraphQL, its features often turn into a
 box-ticking exercise of comparing it to alternative solutions of
 server-client API design, until we may ask ourselves whether
@@ -31,12 +33,18 @@ import { graphql } from 'gql.tada';
 
 const query = graphql(`
   query PostsOverview {
-    latestPosts { ...PostCard }
-    trendingPosts { ...PostCard }
+    latestPosts {
+      ...PostCard
+    }
+    trendingPosts {
+      ...PostCard
+    }
   }
 
   fragment PostCard on Post {
-    id, text, createdAt
+    id
+    text
+    createdAt
   }
 `);
 ```
@@ -59,10 +67,12 @@ const query = graphql(`
   query PostsOverview {
     latestPosts {
       id
-      ...MediaCard on MediaPost {
+      ...MediaCard
+      ... on MediaPost {
         videoUrl
       }
-      ...TextCard on TextPost {
+      ...TextCard
+      ... on TextPost {
         text
       }
     }
@@ -78,11 +88,10 @@ We may use fragments to conditionally apply a selection set
 to either of these types, which is like “Type Narrowing” in
 GraphQL.
 
-:::note
-The above example uses an inline fragment spread, however, the
-same principle of type conditions applies to regular fragments
-and fragment spreads.
-:::
+> [!TIP]
+> The above example uses an inline fragment spread, however, the
+> same principle of type conditions applies to regular fragments
+> and fragment spreads.
 
 ### `@include` & `@skip` Conditions
 
@@ -104,8 +113,12 @@ const query = graphql(`
 
   fragment PostDetails on Post {
     id
-    author { name }
-    location { city }
+    author {
+      name
+    }
+    location {
+      city
+    }
   }
 `);
 ```
@@ -128,31 +141,35 @@ While querying fields is similar to how we _access_ data in front-end
 code, and hence map the hierarchy of data we need; Fragments are similar
 to how we may structure components.
 
-```tsx title="AuthorLabel.tsx"
+::: code-group
+```tsx twoslash [PokemonTypes.tsx]
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
 import { FragmentOf, graphql } from 'gql.tada';
 
-export const authorLabelFragment = graphql(`
-  fragment AuthorLabel on Author @_unmask {
-    id
-    handle
-    name
+export const pokemonTypesFragment = graphql(`
+  fragment PokemonTypes on Pokemon @_unmask {
+    types
   }
 `);
 
-export const AuthorLabel = (props: {
-  data: FragmentOf<typeof authorLabelFragment>
+export const PokemonTypes = (props: {
+  data: FragmentOf<typeof pokemonTypesFragment>
 }) => {
   const { data } = props;
   return (
-    <span>
-      {`by ${data.name}`}
-      <em>@{data.handle}</em>
-    </span>
+    <p>
+      <h2>Types</h2>
+      <ul>
+        {data.types?.map((typing) => <li>{typing}</li>)}
+      </ul>
+    </p>
   );
 };
 ```
+:::
 
-With fragments, like our `authorLabelFragment` above, we can define the data a
+With fragments, like our `pokemonTypesFragment` above, we can define the data a
 component _requires to render_ right next to the component itself, which
 keeps concerns on how to fetch this data away from our presentational
 components, while still defining what data the component requires.
@@ -162,38 +179,55 @@ components, while still defining what data the component requires.
 While colocating fragments is interesting on its own, it really becomes
 useful once we define more nested components, and compose their fragments.
 
-Let’s create a `PostCard` component that renders the `AuthorLabel`
+Let’s create a `Pokemon` component that renders the `PokemonTypes`
 component we’ve already defined above:
 
-```tsx title="PostCard.tsx"
+::: code-group
+```tsx twoslash [Pokemon.tsx]
+// @filename: ./src/PokemonTypes.tsx
+import './graphql/graphql-env.d.ts';
 import { FragmentOf, graphql } from 'gql.tada';
-import { authorLabelFragment, AuthorLabel } from './AuthorLabel';
 
-export const postCardFragment = graphql(`
-  fragment PostCard on Post @_unmask {
-    id
-    text
-    author { ...AuthorLabel }
+export const pokemonTypesFragment = graphql(`
+  fragment PokemonTypes on Pokemon @_unmask {
+    types
   }
-`, [authorLabelFragment]);
+`);
 
-export const PostCard = (props: {
-  data: FragmentOf<typeof postCardFragment>
+export const PokemonTypes = (props: {
+  data: FragmentOf<typeof pokemonTypesFragment>
+}) => null;
+// @filename: ./src/Pokemon.tsx
+// ---cut---
+import { FragmentOf, graphql } from 'gql.tada';
+import { pokemonTypesFragment, PokemonTypes } from './PokemonTypes';
+
+export const pokemonFragment = graphql(`
+  fragment Pokemon on Pokemon @_unmask {
+    id
+    name
+    ...PokemonTypes
+  }
+`, [pokemonTypesFragment]);
+
+export const Pokemon = (props: {
+  data: FragmentOf<typeof pokemonFragment>
 }) => {
   const { data } = props;
   return (
     <section>
-      <p>{data.text}</p>
-      <AuthorLabel data={data.author} />
+      <p>{data.name}</p>
+      <PokemonTypes data={data} />
     </section>
   );
 };
 ```
+:::
 
 As we can see, defining reusing and composing fragments, is just as easy
 as reusing and composing components.
 
-No matter whether where we’re using the `PostCard` or `AuthorLabel`
+No matter whether where we’re using the `Pokemon` or `PokemonTypes`
 components, as long as we compose fragments upwards, we’ll eventually
 be able to compose them into a query, at the level of our screen’s code,
 and hence combine the data requirements of all of our components.
@@ -208,83 +242,111 @@ purpose of our example code. Fragment Masking hides the types of a
 fragment on the fragment’s derived type. This prevents leaking data
 when composing fragments.
 
-Let’s consider what happens if `PostCard` started to accidentally
-depend on data that only the `AuthorLabel`’s fragment defines.
+Let’s consider what happens if the `Pokemon` component started to accidentally
+depend on data that only the `PokemonTypes`’s fragment defines.
 
-```tsx title="PostCard.tsx" ins={"PostCard now accidentally depends on AuthorLabel’s data:":8-9}
-export const PostCard = (props: {
-  data: FragmentOf<typeof postCardFragment>
+::: code-group
+```tsx twoslash [Pokemon.tsx]
+// @filename: ./src/PokemonTypes.tsx
+import './graphql/graphql-env.d.ts';
+import { FragmentOf, graphql } from 'gql.tada';
+
+export const pokemonTypesFragment = graphql(`
+  fragment PokemonTypes on Pokemon @_unmask {
+    types
+  }
+`);
+
+export const PokemonTypes = (props: {
+  data: FragmentOf<typeof pokemonTypesFragment>
+}) => null;
+// @filename: ./src/Pokemon.tsx
+import { FragmentOf, graphql } from 'gql.tada';
+import { pokemonTypesFragment, PokemonTypes } from './PokemonTypes';
+
+export const pokemonFragment = graphql(`
+  fragment Pokemon on Pokemon @_unmask {
+    id
+    name
+    ...PokemonTypes
+  }
+`, [pokemonTypesFragment]);
+// ---cut-before---
+export const Pokemon = (props: {
+  data: FragmentOf<typeof pokemonFragment>
 }) => {
   const { data } = props;
   return (
     <section>
-      <p>{data.text}</p>
+      <p>{data.name}</p>
+// @error: Pokemon now accidentally depends on PokemonTypes’s data:
 
-      <span>{data.author.name}</span>
-      <AuthorLabel data={data.author} />
+      <span>{data.types?.length}</span>
+      <PokemonTypes data={data} />
     </section>
   );
 };
 ```
+:::
 
-We can fix this by removing `@_unmask` on the `AuthorLabel` component to re-enable
-fragment masking. This will effectively “hide” the `authorLabelFragments`’s data
-from the `PostCard` component to keep the fragments isolated from one another
+We can fix this by removing `@_unmask` on the `PokemonTypes` component’s fragment
+to re-enable fragment masking. This will effectively “hide” the `pokemonTypesFragment`’s data
+from the `Pokemon` component to keep the fragments isolated from one another
 on a type-level.
 
-```tsx title="PostCard.tsx" {"Removing @_unmask isolates this fragment’s data.":4-6} del={5} ins={6} ins={"We now have to add readFragment() to unwrap the masked fragment:":16-18} del={17} ins={18}
+::: code-group
+```tsx twoslash [PokemonTypes.tsx]
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
 import { FragmentOf, graphql, readFragment } from 'gql.tada';
 
-export const authorLabelFragment = graphql(`
+// @annotate: Removing @_unmask isolates this fragment’s data.
 
-  fragment AuthorLabel on Author @_unmask {
-  fragment AuthorLabel on Author {
-    id
-    handle
-    name
+export const pokemonTypesFragment = graphql(`
+  fragment PokemonTypes on Pokemon {
+    types
   }
 `);
 
-export const AuthorLabel = (props: {
-  data: FragmentOf<typeof authorLabelFragment>
+export const PokemonTypes = (props: {
+  data: FragmentOf<typeof pokemonTypesFragment>
 }) => {
+// @annotate: We now have to add readFragment() to unwrap the masked fragment:
 
-  const { data } = props;
-  const data = readFragment(authorLabelFragment, props.data);
+  const pokemon = readFragment(pokemonTypesFragment, props.data);
   return (
-    <span>
-      {`by ${data.name}`}
-      <em>@{data.handle}</em>
-    </span>
+    <p>
+      <h2>Types</h2>
+      <ul>
+        {pokemon.types?.map((typing) => <li>{typing}</li>)}
+      </ul>
+    </p>
   );
 };
 ```
-
-:::note
-This is the default behaviour in `gql.tada`, and happens unless you add `@_unmask`
-to a fragment.
-
-However, by default, we recommend you not to disable Fragment Masking unless you
-absolutely have to, to enforce fragment composition.
 :::
 
+> [!TIP]
+> This is the default behaviour in `gql.tada`, and happens unless you add `@_unmask`
+> to a fragment.
+>
+> However, by default, we recommend you not to disable Fragment Masking unless you
+> absolutely have to, to enforce fragment composition.
 
 Inside the inferred TypeScript types, when fragment masking _isn’t disabled_ using
 `@_unmask`, then `gql.tada` will infer masked types. In TypeScript, the type that
 `FragmentOf<>` returns may look like the following:
 
 ```ts
-// FragmentType<typeof authorLabelFragment> with @_unmask:
-type unmaskedAuthor = {
-  id: string | number;
-  handle: string | null;
-  name: string | null;
+// FragmentType<typeof pokemonTypesFragment> with @_unmask:
+type unmaskedPokemonTypes = {
+  types: ("Bug" | "Dark" | /*...*/ null)[] | null;
 };
 
-// FragmentType<typeof authorLabelFragment> without @_unmask:
-type maskedAuthor = {
+// FragmentType<typeof pokemonTypesFragment> without @_unmask:
+type maskedPokemonTypes = {
   [$tada.fragmentRefs]: {
-    AuthorLabel: $tada.ref;
+    PokemonTypes: 'Pokemon';
   };
 };
 ```

@@ -3,7 +3,7 @@ title: Typed Documents
 description: How GraphQL documents and TypeScript come together
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+# Typed Documents
 
 Although GraphQL defines conventions and guarantees for the
 client-side GraphQL query language and the server-side
@@ -106,11 +106,15 @@ then a minimal example using GraphQL is quite simple.
 In this example, we’ll have a GraphQL query sent to an API using a simple
 `fetch` call:
 
-```ts title="query.ts"
+::: code-group
+```ts twoslash [query.ts]
 import { DocumentNode, parse, print } from 'graphql';
 
 const query = parse(/* GraphQL */ `
-  { helloWorld, numberOfRequests }
+  {
+    helloWorld
+    numberOfRequests
+  }
 `);
 
 async function execute(query: DocumentNode, variables?: any): Promise<any> {
@@ -126,6 +130,7 @@ async function execute(query: DocumentNode, variables?: any): Promise<any> {
 
 const data = await execute(query);
 ```
+:::
 
 In TypeScript however, we’re lacking two vital integration points here.
 Without Type Generations, neither `data` nor `variables` are typed
@@ -138,31 +143,46 @@ With manual code generation tools, a separate tool would output a file
 containing our query’s types. For instance, it may output a separate file
 that contains the `Result` and `Variables` types we need:
 
-```ts title="query.generated.ts"
-export interface Result {
+::: code-group
+```ts twoslash [query.generated.ts]
+export type Result = {
   helloWorld: string | null;
   numberOfRequests: number;
-}
+};
 
-export interface Variables {}
+export type Variables = {};
 ```
+:::
 
 However, this now requires us to make an effort to include these types
 manually in our `execute` function:
 
-```ts title="query.ts" {"We add generics to our function:":8-12} {"We set the generics to our generated types:":23-24}
+::: code-group
+```ts twoslash [query.ts]
+// @filename: query.generated.ts
+export type Result = {
+  helloWorld: string | null;
+  numberOfRequests: number;
+};
+export type Variables = {};
+// @filename: query.ts
+// ---cut---
 import { DocumentNode, parse, print } from 'graphql';
-import type { Result, Variables } from './query.generated.ts';
+import type { Result, Variables } from './query.generated';
 
 const query = parse(/* GraphQL */ `
-  { helloWorld, numberOfRequests }
+  {
+    helloWorld
+    numberOfRequests
+  }
 `);
 
+// @annotate: We add generics to our function:
 
-async function execute<
-  Result = any,
-  Variables = any
->(query: DocumentNode, variables: Variables): Promise<Result> {
+async function execute<Result = any, Variables = any>(
+  query: DocumentNode,
+  variables: Variables
+): Promise<Result> {
   const response = await fetch('/graphql', {
     method: 'POST',
     body: JSON.stringify({
@@ -173,9 +193,10 @@ async function execute<
   return (await response.json()).data;
 }
 
-
-const data = await execute<Result, Variables>(query);
+// @annotate: We pass our generated types to these generics
+const data = await execute<Result, Variables>(query, {});
 ```
+:::
 
 This is a very manual process though that doesn’t match our expectation that **GraphQL
 is strongly typed and types should hence be inferred implicitly.**
@@ -191,13 +212,39 @@ Instead of having a `DocumentNode` type, ideally, we’d want the query to be ty
 as `TypedDocumentNode<Result, Variables>`.
 
 As a result, GraphQL in TypeScript has two ways of attaching types to GraphQL documents:
+
 - the [`@graphql-typed-document-node/core`](https://github.com/dotansimha/graphql-typed-document-node) type
 - the [`graphql` package’s](https://github.com/graphql/graphql-js/blob/2aedf25/src/utilities/typedQueryDocumentNode.ts) type
 
 Our type generation tools can now output a `TypedDocumentNode` that has types attached
 to it directly:
 
-```ts title="query.generated.ts"
+::: code-group
+```ts twoslash [query.generated.ts]
+import { parse } from 'graphql';
+import { TypedDocumentNode } from '@graphql-typed-document-node/core';
+
+type Result = {
+  helloWorld: string | null;
+  numberOfRequests: number;
+};
+
+type Variables = {};
+
+export const query: TypedDocumentNode<Result, Variables> = parse(
+  '{ helloWorld, numberOfRequests }'
+);
+```
+:::
+
+Which for clients executing a GraphQL query means, that they can infer the types
+of a given GraphQL query by matching it against `TypedDocumentNode` instead.
+In our example, we can now infer the generic types from the `query` instead:
+
+::: code-group
+```ts twoslash [query.ts] 
+// @filename: query.generated.ts
+import { parse } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 interface Result {
@@ -210,21 +257,13 @@ interface Variables {}
 export const query: TypedDocumentNode<Result, Variables> = parse(
   '{ helloWorld, numberOfRequests }'
 );
-```
-
-Which for clients executing a GraphQL query means, that they can infer the types
-of a given GraphQL query by matching it against `TypedDocumentNode` instead.
-In our example, we can now infer the generic types from the `query` instead:
-
-```ts title="query.ts" {"Types are now inferred from the query argument:":4-11}
+// @filename: query.ts
+// ---cut---
+import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { DocumentNode, parse, print } from 'graphql';
-import { query } from './query.generated.ts';
+import { query } from './query.generated';
 
-
-async function execute<
-  Result = any,
-  Variables = any
->(
+async function execute<Result = any, Variables = any>(
   query: TypedDocumentNode<Result, Variables>,
   variables: Variables
 ): Promise<Result> {
@@ -238,8 +277,10 @@ async function execute<
   return (await response.json()).data;
 }
 
-const data = await execute(query);
+// @annotate: Types are now inferred from the query argument
+const data = await execute(query, {});
 ```
+:::
 
 ### `gql.tada` type inference
 
@@ -250,12 +291,77 @@ In `gql.tada` however, the idea is that we get from writing a query to having a
 `TypedDocumentNode` type just via TypeScript inference, without running a separate
 tool or having files be generated for each query.
 
-```ts {"This is a TypedDocumentNode without extra imports:":3-6}
+```ts twoslash
+// @filename: graphq-env.d.ts
+export type introspection = {
+  "__schema": {
+    "queryType": {
+      "name": "Query"
+    },
+    "mutationType": null,
+    "subscriptionType": null,
+    "types": [
+      {
+        "kind": "OBJECT",
+        "name": "Query",
+        "fields": [
+          {
+            "name": "helloWorld",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "args": []
+          },
+          {
+            "name": "numberOfRequests",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "args": []
+          }
+        ],
+        "interfaces": []
+      },
+      {
+        "kind": "SCALAR",
+        "name": "Int"
+      },
+      {
+        "kind": "SCALAR",
+        "name": "String"
+      }
+    ],
+    "directives": []
+  }
+};
+
+import * as gqlTada from 'gql.tada';
+
+declare module 'gql.tada' {
+  interface setupSchema {
+    introspection: introspection
+  }
+}
+
+// @filename: index.ts
+import './graphql-env.d.ts';
+// ---cut---
 import { graphql } from 'gql.tada';
- 
+
+// @annotate: We get a TypedDocumentNode without extra imports
 
 const query = graphql(`
-  { helloWorld, numberOfRequests }
+  {
+    helloWorld
+    numberOfRequests
+  }
 `);
 ```
 
@@ -268,93 +374,84 @@ Today, supporting typed documents in GraphQL is an accepted and de-facto standar
 and below you can find a non-exhaustive list of GraphQL clients that support
 typed documents and will hence also work well with `gql.tada`.
 
-<Tabs>
-<TabItem label="@apollo/client">
-
-```tsx
+::: code-group
+```ts twoslash [@apollo/client]
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
 import { graphql } from 'gql.tada';
 import { useQuery } from '@apollo/client';
 
-const getBooksQuery = graphql(`
-  query GetBooks {
-    books {
+const getPokemonsQuery = graphql(`
+  query GetPokemons {
+    pokemons {
       id
-      title
+      name
     }
   }
 `);
 
-function Books() {
-  const { loading, error, data } = useQuery(getBooksQuery);
-  return null; // ...
+function Pokemons() {
+  const { loading, error, data } = useQuery(getPokemonsQuery);
 }
 ```
 
-</TabItem>
-<TabItem label="@urql/core">
+```ts twoslash [@urql/core]
+import './graphql/graphql-env.d.ts';
+declare var client: import('@urql/core').Client;
+// ---cut-before---
+import { graphql } from 'gql.tada';
 
-```ts
+const getPokemonsQuery = graphql(`
+  query GetPokemons {
+    pokemons {
+      id
+      name
+    }
+  }
+`);
+
+async function getPokemons() {
+  const { data } = await client.query(getPokemonsQuery, {});
+}
+```
+
+```ts twoslash [urql]
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
 import { graphql } from 'gql.tada';
 import { useQuery } from 'urql';
 
-const getBooksQuery = graphql(`
-  query GetBooks {
-    books {
+const getPokemonsQuery = graphql(`
+  query GetPokemons {
+    pokemons {
       id
-      title
+      name
     }
   }
 `);
 
-async function getBooks() {
-  const { data } = await client.query(getBooks);
-  // ...
+function Pokemons() {
+  const [{ fetching, error, data }] = useQuery({ query: getPokemonsQuery });
 }
 ```
 
-</TabItem>
-<TabItem label="urql">
-
-```tsx
-import { graphql } from 'gql.tada';
-import { useQuery } from 'urql';
-
-const getBooksQuery = graphql(`
-  query GetBooks {
-    books {
-      id
-      title
-    }
-  }
-`);
-
-function Books() {
-  const { loading, error, data } = useQuery({ query: getBooksQuery });
-  return null; // ...
-}
-```
-
-</TabItem>
-<TabItem label="graphql-request">
-
-```ts
+```ts twoslash [graphql-request]
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
 import { graphql } from 'gql.tada';
 import request from 'graphql-request';
 
-const getBooksQuery = graphql(`
-  query GetBooks {
-    books {
+const getPokemonsQuery = graphql(`
+  query GetPokemons {
+    pokemons {
       id
-      title
+      name
     }
   }
 `);
 
-async function getBooks() {
-  const data = await request('/graphql', getBooksQuery);
-  // ...
+async function getPokemons() {
+  const data = await request('/graphql', getPokemonsQuery);
 }
 ```
-
-</TabItem>
-</Tabs>
+:::

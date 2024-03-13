@@ -2,10 +2,12 @@
 title: Introduction
 ---
 
-:::note
-`gql.tada`’s documentation is still a work in progress.
-If you have any feedback, feel free to let us know what you’d like to see explained or changed.
-:::
+# Introduction
+
+> [!NOTE]
+>
+> `gql.tada`’s documentation is still a work in progress.
+> If you have any feedback, feel free to let us know what you’d like to see explained or changed.
 
 The `gql.tada` project aims to improve the experience of writing and using GraphQL
 with TypeScript on the client-side by providing more feedback when writing GraphQL,
@@ -20,7 +22,7 @@ GraphQL schema and provides immediate feedback, auto-completion, diagnostics,
 and GraphQL type hints.<br />
 This all happens on-the-fly in TypeScript.
 
-[Read on on the “Installation” page, to get started! 🪄](./get-started/installation/)
+[Read on on the “Installation” page, to get started! 🪄](./get-started/installation)
 
 ### A demo in 128 seconds
 
@@ -31,6 +33,7 @@ This all happens on-the-fly in TypeScript.
 ## How does it work?
 
 The project currently contains two installable modules:
+
 - `gql.tada`, the package providing typings and the runtime API as a library,
 - `@0no-co/graphqlsp`, a TypeScript Language Service plugins for editor feedback and integration.
 
@@ -49,7 +52,61 @@ provides to create typings for GraphQL result and variables types.
 
 This means, all we see in our code is the plain GraphQL documents with no annotations or distractions:
 
-```ts title="example.ts"
+```ts twoslash
+// @filename: graphql-env.d.ts
+export type introspection = {
+  "__schema": {
+    "queryType": {
+      "name": "Query"
+    },
+    "mutationType": null,
+    "subscriptionType": null,
+    "types": [
+      {
+        "kind": "OBJECT",
+        "name": "Query",
+        "fields": [
+          {
+            "name": "hello",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "args": []
+          },
+          {
+            "name": "world",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "args": []
+          }
+        ],
+        "interfaces": []
+      },
+      {
+        "kind": "SCALAR",
+        "name": "String"
+      }
+    ],
+    "directives": []
+  }
+};
+
+import * as gqlTada from 'gql.tada';
+
+declare module 'gql.tada' {
+  interface setupSchema {
+    introspection: introspection
+  }
+}
+
+// @filename: index.ts
+import './graphql-env.d.ts';
+// ---cut---
 import { graphql } from 'gql.tada';
 
 const fragment = graphql(`
@@ -102,6 +159,6 @@ Currently, the list of supported features is:
 
 ## Next steps
 
-[The next page, “Installation”](./get-started/installation/), will show you how to install and set up `gql.tada` and `@0no-co/graphqlsp`.
+[The next page, “Installation”](./get-started/installation), will show you how to install and set up `gql.tada` and `@0no-co/graphqlsp`.
 
-[The following page, “Writing GraphQL”](./get-started/writing-graphql/), will show you how to use `gql.tada` and write GraphQL documents with it.
+[The following page, “Writing GraphQL”](./get-started/writing-graphql), will show you how to use `gql.tada` and write GraphQL documents with it.
