@@ -71,6 +71,8 @@
   --vp-c-indigo-2: #2973E1;
   --vp-c-indigo-3: #2973E1;
   --vp-c-indigo-soft: #4485E5;
+
+  --vp-code-line-highlight-color: #ececf7;
 }
 
 :root .VPNavBarSearch .DocSearch.DocSearch-Button {
@@ -370,6 +372,32 @@
 :root .VPContent .vp-doc .vp-adaptive-theme .twoslash-tag-line {
   user-select: none;
   margin: 4px -24px;
+  padding: 4px 10px;
+}
+
+:root .VPContent .vp-doc .vp-adaptive-theme .twoslash-tag-annotate-line {
+  display: block;
+  width: min-content;
+  background: rgb(92, 96, 132);
+  color: #fff;
+  border-left: none;
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+  padding: 2px 6px;
+  margin: 6px 0 -1.5em -24px;
+}
+
+:root .VPContent .vp-doc .vp-adaptive-theme .twoslash-tag-annotate-line + .line {
+  display: inline-block;
+  padding-top: calc(1.5em + 2px);
+}
+
+:root .VPContent .vp-doc .vp-adaptive-theme .twoslash-tag-annotate-line .twoslash-tag-icon {
+  display: none;
+}
+
+:root .VPContent .vp-doc .vp-adaptive-theme .twoslash-hover {
+  cursor: help;
 }
 
 :root .VPContent .vp-doc .vp-code-group {
