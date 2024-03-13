@@ -202,6 +202,9 @@ importers:
         specifier: ^3.4.21
         version: 3.4.21(typescript@5.4.2)
     devDependencies:
+      '@shikijs/core':
+        specifier: ^1.1.7
+        version: 1.1.7
       '@types/react':
         specifier: ^18.2.64
         version: 18.2.64

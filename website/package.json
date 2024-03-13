@@ -8,6 +8,7 @@
     "preview": "vitepress preview"
   },
   "devDependencies": {
+    "@shikijs/core": "^1.1.7",
     "@types/react": "^18.2.64",
     "shikiji": "^0.10.2",
     "shikiji-twoslash": "^0.10.2",
