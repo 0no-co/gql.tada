@@ -2,7 +2,8 @@ import { defineConfig } from 'vitepress';
 import { defaultTwoslashOptions } from 'shikiji-twoslash';
 import { transformerTwoslash } from 'vitepress-plugin-twoslash';
 import type { JsxEmit } from 'typescript';
-import { JsxElement } from 'typescript';
+
+import { graphqlLanguage } from './graphql-textmate.mts';
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -17,6 +18,10 @@ export default defineConfig({
   },
 
   markdown: {
+    languages: [
+      graphqlLanguage,
+    ],
+
     theme: {
       light: 'github-light',
       dark: 'github-dark',
