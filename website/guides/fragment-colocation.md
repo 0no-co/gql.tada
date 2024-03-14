@@ -184,7 +184,7 @@ component we’ve already defined above:
 
 ::: code-group
 ```tsx twoslash [Pokemon.tsx]
-// @filename: ./src/PokemonTypes.tsx
+// @filename: PokemonTypes.tsx
 import './graphql/graphql-env.d.ts';
 import { FragmentOf, graphql } from 'gql.tada';
 
@@ -197,7 +197,7 @@ export const pokemonTypesFragment = graphql(`
 export const PokemonTypes = (props: {
   data: FragmentOf<typeof pokemonTypesFragment>
 }) => null;
-// @filename: ./src/Pokemon.tsx
+// @filename: Pokemon.tsx
 // ---cut---
 import { FragmentOf, graphql } from 'gql.tada';
 import { pokemonTypesFragment, PokemonTypes } from './PokemonTypes';
@@ -247,7 +247,7 @@ depend on data that only the `PokemonTypes`’s fragment defines.
 
 ::: code-group
 ```tsx twoslash [Pokemon.tsx]
-// @filename: ./src/PokemonTypes.tsx
+// @filename: PokemonTypes.tsx
 import './graphql/graphql-env.d.ts';
 import { FragmentOf, graphql } from 'gql.tada';
 
@@ -260,7 +260,7 @@ export const pokemonTypesFragment = graphql(`
 export const PokemonTypes = (props: {
   data: FragmentOf<typeof pokemonTypesFragment>
 }) => null;
-// @filename: ./src/Pokemon.tsx
+// @filename: Pokemon.tsx
 import { FragmentOf, graphql } from 'gql.tada';
 import { pokemonTypesFragment, PokemonTypes } from './PokemonTypes';
 

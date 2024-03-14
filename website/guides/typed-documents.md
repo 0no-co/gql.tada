@@ -292,7 +292,7 @@ In `gql.tada` however, the idea is that we get from writing a query to having a
 tool or having files be generated for each query.
 
 ```ts twoslash
-// @filename: graphq-env.d.ts
+// @filename: graphql-env.d.ts
 export type introspection = {
   "__schema": {
     "queryType": {
