@@ -1,5 +1,12 @@
 # @gql.tada/cli-utils
 
+## 0.2.0
+
+### Minor Changes
+
+- Abstract core logic for `generate-schema` and `generate-output` CLI commands into importable Node.js API's
+  Submitted by [@matthewvolk](https://github.com/matthewvolk) (See [#135](https://github.com/0no-co/gql.tada/pull/135))
+
 ## 0.1.2
 
 ### Patch Changes
