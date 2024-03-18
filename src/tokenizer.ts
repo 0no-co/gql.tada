@@ -43,12 +43,10 @@ type skipIgnored<In> = In extends `#${infer _}\n${infer In}`
 type skipDigits<In> = In extends `${digit}${infer In}` ? skipDigits<In> : In;
 
 type skipFloat<In> = In extends `${'.'}${infer In}`
-  ? In extends `${digit}${infer In}`
-    ? In extends `${'e' | 'E'}${infer In}`
-      ? skipDigits<In extends `${'+' | '-'}${infer In}` ? In : In>
-      : In
-    : void
-  : In extends `${'e' | 'E'}${infer In}`
+  ? skipDigits<In> extends `${'e' | 'E'}${infer In}`
+    ? skipDigits<In extends `${'+' | '-'}${infer In}` ? In : In>
+    : skipDigits<In>
+  : skipDigits<In> extends `${'e' | 'E'}${infer In}`
     ? skipDigits<In extends `${'+' | '-'}${infer In}` ? In : In>
     : void;
 
