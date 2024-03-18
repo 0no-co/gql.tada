@@ -22,8 +22,8 @@ describe('tokenize', () => {
   });
 
   it('tokenizes integers', () => {
-    type actual = tokenize<'-1 1'>;
-    type expected = [Token.Integer, Token.Integer];
+    type actual = tokenize<'-1 1 123'>;
+    type expected = [Token.Integer, Token.Integer, Token.Integer];
     expectTypeOf<actual>().toEqualTypeOf<expected>();
   });
 
@@ -31,6 +31,10 @@ describe('tokenize', () => {
     type actual = tokenize<'1.0 1e2 1.0E-2'>;
     type expected = [Token.Float, Token.Float, Token.Float];
     expectTypeOf<actual>().toEqualTypeOf<expected>();
+
+    type actual2 = tokenize<'1.00 1e22 1.00E-20'>;
+    type expected2 = [Token.Float, Token.Float, Token.Float];
+    expectTypeOf<actual2>().toEqualTypeOf<expected2>();
   });
 
   it('tokenizes strings', () => {
