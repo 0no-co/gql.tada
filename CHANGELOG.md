@@ -1,5 +1,12 @@
 # gql.tada
 
+## 1.3.6
+
+### Patch Changes
+
+- ⚠️ Fix tokenizer not handling repeated digits for floats
+  Submitted by [@kitten](https://github.com/kitten) (See [#140](https://github.com/0no-co/gql.tada/pull/140))
+
 ## 1.3.5
 
 ### Patch Changes
