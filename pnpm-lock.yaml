@@ -158,6 +158,9 @@ importers:
       graphql:
         specifier: ^16.8.1
         version: 16.8.1
+      typescript:
+        specifier: ^5.3.3
+        version: 5.3.3
     devDependencies:
       '@types/node':
         specifier: ^20.11.0
@@ -174,9 +177,6 @@ importers:
       type-fest:
         specifier: ^4.10.2
         version: 4.10.2
-      typescript:
-        specifier: ^5.3.3
-        version: 5.3.3
 
   packages/internal:
     dependencies:
@@ -204,7 +204,7 @@ importers:
         version: 4.10.2
       typescript:
         specifier: ^5.3.3
-        version: 5.3.3
+        version: 5.4.2
 
   website:
     dependencies:
@@ -5987,7 +5987,6 @@ packages:
     resolution: {integrity: sha512-pXWcraxM0uxAS+tN0AG/BF2TyqmHO014Z070UsJ+pFvYuRSq8KH8DmWpnbXe0pEPDHXZV3FcAbJkijJ5oNEnWw==}
     engines: {node: '>=14.17'}
     hasBin: true
-    dev: true
 
   /typescript@5.4.2:
     resolution: {integrity: sha512-+2/g0Fds1ERlP6JsakQQDXjZdZMM+rqpamFZJEKh4kwTIn3iDkgKtby0CeNd5ATNZ4Ry1ax15TMx0W2V+miizQ==}
