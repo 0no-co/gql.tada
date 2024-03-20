@@ -2,7 +2,7 @@ import type { DocumentNode, DefinitionNode } from '@0no-co/graphql.web';
 import { Kind, parse as _parse } from '@0no-co/graphql.web';
 
 import type {
-  IntrospectionQuery,
+  IntrospectionLikeInput,
   ScalarsLike,
   SchemaLike,
   mapIntrospection,
@@ -36,7 +36,7 @@ import type { stringLiteral, obj, matchOr, writable, DocumentDecoration } from '
  * @param scalars - An object type with scalar names as keys and the corresponding scalar types as values.
  */
 interface AbstractSetupSchema {
-  introspection: IntrospectionQuery;
+  introspection: IntrospectionLikeInput;
   scalars?: ScalarsLike;
   disableMasking?: boolean;
 }
@@ -210,7 +210,7 @@ interface GraphQLTadaAPI<Schema extends SchemaLike, Config extends AbstractConfi
 }
 
 type schemaOfSetup<Setup extends AbstractSetupSchema> = addIntrospectionScalars<
-  mapIntrospection<matchOr<IntrospectionQuery, Setup['introspection'], never>>,
+  mapIntrospection<matchOr<IntrospectionLikeInput, Setup['introspection'], never>>,
   matchOr<ScalarsLike, Setup['scalars'], {}>
 >;
 

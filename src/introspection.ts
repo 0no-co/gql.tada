@@ -202,16 +202,18 @@ type mapIntrospectionScalarTypes<Scalars extends ScalarsLike = DefaultScalars> =
   };
 }>;
 
-type mapIntrospection<Query extends IntrospectionQuery> = {
-  query: Query['__schema']['queryType']['name'];
-  mutation: Query['__schema']['mutationType'] extends { name: string }
-    ? Query['__schema']['mutationType']['name']
-    : never;
-  subscription: Query['__schema']['subscriptionType'] extends { name: string }
-    ? Query['__schema']['subscriptionType']['name']
-    : never;
-  types: mapIntrospectionTypes<Query>;
-};
+type mapIntrospection<Query extends IntrospectionLikeInput> = Query extends IntrospectionQuery
+  ? {
+      query: Query['__schema']['queryType']['name'];
+      mutation: Query['__schema']['mutationType'] extends { name: string }
+        ? Query['__schema']['mutationType']['name']
+        : never;
+      subscription: Query['__schema']['subscriptionType'] extends { name: string }
+        ? Query['__schema']['subscriptionType']['name']
+        : never;
+      types: mapIntrospectionTypes<Query>;
+    }
+  : Query;
 
 type addIntrospectionScalars<
   Schema extends SchemaLike,
@@ -222,6 +224,10 @@ type addIntrospectionScalars<
   subscription: Schema['subscription'];
   types: mapIntrospectionScalarTypes<Scalars> & Schema['types'];
 };
+
+/** Either a format of introspection data or an already preprocessed schema.
+ * @see {@link IntrospectionQuery} */
+export type IntrospectionLikeInput = SchemaLike | IntrospectionQuery;
 
 export type ScalarsLike = {
   [name: string]: any;
