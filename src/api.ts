@@ -20,7 +20,7 @@ import type {
 import type { getDocumentType } from './selection';
 import type { parseDocument, DocumentNodeLike } from './parser';
 import type { getVariablesType, getScalarType } from './variables';
-import type { stringLiteral, obj, matchOr, writable, DocumentDecoration } from './utils';
+import type { obj, matchOr, writable, DocumentDecoration } from './utils';
 
 /** Abstract configuration type input for your schema and scalars.
  *
@@ -123,10 +123,7 @@ interface GraphQLTadaAPI<Schema extends SchemaLike, Config extends AbstractConfi
    *
    * @see {@link readFragment} for how to read from fragment masks.
    */
-  <
-    const In extends stringLiteral<In>,
-    const Fragments extends readonly [...makeDefinitionDecoration[]],
-  >(
+  <const In extends string, const Fragments extends readonly [...makeDefinitionDecoration[]]>(
     input: In,
     fragments?: Fragments
   ): getDocumentNode<
@@ -163,14 +160,14 @@ interface GraphQLTadaAPI<Schema extends SchemaLike, Config extends AbstractConfi
    * ```
    */
   scalar<
-    const Name extends stringLiteral<Name>,
+    const Name extends string,
     const Value extends getScalarType<Name, Schema, null | undefined>,
   >(
     name: Name,
     value: Value
   ): Value;
 
-  scalar<const Name extends stringLiteral<Name>>(
+  scalar<const Name extends string>(
     name: Name,
     value?: getScalarType<Name, Schema>
   ): getScalarType<Name, Schema>;
@@ -294,7 +291,7 @@ function initGraphQLTada<const Setup extends AbstractSetupSchema>() {
  * GraphQL’s `parse` function. However, its return type will be the exact
  * structure of the AST parsed in types.
  */
-function parse<const In extends stringLiteral<In>>(input: In): parseDocument<In> {
+function parse<const In extends string>(input: In): parseDocument<In> {
   return _parse(input) as any;
 }
 
