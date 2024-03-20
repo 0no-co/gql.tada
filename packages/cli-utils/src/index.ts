@@ -125,11 +125,11 @@ export async function generateTadaTypes(shouldPreprocess = false, cwd: string = 
     return;
   }
 
-  const root = resolveTypeScriptRootDir(
-    readFileSync as (path: string) => string | undefined,
-    tsconfigpath
-  );
-  const tsconfigContents = await fs.readFile(root || tsconfigpath, 'utf-8');
+  // TODO: Remove redundant read and move tsconfig.json handling to internal package
+  const root =
+    resolveTypeScriptRootDir(readFileSync as (path: string) => string | undefined, tsconfigpath) ||
+    cwd;
+  const tsconfigContents = await fs.readFile(path.resolve(root, 'tsconfig.json'), 'utf-8');
   let tsConfig: TsConfigJson;
   try {
     tsConfig = parse(tsconfigContents) as TsConfigJson;
