@@ -16,9 +16,9 @@ export class File {
   text: string | null;
   constructor(name: string, data: Uint8Array | string) {
     this.cache = createTargetCache();
-    this.name = name;
+    this.name = normalize(name);
     if (typeof data === 'string') {
-      this.text = data;
+      this.text = data || '\n';
       this.data = null;
     } else {
       this.text = null;

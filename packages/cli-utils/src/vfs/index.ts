@@ -5,7 +5,11 @@ import type {
   ScriptTarget,
 } from 'typescript';
 
-import { createModuleResolutionCache, resolveModuleName } from 'typescript';
+import {
+  createProgram as tsCreateProgram,
+  createModuleResolutionCache,
+  resolveModuleName,
+} from 'typescript';
 
 import { compilerOptions } from './compilerOptions';
 import { Directory, File, split, normalize, sep } from './host';
@@ -14,6 +18,9 @@ const ROOT_LIB_DTS_PATH = 'lib.d.ts';
 const ROOT_LIB_DTS_DATA = '';
 
 export type VirtualCompilerHost = ReturnType<typeof createVirtualHost> & CompilerHost;
+
+export const createProgram = (rootNames: string[], host: CompilerHost) =>
+  tsCreateProgram(rootNames, compilerOptions, host);
 
 export function createVirtualHost() {
   const cache = createModuleResolutionCache(sep, normalize, compilerOptions);
