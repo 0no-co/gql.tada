@@ -1,19 +1,19 @@
 {
-  "name": "@gql.tada/cli-utils",
-  "version": "0.2.0",
+  "name": "@gql.tada/internal",
+  "version": "0.0.0",
   "public": true,
-  "description": "Main logic for gql.tada’s CLI tool.",
+  "description": "Internal logic for gql.tada’s CLI tool and GraphQLSP.",
   "author": "0no.co <hi@0no.co>",
   "sideEffects": false,
   "source": "./src/index.ts",
-  "main": "./dist/gql-tada-cli",
-  "module": "./dist/gql-tada-cli.mjs",
-  "types": "./dist/gql-tada-cli.d.ts",
+  "main": "./dist/gql-tada-internal",
+  "module": "./dist/gql-tada-internal.mjs",
+  "types": "./dist/gql-tada-internal.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/gql-tada-cli.d.ts",
-      "import": "./dist/gql-tada-cli.mjs",
-      "require": "./dist/gql-tada-cli.js",
+      "types": "./dist/gql-tada-internal.d.ts",
+      "import": "./dist/gql-tada-internal.mjs",
+      "require": "./dist/gql-tada-internal.js",
       "source": "./src/index.ts"
     },
     "./package.json": "./package.json"
@@ -27,7 +27,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/0no-co/gql.tada.git",
-    "directory": "packages/cli-utils"
+    "directory": "packages/internal"
   },
   "bugs": {
     "url": "https://github.com/0no-co/gql.tada/issues"
@@ -49,7 +49,6 @@
   },
   "dependencies": {
     "@urql/introspection": "^1.0.3",
-    "@gql.tada/internal": "workspace:*",
     "graphql": "^16.8.1"
   },
   "publishConfig": {

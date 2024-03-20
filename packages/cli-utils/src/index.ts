@@ -1,12 +1,11 @@
 import sade from 'sade';
-import { promises as fs, existsSync } from 'node:fs';
+import { promises as fs, existsSync, readFileSync } from 'node:fs';
 import path, { resolve } from 'node:path';
-// We use comment-json to parse the tsconfig as the default ones
-// have comment annotations in JSON.
-import { parse } from 'comment-json';
+import { parse } from 'json5';
 import type { IntrospectionQuery } from 'graphql';
 import { buildClientSchema, getIntrospectionQuery, printSchema } from 'graphql';
 import type { TsConfigJson } from 'type-fest';
+import { resolveTypeScriptRootDir } from '@gql.tada/internal';
 
 import type { GraphQLSPConfig } from './lsp';
 import { hasGraphQLSP } from './lsp';
@@ -126,7 +125,11 @@ export async function generateTadaTypes(cwd: string = process.cwd()) {
     return;
   }
 
-  const tsconfigContents = await fs.readFile(tsconfigpath, 'utf-8');
+  const root = resolveTypeScriptRootDir(
+    readFileSync as (path: string) => string | undefined,
+    tsconfigpath
+  );
+  const tsconfigContents = await fs.readFile(root || tsconfigpath, 'utf-8');
   let tsConfig: TsConfigJson;
   try {
     tsConfig = parse(tsconfigContents) as TsConfigJson;
@@ -140,7 +143,7 @@ export async function generateTadaTypes(cwd: string = process.cwd()) {
   }
 
   const foundPlugin = tsConfig.compilerOptions!.plugins!.find(
-    (plugin) => plugin.name === '@0no-co/graphqlsp'
+    (plugin) => plugin.name === '@0no-co/graphqlsp' || plugin.name === 'gql.tda/cli'
   ) as GraphQLSPConfig;
 
   await ensureTadaIntrospection(foundPlugin.schema, foundPlugin.tadaOutputLocation!, cwd);
