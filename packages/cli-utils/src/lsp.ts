@@ -18,7 +18,7 @@ export function hasGraphQLSP(tsconfig: TsConfigJson): boolean {
   }
 
   const foundPlugin = tsconfig.compilerOptions.plugins.find(
-    (plugin) => plugin.name === '@0no-co/graphqlsp'
+    (plugin) => plugin.name === '@0no-co/graphqlsp' || plugin.name === 'gql.tada/lsp'
   ) as GraphQLSPConfig | undefined;
   if (!foundPlugin) {
     console.warn('Missing @0no-co/graphqlsp plugin in tsconfig.json.');

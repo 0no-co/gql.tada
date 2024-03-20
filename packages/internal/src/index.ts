@@ -1,0 +1,1 @@
+export { resolveTypeScriptRootDir } from './resolve';

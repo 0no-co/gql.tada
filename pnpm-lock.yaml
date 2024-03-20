@@ -146,6 +146,9 @@ importers:
 
   packages/cli-utils:
     dependencies:
+      '@gql.tada/internal':
+        specifier: workspace:*
+        version: link:../internal
       '@urql/introspection':
         specifier: ^1.0.3
         version: 1.0.3(graphql@16.8.1)
@@ -156,9 +159,37 @@ importers:
       '@types/node':
         specifier: ^20.11.0
         version: 20.11.0
-      comment-json:
-        specifier: ^4.2.3
-        version: 4.2.3
+      json5:
+        specifier: ^2.2.3
+        version: 2.2.3
+      rollup:
+        specifier: ^4.9.4
+        version: 4.9.4
+      sade:
+        specifier: ^1.8.1
+        version: 1.8.1
+      type-fest:
+        specifier: ^4.10.2
+        version: 4.10.2
+      typescript:
+        specifier: ^5.3.3
+        version: 5.3.3
+
+  packages/internal:
+    dependencies:
+      '@urql/introspection':
+        specifier: ^1.0.3
+        version: 1.0.3(graphql@16.8.1)
+      graphql:
+        specifier: ^16.8.1
+        version: 16.8.1
+    devDependencies:
+      '@types/node':
+        specifier: ^20.11.0
+        version: 20.11.0
+      json5:
+        specifier: ^2.2.3
+        version: 2.2.3
       rollup:
         specifier: ^4.9.4
         version: 4.9.4
@@ -2520,10 +2551,6 @@ packages:
       is-array-buffer: 3.0.2
     dev: true
 
-  /array-timsort@1.0.3:
-    resolution: {integrity: sha512-/+3GRL7dDAGEfM6TseQk/U+mi18TU2Ms9I3UlLdUMhz2hbvGNTKdj9xniwXfUqgYhHxRx0+8UnKkvlNwVU+cWQ==}
-    dev: true
-
   /array-union@2.1.0:
     resolution: {integrity: sha512-HGyxoOTYUyCM6stUe6EJgnd4EoewAI7zMdfqO+kGjnlZmBDz/cR5pf8r/cR4Wq60sL/p0IkcjUEEPwS3GFrIyw==}
     engines: {node: '>=8'}
@@ -2792,17 +2819,6 @@ packages:
     resolution: {integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==}
     dev: true
 
-  /comment-json@4.2.3:
-    resolution: {integrity: sha512-SsxdiOf064DWoZLH799Ata6u7iV658A11PlWtZATDlXPpKGJnbJZ5Z24ybixAi+LUUqJ/GKowAejtC5GFUG7Tw==}
-    engines: {node: '>= 6'}
-    dependencies:
-      array-timsort: 1.0.3
-      core-util-is: 1.0.3
-      esprima: 4.0.1
-      has-own-prop: 2.0.0
-      repeat-string: 1.6.1
-    dev: true
-
   /commondir@1.0.1:
     resolution: {integrity: sha512-W9pAhw0ja1Edb5GVdIF1mjZw/ASI0AlShXM83UUGe2DVr5TdAPEA1OA8m/g8zWp9x6On7gqufY+FatDbC3MDQg==}
     dev: true
@@ -2817,10 +2833,6 @@ packages:
 
   /convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
-    dev: true
-
-  /core-util-is@1.0.3:
-    resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
     dev: true
 
   /cross-fetch@3.1.8:
@@ -3688,11 +3700,6 @@ packages:
 
   /has-flag@4.0.0:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
-    engines: {node: '>=8'}
-    dev: true
-
-  /has-own-prop@2.0.0:
-    resolution: {integrity: sha512-Pq0h+hvsVm6dDEa8x82GnLSYHOzNDt7f0ddFa3FqcQlgzEiptPqL+XrOJNavjOzSYiYWIrgeVYYgGlLmnxwilQ==}
     engines: {node: '>=8'}
     dev: true
 
@@ -5203,11 +5210,6 @@ packages:
       '@types/react': 18.2.64
       react: 18.2.0
     dev: false
-
-  /repeat-string@1.6.1:
-    resolution: {integrity: sha512-PV0dzCYDNfRi1jCDbJzpW7jNNDRuCOG/jI5ctQcGKt/clZD+YcPS3yIlWuTJMmESC8aevCFmWJy5wjAFgNqN6w==}
-    engines: {node: '>=0.10'}
-    dev: true
 
   /require-directory@2.1.1:
     resolution: {integrity: sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==}
