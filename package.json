@@ -32,11 +32,18 @@
       "require": "./dist/gql-tada-cli.js",
       "source": "./src/cli/index.ts"
     },
+    "./internal": {
+      "types": "./dist/gql-tada-internal.d.ts",
+      "import": "./dist/gql-tada-internal.mjs",
+      "require": "./dist/gql-tada-internal.js",
+      "source": "./src/internal/index.ts"
+    },
     "./package.json": "./package.json"
   },
   "dependencies": {
     "@0no-co/graphql.web": "^1.0.4",
-    "@gql.tada/cli-utils": "workspace:*"
+    "@gql.tada/cli-utils": "workspace:*",
+    "@gql.tada/internal": "workspace:*"
   },
   "public": true,
   "keywords": [

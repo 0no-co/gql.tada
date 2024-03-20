@@ -18,6 +18,9 @@ importers:
       '@gql.tada/cli-utils':
         specifier: workspace:*
         version: link:packages/cli-utils
+      '@gql.tada/internal':
+        specifier: workspace:*
+        version: link:packages/internal
     devDependencies:
       '@0no-co/typescript.js':
         specifier: 5.3.2-2
