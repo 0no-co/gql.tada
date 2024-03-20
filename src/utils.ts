@@ -1,6 +1,3 @@
-/** Constraints a given string to a string literal. */
-export type stringLiteral<T extends string> = string extends T ? never : string;
-
 /** Returns `T` if it matches `Constraint` without being equal to it. Failing this evaluates to `Fallback` otherwise. */
 export type matchOr<Constraint, T, Fallback> = Constraint extends T
   ? Fallback
