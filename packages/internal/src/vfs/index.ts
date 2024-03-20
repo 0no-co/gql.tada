@@ -19,11 +19,14 @@ const ROOT_LIB_DTS_DATA = '';
 
 export { importLib, importModule, resolveModuleFile } from './import';
 
+/** @internal */
 export type VirtualCompilerHost = ReturnType<typeof createVirtualHost> & CompilerHost;
 
+/** @internal */
 export const createProgram = (rootNames: string[], host: CompilerHost) =>
   tsCreateProgram(rootNames, compilerOptions, host);
 
+/** @internal */
 export function createVirtualHost() {
   const cache = createModuleResolutionCache(sep, normalize, compilerOptions);
 

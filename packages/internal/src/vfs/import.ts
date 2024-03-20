@@ -5,11 +5,12 @@ import fs from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { compilerOptions } from './compilerOptions';
 
-export const requireResolve =
+const requireResolve =
   typeof require === 'function' ? require.resolve : createRequire(import.meta.url).resolve;
 
 const toPath = (input: string) => input.split(path.sep).join('/');
 
+/** @internal */
 export async function importModule(host: CompilerHost, id: string) {
   const request = `${id}/package.json`;
   const module = requireResolve(request, {
@@ -38,6 +39,7 @@ export async function importModule(host: CompilerHost, id: string) {
   await walk(fromBasePath);
 }
 
+/** @internal */
 export async function importLib(host: CompilerHost) {
   const request = 'typescript/package.json';
   const module = requireResolve(request, {
@@ -64,6 +66,7 @@ export async function importLib(host: CompilerHost) {
   host.writeFile(host.getDefaultLibFileName(compilerOptions), contents, false);
 }
 
+/** @internal */
 export async function resolveModuleFile(from: string) {
   const slashIndex = from.indexOf('/');
   const id = from.slice(0, slashIndex);
