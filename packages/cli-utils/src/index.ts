@@ -117,7 +117,7 @@ export async function generateSchema(
   await fs.writeFile(resolve(cwd, destination), printSchema(schema), 'utf-8');
 }
 
-export async function generateTadaTypes(cwd: string = process.cwd()) {
+export async function generateTadaTypes(shouldPreprocess = false, cwd: string = process.cwd()) {
   const tsconfigpath = path.resolve(cwd, 'tsconfig.json');
   const hasTsConfig = existsSync(tsconfigpath);
   if (!hasTsConfig) {
@@ -125,11 +125,11 @@ export async function generateTadaTypes(cwd: string = process.cwd()) {
     return;
   }
 
-  const root = resolveTypeScriptRootDir(
-    readFileSync as (path: string) => string | undefined,
-    tsconfigpath
-  );
-  const tsconfigContents = await fs.readFile(root || tsconfigpath, 'utf-8');
+  // TODO: Remove redundant read and move tsconfig.json handling to internal package
+  const root =
+    resolveTypeScriptRootDir(readFileSync as (path: string) => string | undefined, tsconfigpath) ||
+    cwd;
+  const tsconfigContents = await fs.readFile(path.resolve(root, 'tsconfig.json'), 'utf-8');
   let tsConfig: TsConfigJson;
   try {
     tsConfig = parse(tsconfigContents) as TsConfigJson;
@@ -146,7 +146,12 @@ export async function generateTadaTypes(cwd: string = process.cwd()) {
     (plugin) => plugin.name === '@0no-co/graphqlsp' || plugin.name === 'gql.tda/cli'
   ) as GraphQLSPConfig;
 
-  await ensureTadaIntrospection(foundPlugin.schema, foundPlugin.tadaOutputLocation!, cwd);
+  await ensureTadaIntrospection(
+    foundPlugin.schema,
+    foundPlugin.tadaOutputLocation!,
+    cwd,
+    shouldPreprocess
+  );
 }
 
 const prog = sade('gql.tada');
@@ -179,16 +184,23 @@ async function main() {
         });
       }
 
-      generateSchema(target, {
+      return generateSchema(target, {
         headers: parsedHeaders,
         output: options.output,
       });
     })
     .command('generate-output')
+    .option(
+      '--preprocess',
+      'Enables pre-processing, converting the introspection data to a more efficient schema structure ahead of time'
+    )
     .describe(
       'Generate the gql.tada types file, this will look for your "tsconfig.json" and use the "@0no-co/graphqlsp" configuration to generate the file.'
     )
-    .action(() => generateTadaTypes());
+    .action((options) => {
+      const shouldPreprocess = !!options.preprocess && options.preprocess !== 'false';
+      return generateTadaTypes(shouldPreprocess);
+    });
   prog.parse(process.argv);
 }
 

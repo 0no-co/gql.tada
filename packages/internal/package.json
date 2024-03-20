@@ -40,16 +40,16 @@
     "prepublishOnly": "run-s clean build"
   },
   "devDependencies": {
+    "@urql/introspection": "^1.0.3",
     "@types/node": "^20.11.0",
     "json5": "^2.2.3",
     "rollup": "^4.9.4",
     "sade": "^1.8.1",
-    "type-fest": "^4.10.2",
-    "typescript": "^5.3.3"
+    "type-fest": "^4.10.2"
   },
   "dependencies": {
-    "@urql/introspection": "^1.0.3",
-    "graphql": "^16.8.1"
+    "graphql": "^16.8.1",
+    "typescript": "^5.3.3"
   },
   "publishConfig": {
     "access": "public",

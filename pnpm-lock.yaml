@@ -152,9 +152,6 @@ importers:
       '@gql.tada/internal':
         specifier: workspace:*
         version: link:../internal
-      '@urql/introspection':
-        specifier: ^1.0.3
-        version: 1.0.3(graphql@16.8.1)
       graphql:
         specifier: ^16.8.1
         version: 16.8.1
@@ -174,22 +171,22 @@ importers:
       type-fest:
         specifier: ^4.10.2
         version: 4.10.2
-      typescript:
-        specifier: ^5.3.3
-        version: 5.3.3
 
   packages/internal:
     dependencies:
-      '@urql/introspection':
-        specifier: ^1.0.3
-        version: 1.0.3(graphql@16.8.1)
       graphql:
         specifier: ^16.8.1
         version: 16.8.1
+      typescript:
+        specifier: ^5.3.3
+        version: 5.4.2
     devDependencies:
       '@types/node':
         specifier: ^20.11.0
         version: 20.11.0
+      '@urql/introspection':
+        specifier: ^1.0.3
+        version: 1.0.3(graphql@16.8.1)
       json5:
         specifier: ^2.2.3
         version: 2.2.3
@@ -202,9 +199,6 @@ importers:
       type-fest:
         specifier: ^4.10.2
         version: 4.10.2
-      typescript:
-        specifier: ^5.3.3
-        version: 5.3.3
 
   website:
     dependencies:
@@ -2143,7 +2137,7 @@ packages:
       graphql: ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
     dependencies:
       graphql: 16.8.1
-    dev: false
+    dev: true
 
   /@vitejs/plugin-react@4.2.1(vite@5.1.6):
     resolution: {integrity: sha512-oojO9IDc4nCUUi8qIR11KoQm0XFFLIwsRBwHRR4d/88IWghn1y6ckz/bJ8GHDCsYEJee8mDzqtJxh15/cisJNQ==}
