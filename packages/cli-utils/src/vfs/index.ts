@@ -17,6 +17,8 @@ import { Directory, File, split, normalize, sep } from './host';
 const ROOT_LIB_DTS_PATH = 'lib.d.ts';
 const ROOT_LIB_DTS_DATA = '';
 
+export { importLib, importModule, resolveModuleFile } from './import';
+
 export type VirtualCompilerHost = ReturnType<typeof createVirtualHost> & CompilerHost;
 
 export const createProgram = (rootNames: string[], host: CompilerHost) =>
@@ -59,6 +61,7 @@ export function createVirtualHost() {
 
     directoryExists(directoryName: string) {
       const parts = split(normalize(directoryName));
+      if (!parts.length) return true;
       let directory: Directory | undefined = root;
       for (let i = 0; i < parts.length - 1; i++) {
         directory = directory.children[parts[i]];
