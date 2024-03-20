@@ -10,7 +10,6 @@ import { resolveTypeScriptRootDir } from '@gql.tada/internal';
 import type { GraphQLSPConfig } from './lsp';
 import { hasGraphQLSP } from './lsp';
 import { ensureTadaIntrospection } from './tada';
-import { outputInternalTadaIntrospection } from './introspection';
 
 interface GenerateSchemaOptions {
   headers?: Record<string, string>;
@@ -118,7 +117,7 @@ export async function generateSchema(
   await fs.writeFile(resolve(cwd, destination), printSchema(schema), 'utf-8');
 }
 
-export async function generateTadaTypes(cwd: string = process.cwd()) {
+export async function generateTadaTypes(shouldPreprocess = false, cwd: string = process.cwd()) {
   const tsconfigpath = path.resolve(cwd, 'tsconfig.json');
   const hasTsConfig = existsSync(tsconfigpath);
   if (!hasTsConfig) {
@@ -147,35 +146,12 @@ export async function generateTadaTypes(cwd: string = process.cwd()) {
     (plugin) => plugin.name === '@0no-co/graphqlsp' || plugin.name === 'gql.tda/cli'
   ) as GraphQLSPConfig;
 
-  await ensureTadaIntrospection(foundPlugin.schema, foundPlugin.tadaOutputLocation!, cwd);
-}
-
-export async function generateTadaIntrospection(cwd: string = process.cwd()) {
-  const tsconfigpath = path.resolve(cwd, 'tsconfig.json');
-  const hasTsConfig = existsSync(tsconfigpath);
-  if (!hasTsConfig) {
-    console.error('Missing tsconfig.json');
-    return;
-  }
-
-  const tsconfigContents = await fs.readFile(tsconfigpath, 'utf-8');
-  let tsConfig: TsConfigJson;
-  try {
-    tsConfig = parse(tsconfigContents) as TsConfigJson;
-  } catch (err) {
-    console.error(err);
-    return;
-  }
-
-  if (!hasGraphQLSP(tsConfig)) {
-    return;
-  }
-
-  const foundPlugin = tsConfig.compilerOptions!.plugins!.find(
-    (plugin) => plugin.name === '@0no-co/graphqlsp'
-  ) as GraphQLSPConfig;
-
-  await outputInternalTadaIntrospection(foundPlugin.schema, cwd);
+  await ensureTadaIntrospection(
+    foundPlugin.schema,
+    foundPlugin.tadaOutputLocation!,
+    cwd,
+    shouldPreprocess
+  );
 }
 
 const prog = sade('gql.tada');
@@ -208,18 +184,23 @@ async function main() {
         });
       }
 
-      generateSchema(target, {
+      return generateSchema(target, {
         headers: parsedHeaders,
         output: options.output,
       });
     })
     .command('generate-output')
+    .option(
+      '--preprocess',
+      'Enables pre-processing, converting the introspection data to a more efficient schema structure ahead of time'
+    )
     .describe(
       'Generate the gql.tada types file, this will look for your "tsconfig.json" and use the "@0no-co/graphqlsp" configuration to generate the file.'
     )
-    .action(() => generateTadaTypes())
-    .command('generate-introspection')
-    .action(() => generateTadaIntrospection());
+    .action((options) => {
+      const shouldPreprocess = !!options.preprocess && options.preprocess !== 'false';
+      return generateTadaTypes(shouldPreprocess);
+    });
   prog.parse(process.argv);
 }
 

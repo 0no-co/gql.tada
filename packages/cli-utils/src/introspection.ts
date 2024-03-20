@@ -1,8 +1,3 @@
-import type { SchemaOrigin } from './tada';
-
-import { introspectionFromSchema } from 'graphql';
-import { minifyIntrospectionQuery } from '@urql/introspection';
-
 import { EmitHint, NodeBuilderFlags, NewLineKind, createPrinter } from 'typescript';
 
 import {
@@ -12,7 +7,6 @@ import {
   resolveModuleFile,
   createProgram,
 } from './vfs';
-import { loadSchema } from './tada';
 
 const builderFlags =
   NodeBuilderFlags.NoTruncation |
@@ -30,33 +24,8 @@ const boilerplateFile = `
   export type output = obj<mapIntrospection<introspection>>;
 `;
 
-export async function outputInternalTadaIntrospection(
-  schemaLocation: SchemaOrigin,
-  base: string = process.cwd()
-) {
-  const schema = await loadSchema(base, schemaLocation);
-  if (!schema) {
-    console.error('Something went wrong while trying to load the schema.');
-    return;
-  }
-
-  const introspection = minifyIntrospectionQuery(
-    introspectionFromSchema(schema, {
-      descriptions: false,
-    }),
-    {
-      includeDirectives: false,
-      includeEnums: true,
-      includeInputs: true,
-      includeScalars: true,
-    }
-  );
-
-  const introspectionFile = `export type introspection = ${JSON.stringify(
-    introspection,
-    null,
-    2
-  )};`;
+export async function introspectionToSchemaType(introspectionJson: string): Promise<string> {
+  const introspectionFile = `export type introspection = ${introspectionJson};`;
 
   const host = createVirtualHost();
   await importLib(host);
@@ -93,6 +62,5 @@ export async function outputInternalTadaIntrospection(
     throw new Error('Something went wrong while evaluating introspection type node.');
   }
 
-  const _output = printer.printNode(EmitHint.Unspecified, typeNode, root);
-  // TODO
+  return printer.printNode(EmitHint.Unspecified, typeNode, root);
 }

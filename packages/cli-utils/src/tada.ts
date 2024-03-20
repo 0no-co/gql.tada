@@ -9,6 +9,8 @@ import {
 } from 'graphql';
 import { minifyIntrospectionQuery } from '@urql/introspection';
 
+import { introspectionToSchemaType } from './introspection';
+
 export const tadaGqlContents = `import { initGraphQLTada } from 'gql.tada';
 import type { introspection } from './introspection';
 
@@ -32,7 +34,8 @@ export { readFragment as useFragment } from 'gql.tada';
 export async function ensureTadaIntrospection(
   schemaLocation: SchemaOrigin,
   outputLocation: string,
-  base: string = process.cwd()
+  base: string = process.cwd(),
+  shouldPreprocess = false
 ) {
   const writeTada = async () => {
     try {
@@ -56,10 +59,11 @@ export async function ensureTadaIntrospection(
       let contents;
 
       if (/\.d\.ts$/.test(outputLocation)) {
+        const outputType = shouldPreprocess ? await introspectionToSchemaType(json) : json;
         contents = [
           preambleComments,
           dtsAnnotationComment,
-          `export type introspection = ${json};\n`,
+          `export type introspection = ${outputType};\n`,
           "import * as gqlTada from 'gql.tada';\n",
           "declare module 'gql.tada' {",
           '  interface setupSchema {',
