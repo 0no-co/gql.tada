@@ -76,14 +76,14 @@ describe('graphql()', () => {
     );
 
     expectTypeOf<FragmentOf<typeof fragment>>().toEqualTypeOf<{
-      id: string | number;
+      id: string;
       text: string;
     }>();
 
     expectTypeOf<ResultOf<typeof query>>().toEqualTypeOf<{
       todos:
         | ({
-            id: string | number;
+            id: string;
             text: string;
           } | null)[]
         | null;
@@ -124,11 +124,11 @@ describe('graphql()', () => {
     expectTypeOf<FragmentOf<typeof fragment>>().toEqualTypeOf<
       | {
           __typename: 'BigTodo';
-          id: string | number;
+          id: string;
         }
       | {
           __typename: 'SmallTodo';
-          id: string | number;
+          id: string;
         }
     >();
 
@@ -136,12 +136,12 @@ describe('graphql()', () => {
       itodo:
         | {
             __typename: 'BigTodo';
-            id: string | number;
+            id: string;
             wallOfText: string | null;
           }
         | {
             __typename: 'SmallTodo';
-            id: string | number;
+            id: string;
             maxLength: number | null;
           };
     }>();
@@ -218,14 +218,14 @@ describe('graphql() with `disableMasking: true`', () => {
     );
 
     expectTypeOf<FragmentOf<typeof fragment>>().toEqualTypeOf<{
-      id: string | number;
+      id: string;
       text: string;
     }>();
 
     expectTypeOf<ResultOf<typeof query>>().toEqualTypeOf<{
       todos:
         | ({
-            id: string | number;
+            id: string;
             text: string;
           } | null)[]
         | null;

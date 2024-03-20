@@ -20,7 +20,7 @@ test('infers simple fields', () => {
   `>;
 
   type actual = getDocumentType<query, schema>;
-  type expected = { todos: Array<{ id: string | number } | null> | null };
+  type expected = { todos: Array<{ id: string } | null> | null };
 
   expectTypeOf<expected>().toEqualTypeOf<actual>();
 });
@@ -35,7 +35,7 @@ test('infers mutation fields', () => {
   `>;
 
   type actual = getDocumentType<mutation, schema>;
-  type expected = { toggleTodo: { id: string | number } | null };
+  type expected = { toggleTodo: { id: string } | null };
 
   expectTypeOf<expected>().toEqualTypeOf<actual>();
 });
@@ -70,7 +70,7 @@ test('infers adjacent inline fragments', () => {
   type actual = getDocumentType<query, schema>;
   type expected = {
     todos: Array<{
-      id: string | number;
+      id: string;
       text: string;
       complete: boolean | null;
     } | null> | null;
@@ -86,7 +86,7 @@ test('infers aliased fields', () => {
 
   type actual = getDocumentType<query, schema>;
   type expected = {
-    todos: Array<{ myIdIsGreat: string | number } | null> | null;
+    todos: Array<{ myIdIsGreat: string } | null> | null;
   };
 
   expectTypeOf<expected>().toEqualTypeOf<actual>();
@@ -105,7 +105,7 @@ test('infers optional properties for @skip/@include', () => {
   type actual = getDocumentType<query, schema>;
   type expected = {
     todos: Array<{
-      id?: string | number | undefined;
+      id?: string | undefined;
       __typename?: 'Todo';
     } | null> | null;
   };
@@ -127,7 +127,7 @@ test('infers nullable field types for @required/@optional', () => {
   type expected = {
     todos:
       | ({
-          id: string | number | null;
+          id: string | null;
           complete: boolean;
         } | null)[]
       | null;
@@ -154,7 +154,7 @@ test('infers optional fragment for @defer', () => {
   type expected = {
     todos: Array<
       | {
-          id: string | number;
+          id: string;
         }
       | {}
       | null
@@ -184,7 +184,7 @@ test('infers optional inline fragment for @defer', () => {
   type expected = {
     todos: Array<
       | {
-          id: string | number;
+          id: string;
         }
       | {}
       | null
@@ -201,7 +201,7 @@ test('infers enum values', () => {
 
   type actual = getDocumentType<query, schema>;
   type expected = {
-    todos: Array<{ id: string | number; test: 'value' | 'more' | null } | null> | null;
+    todos: Array<{ id: string; test: 'value' | 'more' | null } | null> | null;
   };
 
   expectTypeOf<expected>().toEqualTypeOf<actual>();
@@ -217,7 +217,7 @@ test('infers fragment spreads', () => {
   type expected = {
     todos: Array<{
       __typename: 'Todo';
-      id: string | number;
+      id: string;
       text: string;
       complete: boolean | null;
     } | null> | null;
@@ -271,7 +271,7 @@ test('infers inline fragments and fragment spreads', () => {
   type expected = {
     todos: Array<{
       __typename: 'Todo';
-      id: string | number;
+      id: string;
       text: string;
       complete: boolean | null;
     } | null> | null;
@@ -309,7 +309,7 @@ test('infers fragment spreads on unions', () => {
       | { message: string; __typename: 'NoTodosError' }
       | {
           __typename: 'Todo';
-          id: string | number;
+          id: string;
           text: string;
           complete: boolean | null;
         };
@@ -321,7 +321,7 @@ test('infers fragment spreads on unions', () => {
   if (data.latestTodo.__typename === 'NoTodosError') {
     data.latestTodo.message satisfies string;
   } else if (data.latestTodo.__typename === 'Todo') {
-    data.latestTodo.id satisfies string | number;
+    data.latestTodo.id satisfies string;
   }
 });
 
@@ -349,8 +349,8 @@ test('infers fragment spreads inside fragment spreads on interfaces', () => {
   type actual = getDocumentType<query, schema>;
   type expected = {
     itodo:
-      | { wallOfText: string | null; id: string | number; __typename: 'BigTodo' }
-      | { maxLength: number | null; id: string | number; __typename: 'SmallTodo' };
+      | { wallOfText: string | null; id: string; __typename: 'BigTodo' }
+      | { maxLength: number | null; id: string; __typename: 'SmallTodo' };
   };
 
   expectTypeOf<expected>().toEqualTypeOf<actual>();
@@ -365,7 +365,7 @@ test('infers mutations', () => {
 
   type actual = getDocumentType<query, schema>;
   type expected = {
-    toggleTodo: { id: string | number } | null;
+    toggleTodo: { id: string } | null;
   };
 
   expectTypeOf<expected>().toEqualTypeOf<actual>();
@@ -393,13 +393,13 @@ test('infers unions and interfaces correctly', () => {
     test:
       | {
           __typename: 'SmallTodo';
-          id: string | number;
+          id: string;
           text: string;
           maxLength: number | null;
         }
       | {
           __typename: 'BigTodo';
-          id: string | number;
+          id: string;
           wallOfText: string | null;
         }
       | null;
@@ -449,7 +449,7 @@ test('infers queries from GitHub introspection schema', () => {
 
   type expected = {
     repository: {
-      id: string | number;
+      id: string;
     } | null;
   };
 
@@ -470,7 +470,7 @@ test('creates a type for a given fragment', () => {
 
   type expected = {
     __typename: 'Todo';
-    id: string | number;
+    id: string;
     text: string;
     complete: boolean | null;
   };
@@ -492,7 +492,7 @@ test('creates a type for a given fragment with optional inline spread', () => {
   type expected =
     | {}
     | {
-        id: number | string;
+        id: string;
       };
 
   expectTypeOf<expected>().toEqualTypeOf<actual>();

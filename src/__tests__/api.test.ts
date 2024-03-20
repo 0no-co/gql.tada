@@ -92,7 +92,7 @@ describe('declare setupSchema configuration', () => {
 
         expectTypeOf<typeof result>().toEqualTypeOf<{
           todos: ({
-            id: string | number;
+            id: string;
             complete: boolean | null;
             [$tada.fragmentRefs]: {
               TodoData: 'Todo';
@@ -103,7 +103,7 @@ describe('declare setupSchema configuration', () => {
         const todo = readFragment(todoFragment, result?.todos?.[0]);
 
         expectTypeOf<typeof todo>().toEqualTypeOf<{
-          id: string | number;
+          id: string;
           text: string;
         } | undefined | null>();
       `,
@@ -157,7 +157,7 @@ describe('initGraphQLTada configuration', () => {
 
         expectTypeOf<typeof result>().toEqualTypeOf<{
           todos: ({
-            id: string | number;
+            id: string;
             complete: boolean | null;
             [$tada.fragmentRefs]: {
               TodoData: 'Todo';
@@ -168,7 +168,7 @@ describe('initGraphQLTada configuration', () => {
         const todo = readFragment(todoFragment, result?.todos?.[0]);
 
         expectTypeOf<typeof todo>().toEqualTypeOf<{
-          id: string | number;
+          id: string;
           text: string;
         } | undefined | null>();
       `,
@@ -220,7 +220,7 @@ describe('initGraphQLTada configuration', () => {
 
         expectTypeOf<typeof result>().toEqualTypeOf<{
           todos: ({
-            id: string | number;
+            id: string;
             complete: boolean | null;
             text: string;
           } | null)[] | null;
@@ -229,7 +229,7 @@ describe('initGraphQLTada configuration', () => {
         const todo = readFragment(todoFragment, result?.todos?.[0]);
 
         expectTypeOf<typeof todo>().toEqualTypeOf<{
-          id: string | number;
+          id: string;
           text: string;
         } | undefined | null>();
       `,

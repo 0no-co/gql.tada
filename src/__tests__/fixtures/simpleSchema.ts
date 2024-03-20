@@ -371,7 +371,7 @@ export type simpleSchema = {
     ID: {
       kind: 'SCALAR';
       name: 'ID';
-      type: string | number;
+      type: string;
     };
 
     String: {
