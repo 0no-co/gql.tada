@@ -10,6 +10,7 @@ import { resolveTypeScriptRootDir } from '@gql.tada/internal';
 import type { GraphQLSPConfig } from './lsp';
 import { hasGraphQLSP } from './lsp';
 import { ensureTadaIntrospection } from './tada';
+import { outputInternalTadaIntrospection } from './introspection';
 
 interface GenerateSchemaOptions {
   headers?: Record<string, string>;
@@ -149,6 +150,34 @@ export async function generateTadaTypes(cwd: string = process.cwd()) {
   await ensureTadaIntrospection(foundPlugin.schema, foundPlugin.tadaOutputLocation!, cwd);
 }
 
+export async function generateTadaIntrospection(cwd: string = process.cwd()) {
+  const tsconfigpath = path.resolve(cwd, 'tsconfig.json');
+  const hasTsConfig = existsSync(tsconfigpath);
+  if (!hasTsConfig) {
+    console.error('Missing tsconfig.json');
+    return;
+  }
+
+  const tsconfigContents = await fs.readFile(tsconfigpath, 'utf-8');
+  let tsConfig: TsConfigJson;
+  try {
+    tsConfig = parse(tsconfigContents) as TsConfigJson;
+  } catch (err) {
+    console.error(err);
+    return;
+  }
+
+  if (!hasGraphQLSP(tsConfig)) {
+    return;
+  }
+
+  const foundPlugin = tsConfig.compilerOptions!.plugins!.find(
+    (plugin) => plugin.name === '@0no-co/graphqlsp'
+  ) as GraphQLSPConfig;
+
+  await outputInternalTadaIntrospection(foundPlugin.schema, cwd);
+}
+
 const prog = sade('gql.tada');
 
 prog.version(process.env.npm_package_version || '0.0.0');
@@ -188,7 +217,9 @@ async function main() {
     .describe(
       'Generate the gql.tada types file, this will look for your "tsconfig.json" and use the "@0no-co/graphqlsp" configuration to generate the file.'
     )
-    .action(() => generateTadaTypes());
+    .action(() => generateTadaTypes())
+    .command('generate-introspection')
+    .action(() => generateTadaIntrospection());
   prog.parse(process.argv);
 }
 

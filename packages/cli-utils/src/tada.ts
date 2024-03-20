@@ -30,7 +30,7 @@ export { readFragment as useFragment } from 'gql.tada';
  * this function.
  */
 export async function ensureTadaIntrospection(
-  schemaLocation: SchemaOrigin | string,
+  schemaLocation: SchemaOrigin,
   outputLocation: string,
   base: string = process.cwd()
 ) {
@@ -88,14 +88,16 @@ export async function ensureTadaIntrospection(
   await writeTada();
 }
 
-type SchemaOrigin = {
-  url: string;
-  headers: Record<string, unknown>;
-};
+export type SchemaOrigin =
+  | string
+  | {
+      url: string;
+      headers: Record<string, unknown>;
+    };
 
 export const loadSchema = async (
   root: string,
-  schema: SchemaOrigin | string
+  schema: SchemaOrigin
 ): Promise<GraphQLSchema | undefined> => {
   let url: URL | undefined;
   let config: { headers: Record<string, unknown> } | undefined;

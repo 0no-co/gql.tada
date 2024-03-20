@@ -14,7 +14,7 @@
     "lib": ["dom", "esnext"],
     "jsx": "react-jsx",
     "declaration": false,
-    "module": "es2015",
+    "module": "es2022",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "target": "esnext",
