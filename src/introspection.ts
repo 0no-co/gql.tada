@@ -202,6 +202,7 @@ type mapIntrospectionScalarTypes<Scalars extends ScalarsLike = DefaultScalars> =
   };
 }>;
 
+/** @internal */
 type mapIntrospection<Query extends IntrospectionLikeInput> = Query extends IntrospectionQuery
   ? {
       query: Query['__schema']['queryType']['name'];
