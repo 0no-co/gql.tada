@@ -198,7 +198,7 @@ type mapIntrospectionScalarTypes<Scalars extends ScalarsLike = DefaultScalars> =
       ? Scalars[P]
       : P extends keyof DefaultScalars
         ? DefaultScalars[P]
-        : 'wat';
+        : never;
   };
 }>;
 
