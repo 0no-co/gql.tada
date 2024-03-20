@@ -196,6 +196,53 @@ describe('graphql() with custom scalars', () => {
   });
 });
 
+describe('graphql() with pre-processed schema', () => {
+  const graphql = initGraphQLTada<{
+    introspection: simpleSchema;
+    scalars: {
+      ID: number;
+    };
+  }>();
+
+  it('should create a unmasked fragment type with custom scalars', () => {
+    const fragment = graphql(`
+      fragment Fields on Todo @_unmask {
+        id
+        text
+      }
+    `);
+
+    const query = graphql(
+      `
+        query Test($limit: Int) {
+          todos(limit: $limit) {
+            ...Fields
+          }
+        }
+      `,
+      [fragment]
+    );
+
+    expectTypeOf<FragmentOf<typeof fragment>>().toEqualTypeOf<{
+      id: number;
+      text: string;
+    }>();
+
+    expectTypeOf<ResultOf<typeof query>>().toEqualTypeOf<{
+      todos:
+        | ({
+            id: number;
+            text: string;
+          } | null)[]
+        | null;
+    }>();
+
+    expectTypeOf<VariablesOf<typeof query>>().toEqualTypeOf<{
+      limit?: number | null;
+    }>();
+  });
+});
+
 describe('graphql() with `disableMasking: true`', () => {
   const graphql = initGraphQLTada<{ introspection: simpleIntrospection; disableMasking: true }>();
   it('should support unmasked fragments via the `disableMasking` option', () => {

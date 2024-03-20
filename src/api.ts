@@ -2,10 +2,11 @@ import type { DocumentNode, DefinitionNode } from '@0no-co/graphql.web';
 import { Kind, parse as _parse } from '@0no-co/graphql.web';
 
 import type {
-  IntrospectionQuery,
+  IntrospectionLikeInput,
   ScalarsLike,
-  IntrospectionLikeType,
+  SchemaLike,
   mapIntrospection,
+  addIntrospectionScalars,
 } from './introspection';
 
 import type {
@@ -35,7 +36,7 @@ import type { stringLiteral, obj, matchOr, writable, DocumentDecoration } from '
  * @param scalars - An object type with scalar names as keys and the corresponding scalar types as values.
  */
 interface AbstractSetupSchema {
-  introspection: IntrospectionQuery;
+  introspection: IntrospectionLikeInput;
   scalars?: ScalarsLike;
   disableMasking?: boolean;
 }
@@ -82,7 +83,7 @@ interface setupSchema extends AbstractSetupSchema {
   /*empty*/
 }
 
-interface GraphQLTadaAPI<Schema extends IntrospectionLikeType, Config extends AbstractConfig> {
+interface GraphQLTadaAPI<Schema extends SchemaLike, Config extends AbstractConfig> {
   /** Function to create and compose GraphQL documents with result and variable types.
    *
    * @param input - A string of a GraphQL document.
@@ -208,8 +209,8 @@ interface GraphQLTadaAPI<Schema extends IntrospectionLikeType, Config extends Ab
     : never;
 }
 
-type schemaOfSetup<Setup extends AbstractSetupSchema> = mapIntrospection<
-  matchOr<IntrospectionQuery, Setup['introspection'], never>,
+type schemaOfSetup<Setup extends AbstractSetupSchema> = addIntrospectionScalars<
+  mapIntrospection<matchOr<IntrospectionLikeInput, Setup['introspection'], never>>,
   matchOr<ScalarsLike, Setup['scalars'], {}>
 >;
 
@@ -299,7 +300,7 @@ function parse<const In extends stringLiteral<In>>(input: In): parseDocument<In>
 
 export type getDocumentNode<
   Document extends DocumentNodeLike,
-  Introspection extends IntrospectionLikeType,
+  Introspection extends SchemaLike,
   Fragments extends { [name: string]: any } = {},
   isMaskingDisabled = false,
 > = getDocumentType<Document, Introspection, Fragments> extends never

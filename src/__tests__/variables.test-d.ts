@@ -1,7 +1,10 @@
 import { describe, it, expectTypeOf } from 'vitest';
-import type { simpleSchema as schema } from './fixtures/simpleSchema';
+import type { simpleSchema } from './fixtures/simpleSchema';
+import type { addIntrospectionScalars } from '../introspection';
 import type { parseDocument } from '../parser';
 import type { getVariablesType, getScalarType } from '../variables';
+
+type schema = addIntrospectionScalars<simpleSchema>;
 
 describe('getVariablesType', () => {
   it('parses document-variables correctly', () => {

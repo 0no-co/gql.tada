@@ -19,7 +19,7 @@ describe('simple introspection', () => {
         import { expectTypeOf } from 'expect-type';
         import { simpleIntrospection } from './simpleIntrospection';
         import { parseDocument } from './parser';
-        import { mapIntrospection } from './introspection';
+        import { mapIntrospection, addIntrospectionScalars } from './introspection';
         import { getDocumentType } from './selection';
 
         type query = parseDocument<\`
@@ -32,7 +32,7 @@ describe('simple introspection', () => {
           }
         \`>;
 
-        type schema = mapIntrospection<simpleIntrospection>;
+        type schema = addIntrospectionScalars<mapIntrospection<simpleIntrospection>>;
         type actual = getDocumentType<query, schema>;
 
         expectTypeOf<{
@@ -66,7 +66,7 @@ describe('simple introspection', () => {
         import { expectTypeOf } from 'expect-type';
         import { simpleIntrospection } from './simpleIntrospection';
         import { parseDocument } from './parser';
-        import { mapIntrospection } from './introspection';
+        import { mapIntrospection, addIntrospectionScalars } from './introspection';
         import { getDocumentType } from './selection';
 
         type query = parseDocument<\`
@@ -85,7 +85,7 @@ describe('simple introspection', () => {
           }
         \`>;
 
-        type schema = mapIntrospection<simpleIntrospection>;
+        type schema = addIntrospectionScalars<mapIntrospection<simpleIntrospection>>;
         type actual = getDocumentType<query, schema>;
 
         expectTypeOf<{
