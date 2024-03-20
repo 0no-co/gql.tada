@@ -177,6 +177,9 @@ importers:
       graphql:
         specifier: ^16.8.1
         version: 16.8.1
+      typescript:
+        specifier: ^5.3.3
+        version: 5.4.2
     devDependencies:
       '@types/node':
         specifier: ^20.11.0
@@ -196,9 +199,6 @@ importers:
       type-fest:
         specifier: ^4.10.2
         version: 4.10.2
-      typescript:
-        specifier: ^5.3.3
-        version: 5.4.2
 
   website:
     dependencies:
