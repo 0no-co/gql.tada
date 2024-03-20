@@ -168,6 +168,7 @@ type mapUnion<T extends IntrospectionUnionType> = {
   possibleTypes: T['possibleTypes'][number]['name'];
 };
 
+/** @internal */
 type mapType<Type> = Type extends IntrospectionEnumType
   ? mapEnum<Type>
   : Type extends IntrospectionObjectType
@@ -182,6 +183,7 @@ type mapType<Type> = Type extends IntrospectionEnumType
             ? unknown
             : never;
 
+/** @internal */
 type mapIntrospectionTypes<Query extends IntrospectionQuery> = obj<{
   [P in Query['__schema']['types'][number]['name']]: Query['__schema']['types'][number] extends infer Type
     ? Type extends { readonly name: P }
@@ -190,6 +192,7 @@ type mapIntrospectionTypes<Query extends IntrospectionQuery> = obj<{
     : never;
 }>;
 
+/** @internal */
 type mapIntrospectionScalarTypes<Scalars extends ScalarsLike = DefaultScalars> = obj<{
   [P in keyof Scalars | keyof DefaultScalars]: {
     kind: 'SCALAR';
@@ -241,4 +244,4 @@ export type SchemaLike = {
   types: { [name: string]: any };
 };
 
-export type { mapIntrospectionTypes, mapIntrospection, addIntrospectionScalars };
+export type { mapType, mapIntrospectionTypes, mapIntrospection, addIntrospectionScalars };
