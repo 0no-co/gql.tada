@@ -6,6 +6,7 @@ import type {
   ScalarsLike,
   IntrospectionLikeType,
   mapIntrospection,
+  addIntrospectionScalars,
 } from './introspection';
 
 import type {
@@ -208,8 +209,8 @@ interface GraphQLTadaAPI<Schema extends IntrospectionLikeType, Config extends Ab
     : never;
 }
 
-type schemaOfSetup<Setup extends AbstractSetupSchema> = mapIntrospection<
-  matchOr<IntrospectionQuery, Setup['introspection'], never>,
+type schemaOfSetup<Setup extends AbstractSetupSchema> = addIntrospectionScalars<
+  mapIntrospection<matchOr<IntrospectionQuery, Setup['introspection'], never>>,
   matchOr<ScalarsLike, Setup['scalars'], {}>
 >;
 

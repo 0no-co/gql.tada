@@ -182,15 +182,15 @@ type mapType<Type> = Type extends IntrospectionEnumType
             ? unknown
             : never;
 
-type mapIntrospectionTypes<Query extends IntrospectionQuery> = {
+type mapIntrospectionTypes<Query extends IntrospectionQuery> = obj<{
   [P in Query['__schema']['types'][number]['name']]: Query['__schema']['types'][number] extends infer Type
     ? Type extends { readonly name: P }
       ? mapType<Type>
       : never
     : never;
-};
+}>;
 
-type mapIntrospectionScalarTypes<Scalars extends ScalarsLike = DefaultScalars> = {
+type mapIntrospectionScalarTypes<Scalars extends ScalarsLike = DefaultScalars> = obj<{
   [P in keyof Scalars | keyof DefaultScalars]: {
     kind: 'SCALAR';
     name: P;
@@ -200,12 +200,9 @@ type mapIntrospectionScalarTypes<Scalars extends ScalarsLike = DefaultScalars> =
         ? DefaultScalars[P]
         : 'wat';
   };
-};
+}>;
 
-type mapIntrospection<
-  Query extends IntrospectionQuery,
-  Scalars extends ScalarsLike = DefaultScalars,
-> = {
+type mapIntrospection<Query extends IntrospectionQuery> = {
   query: Query['__schema']['queryType']['name'];
   mutation: Query['__schema']['mutationType'] extends { name: string }
     ? Query['__schema']['mutationType']['name']
@@ -213,7 +210,17 @@ type mapIntrospection<
   subscription: Query['__schema']['subscriptionType'] extends { name: string }
     ? Query['__schema']['subscriptionType']['name']
     : never;
-  types: obj<mapIntrospectionTypes<Query> & mapIntrospectionScalarTypes<Scalars>>;
+  types: mapIntrospectionTypes<Query>;
+};
+
+type addIntrospectionScalars<
+  Schema extends IntrospectionLikeType,
+  Scalars extends ScalarsLike = DefaultScalars,
+> = {
+  query: Schema['query'];
+  mutation: Schema['mutation'];
+  subscription: Schema['subscription'];
+  types: mapIntrospectionScalarTypes<Scalars> & Schema['types'];
 };
 
 export type ScalarsLike = {
@@ -227,4 +234,4 @@ export type IntrospectionLikeType = {
   types: { [name: string]: any };
 };
 
-export type { mapIntrospectionTypes, mapIntrospection };
+export type { mapIntrospectionTypes, mapIntrospection, addIntrospectionScalars };

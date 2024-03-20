@@ -2,7 +2,7 @@ import { expectTypeOf, test } from 'vitest';
 
 import type { simpleSchema } from './fixtures/simpleSchema';
 import type { parseDocument } from '../parser';
-import type { mapIntrospection } from '../introspection';
+import type { mapIntrospection, addIntrospectionScalars } from '../introspection';
 import type { getDocumentType } from '../selection';
 
 import type {
@@ -435,7 +435,9 @@ test('infers __typename on union unambiguously', () => {
 });
 
 test('infers queries from GitHub introspection schema', () => {
-  type schema = mapIntrospection<import('./fixtures/githubIntrospection').githubIntrospection>;
+  type schema = addIntrospectionScalars<
+    mapIntrospection<import('./fixtures/githubIntrospection').githubIntrospection>
+  >;
 
   type repositories = parseDocument</* GraphQL */ `
     query ($org: String!, $repo: String!) {
