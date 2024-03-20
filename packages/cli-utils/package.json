@@ -48,9 +48,7 @@
   },
   "dependencies": {
     "@gql.tada/internal": "workspace:*",
-    "@urql/introspection": "^1.0.3",
-    "graphql": "^16.8.1",
-    "typescript": "^5.3.3"
+    "graphql": "^16.8.1"
   },
   "publishConfig": {
     "access": "public",
