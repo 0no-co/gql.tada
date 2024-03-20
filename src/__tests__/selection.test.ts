@@ -37,7 +37,7 @@ describe('simple introspection', () => {
 
         expectTypeOf<{
           todos: Array<{
-            id: string | number;
+            id: string;
             text: string;
             complete: boolean | null;
           } | null> | null;
@@ -91,12 +91,12 @@ describe('simple introspection', () => {
         expectTypeOf<{
           test: null | {
             __typename: 'SmallTodo';
-            id: string | number;
+            id: string;
             text: string;
             maxLength: number | null;
           } | {
             __typename: 'BigTodo';
-            id: string | number;
+            id: string;
             wallOfText: string | null;
           };
         }>().toEqualTypeOf<actual>();

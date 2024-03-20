@@ -14,7 +14,7 @@ describe('getVariablesType', () => {
     type doc = parseDocument<typeof query>;
     type variables = getVariablesType<doc, schema>;
 
-    expectTypeOf<variables>().toEqualTypeOf<{ id: string | number }>();
+    expectTypeOf<variables>().toEqualTypeOf<{ id: string }>();
   });
 
   it('works for input-objects', () => {
@@ -28,7 +28,7 @@ describe('getVariablesType', () => {
     type variables = getVariablesType<doc, schema>;
 
     expectTypeOf<variables>().toEqualTypeOf<{
-      id: string | number;
+      id: string;
       input: { title: string; complete?: boolean | null; description: string };
     }>();
   });
@@ -43,8 +43,8 @@ describe('getVariablesType', () => {
     type doc = parseDocument<typeof query>;
     type variables = getVariablesType<doc, schema>;
 
-    expectTypeOf<variables>().toEqualTypeOf<{ id?: string | number | undefined }>();
-    expectTypeOf<variables['id']>().toEqualTypeOf<string | number | undefined>();
+    expectTypeOf<variables>().toEqualTypeOf<{ id?: string | undefined }>();
+    expectTypeOf<variables['id']>().toEqualTypeOf<string | undefined>();
   });
 
   it('allows optionals for default values inside input-objects', () => {
@@ -74,8 +74,8 @@ describe('getVariablesType', () => {
     type doc = parseDocument<typeof query>;
     type variables = getVariablesType<doc, schema>;
 
-    expectTypeOf<variables>().toEqualTypeOf<{ id?: string | number | null | undefined }>();
-    expectTypeOf<variables['id']>().toEqualTypeOf<string | number | null | undefined>();
+    expectTypeOf<variables>().toEqualTypeOf<{ id?: string | null | undefined }>();
+    expectTypeOf<variables['id']>().toEqualTypeOf<string | null | undefined>();
   });
 });
 

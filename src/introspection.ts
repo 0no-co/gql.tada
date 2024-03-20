@@ -110,7 +110,7 @@ interface IntrospectionInputValue {
 }
 
 interface DefaultScalars {
-  ID: number | string;
+  ID: string;
   Boolean: boolean;
   String: string;
   Float: number;
