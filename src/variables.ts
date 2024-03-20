@@ -1,11 +1,11 @@
 import type { Kind } from '@0no-co/graphql.web';
-import type { IntrospectionLikeType } from './introspection';
+import type { SchemaLike } from './introspection';
 import type { DocumentNodeLike } from './parser';
 import type { obj } from './utils';
 
 type getInputObjectTypeRec<
   InputFields,
-  Introspection extends IntrospectionLikeType,
+  Introspection extends SchemaLike,
   InputObject = {},
 > = InputFields extends [infer InputField, ...infer Rest]
   ? getInputObjectTypeRec<
@@ -26,11 +26,10 @@ type getInputObjectTypeRec<
     >
   : InputObject;
 
-type unwrapTypeRec<
-  TypeRef,
-  Introspection extends IntrospectionLikeType,
-  IsOptional,
-> = TypeRef extends { kind: 'NON_NULL'; ofType: any }
+type unwrapTypeRec<TypeRef, Introspection extends SchemaLike, IsOptional> = TypeRef extends {
+  kind: 'NON_NULL';
+  ofType: any;
+}
   ? unwrapTypeRec<TypeRef['ofType'], Introspection, false>
   : TypeRef extends { kind: 'LIST'; ofType: any }
     ? IsOptional extends false
@@ -42,11 +41,10 @@ type unwrapTypeRec<
         : null | _getScalarType<TypeRef['name'], Introspection>
       : unknown;
 
-type unwrapTypeRefRec<
-  Type,
-  Introspection extends IntrospectionLikeType,
-  IsOptional,
-> = Type extends { kind: Kind.NON_NULL_TYPE; type: any }
+type unwrapTypeRefRec<Type, Introspection extends SchemaLike, IsOptional> = Type extends {
+  kind: Kind.NON_NULL_TYPE;
+  type: any;
+}
   ? unwrapTypeRefRec<Type['type'], Introspection, false>
   : Type extends { kind: Kind.LIST_TYPE; type: any }
     ? IsOptional extends false
@@ -60,7 +58,7 @@ type unwrapTypeRefRec<
 
 type _getVariablesRec<
   Variables,
-  Introspection extends IntrospectionLikeType,
+  Introspection extends SchemaLike,
   VariablesObject = {},
 > = Variables extends [infer Variable, ...infer Rest]
   ? _getVariablesRec<
@@ -89,7 +87,7 @@ type _getVariablesRec<
 
 type getVariablesType<
   Document extends DocumentNodeLike,
-  Introspection extends IntrospectionLikeType,
+  Introspection extends SchemaLike,
 > = Document['definitions'][0] extends {
   kind: Kind.OPERATION_DEFINITION;
   variableDefinitions: any;
@@ -99,7 +97,7 @@ type getVariablesType<
 
 type _getScalarType<
   TypeName,
-  Introspection extends IntrospectionLikeType,
+  Introspection extends SchemaLike,
 > = TypeName extends keyof Introspection['types']
   ? Introspection['types'][TypeName] extends { kind: 'SCALAR' | 'ENUM'; type: any }
     ? Introspection['types'][TypeName]['type']
@@ -110,7 +108,7 @@ type _getScalarType<
 
 type getScalarType<
   TypeName,
-  Introspection extends IntrospectionLikeType,
+  Introspection extends SchemaLike,
   OrType = never,
 > = TypeName extends keyof Introspection['types']
   ? Introspection['types'][TypeName] extends { kind: 'SCALAR' | 'ENUM'; type: any }

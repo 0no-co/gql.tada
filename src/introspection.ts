@@ -214,7 +214,7 @@ type mapIntrospection<Query extends IntrospectionQuery> = {
 };
 
 type addIntrospectionScalars<
-  Schema extends IntrospectionLikeType,
+  Schema extends SchemaLike,
   Scalars extends ScalarsLike = DefaultScalars,
 > = {
   query: Schema['query'];
@@ -227,7 +227,7 @@ export type ScalarsLike = {
   [name: string]: any;
 };
 
-export type IntrospectionLikeType = {
+export type SchemaLike = {
   query: string;
   mutation?: any;
   subscription?: any;

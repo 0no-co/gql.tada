@@ -4,7 +4,7 @@ import { Kind, parse as _parse } from '@0no-co/graphql.web';
 import type {
   IntrospectionQuery,
   ScalarsLike,
-  IntrospectionLikeType,
+  SchemaLike,
   mapIntrospection,
   addIntrospectionScalars,
 } from './introspection';
@@ -83,7 +83,7 @@ interface setupSchema extends AbstractSetupSchema {
   /*empty*/
 }
 
-interface GraphQLTadaAPI<Schema extends IntrospectionLikeType, Config extends AbstractConfig> {
+interface GraphQLTadaAPI<Schema extends SchemaLike, Config extends AbstractConfig> {
   /** Function to create and compose GraphQL documents with result and variable types.
    *
    * @param input - A string of a GraphQL document.
@@ -300,7 +300,7 @@ function parse<const In extends stringLiteral<In>>(input: In): parseDocument<In>
 
 export type getDocumentNode<
   Document extends DocumentNodeLike,
-  Introspection extends IntrospectionLikeType,
+  Introspection extends SchemaLike,
   Fragments extends { [name: string]: any } = {},
   isMaskingDisabled = false,
 > = getDocumentType<Document, Introspection, Fragments> extends never
