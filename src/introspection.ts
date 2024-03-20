@@ -117,19 +117,6 @@ interface DefaultScalars {
   Int: number;
 }
 
-type mapScalar<
-  Type extends IntrospectionScalarType,
-  Scalars extends ScalarsLike = DefaultScalars,
-> = {
-  kind: 'SCALAR';
-  name: Type['name'];
-  type: Type['name'] extends keyof Scalars
-    ? Scalars[Type['name']]
-    : Type['name'] extends keyof DefaultScalars
-      ? DefaultScalars[Type['name']]
-      : unknown;
-};
-
 type mapEnum<T extends IntrospectionEnumType> = {
   kind: 'ENUM';
   name: T['name'];
@@ -181,33 +168,39 @@ type mapUnion<T extends IntrospectionUnionType> = {
   possibleTypes: T['possibleTypes'][number]['name'];
 };
 
-type mapType<
-  Type,
-  Scalars extends ScalarsLike = DefaultScalars,
-> = Type extends IntrospectionScalarType
-  ? mapScalar<Type, Scalars>
-  : Type extends IntrospectionEnumType
-    ? mapEnum<Type>
-    : Type extends IntrospectionObjectType
-      ? mapObject<Type>
-      : Type extends IntrospectionInterfaceType
-        ? mapInterface<Type>
-        : Type extends IntrospectionUnionType
-          ? mapUnion<Type>
-          : Type extends IntrospectionInputObjectType
-            ? mapInputObject<Type>
+type mapType<Type> = Type extends IntrospectionEnumType
+  ? mapEnum<Type>
+  : Type extends IntrospectionObjectType
+    ? mapObject<Type>
+    : Type extends IntrospectionInterfaceType
+      ? mapInterface<Type>
+      : Type extends IntrospectionUnionType
+        ? mapUnion<Type>
+        : Type extends IntrospectionInputObjectType
+          ? mapInputObject<Type>
+          : Type extends IntrospectionScalarType
+            ? unknown
             : never;
 
-type mapIntrospectionTypes<
-  Query extends IntrospectionQuery,
-  Scalars extends ScalarsLike = DefaultScalars,
-> = obj<{
+type mapIntrospectionTypes<Query extends IntrospectionQuery> = {
   [P in Query['__schema']['types'][number]['name']]: Query['__schema']['types'][number] extends infer Type
     ? Type extends { readonly name: P }
-      ? mapType<Type, Scalars>
+      ? mapType<Type>
       : never
     : never;
-}>;
+};
+
+type mapIntrospectionScalarTypes<Scalars extends ScalarsLike = DefaultScalars> = {
+  [P in keyof Scalars | keyof DefaultScalars]: {
+    kind: 'SCALAR';
+    name: P;
+    type: P extends keyof Scalars
+      ? Scalars[P]
+      : P extends keyof DefaultScalars
+        ? DefaultScalars[P]
+        : 'wat';
+  };
+};
 
 type mapIntrospection<
   Query extends IntrospectionQuery,
@@ -220,7 +213,7 @@ type mapIntrospection<
   subscription: Query['__schema']['subscriptionType'] extends { name: string }
     ? Query['__schema']['subscriptionType']['name']
     : never;
-  types: mapIntrospectionTypes<Query, Scalars>;
+  types: obj<mapIntrospectionTypes<Query> & mapIntrospectionScalarTypes<Scalars>>;
 };
 
 export type ScalarsLike = {
