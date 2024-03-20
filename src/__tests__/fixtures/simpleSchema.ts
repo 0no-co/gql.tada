@@ -368,29 +368,10 @@ export type simpleSchema = {
       };
     };
 
-    ID: {
-      kind: 'SCALAR';
-      name: 'ID';
-      type: string;
-    };
-
-    String: {
-      kind: 'SCALAR';
-      name: 'String';
-      type: string;
-    };
-
-    Boolean: {
-      kind: 'SCALAR';
-      name: 'Boolean';
-      type: boolean;
-    };
-
-    Int: {
-      kind: 'SCALAR';
-      name: 'Int';
-      type: number;
-    };
+    ID: unknown;
+    String: unknown;
+    Boolean: unknown;
+    Int: unknown;
 
     Author: {
       kind: 'OBJECT';

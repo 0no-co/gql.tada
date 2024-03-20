@@ -12,7 +12,7 @@ import type {
   makeDefinitionDecoration,
 } from '../namespace';
 
-type schema = simpleSchema;
+type schema = addIntrospectionScalars<simpleSchema>;
 
 test('infers simple fields', () => {
   type query = parseDocument</* GraphQL */ `
