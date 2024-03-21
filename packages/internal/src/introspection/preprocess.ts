@@ -1,88 +1,79 @@
-import type { IntrospectionQuery, IntrospectionType } from 'graphql';
+import type {
+  IntrospectionQuery,
+  IntrospectionType,
+  IntrospectionEnumValue,
+  IntrospectionInputValue,
+  IntrospectionTypeRef,
+  IntrospectionNamedTypeRef,
+  IntrospectionField,
+} from 'graphql';
 
-const stringifyName = (input: string | undefined | null): string =>
-  input ? `"${input}"` : 'never';
+const printName = (input: string | undefined | null): string => (input ? `'${input}'` : 'never');
 
-const stringifyDeepObjectType = (object: Record<string, unknown>) => {
-  let output = '';
-  for (const key in object) {
-    let value = 'unknown';
-    if (object[key] == null) {
-      value = 'null';
-    } else if (typeof object[key] === 'string') {
-      value = JSON.stringify(object[key] as string);
-    } else if (typeof object[key] === 'object') {
-      value = stringifyDeepObjectType(object[key] as Record<string, unknown>);
-    }
-    output += `${stringifyName(key)}: ${value}; `;
+const printTypeRef = (typeRef: IntrospectionTypeRef) => {
+  if (typeRef.kind === 'NON_NULL') {
+    return `{ kind: 'NON_NULL'; ofType: ${printTypeRef(typeRef.ofType)}; }`;
+  } else if (typeRef.kind === 'LIST') {
+    return `{ kind: 'LIST'; ofType: ${printTypeRef(typeRef.ofType)}; }`;
+  } else {
+    return `{ kind: ${printName(typeRef.kind)}; name: ${printName(typeRef.name)}; ofType: null; }`;
   }
-  return `{ ${output}}`;
 };
 
-const stringifyObjectType = (object: Record<string, string>) => {
+const printInputFields = (inputFields: readonly IntrospectionInputValue[]) => {
   let output = '';
-  for (const key in object) output += `${stringifyName(key)}: ${object[key]}; `;
-  return `{ ${output}}`;
-};
-
-const stringifyTupleType = (tuple: Array<Record<string, unknown>>) => {
-  let output = '';
-  for (const value of tuple) {
+  for (const inputField of inputFields) {
     if (output) output += ', ';
-    output += `${stringifyDeepObjectType(value)}`;
+    const type = printTypeRef(inputField.type);
+    const defaultValue = inputField.defaultValue && JSON.stringify(inputField.defaultValue);
+    output += defaultValue
+      ? `{ name: ${printName(inputField.name)}; type: ${type}; defaultValue: ${defaultValue} }`
+      : `{ name: ${printName(inputField.name)}; type: ${type}; }`;
   }
-  return `[ ${output}]`;
+  return `[${output}]`;
+};
+
+const printNamedTypes = (
+  values: readonly (IntrospectionEnumValue | IntrospectionNamedTypeRef)[]
+) => {
+  if (!values.length) return 'never';
+  let output = '';
+  for (const value of values) {
+    if (output) output += ' | ';
+    output += printName(value.name);
+  }
+  return output;
+};
+
+const printFields = (fields: readonly IntrospectionField[]) => {
+  let output = '';
+  for (const field of fields) {
+    const name = printName(field.name);
+    const type = printTypeRef(field.type);
+    output += `${printName(field.name)}: { name: ${name}; type: ${type} }; `;
+  }
+  return `{ ${output}}`;
 };
 
 export const printIntrospectionType = (type: IntrospectionType) => {
   if (type.kind === 'ENUM') {
-    return stringifyObjectType({
-      kind: stringifyName(type.kind),
-      name: stringifyName(type.name),
-      type: type.enumValues.map((value) => stringifyName(value.name)).join(' | '),
-    });
+    const values = printNamedTypes(type.enumValues);
+    return `{ kind: 'ENUM'; name: ${printName(type.name)}; type: ${values}; }`;
   } else if (type.kind === 'INPUT_OBJECT') {
-    return stringifyObjectType({
-      kind: stringifyName(type.kind),
-      name: stringifyName(type.name),
-      inputFields: stringifyTupleType(type.inputFields as any),
-    });
+    const fields = printInputFields(type.inputFields);
+    return `{ kind: 'INPUT_OBJECT'; name: ${printName(type.name)}; inputFields: ${fields}; }`;
   } else if (type.kind === 'OBJECT') {
-    return stringifyObjectType({
-      kind: stringifyName(type.kind),
-      name: stringifyName(type.name),
-      fields: stringifyObjectType(
-        type.fields.reduce((object, field) => {
-          object[field.name] = stringifyObjectType({
-            name: stringifyName(field.name),
-            type: stringifyDeepObjectType(field.type as any),
-          });
-          return object;
-        }, {})
-      ),
-    });
+    const fields = printFields(type.fields);
+    return `{ kind: 'OBJECT'; name: ${printName(type.name)}; fields: ${fields}; }`;
   } else if (type.kind === 'INTERFACE') {
-    return stringifyObjectType({
-      kind: stringifyName(type.kind),
-      name: stringifyName(type.name),
-      possibleTypes: type.possibleTypes.map((value) => stringifyName(value.name)).join(' | '),
-      fields: stringifyObjectType(
-        type.fields.reduce((object, field) => {
-          object[field.name] = stringifyObjectType({
-            name: stringifyName(field.name),
-            type: stringifyDeepObjectType(field.type as any),
-          });
-          return object;
-        }, {})
-      ),
-    });
+    const name = printName(type.name);
+    const fields = printFields(type.fields);
+    const possibleTypes = printNamedTypes(type.possibleTypes);
+    return `{ kind: 'INTERFACE'; name: ${name}; fields: ${fields}; possibleTypes: ${possibleTypes}; }`;
   } else if (type.kind === 'UNION') {
-    return stringifyObjectType({
-      kind: stringifyName(type.kind),
-      name: stringifyName(type.name),
-      possibleTypes: type.possibleTypes.map((value) => stringifyName(value.name)).join(' | '),
-      fields: '{}',
-    });
+    const name = printName(type.name);
+    const possibleTypes = printNamedTypes(type.possibleTypes);
+    return `{ kind: 'UNION'; name: ${name}; fields: {}; possibleTypes: ${possibleTypes}; }`;
   } else if (type.kind === 'SCALAR') {
     return 'unknown';
   } else {
@@ -91,14 +82,15 @@ export const printIntrospectionType = (type: IntrospectionType) => {
 };
 
 export function preprocessIntrospection({ __schema: schema }: IntrospectionQuery): string {
-  const queryName = stringifyName(schema.queryType.name);
-  const mutationName = stringifyName(schema.mutationType && schema.mutationType.name);
-  const subscriptionName = stringifyName(schema.subscriptionType && schema.subscriptionType.name);
+  const queryName = printName(schema.queryType.name);
+  const mutationName = printName(schema.mutationType && schema.mutationType.name);
+  const subscriptionName = printName(schema.subscriptionType && schema.subscriptionType.name);
 
   let evaluatedTypes = '';
   for (const type of schema.types) {
     const typeStr = printIntrospectionType(type);
-    evaluatedTypes += `    ${stringifyName(type.name)}: ${typeStr};\n`;
+    if (!evaluatedTypes) evaluatedTypes += '\n';
+    evaluatedTypes += `    ${printName(type.name)}: ${typeStr};`;
   }
 
   return (
@@ -106,6 +98,6 @@ export function preprocessIntrospection({ __schema: schema }: IntrospectionQuery
     `  query: ${queryName};\n` +
     `  mutation: ${mutationName};\n` +
     `  subscription: ${subscriptionName};\n` +
-    `  types: {\n${evaluatedTypes}  };\n}`
+    `  types: {\n${evaluatedTypes}\n  };\n}`
   );
 }
