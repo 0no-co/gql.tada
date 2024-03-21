@@ -7,6 +7,7 @@ settings:
 overrides:
   gql.tada: workspace:*
   astro-expressive-code: ^0.31.0
+  typescript: ^5.3.3
 
 importers:
 
@@ -141,7 +142,7 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1(vite@5.1.6)
       typescript:
-        specifier: ^5.4.2
+        specifier: ^5.3.3
         version: 5.4.2
       vite:
         specifier: ^5.1.6
@@ -171,15 +172,15 @@ importers:
       type-fest:
         specifier: ^4.10.2
         version: 4.10.2
+      typescript:
+        specifier: ^5.3.3
+        version: 5.4.2
 
   packages/internal:
     dependencies:
       graphql:
         specifier: ^16.8.1
         version: 16.8.1
-      typescript:
-        specifier: ^5.3.3
-        version: 5.4.2
     devDependencies:
       '@types/node':
         specifier: ^20.11.0
@@ -199,6 +200,9 @@ importers:
       type-fest:
         specifier: ^4.10.2
         version: 4.10.2
+      typescript:
+        specifier: ^5.3.3
+        version: 5.4.2
 
   website:
     dependencies:
@@ -2281,7 +2285,7 @@ packages:
   /@vue/language-core@1.8.27(typescript@5.4.2):
     resolution: {integrity: sha512-L8Kc27VdQserNaCUNiSFdDl9LWT24ly8Hpwf1ECy3aFb9m6bDhBGQYOujDm21N7EW3moKIOKEanQwe1q5BK+mA==}
     peerDependencies:
-      typescript: '*'
+      typescript: ^5.3.3
     peerDependenciesMeta:
       typescript:
         optional: true
@@ -5300,7 +5304,7 @@ packages:
     engines: {node: '>=16'}
     peerDependencies:
       rollup: ^3.29.4 || ^4
-      typescript: ^4.5 || ^5.0
+      typescript: ^5.3.3
     dependencies:
       magic-string: 0.30.5
       rollup: 4.9.4
@@ -5845,7 +5849,7 @@ packages:
     resolution: {integrity: sha512-wNMeqtMz5NtwpT/UZGY5alT+VoKdSsOOP/kqHFcUW1P/VRhH2wJ48+DN2WwUliNbQ976ETwDL0Ifd2VVvgonvg==}
     engines: {node: '>=16.13.0'}
     peerDependencies:
-      typescript: '>=4.2.0'
+      typescript: ^5.3.3
     dependencies:
       typescript: 5.3.3
     dev: true
@@ -5877,7 +5881,7 @@ packages:
   /twoslash-vue@0.1.2(typescript@5.4.2):
     resolution: {integrity: sha512-LCD3VTw0+gKVMXou/nP8OAtpajGAoKuzFx9oyGteBkeMRgDj2DO95WDBHy/o+ihkckYZ0lUbvIFFjzmDy7zHag==}
     peerDependencies:
-      typescript: '*'
+      typescript: ^5.3.3
     dependencies:
       '@vue/language-core': 1.8.27(typescript@5.4.2)
       twoslash: 0.1.2(typescript@5.4.2)
@@ -5889,7 +5893,7 @@ packages:
   /twoslash@0.1.2(typescript@5.4.2):
     resolution: {integrity: sha512-q0jnapnD3b0umNGCJCRlo6Em1oSFl2OBPwsXqhLzijtEzuORrGVrJffG7E1k1KPHFlwBSRX2q6yYA61etn5hSg==}
     peerDependencies:
-      typescript: '*'
+      typescript: ^5.3.3
     dependencies:
       '@typescript/vfs': 1.5.0
       typescript: 5.4.2
@@ -6314,7 +6318,7 @@ packages:
   /vue@3.4.21(typescript@5.4.2):
     resolution: {integrity: sha512-5hjyV/jLEIKD/jYl4cavMcnzKwjMKohureP8ejn3hhEjwhWIhWeuzL2kJAjzl/WyVsgPY56Sy4Z40C3lVshxXA==}
     peerDependencies:
-      typescript: '*'
+      typescript: ^5.3.3
     peerDependenciesMeta:
       typescript:
         optional: true
