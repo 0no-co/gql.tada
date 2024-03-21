@@ -51,10 +51,10 @@ jobs:
         run: pnpm run lint
 
       - name: Unit Tests
-        run: pnpm multi --include-workspace-root run test --run
+        run: pnpm run test
 
       - name: benchmarks
-        run: pnpm multi --include-workspace-root run bench --run
+        run: pnpm run bench --run
 
       - name: Build
         run: pnpm multi --include-workspace-root run build
