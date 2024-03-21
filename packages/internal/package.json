@@ -46,11 +46,14 @@
     "json5": "^2.2.3",
     "rollup": "^4.9.4",
     "sade": "^1.8.1",
-    "type-fest": "^4.10.2"
+    "type-fest": "^4.10.2",
+    "typescript": "^5.3.3"
   },
   "dependencies": {
-    "graphql": "^16.8.1",
-    "typescript": "^5.3.3"
+    "graphql": "^16.8.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
   },
   "publishConfig": {
     "access": "public",
