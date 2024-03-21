@@ -191,14 +191,15 @@ async function main() {
     })
     .command('generate-output')
     .option(
-      '--preprocess',
-      'Enables pre-processing, converting the introspection data to a more efficient schema structure ahead of time'
+      '--disable-preprocessing',
+      'Disables pre-processing, which is an internal introspection format generated ahead of time'
     )
     .describe(
       'Generate the gql.tada types file, this will look for your "tsconfig.json" and use the "@0no-co/graphqlsp" configuration to generate the file.'
     )
     .action((options) => {
-      const shouldPreprocess = !!options.preprocess && options.preprocess !== 'false';
+      const shouldPreprocess =
+        !options['disable-preprocessing'] && options['disable-preprocessing'] !== 'false';
       return generateTadaTypes(shouldPreprocess);
     });
   prog.parse(process.argv);
