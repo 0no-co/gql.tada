@@ -12,9 +12,9 @@ const printName = (input: string | undefined | null): string => (input ? `'${inp
 
 const printTypeRef = (typeRef: IntrospectionTypeRef) => {
   if (typeRef.kind === 'NON_NULL') {
-    return `{ kind: 'NON_NULL'; ofType: ${printTypeRef(typeRef.ofType)}; }`;
+    return `{ kind: 'NON_NULL'; name: never; ofType: ${printTypeRef(typeRef.ofType)}; }`;
   } else if (typeRef.kind === 'LIST') {
-    return `{ kind: 'LIST'; ofType: ${printTypeRef(typeRef.ofType)}; }`;
+    return `{ kind: 'LIST'; name: never; ofType: ${printTypeRef(typeRef.ofType)}; }`;
   } else {
     return `{ kind: ${printName(typeRef.kind)}; name: ${printName(typeRef.name)}; ofType: null; }`;
   }
@@ -88,7 +88,7 @@ export function preprocessIntrospection({ __schema: schema }: IntrospectionQuery
   let evaluatedTypes = '';
   for (const type of schema.types) {
     const typeStr = printIntrospectionType(type);
-    if (!evaluatedTypes) evaluatedTypes += '\n';
+    if (evaluatedTypes) evaluatedTypes += '\n';
     evaluatedTypes += `    ${printName(type.name)}: ${typeStr};`;
   }
 
