@@ -29,7 +29,7 @@ get our introspection as our new Hasura user.
             "headers": { // [!code ++]
                 "x-hasura-admin-secret": "secret",  // [!code ++]
                 "x-hasura-role": "gqltada"  // [!code ++]
-            }, // [!code ++]
+            } // [!code ++]
         },
         "tadaOutputLocation": "./src/graphql-env.d.ts"
       }
