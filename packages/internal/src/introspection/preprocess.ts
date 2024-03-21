@@ -24,11 +24,10 @@ const printInputFields = (inputFields: readonly IntrospectionInputValue[]) => {
   let output = '';
   for (const inputField of inputFields) {
     if (output) output += ', ';
+    const name = printName(inputField.name);
     const type = printTypeRef(inputField.type);
-    const defaultValue = inputField.defaultValue && JSON.stringify(inputField.defaultValue);
-    output += defaultValue
-      ? `{ name: ${printName(inputField.name)}; type: ${type}; defaultValue: ${defaultValue} }`
-      : `{ name: ${printName(inputField.name)}; type: ${type}; }`;
+    const defaultValue = inputField.defaultValue ? JSON.stringify(inputField.defaultValue) : 'null';
+    output += `{ name: ${name}; type: ${type}; defaultValue: ${defaultValue} }`;
   }
   return `[${output}]`;
 };
