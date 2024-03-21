@@ -35,6 +35,7 @@
   "homepage": "https://gql-tada.0no.co/",
   "license": "MIT",
   "scripts": {
+    "test": "vitest test",
     "build": "rollup -c ../../scripts/rollup.config.mjs",
     "clean": "rimraf dist node_modules/.cache",
     "prepublishOnly": "run-s clean build"
