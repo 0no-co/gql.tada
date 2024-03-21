@@ -171,6 +171,12 @@ export const graphql = initGraphQLTada<{
 
 #### Format 2 — `.ts` file
 
+> [!WARNING]
+>
+> We strongly recommend you to use the `.d.ts` format instead. While it's less reusable, the format will
+> be more efficient and increase TypeScript inference performance.
+> You will still be able to import the `introspection` type from the `.d.ts` file.
+
 When writing a `.ts` file instead, `@0no-co/graphqlsp` will create a regular TypeScript file that
 exports an `introspection` object, which is useful if we’re planning on re-using the introspection
 data during runtime.
