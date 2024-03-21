@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "@urql/core": "^4.3.0",
-    "gql.tada": "^1.3.3",
+    "gql.tada": "^1.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "urql": "^4.0.6"
