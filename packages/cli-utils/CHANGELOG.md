@@ -1,5 +1,21 @@
 # @gql.tada/cli-utils
 
+## 0.3.0
+
+### Minor Changes
+
+- Enable pre-processed introspection output by default (since it only applies to `d.ts` outputs)
+  Submitted by [@kitten](https://github.com/kitten) (See [#155](https://github.com/0no-co/gql.tada/pull/155))
+- Expose introspection output format generation from `@gql.tada/internal` and implement a new pre-processed output format, which pre-computes the output of the `mapIntrospection` type
+  Submitted by [@kitten](https://github.com/kitten) (See [#150](https://github.com/0no-co/gql.tada/pull/150))
+- Add `@gql.tada/internal` package to extract common logic between the CLI and the LSP
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#149](https://github.com/0no-co/gql.tada/pull/149))
+
+### Patch Changes
+
+- Updated dependencies (See [#150](https://github.com/0no-co/gql.tada/pull/150) and [#149](https://github.com/0no-co/gql.tada/pull/149))
+  - @gql.tada/internal@0.1.0
+
 ## 0.2.0
 
 ### Minor Changes

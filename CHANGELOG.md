@@ -1,5 +1,24 @@
 # gql.tada
 
+## 1.4.0
+
+### Minor Changes
+
+- Accept a pre-processed schema when setting up `gql.tada` for the `AbstractSetupSchema.introspection` option. This allows us to map an `IntrospectionQuery` ahead of time
+  Submitted by [@kitten](https://github.com/kitten) (See [#147](https://github.com/0no-co/gql.tada/pull/147))
+- Add `@gql.tada/internal` package to extract common logic between the CLI and the LSP
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#149](https://github.com/0no-co/gql.tada/pull/149))
+- Change the default scalar type of `ID` to be `string`, as [the GraphQL spec](https://spec.graphql.org/October2021/#sec-ID) recommends it to serialize to a string
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#146](https://github.com/0no-co/gql.tada/pull/146))
+
+### Patch Changes
+
+- Remove `stringLiteral` generic constraint, causing errors depending on TypeScript version
+  Submitted by [@kitten](https://github.com/kitten) (See [#151](https://github.com/0no-co/gql.tada/pull/151))
+- Updated dependencies (See [#155](https://github.com/0no-co/gql.tada/pull/155), [#150](https://github.com/0no-co/gql.tada/pull/150), and [#149](https://github.com/0no-co/gql.tada/pull/149))
+  - @gql.tada/cli-utils@0.3.0
+  - @gql.tada/internal@0.1.0
+
 ## 1.3.6
 
 ### Patch Changes
