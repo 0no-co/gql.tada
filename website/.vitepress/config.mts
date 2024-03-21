@@ -115,6 +115,16 @@ export default defineConfig({
             text: 'Fragment Colocation',
             link: '/guides/fragment-colocation',
           },
+          {
+            text: 'Integrations',
+            items: [
+              {
+                text: 'Hasura',
+                link: '/guides/integrations/hasura',
+              },
+            ],
+            collapsed: true,
+          }
         ],
       },
       {
