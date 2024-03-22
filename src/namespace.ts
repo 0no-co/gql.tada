@@ -1,6 +1,6 @@
 import type { Kind } from '@0no-co/graphql.web';
 import type { DocumentNodeLike } from './parser';
-import type { DocumentDecoration } from './utils';
+import type { DocumentDecoration, overload } from './utils';
 
 /** Private namespace holding our symbols for markers.
  * @internal
@@ -55,7 +55,7 @@ type decorateFragmentDef<
     }
   : void;
 
-type getFragmentsOfDocuments<Documents extends readonly FragmentShape[]> =
+type getFragmentsOfDocuments<Documents extends readonly FragmentShape[]> = overload<
   Documents[number] extends infer Document
     ? Document extends FragmentShape<infer Definition>
       ? {
@@ -75,8 +75,9 @@ type getFragmentsOfDocuments<Documents extends readonly FragmentShape[]> =
             [$tada.ref]: makeFragmentRef<Document>;
           };
         }
-      : {}
-    : {};
+      : never
+    : never
+>;
 
 type makeFragmentRef<Document> = Document extends FragmentShape<infer Definition, infer Result>
   ? Definition['masked'] extends false

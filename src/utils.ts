@@ -13,6 +13,11 @@ export type matchOr<Constraint, T, Fallback> = Constraint extends T
  */
 export type obj<T> = T extends { [key: string | number]: any } ? { [K in keyof T]: T[K] } : never;
 
+/** Turns a given union to an intersection type. */
+export type overload<T> = (T extends any ? (x: T) => void : never) extends (x: infer U) => void
+  ? U & T
+  : never;
+
 /** Marks all properties as writable */
 export type writable<T> = { -readonly [K in keyof T]: T[K] };
 
