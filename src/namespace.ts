@@ -55,33 +55,28 @@ type decorateFragmentDef<
     }
   : void;
 
-type getFragmentsOfDocumentsRec<Documents, Fragments = {}> = Documents extends readonly [
-  infer Document,
-  ...infer Rest,
-]
-  ? getFragmentsOfDocumentsRec<
-      Rest,
-      Document extends FragmentShape<infer Definition>
-        ? {
-            [Name in Definition['fragment']]: {
-              kind: Kind.FRAGMENT_DEFINITION;
+type getFragmentsOfDocumentsRec<Documents extends readonly FragmentShape[]> =
+  Documents[number] extends infer Document
+    ? Document extends FragmentShape<infer Definition>
+      ? {
+          [P in Definition['fragment']]: {
+            kind: Kind.FRAGMENT_DEFINITION;
+            name: {
+              kind: Kind.NAME;
+              value: Definition['fragment'];
+            };
+            typeCondition: {
+              kind: Kind.NAMED_TYPE;
               name: {
                 kind: Kind.NAME;
-                value: Definition['fragment'];
+                value: Definition['on'];
               };
-              typeCondition: {
-                kind: Kind.NAMED_TYPE;
-                name: {
-                  kind: Kind.NAME;
-                  value: Definition['on'];
-                };
-              };
-              [$tada.ref]: makeFragmentRef<Document>;
             };
-          } & Fragments
-        : Fragments
-    >
-  : Fragments;
+            [$tada.ref]: makeFragmentRef<Document>;
+          };
+        }
+      : {}
+    : {};
 
 type makeFragmentRef<Document> = Document extends FragmentShape<infer Definition, infer Result>
   ? Definition['masked'] extends false
