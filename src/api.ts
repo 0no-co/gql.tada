@@ -11,7 +11,7 @@ import type {
 
 import type {
   getFragmentsOfDocumentsRec,
-  makeDefinitionDecoration,
+  DefinitionDecoration,
   decorateFragmentDef,
   omitFragmentRefsRec,
   makeFragmentRef,
@@ -123,7 +123,7 @@ interface GraphQLTadaAPI<Schema extends SchemaLike, Config extends AbstractConfi
    *
    * @see {@link readFragment} for how to read from fragment masks.
    */
-  <const In extends string, const Fragments extends readonly [...makeDefinitionDecoration[]]>(
+  <const In extends string, const Fragments extends readonly [...DefinitionDecoration[]]>(
     input: In,
     fragments?: Fragments
   ): getDocumentNode<
@@ -328,7 +328,7 @@ interface TadaDocumentNode<
   Decoration = void,
 > extends DocumentNode,
     DocumentDecoration<Result, Variables>,
-    makeDefinitionDecoration<Decoration> {}
+    DefinitionDecoration<Decoration> {}
 
 /** A GraphQL persisted document with attached types for results and variables.
  *
@@ -398,9 +398,9 @@ type VariablesOf<Document> = Document extends DocumentDecoration<any, infer Vari
  *
  * @see {@link readFragment} for how to read from fragment masks.
  */
-type FragmentOf<Document extends makeDefinitionDecoration> = makeFragmentRef<Document>;
+type FragmentOf<Document extends DefinitionDecoration> = makeFragmentRef<Document>;
 
-type resultOrFragmentOf<Document extends makeDefinitionDecoration> =
+type resultOrFragmentOf<Document extends DefinitionDecoration> =
   | FragmentOf<Document>
   | ResultOf<Document>;
 
@@ -466,59 +466,59 @@ type fragmentRefsOfFragmentsRec<
  *
  * @see {@link readFragment} for how to read from fragment masks.
  */
-function readFragment<const Document extends makeDefinitionDecoration>(
+function readFragment<const Document extends DefinitionDecoration>(
   fragment: resultOrFragmentOf<Document>
 ): ResultOf<Document>;
-function readFragment<const Document extends makeDefinitionDecoration>(
+function readFragment<const Document extends DefinitionDecoration>(
   fragment: resultOrFragmentOf<Document> | null
 ): ResultOf<Document> | null;
-function readFragment<const Document extends makeDefinitionDecoration>(
+function readFragment<const Document extends DefinitionDecoration>(
   fragment: resultOrFragmentOf<Document> | undefined
 ): ResultOf<Document> | undefined;
-function readFragment<const Document extends makeDefinitionDecoration>(
+function readFragment<const Document extends DefinitionDecoration>(
   fragment: resultOrFragmentOf<Document> | null | undefined
 ): ResultOf<Document> | null | undefined;
-function readFragment<const Document extends makeDefinitionDecoration>(
+function readFragment<const Document extends DefinitionDecoration>(
   fragment: readonly resultOrFragmentOf<Document>[]
 ): readonly ResultOf<Document>[];
-function readFragment<const Document extends makeDefinitionDecoration>(
+function readFragment<const Document extends DefinitionDecoration>(
   fragment: readonly (resultOrFragmentOf<Document> | null)[]
 ): readonly (ResultOf<Document> | null)[];
-function readFragment<const Document extends makeDefinitionDecoration>(
+function readFragment<const Document extends DefinitionDecoration>(
   fragment: readonly (resultOrFragmentOf<Document> | undefined)[]
 ): readonly (ResultOf<Document> | undefined)[];
-function readFragment<const Document extends makeDefinitionDecoration>(
+function readFragment<const Document extends DefinitionDecoration>(
   fragment: readonly (resultOrFragmentOf<Document> | null | undefined)[]
 ): readonly (ResultOf<Document> | null | undefined)[];
-function readFragment<const Document extends makeDefinitionDecoration>(
+function readFragment<const Document extends DefinitionDecoration>(
   _document: Document,
   fragment: resultOrFragmentOf<Document>
 ): ResultOf<Document>;
-function readFragment<const Document extends makeDefinitionDecoration>(
+function readFragment<const Document extends DefinitionDecoration>(
   _document: Document,
   fragment: resultOrFragmentOf<Document> | null
 ): ResultOf<Document> | null;
-function readFragment<const Document extends makeDefinitionDecoration>(
+function readFragment<const Document extends DefinitionDecoration>(
   _document: Document,
   fragment: resultOrFragmentOf<Document> | undefined
 ): ResultOf<Document> | undefined;
-function readFragment<const Document extends makeDefinitionDecoration>(
+function readFragment<const Document extends DefinitionDecoration>(
   _document: Document,
   fragment: resultOrFragmentOf<Document> | null | undefined
 ): ResultOf<Document> | null | undefined;
-function readFragment<const Document extends makeDefinitionDecoration>(
+function readFragment<const Document extends DefinitionDecoration>(
   _document: Document,
   fragment: readonly resultOrFragmentOf<Document>[]
 ): readonly ResultOf<Document>[];
-function readFragment<const Document extends makeDefinitionDecoration>(
+function readFragment<const Document extends DefinitionDecoration>(
   _document: Document,
   fragment: readonly (resultOrFragmentOf<Document> | null)[]
 ): readonly (ResultOf<Document> | null)[];
-function readFragment<const Document extends makeDefinitionDecoration>(
+function readFragment<const Document extends DefinitionDecoration>(
   _document: Document,
   fragment: readonly (resultOrFragmentOf<Document> | undefined)[]
 ): readonly (ResultOf<Document> | undefined)[];
-function readFragment<const Document extends makeDefinitionDecoration>(
+function readFragment<const Document extends DefinitionDecoration>(
   _document: Document,
   fragment: readonly (resultOrFragmentOf<Document> | null | undefined)[]
 ): readonly (ResultOf<Document> | null | undefined)[];
@@ -555,35 +555,35 @@ function readFragment(...args: [unknown] | [unknown, unknown]) {
  *
  * @see {@link readFragment} for how to read from fragment masks (i.e. the reverse)
  */
-function maskFragments<const Fragments extends readonly [...makeDefinitionDecoration[]]>(
+function maskFragments<const Fragments extends readonly [...DefinitionDecoration[]]>(
   _fragments: Fragments,
   fragment: resultOfFragmentsRec<Fragments>
 ): fragmentRefsOfFragmentsRec<Fragments>;
-function maskFragments<const Fragments extends readonly [...makeDefinitionDecoration[]]>(
+function maskFragments<const Fragments extends readonly [...DefinitionDecoration[]]>(
   _fragments: Fragments,
   fragment: resultOfFragmentsRec<Fragments> | null
 ): fragmentRefsOfFragmentsRec<Fragments> | null;
-function maskFragments<const Fragments extends readonly [...makeDefinitionDecoration[]]>(
+function maskFragments<const Fragments extends readonly [...DefinitionDecoration[]]>(
   _fragments: Fragments,
   fragment: resultOfFragmentsRec<Fragments> | undefined
 ): fragmentRefsOfFragmentsRec<Fragments> | undefined;
-function maskFragments<const Fragments extends readonly [...makeDefinitionDecoration[]]>(
+function maskFragments<const Fragments extends readonly [...DefinitionDecoration[]]>(
   _fragments: Fragments,
   fragment: resultOfFragmentsRec<Fragments> | null | undefined
 ): fragmentRefsOfFragmentsRec<Fragments> | null | undefined;
-function maskFragments<const Fragments extends readonly [...makeDefinitionDecoration[]]>(
+function maskFragments<const Fragments extends readonly [...DefinitionDecoration[]]>(
   _fragments: Fragments,
   fragment: readonly resultOfFragmentsRec<Fragments>[]
 ): readonly fragmentRefsOfFragmentsRec<Fragments>[];
-function maskFragments<const Fragments extends readonly [...makeDefinitionDecoration[]]>(
+function maskFragments<const Fragments extends readonly [...DefinitionDecoration[]]>(
   _fragments: Fragments,
   fragment: readonly (resultOfFragmentsRec<Fragments> | null)[]
 ): readonly (fragmentRefsOfFragmentsRec<Fragments> | null)[];
-function maskFragments<const Fragments extends readonly [...makeDefinitionDecoration[]]>(
+function maskFragments<const Fragments extends readonly [...DefinitionDecoration[]]>(
   _fragments: Fragments,
   fragment: readonly (resultOfFragmentsRec<Fragments> | undefined)[]
 ): readonly (fragmentRefsOfFragmentsRec<Fragments> | undefined)[];
-function maskFragments<const Fragments extends readonly [...makeDefinitionDecoration[]]>(
+function maskFragments<const Fragments extends readonly [...DefinitionDecoration[]]>(
   _fragments: Fragments,
   fragment: readonly (resultOfFragmentsRec<Fragments> | null | undefined)[]
 ): readonly (fragmentRefsOfFragmentsRec<Fragments> | null | undefined)[];

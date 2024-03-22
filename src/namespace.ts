@@ -117,23 +117,23 @@ type omitFragmentRefsRec<Data> = Data extends readonly (infer Value)[]
           }
         : Data;
 
-type makeUndefinedFragmentRef<FragmentName extends string> = {
+interface makeUndefinedFragmentRef<FragmentName extends string> {
   [$tada.fragmentRefs]: {
     [Name in FragmentName]: 'Undefined Fragment';
   };
-};
+}
 
-type makeDefinitionDecoration<Definition = FragmentDefDecorationLike> = {
-  [Key in $tada.definition]?: Definition;
-};
+interface DefinitionDecoration<Definition = FragmentDefDecorationLike> {
+  [$tada.definition]?: Definition;
+}
 
 export type {
   $tada,
   decorateFragmentDef,
   getFragmentsOfDocumentsRec,
   omitFragmentRefsRec,
-  makeDefinitionDecoration,
   makeFragmentRef,
   makeUndefinedFragmentRef,
+  DefinitionDecoration,
   FragmentDefDecorationLike,
 };
