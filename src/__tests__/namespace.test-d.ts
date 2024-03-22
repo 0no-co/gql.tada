@@ -76,6 +76,25 @@ describe('getFragmentsOfDocumentsRec', () => {
         };
       };
     };
+    TodoFragment2: {
+      kind: Kind.FRAGMENT_DEFINITION;
+      name: {
+        kind: Kind.NAME;
+        value: 'TodoFragment2';
+      };
+      typeCondition: {
+        kind: Kind.NAMED_TYPE;
+        name: {
+          kind: Kind.NAME;
+          value: 'Todo';
+        };
+      };
+      [$tada.ref]: {
+        [$tada.fragmentRefs]: {
+          TodoFragment2: 'Todo';
+        };
+      };
+    };
   };
 
   expectTypeOf<actual>().toMatchTypeOf<expected>();
