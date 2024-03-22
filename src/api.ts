@@ -12,7 +12,7 @@ import type {
 import type {
   DefinitionDecoration,
   FragmentShape,
-  getFragmentsOfDocumentsRec,
+  getFragmentsOfDocuments,
   decorateFragmentDef,
   omitFragmentRefsRec,
   makeFragmentRef,
@@ -130,7 +130,7 @@ interface GraphQLTadaAPI<Schema extends SchemaLike, Config extends AbstractConfi
   ): getDocumentNode<
     parseDocument<In>,
     Schema,
-    getFragmentsOfDocumentsRec<Fragments>,
+    getFragmentsOfDocuments<Fragments>,
     Config['isMaskingDisabled']
   >;
 

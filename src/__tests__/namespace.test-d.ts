@@ -1,7 +1,7 @@
 import { describe, it, expectTypeOf } from 'vitest';
 import type { Kind } from '@0no-co/graphql.web';
 
-import type { $tada, decorateFragmentDef, getFragmentsOfDocumentsRec } from '../namespace';
+import type { $tada, decorateFragmentDef, getFragmentsOfDocuments } from '../namespace';
 
 describe('decorateFragmentDef', () => {
   it('creates an annotated fragment definition', () => {
@@ -37,7 +37,7 @@ describe('decorateFragmentDef', () => {
 });
 
 describe('getFragmentsOfDocumentsRec', () => {
-  type actual = getFragmentsOfDocumentsRec<
+  type actual = getFragmentsOfDocuments<
     [
       {
         [$tada.definition]?: {

@@ -4,7 +4,7 @@ import type { simpleSchema } from './fixtures/simpleSchema';
 import type { simpleIntrospection } from './fixtures/simpleIntrospection';
 
 import type { parseDocument } from '../parser';
-import type { $tada, getFragmentsOfDocumentsRec } from '../namespace';
+import type { $tada, getFragmentsOfDocuments } from '../namespace';
 import type { obj } from '../utils';
 
 import { readFragment, maskFragments, unsafe_readResult, initGraphQLTada } from '../api';
@@ -561,7 +561,7 @@ describe('unsafe_readResult', () => {
     `>;
 
     type fragmentDoc = getDocumentNode<fragment, schema>;
-    type document = getDocumentNode<query, schema, getFragmentsOfDocumentsRec<[fragmentDoc]>>;
+    type document = getDocumentNode<query, schema, getFragmentsOfDocuments<[fragmentDoc]>>;
 
     const result = unsafe_readResult({} as document, {
       todos: [
@@ -592,7 +592,7 @@ describe('unsafe_readResult', () => {
     `>;
 
     type fragmentDoc = getDocumentNode<fragment, schema>;
-    type document = getDocumentNode<query, schema, getFragmentsOfDocumentsRec<[fragmentDoc]>>;
+    type document = getDocumentNode<query, schema, getFragmentsOfDocuments<[fragmentDoc]>>;
 
     const result = unsafe_readResult({} as document, {
       todos: [

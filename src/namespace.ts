@@ -55,7 +55,7 @@ type decorateFragmentDef<
     }
   : void;
 
-type getFragmentsOfDocumentsRec<Documents extends readonly FragmentShape[]> =
+type getFragmentsOfDocuments<Documents extends readonly FragmentShape[]> =
   Documents[number] extends infer Document
     ? Document extends FragmentShape<infer Definition>
       ? {
@@ -119,7 +119,7 @@ interface FragmentShape<
 export type {
   $tada,
   decorateFragmentDef,
-  getFragmentsOfDocumentsRec,
+  getFragmentsOfDocuments,
   omitFragmentRefsRec,
   makeFragmentRef,
   makeUndefinedFragmentRef,
