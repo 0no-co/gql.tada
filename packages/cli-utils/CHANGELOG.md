@@ -1,5 +1,14 @@
 # @gql.tada/cli-utils
 
+## 0.3.1
+
+### Patch Changes
+
+- Add `typescript` to `peerDependencies`
+  Submitted by [@kitten](https://github.com/kitten) (See [#156](https://github.com/0no-co/gql.tada/pull/156))
+- Updated dependencies (See [#156](https://github.com/0no-co/gql.tada/pull/156))
+  - @gql.tada/internal@0.1.1
+
 ## 0.3.0
 
 ### Minor Changes

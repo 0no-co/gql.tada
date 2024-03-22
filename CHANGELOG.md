@@ -1,5 +1,17 @@
 # gql.tada
 
+## 1.4.1
+
+### Patch Changes
+
+- Improve type inference performance of hot-path that computes fragment spreads. The `getFragmentsOfDocuments` type has been refactored and will now have a lower impact on performance
+  Submitted by [@kitten](https://github.com/kitten) (See [#159](https://github.com/0no-co/gql.tada/pull/159))
+- Add `typescript` to `peerDependencies`
+  Submitted by [@kitten](https://github.com/kitten) (See [#156](https://github.com/0no-co/gql.tada/pull/156))
+- Updated dependencies (See [#156](https://github.com/0no-co/gql.tada/pull/156))
+  - @gql.tada/cli-utils@0.3.1
+  - @gql.tada/internal@0.1.1
+
 ## 1.4.0
 
 ### Minor Changes
