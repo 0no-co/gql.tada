@@ -127,6 +127,8 @@ interface DefinitionDecoration<Definition = FragmentDefDecorationLike> {
   [$tada.definition]?: Definition;
 }
 
+interface FragmentShape<Result = any> extends DocumentDecoration<Result>, DefinitionDecoration {}
+
 export type {
   $tada,
   decorateFragmentDef,
@@ -136,4 +138,5 @@ export type {
   makeUndefinedFragmentRef,
   DefinitionDecoration,
   FragmentDefDecorationLike,
+  FragmentShape,
 };
