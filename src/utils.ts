@@ -35,10 +35,7 @@ export type writable<T> = { -readonly [K in keyof T]: T[K] };
  *
  * @see {@link https://github.com/dotansimha/graphql-typed-document-node} for more information.
  */
-export interface DocumentDecoration<
-  Result = { [key: string]: any },
-  Variables = { [key: string]: any },
-> {
+export interface DocumentDecoration<Result = any, Variables = any> {
   /** Type to support `@graphql-typed-document-node/core`
    * @internal
    */
