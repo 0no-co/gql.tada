@@ -1,7 +1,7 @@
 import { describe, it, expectTypeOf } from 'vitest';
 import type { Kind } from '@0no-co/graphql.web';
 
-import type { $tada, decorateFragmentDef, getFragmentsOfDocumentsRec } from '../namespace';
+import type { $tada, decorateFragmentDef, getFragmentsOfDocuments } from '../namespace';
 
 describe('decorateFragmentDef', () => {
   it('creates an annotated fragment definition', () => {
@@ -37,11 +37,18 @@ describe('decorateFragmentDef', () => {
 });
 
 describe('getFragmentsOfDocumentsRec', () => {
-  type actual = getFragmentsOfDocumentsRec<
+  type actual = getFragmentsOfDocuments<
     [
       {
         [$tada.definition]?: {
           fragment: 'TodoFragment';
+          on: 'Todo';
+          masked: true;
+        };
+      },
+      {
+        [$tada.definition]?: {
+          fragment: 'TodoFragment2';
           on: 'Todo';
           masked: true;
         };
@@ -66,6 +73,25 @@ describe('getFragmentsOfDocumentsRec', () => {
       [$tada.ref]: {
         [$tada.fragmentRefs]: {
           TodoFragment: 'Todo';
+        };
+      };
+    };
+    TodoFragment2: {
+      kind: Kind.FRAGMENT_DEFINITION;
+      name: {
+        kind: Kind.NAME;
+        value: 'TodoFragment2';
+      };
+      typeCondition: {
+        kind: Kind.NAMED_TYPE;
+        name: {
+          kind: Kind.NAME;
+          value: 'Todo';
+        };
+      };
+      [$tada.ref]: {
+        [$tada.fragmentRefs]: {
+          TodoFragment2: 'Todo';
         };
       };
     };

@@ -1,6 +1,6 @@
 import type { Kind } from '@0no-co/graphql.web';
 import type { DocumentNodeLike } from './parser';
-import type { DocumentDecoration } from './utils';
+import type { DocumentDecoration, overload } from './utils';
 
 /** Private namespace holding our symbols for markers.
  * @internal
@@ -55,54 +55,38 @@ type decorateFragmentDef<
     }
   : void;
 
-type getFragmentsOfDocumentsRec<Documents, Fragments = {}> = Documents extends readonly [
-  infer Document,
-  ...infer Rest,
-]
-  ? getFragmentsOfDocumentsRec<
-      Rest,
-      (Document extends { [$tada.definition]?: any }
-        ? Exclude<Document[$tada.definition], undefined> extends infer Definition extends
-            FragmentDefDecorationLike
-          ? {
-              [Name in Definition['fragment']]: {
-                kind: Kind.FRAGMENT_DEFINITION;
-                name: {
-                  kind: Kind.NAME;
-                  value: Definition['fragment'];
-                };
-                typeCondition: {
-                  kind: Kind.NAMED_TYPE;
-                  name: {
-                    kind: Kind.NAME;
-                    value: Definition['on'];
-                  };
-                };
-                [$tada.ref]: makeFragmentRef<Document>;
-              };
-            }
-          : {}
-        : {}) &
-        Fragments
-    >
-  : Fragments;
-
-type makeFragmentRef<Document> = Document extends { [$tada.definition]?: infer Definition }
-  ? Definition extends FragmentDefDecorationLike
-    ? Definition['masked'] extends false
-      ? Document extends DocumentDecoration<infer Result, any>
-        ? Result
-        : {
-            [$tada.fragmentRefs]: {
-              [Name in Definition['fragment']]: Definition['on'];
+type getFragmentsOfDocuments<Documents extends readonly FragmentShape[]> = overload<
+  Documents[number] extends infer Document
+    ? Document extends FragmentShape<infer Definition>
+      ? {
+          [P in Definition['fragment']]: {
+            kind: Kind.FRAGMENT_DEFINITION;
+            name: {
+              kind: Kind.NAME;
+              value: Definition['fragment'];
             };
-          }
-      : {
-          [$tada.fragmentRefs]: {
-            [Name in Definition['fragment']]: Definition['on'];
+            typeCondition: {
+              kind: Kind.NAMED_TYPE;
+              name: {
+                kind: Kind.NAME;
+                value: Definition['on'];
+              };
+            };
+            [$tada.ref]: makeFragmentRef<Document>;
           };
         }
+      : never
     : never
+>;
+
+type makeFragmentRef<Document> = Document extends FragmentShape<infer Definition, infer Result>
+  ? Definition['masked'] extends false
+    ? Result
+    : {
+        [$tada.fragmentRefs]: {
+          [Name in Definition['fragment']]: Definition['on'];
+        };
+      }
   : never;
 
 type omitFragmentRefsRec<Data> = Data extends readonly (infer Value)[]
@@ -117,23 +101,30 @@ type omitFragmentRefsRec<Data> = Data extends readonly (infer Value)[]
           }
         : Data;
 
-type makeUndefinedFragmentRef<FragmentName extends string> = {
+interface makeUndefinedFragmentRef<FragmentName extends string> {
   [$tada.fragmentRefs]: {
     [Name in FragmentName]: 'Undefined Fragment';
   };
-};
+}
 
-type makeDefinitionDecoration<Definition = FragmentDefDecorationLike> = {
-  [Key in $tada.definition]?: Definition;
-};
+interface DefinitionDecoration<Definition = FragmentDefDecorationLike> {
+  [$tada.definition]?: Definition;
+}
+
+interface FragmentShape<
+  Definition extends FragmentDefDecorationLike = FragmentDefDecorationLike,
+  Result = any,
+> extends DocumentDecoration<Result>,
+    DefinitionDecoration<Definition> {}
 
 export type {
   $tada,
   decorateFragmentDef,
-  getFragmentsOfDocumentsRec,
+  getFragmentsOfDocuments,
   omitFragmentRefsRec,
-  makeDefinitionDecoration,
   makeFragmentRef,
   makeUndefinedFragmentRef,
+  DefinitionDecoration,
   FragmentDefDecorationLike,
+  FragmentShape,
 };

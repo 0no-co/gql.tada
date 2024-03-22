@@ -8,8 +8,8 @@ import type { getDocumentType } from '../selection';
 import type {
   $tada,
   decorateFragmentDef,
-  getFragmentsOfDocumentsRec,
-  makeDefinitionDecoration,
+  getFragmentsOfDocuments,
+  DefinitionDecoration,
 } from '../namespace';
 
 type schema = addIntrospectionScalars<simpleSchema>;
@@ -235,8 +235,8 @@ test('infers fragment spreads for masked fragment refs', () => {
     query { ...Fields }
   `>;
 
-  type extraFragments = getFragmentsOfDocumentsRec<
-    [makeDefinitionDecoration<decorateFragmentDef<fragment>>]
+  type extraFragments = getFragmentsOfDocuments<
+    [DefinitionDecoration<decorateFragmentDef<fragment>>]
   >;
 
   type actual = getDocumentType<query, schema, extraFragments>;
