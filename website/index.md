@@ -38,6 +38,11 @@ with full editor feedback, auto-completion, and type hints!**
 </div>
 
 <div class="sponsor-item">
+  <img src="https://avatars.githubusercontent.com/u/64281914?s=200&v=4" width="150" alt="WunderGraph"/>
+  <a href="https://wundergraph.com/" rel="noopener noreferrer nofollow sponsored" target="_blank">WunderGraph</a>
+</div>
+
+<div class="sponsor-item">
   <img src="https://avatars.githubusercontent.com/u/51333382?s=200&v=4" width="150" alt="BeatGig"/>
   <a href="https://beatgig.com/" rel="noopener noreferrer nofollow sponsored" target="_blank">BeatGig</a>
 </div>

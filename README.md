@@ -51,8 +51,11 @@ server for TypeScript, the documentation for each API should pop up in your edit
 <table>
   <tr>
    <td align="center"><a href="https://bigcommerce.com/"><img src="https://avatars.githubusercontent.com/u/186342?s=150&v=4" width="150" alt="BigCommerce"/><br />BigCommerce</a></td>
+   <td align="center"><a href="https://wundergraph.com/"><img src="https://avatars.githubusercontent.com/u/64281914?s=200&v=4" width="150" alt="WunderGraph"/><br />WunderGraph</a></td>
   </tr>
 </table>
+
+https://avatars.githubusercontent.com/u/64281914?s=200&v=4
 <table>
   <tr>
    <td align="center"><a href="https://beatgig.com/"><img src="https://avatars.githubusercontent.com/u/51333382?s=200&v=4" width="100" alt="BeatGig"/><br />BeatGig</a></td>
