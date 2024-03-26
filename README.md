@@ -46,6 +46,21 @@ server for TypeScript, the documentation for each API should pop up in your edit
 
 <img width="100%" alt="Code Editor showing GraphQL queries being edited with gql.tada and GraphLSP" src="https://github.com/0no-co/gql.tada/blob/277ce424a747522ef2ca0d398b113f4f285eb595/website/public/demo-code.png?raw=true" />
 
+## 💙 [Sponsors](https://github.com/sponsors/urql-graphql)
+
+<table>
+  <tr>
+   <td align="center"><a href="https://bigcommerce.com/"><img src="https://avatars.githubusercontent.com/u/186342?s=150&v=4" width="150" alt="BigCommerce"/><br />BigCommerce</a></td>
+   <td align="center"><a href="https://wundergraph.com/"><img src="https://avatars.githubusercontent.com/u/64281914?s=200&v=4" width="150" alt="WunderGraph"/><br />WunderGraph</a></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+   <td align="center"><a href="https://beatgig.com/"><img src="https://avatars.githubusercontent.com/u/51333382?s=200&v=4" width="100" alt="BeatGig"/><br />BeatGig</a></td>
+  </tr>
+</table>
+
 ## 📦 [Releases](https://github.com/0no-co/gql.tada/releases)
 
 If you'd like to get involved, [check out our Contributor's guide.](https://github.com/0no-co/gql.tada/blob/main/CONTRIBUTING.md)
