@@ -91,7 +91,7 @@ export default defineConfig({
         items: [
           {
             text: 'Introduction',
-            link: '/',
+            link: '/get-started/',
           },
           {
             text: 'Installation',

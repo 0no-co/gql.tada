@@ -34,10 +34,10 @@ with full editor feedback, auto-completion, and type hints!**
 
 <div class="sponsor-item">
   <img src="https://avatars.githubusercontent.com/u/186342?s=200&v=4" width="150" alt="BigCommerce"/>
-  <a href="https://bigcommerce.com/" rel="noopener noreferrer nofollow sponsored" target="_blank">BigCommerce</a>
+  <a href="https://bigcommerce.com/">BigCommerce</a>
 </div>
 
 <div class="sponsor-item">
   <img src="https://avatars.githubusercontent.com/u/51333382?s=200&v=4" width="150" alt="BeatGig"/>
-  <a href="https://beatgig.com/" rel="noopener noreferrer nofollow sponsored" target="_blank">BeatGig</a>
+  <a href="https://beatgig.com/">BeatGig</a>
 </div>

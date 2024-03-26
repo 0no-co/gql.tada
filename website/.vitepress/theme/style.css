@@ -422,3 +422,23 @@
 :root .VPContent .vp-doc .vp-code-group .tabs label {
   line-height: 2.7rem;
 }
+
+:root .VPContent .sponsor-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background: var(--vp-c-bg-soft);
+  border-radius: 8px;
+  gap: 2em;
+  padding: 1em 2em;
+}
+
+:root .VPContent .sponsor-item > img {
+  width: 3rem;
+  height: 3rem;
+}
+
+:root .VPContent .sponsor-item > a {
+  font-size: 1.4em;
+  color: var(--vp-c-text-1);
+}
