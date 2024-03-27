@@ -1,15 +1,14 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import type { GraphQLSchema, IntrospectionQuery } from 'graphql';
+import type { IntrospectionQuery } from 'graphql';
+import type { SchemaLoader } from '@gql.tada/internal';
 
 import {
-  buildClientSchema,
-  buildSchema,
-  getIntrospectionQuery,
-  introspectionFromSchema,
-} from 'graphql';
-
-import { minifyIntrospection, outputIntrospectionFile } from '@gql.tada/internal';
+  minifyIntrospection,
+  outputIntrospectionFile,
+  loadFromSDL,
+  loadFromURL,
+} from '@gql.tada/internal';
 
 /**
  * This function mimics the behavior of the LSP, this so we can ensure
@@ -24,30 +23,29 @@ export async function ensureTadaIntrospection(
   base: string = process.cwd(),
   shouldPreprocess = true
 ) {
-  const writeTada = async () => {
-    const schema = await loadSchema(base, schemaLocation);
-    if (!schema) {
-      console.error('Something went wrong while trying to load the schema.');
-      return;
-    }
+  const loader = makeLoader(base, schemaLocation);
 
-    const introspection = minifyIntrospection(
-      introspectionFromSchema(schema, {
-        descriptions: false,
-      })
-    );
+  let introspection: IntrospectionQuery | null;
+  try {
+    introspection = await loader.loadIntrospection();
+  } catch (error) {
+    console.error('Something went wrong while trying to load the schema.', error);
+    return;
+  }
 
-    const contents = await outputIntrospectionFile(introspection, {
+  if (!introspection) {
+    console.error('Could not retrieve introspection schema.');
+    return;
+  }
+
+  try {
+    const contents = outputIntrospectionFile(minifyIntrospection(introspection), {
       fileType: outputLocation,
       shouldPreprocess,
     });
 
     const resolvedOutputLocation = path.resolve(base, outputLocation);
     await fs.writeFile(resolvedOutputLocation, contents);
-  };
-
-  try {
-    await writeTada();
   } catch (error) {
     console.error('Something went wrong while writing the introspection file', error);
   }
@@ -57,74 +55,38 @@ export type SchemaOrigin =
   | string
   | {
       url: string;
-      headers: Record<string, unknown>;
+      headers: HeadersInit;
     };
 
-export const loadSchema = async (
-  root: string,
-  schema: SchemaOrigin
-): Promise<GraphQLSchema | undefined> => {
-  let url: URL | undefined;
-  let config: { headers: Record<string, unknown> } | undefined;
-
-  try {
-    if (typeof schema === 'object') {
-      url = new URL(schema.url);
-      config = { headers: schema.headers };
-    } else {
-      url = new URL(schema);
+const getURLConfig = (origin: SchemaOrigin) => {
+  if (typeof origin === 'string') {
+    try {
+      return { url: new URL(origin) };
+    } catch (_error) {
+      return null;
     }
-  } catch (e) {}
-
-  if (url) {
-    const response = await fetch(url!.toString(), {
-      method: 'POST',
-      headers: config
-        ? {
-            ...(config.headers || {}),
-            'Content-Type': 'application/json',
-          }
-        : {
-            'Content-Type': 'application/json',
-          },
-      body: JSON.stringify({
-        query: getIntrospectionQuery({
-          descriptions: true,
-          schemaDescription: false,
-          inputValueDeprecation: false,
-          directiveIsRepeatable: false,
-          specifiedByUrl: false,
-        }),
-      }),
-    });
-
-    if (response.ok) {
-      const result = await response.json();
-      if (result.data) {
-        const introspection = (result as { data: IntrospectionQuery }).data;
-        try {
-          return buildClientSchema(introspection);
-        } catch (e: any) {
-          console.error(`Got schema error for ${e.message}`);
-        }
-      } else {
-        console.error(`Got invalid response ${JSON.stringify(result)}`);
-      }
-    } else {
-      console.error(`Got invalid response ${await response.text()}`);
+  } else if (typeof origin.url === 'string') {
+    try {
+      return {
+        url: new URL(origin.url),
+        headers: origin.headers,
+      };
+    } catch (error) {
+      throw new Error(`Input URL "${origin.url}" is invalid`);
     }
-  } else if (typeof schema === 'string') {
-    const isJson = path.extname(schema) === '.json';
-    const resolvedPath = path.resolve(root, schema);
-
-    const contents = await fs.readFile(resolvedPath, 'utf-8');
-
-    const schemaOrIntrospection = isJson
-      ? (JSON.parse(contents) as IntrospectionQuery)
-      : buildSchema(contents);
-
-    return '__schema' in schemaOrIntrospection
-      ? buildClientSchema(schemaOrIntrospection)
-      : schemaOrIntrospection;
+  } else {
+    return null;
   }
 };
+
+export function makeLoader(root: string, origin: SchemaOrigin): SchemaLoader {
+  const urlOrigin = getURLConfig(origin);
+  if (urlOrigin) {
+    return loadFromURL(urlOrigin);
+  } else if (typeof origin === 'string') {
+    const file = path.resolve(root, origin);
+    return loadFromSDL({ file, assumeValid: true });
+  } else {
+    throw new Error(`Configuration contains an invalid "schema" option`);
+  }
+}
