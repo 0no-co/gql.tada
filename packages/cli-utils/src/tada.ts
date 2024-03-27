@@ -10,6 +10,8 @@ import {
   loadFromURL,
 } from '@gql.tada/internal';
 
+import type { SchemaOrigin } from './lsp';
+
 /**
  * This function mimics the behavior of the LSP, this so we can ensure
  * that gql.tada will work in any environment. The JetBrains IDE's do not
@@ -50,13 +52,6 @@ export async function ensureTadaIntrospection(
     console.error('Something went wrong while writing the introspection file', error);
   }
 }
-
-export type SchemaOrigin =
-  | string
-  | {
-      url: string;
-      headers: HeadersInit;
-    };
 
 const getURLConfig = (origin: SchemaOrigin) => {
   if (typeof origin === 'string') {

@@ -8,7 +8,7 @@ import type { TsConfigJson } from 'type-fest';
 import { resolveTypeScriptRootDir } from '@gql.tada/internal';
 
 import type { GraphQLSPConfig } from './lsp';
-import { hasGraphQLSP } from './lsp';
+import { getGraphQLSPConfig } from './lsp';
 import { ensureTadaIntrospection } from './tada';
 
 interface GenerateSchemaOptions {
@@ -97,20 +97,15 @@ export async function generateSchema(
       return;
     }
 
-    if (!hasGraphQLSP(tsConfig)) {
+    const config = getGraphQLSPConfig(tsConfig);
+    if (!config) {
       console.error(`Could not find a "@0no-co/graphqlsp" plugin in your tsconfig.`);
       return;
-    }
-
-    const foundPlugin = tsConfig.compilerOptions!.plugins!.find(
-      (plugin) => plugin.name === '@0no-co/graphqlsp'
-    ) as GraphQLSPConfig;
-
-    destination = foundPlugin.schema;
-
-    if (!foundPlugin.schema.endsWith('.graphql')) {
-      console.error(`Found "${foundPlugin.schema}" which is not a path to a GraphQL Schema.`);
+    } else if (typeof config.schema !== 'string' || !config.schema.endsWith('.graphql')) {
+      console.error(`Found "${config.schema}" which is not a path to a .graphql SDL file.`);
       return;
+    } else {
+      destination = config.schema;
     }
   }
 
@@ -138,17 +133,15 @@ export async function generateTadaTypes(shouldPreprocess = false, cwd: string = 
     return;
   }
 
-  if (!hasGraphQLSP(tsConfig)) {
+  const config = getGraphQLSPConfig(tsConfig);
+  if (!config) {
+    console.error(`Could not find a "@0no-co/graphqlsp" plugin in your tsconfig.`);
     return;
   }
 
-  const foundPlugin = tsConfig.compilerOptions!.plugins!.find(
-    (plugin) => plugin.name === '@0no-co/graphqlsp' || plugin.name === 'gql.tda/cli'
-  ) as GraphQLSPConfig;
-
-  await ensureTadaIntrospection(
-    foundPlugin.schema,
-    foundPlugin.tadaOutputLocation!,
+  return await ensureTadaIntrospection(
+    config.schema,
+    config.tadaOutputLocation,
     cwd,
     shouldPreprocess
   );
