@@ -66,6 +66,7 @@ export async function generateSchema(
     }
   }
 
+  // TODO: Should the output be relative to the relevant `tsconfig.json` file?
   await fs.writeFile(path.resolve(cwd, destination), printSchema(schema), 'utf-8');
 }
 
