@@ -71,15 +71,19 @@ export async function generateSchema(
 
 export async function generateTadaTypes(shouldPreprocess = false, cwd: string = process.cwd()) {
   const tsconfigpath = path.resolve(cwd, 'tsconfig.json');
-  const hasTsConfig = existsSync(tsconfigpath);
-  if (!hasTsConfig) {
-    console.error('Missing tsconfig.json');
-    return;
-  }
 
   // TODO: Remove redundant read and move tsconfig.json handling to internal package
   const root = (await resolveTypeScriptRootDir(tsconfigpath)) || cwd;
-  const tsconfigContents = await fs.readFile(path.resolve(root, 'tsconfig.json'), 'utf-8');
+
+  let tsconfigContents: string;
+  try {
+    const file = path.resolve(root, 'tsconfig.json');
+    tsconfigContents = await fs.readFile(file, 'utf-8');
+  } catch (error) {
+    console.error('Failed to read tsconfig.json in current working directory.', error);
+    return;
+  }
+
   let tsConfig: TsConfigJson;
   try {
     tsConfig = parse(tsconfigContents) as TsConfigJson;
