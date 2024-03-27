@@ -41,8 +41,10 @@
     "prepublishOnly": "run-s clean build"
   },
   "devDependencies": {
-    "@urql/introspection": "^1.0.3",
     "@types/node": "^20.11.0",
+    "@urql/core": "^4.3.0",
+    "@urql/exchange-retry": "^1.2.1",
+    "@urql/introspection": "^1.0.3",
     "json5": "^2.2.3",
     "rollup": "^4.9.4",
     "sade": "^1.8.1",
@@ -50,6 +52,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "@0no-co/graphql.web": "^1.0.4",
     "graphql": "^16.8.1"
   },
   "peerDependencies": {

@@ -1,15 +1,15 @@
 import sade from 'sade';
-import { promises as fs, existsSync, readFileSync } from 'node:fs';
-import path, { resolve } from 'node:path';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { parse } from 'json5';
-import type { IntrospectionQuery } from 'graphql';
-import { buildClientSchema, getIntrospectionQuery, printSchema } from 'graphql';
+import { printSchema } from 'graphql';
+
+import type { GraphQLSchema } from 'graphql';
 import type { TsConfigJson } from 'type-fest';
 import { resolveTypeScriptRootDir } from '@gql.tada/internal';
 
-import type { GraphQLSPConfig } from './lsp';
-import { hasGraphQLSP } from './lsp';
-import { ensureTadaIntrospection } from './tada';
+import { getGraphQLSPConfig } from './lsp';
+import { ensureTadaIntrospection, makeLoader } from './tada';
 
 interface GenerateSchemaOptions {
   headers?: Record<string, string>;
@@ -21,74 +21,31 @@ export async function generateSchema(
   target: string,
   { headers, output, cwd = process.cwd() }: GenerateSchemaOptions
 ) {
-  let url: URL | undefined;
+  const loader = makeLoader(cwd, headers ? { url: target, headers } : target);
 
+  let schema: GraphQLSchema | null;
   try {
-    url = new URL(target);
-  } catch (e) {}
-
-  let introspection: IntrospectionQuery;
-  if (url) {
-    const response = await fetch(url!.toString(), {
-      method: 'POST',
-      headers: {
-        ...headers,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query: getIntrospectionQuery({
-          descriptions: true,
-          schemaDescription: false,
-          inputValueDeprecation: false,
-          directiveIsRepeatable: false,
-          specifiedByUrl: false,
-        }),
-      }),
-    });
-
-    if (response.ok) {
-      const text = await response.text();
-
-      try {
-        const result = JSON.parse(text);
-        if (result.data) {
-          introspection = (result as { data: IntrospectionQuery }).data;
-        } else {
-          console.error(`Got invalid response ${JSON.stringify(result)}`);
-          return;
-        }
-      } catch (e) {
-        console.error(`Got invalid JSON ${text}`);
-        return;
-      }
-    } else {
-      console.error(`Got invalid response ${await response.text()}`);
-      return;
-    }
-  } else {
-    const path = resolve(cwd, target);
-    const fileContents = await fs.readFile(path, 'utf-8');
-
-    try {
-      introspection = JSON.parse(fileContents);
-    } catch (e) {
-      console.error(`Got invalid JSON ${fileContents}`);
-      return;
-    }
+    schema = await loader.loadSchema();
+  } catch (error) {
+    console.error('Something went wrong while trying to load the schema.', error);
+    return;
   }
 
-  const schema = buildClientSchema(introspection!);
+  if (!schema) {
+    console.error('Could not load the schema.');
+    return;
+  }
 
   let destination = output;
   if (!destination) {
-    const tsconfigpath = path.resolve(cwd, 'tsconfig.json');
-    const hasTsConfig = existsSync(tsconfigpath);
-    if (!hasTsConfig) {
-      console.error(`Could not find a tsconfig in the working-directory.`);
+    let tsconfigContents: string;
+    try {
+      tsconfigContents = await fs.readFile('tsconfig.json', 'utf-8');
+    } catch (error) {
+      console.error('Failed to read tsconfig.json in current working directory.', error);
       return;
     }
 
-    const tsconfigContents = await fs.readFile(tsconfigpath, 'utf-8');
     let tsConfig: TsConfigJson;
     try {
       tsConfig = parse(tsconfigContents) as TsConfigJson;
@@ -97,39 +54,37 @@ export async function generateSchema(
       return;
     }
 
-    if (!hasGraphQLSP(tsConfig)) {
+    const config = getGraphQLSPConfig(tsConfig);
+    if (!config) {
       console.error(`Could not find a "@0no-co/graphqlsp" plugin in your tsconfig.`);
       return;
-    }
-
-    const foundPlugin = tsConfig.compilerOptions!.plugins!.find(
-      (plugin) => plugin.name === '@0no-co/graphqlsp'
-    ) as GraphQLSPConfig;
-
-    destination = foundPlugin.schema;
-
-    if (!foundPlugin.schema.endsWith('.graphql')) {
-      console.error(`Found "${foundPlugin.schema}" which is not a path to a GraphQL Schema.`);
+    } else if (typeof config.schema !== 'string' || !config.schema.endsWith('.graphql')) {
+      console.error(`Found "${config.schema}" which is not a path to a .graphql SDL file.`);
       return;
+    } else {
+      destination = config.schema;
     }
   }
 
-  await fs.writeFile(resolve(cwd, destination), printSchema(schema), 'utf-8');
+  // TODO: Should the output be relative to the relevant `tsconfig.json` file?
+  await fs.writeFile(path.resolve(cwd, destination), printSchema(schema), 'utf-8');
 }
 
 export async function generateTadaTypes(shouldPreprocess = false, cwd: string = process.cwd()) {
   const tsconfigpath = path.resolve(cwd, 'tsconfig.json');
-  const hasTsConfig = existsSync(tsconfigpath);
-  if (!hasTsConfig) {
-    console.error('Missing tsconfig.json');
+
+  // TODO: Remove redundant read and move tsconfig.json handling to internal package
+  const root = (await resolveTypeScriptRootDir(tsconfigpath)) || cwd;
+
+  let tsconfigContents: string;
+  try {
+    const file = path.resolve(root, 'tsconfig.json');
+    tsconfigContents = await fs.readFile(file, 'utf-8');
+  } catch (error) {
+    console.error('Failed to read tsconfig.json in current working directory.', error);
     return;
   }
 
-  // TODO: Remove redundant read and move tsconfig.json handling to internal package
-  const root =
-    resolveTypeScriptRootDir(readFileSync as (path: string) => string | undefined, tsconfigpath) ||
-    cwd;
-  const tsconfigContents = await fs.readFile(path.resolve(root, 'tsconfig.json'), 'utf-8');
   let tsConfig: TsConfigJson;
   try {
     tsConfig = parse(tsconfigContents) as TsConfigJson;
@@ -138,17 +93,15 @@ export async function generateTadaTypes(shouldPreprocess = false, cwd: string = 
     return;
   }
 
-  if (!hasGraphQLSP(tsConfig)) {
+  const config = getGraphQLSPConfig(tsConfig);
+  if (!config) {
+    console.error(`Could not find a "@0no-co/graphqlsp" plugin in your tsconfig.`);
     return;
   }
 
-  const foundPlugin = tsConfig.compilerOptions!.plugins!.find(
-    (plugin) => plugin.name === '@0no-co/graphqlsp' || plugin.name === 'gql.tda/cli'
-  ) as GraphQLSPConfig;
-
-  await ensureTadaIntrospection(
-    foundPlugin.schema,
-    foundPlugin.tadaOutputLocation!,
+  return await ensureTadaIntrospection(
+    config.schema,
+    config.tadaOutputLocation,
     cwd,
     shouldPreprocess
   );
@@ -185,7 +138,7 @@ async function main() {
       }
 
       return generateSchema(target, {
-        headers: parsedHeaders,
+        headers: Object.keys(parsedHeaders).length ? parsedHeaders : undefined,
         output: options.output,
       });
     })
