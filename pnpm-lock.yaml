@@ -178,6 +178,9 @@ importers:
 
   packages/internal:
     dependencies:
+      '@0no-co/graphql.web':
+        specifier: ^1.0.4
+        version: 1.0.4(graphql@16.8.1)
       graphql:
         specifier: ^16.8.1
         version: 16.8.1
@@ -185,6 +188,12 @@ importers:
       '@types/node':
         specifier: ^20.11.0
         version: 20.11.0
+      '@urql/core':
+        specifier: ^4.3.0
+        version: 4.3.0(graphql@16.8.1)
+      '@urql/exchange-retry':
+        specifier: ^1.2.1
+        version: 1.2.1(graphql@16.8.1)
       '@urql/introspection':
         specifier: ^1.0.3
         version: 1.0.3(graphql@16.8.1)
@@ -264,7 +273,6 @@ packages:
         optional: true
     dependencies:
       graphql: 16.8.1
-    dev: false
 
   /@0no-co/graphqlsp@1.5.0:
     resolution: {integrity: sha512-NGMUwzj7m6DfIqudZxfTfUEmzKR2n9xphPssCKqkGsMEKe9qIzrNqLpXXwzXTWrGBS5FBELW+TXGUyTa0v1LAw==}
@@ -2133,7 +2141,15 @@ packages:
       wonka: 6.3.4
     transitivePeerDependencies:
       - graphql
-    dev: false
+
+  /@urql/exchange-retry@1.2.1(graphql@16.8.1):
+    resolution: {integrity: sha512-+BP73EJA0zJpGbdU1V6l2v8hb2m7/9dMHnF85ZjkaG6INkq4O7Tu9+jfC2wYxt2cajRxgxOoAL3iEJ5Xeerzyg==}
+    dependencies:
+      '@urql/core': 4.3.0(graphql@16.8.1)
+      wonka: 6.3.4
+    transitivePeerDependencies:
+      - graphql
+    dev: true
 
   /@urql/introspection@1.0.3(graphql@16.8.1):
     resolution: {integrity: sha512-5zgnfUDV10c3qudqYvfZ/rOtWVB2QvqanmoDMttqpt+TCCPkSUZdb2qcLCEB6DL7ph8mQRTZhXI29J57nTnqKg==}
@@ -6404,7 +6420,6 @@ packages:
 
   /wonka@6.3.4:
     resolution: {integrity: sha512-CjpbqNtBGNAeyNS/9W6q3kSkKE52+FjIj7AkFlLr11s/VWGUu6a2CdYSdGxocIhIVjaW/zchesBQUKPVU69Cqg==}
-    dev: false
 
   /wrap-ansi@6.2.0:
     resolution: {integrity: sha512-r6lPcBGxZXlIcymEu7InxDMhdW0KDxpLgoFLcguasxCaJ/SOIZwINatK9KY/tf+ZrlywOKU0UDj3ATXUBfxJXA==}
