@@ -82,7 +82,10 @@ export default defineConfig({
     search: {
       provider: 'local'
     },
-    nav: [],
+
+    nav: [
+      { text: 'Documentation', link: '/get-started/' },
+    ],
 
     sidebar: [
       {
