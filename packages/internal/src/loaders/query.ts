@@ -37,7 +37,7 @@ export const toSupportedFeatures = (data: IntrospectSupportQueryData): Supported
 let _introspectionQuery: DocumentNode | undefined;
 let _previousSupport: SupportedFeatures | undefined;
 /** Builds an introspection query as AST */
-export const makeIntrospectionQuery = (support: SupportedFeatures) => {
+export const makeIntrospectionQuery = (support: SupportedFeatures): DocumentNode => {
   if (_introspectionQuery && _previousSupport === support) {
     return _introspectionQuery;
   } else {
