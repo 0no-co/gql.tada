@@ -1,15 +1,15 @@
 import sade from 'sade';
-import { promises as fs, existsSync, readFileSync } from 'node:fs';
-import path, { resolve } from 'node:path';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { parse } from 'json5';
-import type { IntrospectionQuery } from 'graphql';
-import { buildClientSchema, getIntrospectionQuery, printSchema } from 'graphql';
+import { printSchema } from 'graphql';
+
+import type { GraphQLSchema } from 'graphql';
 import type { TsConfigJson } from 'type-fest';
 import { resolveTypeScriptRootDir } from '@gql.tada/internal';
 
-import type { GraphQLSPConfig } from './lsp';
 import { getGraphQLSPConfig } from './lsp';
-import { ensureTadaIntrospection } from './tada';
+import { ensureTadaIntrospection, makeLoader } from './tada';
 
 interface GenerateSchemaOptions {
   headers?: Record<string, string>;
@@ -21,74 +21,31 @@ export async function generateSchema(
   target: string,
   { headers, output, cwd = process.cwd() }: GenerateSchemaOptions
 ) {
-  let url: URL | undefined;
+  const loader = makeLoader(cwd, headers ? { url: target, headers } : target);
 
+  let schema: GraphQLSchema | null;
   try {
-    url = new URL(target);
-  } catch (e) {}
-
-  let introspection: IntrospectionQuery;
-  if (url) {
-    const response = await fetch(url!.toString(), {
-      method: 'POST',
-      headers: {
-        ...headers,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query: getIntrospectionQuery({
-          descriptions: true,
-          schemaDescription: false,
-          inputValueDeprecation: false,
-          directiveIsRepeatable: false,
-          specifiedByUrl: false,
-        }),
-      }),
-    });
-
-    if (response.ok) {
-      const text = await response.text();
-
-      try {
-        const result = JSON.parse(text);
-        if (result.data) {
-          introspection = (result as { data: IntrospectionQuery }).data;
-        } else {
-          console.error(`Got invalid response ${JSON.stringify(result)}`);
-          return;
-        }
-      } catch (e) {
-        console.error(`Got invalid JSON ${text}`);
-        return;
-      }
-    } else {
-      console.error(`Got invalid response ${await response.text()}`);
-      return;
-    }
-  } else {
-    const path = resolve(cwd, target);
-    const fileContents = await fs.readFile(path, 'utf-8');
-
-    try {
-      introspection = JSON.parse(fileContents);
-    } catch (e) {
-      console.error(`Got invalid JSON ${fileContents}`);
-      return;
-    }
+    schema = await loader.loadSchema();
+  } catch (error) {
+    console.error('Something went wrong while trying to load the schema.', error);
+    return;
   }
 
-  const schema = buildClientSchema(introspection!);
+  if (!schema) {
+    console.error('Could not load the schema.');
+    return;
+  }
 
   let destination = output;
   if (!destination) {
-    const tsconfigpath = path.resolve(cwd, 'tsconfig.json');
-    const hasTsConfig = existsSync(tsconfigpath);
-    if (!hasTsConfig) {
-      console.error(`Could not find a tsconfig in the working-directory.`);
+    let tsconfigContents: string;
+    try {
+      tsconfigContents = await fs.readFile('tsconfig.json', 'utf-8');
+    } catch (error) {
+      console.error('Failed to read tsconfig.json in current working directory.', error);
       return;
     }
 
-    const tsconfigContents = await fs.readFile(tsconfigpath, 'utf-8');
     let tsConfig: TsConfigJson;
     try {
       tsConfig = parse(tsconfigContents) as TsConfigJson;
@@ -109,7 +66,7 @@ export async function generateSchema(
     }
   }
 
-  await fs.writeFile(resolve(cwd, destination), printSchema(schema), 'utf-8');
+  await fs.writeFile(path.resolve(cwd, destination), printSchema(schema), 'utf-8');
 }
 
 export async function generateTadaTypes(shouldPreprocess = false, cwd: string = process.cwd()) {
@@ -121,9 +78,7 @@ export async function generateTadaTypes(shouldPreprocess = false, cwd: string = 
   }
 
   // TODO: Remove redundant read and move tsconfig.json handling to internal package
-  const root =
-    resolveTypeScriptRootDir(readFileSync as (path: string) => string | undefined, tsconfigpath) ||
-    cwd;
+  const root = (await resolveTypeScriptRootDir(tsconfigpath)) || cwd;
   const tsconfigContents = await fs.readFile(path.resolve(root, 'tsconfig.json'), 'utf-8');
   let tsConfig: TsConfigJson;
   try {

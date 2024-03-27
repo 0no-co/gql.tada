@@ -1,13 +1,13 @@
 import path from 'path';
 import JSON5 from 'json5';
+import fs from 'node:fs/promises';
 import type { TsConfigJson } from 'type-fest';
 
-export const resolveTypeScriptRootDir = (
-  readFile: (path: string) => string | undefined,
+export const resolveTypeScriptRootDir = async (
   tsconfigPath: string
-): string | undefined => {
-  const tsconfigContents = readFile(tsconfigPath);
-  const parsed = JSON5.parse<TsConfigJson>(tsconfigContents!);
+): Promise<string | undefined> => {
+  const tsconfigContents = await fs.readFile(tsconfigPath, { encoding: 'utf8' });
+  const parsed = JSON5.parse<TsConfigJson>(tsconfigContents);
 
   if (
     parsed.compilerOptions &&
@@ -22,12 +22,12 @@ export const resolveTypeScriptRootDir = (
       const resolved = require.resolve(p, {
         paths: [path.dirname(tsconfigPath)],
       });
-      return resolveTypeScriptRootDir(readFile, resolved);
+      return resolveTypeScriptRootDir(resolved);
     });
   } else if (parsed.extends) {
     const resolved = require.resolve(parsed.extends, {
       paths: [path.dirname(tsconfigPath)],
     });
-    return resolveTypeScriptRootDir(readFile, resolved);
+    return resolveTypeScriptRootDir(resolved);
   }
 };
