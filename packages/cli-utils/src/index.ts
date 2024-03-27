@@ -137,7 +137,7 @@ async function main() {
       }
 
       return generateSchema(target, {
-        headers: parsedHeaders,
+        headers: Object.keys(parsedHeaders).length ? parsedHeaders : undefined,
         output: options.output,
       });
     })
