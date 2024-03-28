@@ -72,7 +72,11 @@ export function loadFromURL(config: LoadFromURLConfig): SchemaLoader {
   };
 
   return {
-    async loadIntrospection() {
+    async loadIntrospection(reload?: boolean) {
+      if (!reload && introspection) {
+        return introspection;
+      }
+
       if (!supportedFeatures) {
         const query = makeIntrospectSupportQuery();
         const result = await client.query<IntrospectSupportQueryData>(query, {});
@@ -104,8 +108,8 @@ export function loadFromURL(config: LoadFromURLConfig): SchemaLoader {
       return introspect(supportedFeatures);
     },
 
-    async loadSchema() {
-      if (schema) {
+    async loadSchema(reload?: boolean) {
+      if (!reload && schema) {
         return schema;
       } else {
         const introspection = await this.loadIntrospection();

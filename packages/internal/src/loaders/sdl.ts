@@ -67,11 +67,15 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
   };
 
   return {
-    async loadIntrospection() {
-      return introspect();
+    async loadIntrospection(reload?: boolean) {
+      if (!reload && introspection) {
+        return introspection;
+      } else {
+        return introspect();
+      }
     },
-    async loadSchema() {
-      if (schema) {
+    async loadSchema(reload?: boolean) {
+      if (!reload && schema) {
         return schema;
       } else {
         await this.loadIntrospection();
