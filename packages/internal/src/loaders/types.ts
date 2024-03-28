@@ -16,3 +16,10 @@ export interface SchemaLoader {
   /** @internal */
   loadSchema(): Promise<GraphQLSchema | null>;
 }
+
+export type SchemaOrigin =
+  | string
+  | {
+      url: string;
+      headers?: HeadersInit;
+    };
