@@ -1,13 +1,12 @@
-import type { IntrospectionQuery, GraphQLSchema } from 'graphql';
+import type { IntrospectionQuery } from 'graphql';
 import { buildClientSchema } from 'graphql';
 import { Client, fetchExchange } from '@urql/core';
 import { retryExchange } from '@urql/exchange-retry';
 
+import { makeIntrospectionQuery, makeIntrospectSupportQuery, toSupportedFeatures } from './query';
 import type { SupportedFeatures, IntrospectSupportQueryData } from './query';
 
-import { makeIntrospectionQuery, makeIntrospectSupportQuery, toSupportedFeatures } from './query';
-
-import type { SchemaLoader } from './types';
+import type { SchemaLoader, SchemaLoaderResult, OnSchemaUpdate } from './types';
 
 interface LoadFromURLConfig {
   url: URL | string;
@@ -29,12 +28,11 @@ const NO_SUPPORTED_FEATURES: SupportedFeatures = {
 
 export function loadFromURL(config: LoadFromURLConfig): SchemaLoader {
   const interval = config.interval || 60_000;
-  const subscriptions = new Set<() => void>();
+  const subscriptions = new Set<OnSchemaUpdate>();
 
   let timeoutID: NodeJS.Timeout | null = null;
   let supportedFeatures: SupportedFeatures | null = null;
-  let introspection: IntrospectionQuery | null = null;
-  let schema: GraphQLSchema | null = null;
+  let result: SchemaLoaderResult | null = null;
 
   const client = new Client({
     url: `${config.url}`,
@@ -44,80 +42,73 @@ export function loadFromURL(config: LoadFromURLConfig): SchemaLoader {
 
   const scheduleUpdate = () => {
     if (subscriptions.size && !timeoutID) {
-      timeoutID = setTimeout(() => {
-        for (const subscriber of subscriptions) subscriber();
+      timeoutID = setTimeout(async () => {
         timeoutID = null;
+        try {
+          result = await load();
+        } catch (_error) {
+          result = null;
+        }
+        if (result) for (const subscriber of subscriptions) subscriber(result);
       }, interval);
     }
   };
 
-  const introspect = async (support: SupportedFeatures): Promise<IntrospectionQuery | null> => {
+  const introspect = async (support: SupportedFeatures): Promise<typeof result> => {
     const query = makeIntrospectionQuery(support);
-    const result = await client.query<IntrospectionQuery>(query, {});
-
+    const introspectionResult = await client.query<IntrospectionQuery>(query, {});
     try {
-      if (result.error && result.error.graphQLErrors.length > 0) {
-        schema = null;
-        return (introspection = null);
-      } else if (result.error) {
-        schema = null;
-        throw result.error;
+      if (introspectionResult.error) {
+        throw introspectionResult.error;
+      } else if (introspectionResult.data) {
+        const introspection = introspectionResult.data;
+        return {
+          introspection,
+          schema: buildClientSchema(introspection, { assumeValid: true }),
+        };
       } else {
-        schema = null;
-        return (introspection = result.data || null);
+        return null;
       }
     } finally {
       scheduleUpdate();
     }
   };
 
-  return {
-    async loadIntrospection(reload?: boolean) {
-      if (!reload && introspection) {
-        return introspection;
-      }
-
-      if (!supportedFeatures) {
-        const query = makeIntrospectSupportQuery();
-        const result = await client.query<IntrospectSupportQueryData>(query, {});
-        if (result.error && result.error.graphQLErrors.length > 0) {
-          // If we failed to determine support, we try to activate all introspection features
-          introspection = await introspect(ALL_SUPPORTED_FEATURES);
-          if (introspection) {
-            // If we succeed, we can return the introspection and enable all introspection features
-            supportedFeatures = ALL_SUPPORTED_FEATURES;
-            return introspection;
-          } else {
-            // Otherwise, we assume no extra introspection features are supported,
-            // since all introspection spec additions were made in a single spec revision
-            supportedFeatures = NO_SUPPORTED_FEATURES;
-          }
-        } else if (result.data && !result.error) {
-          // Succeeding the support query, we get the supported features
-          supportedFeatures = toSupportedFeatures(result.data);
-        } else if (result.error) {
-          // On misc. error, we rethrow and reset supported features
-          supportedFeatures = null;
-          throw result.error;
+  const load = async (): Promise<typeof result> => {
+    if (!supportedFeatures) {
+      const query = makeIntrospectSupportQuery();
+      const supportResult = await client.query<IntrospectSupportQueryData>(query, {});
+      if (supportResult.error && supportResult.error.graphQLErrors.length > 0) {
+        // If we failed to determine support, we try to activate all introspection features
+        const _result = await introspect(ALL_SUPPORTED_FEATURES);
+        if (_result) {
+          // If we succeed, we can return the introspection and enable all introspection features
+          supportedFeatures = ALL_SUPPORTED_FEATURES;
+          return _result;
         } else {
-          // Otherwise we assume no features are supported
+          // Otherwise, we assume no extra introspection features are supported,
+          // since all introspection spec additions were made in a single spec revision
           supportedFeatures = NO_SUPPORTED_FEATURES;
         }
-      }
-
-      return introspect(supportedFeatures);
-    },
-
-    async loadSchema(reload?: boolean) {
-      if (!reload && schema) {
-        return schema;
+      } else if (supportResult.data && !supportResult.error) {
+        // Succeeding the support query, we get the supported features
+        supportedFeatures = toSupportedFeatures(supportResult.data);
+      } else if (supportResult.error) {
+        // On misc. error, we rethrow and reset supported features
+        supportedFeatures = null;
+        throw supportResult.error;
       } else {
-        const introspection = await this.loadIntrospection();
-        schema = introspection && buildClientSchema(introspection, { assumeValid: true });
-        return schema;
+        // Otherwise we assume no features are supported
+        supportedFeatures = NO_SUPPORTED_FEATURES;
       }
-    },
+    }
+    return introspect(supportedFeatures);
+  };
 
+  return {
+    async load(reload?: boolean) {
+      return reload || !result ? (result = await load()) : result;
+    },
     notifyOnUpdate(onUpdate) {
       subscriptions.add(onUpdate);
       return () => {
@@ -127,6 +118,14 @@ export function loadFromURL(config: LoadFromURLConfig): SchemaLoader {
           timeoutID = null;
         }
       };
+    },
+    async loadIntrospection() {
+      const result = await this.load();
+      return result && result.introspection;
+    },
+    async loadSchema() {
+      const result = await this.load();
+      return result && result.schema;
     },
   };
 }
