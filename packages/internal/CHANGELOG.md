@@ -1,5 +1,12 @@
 # @gql.tada/internal
 
+## 0.1.2
+
+### Patch Changes
+
+- Add `loadFromSDL` and `loadFromURL` schema loader utilities
+  Submitted by [@kitten](https://github.com/kitten) (See [#163](https://github.com/0no-co/gql.tada/pull/163))
+
 ## 0.1.1
 
 ### Patch Changes
