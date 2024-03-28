@@ -6,10 +6,10 @@ import { printSchema } from 'graphql';
 
 import type { GraphQLSchema } from 'graphql';
 import type { TsConfigJson } from 'type-fest';
-import { resolveTypeScriptRootDir } from '@gql.tada/internal';
+import { resolveTypeScriptRootDir, load } from '@gql.tada/internal';
 
 import { getGraphQLSPConfig } from './lsp';
-import { ensureTadaIntrospection, makeLoader } from './tada';
+import { ensureTadaIntrospection } from './tada';
 
 interface GenerateSchemaOptions {
   headers?: Record<string, string>;
@@ -21,7 +21,8 @@ export async function generateSchema(
   target: string,
   { headers, output, cwd = process.cwd() }: GenerateSchemaOptions
 ) {
-  const loader = makeLoader(cwd, headers ? { url: target, headers } : target);
+  const origin = headers ? { url: target, headers } : target;
+  const loader = load({ origin, rootPath: cwd });
 
   let schema: GraphQLSchema | null;
   try {
