@@ -1,7 +1,6 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import type { IntrospectionQuery } from 'graphql';
-import type { SchemaLoader } from '@gql.tada/internal';
 
 import {
   type SchemaOrigin,
@@ -48,17 +47,5 @@ export async function ensureTadaIntrospection(
     await fs.writeFile(resolvedOutputLocation, contents);
   } catch (error) {
     console.error('Something went wrong while writing the introspection file', error);
-  }
-}
-
-export function makeLoader(root: string, origin: SchemaOrigin): SchemaLoader {
-  const urlOrigin = getURLConfig(origin);
-  if (urlOrigin) {
-    return loadFromURL(urlOrigin);
-  } else if (typeof origin === 'string') {
-    const file = path.resolve(root, origin);
-    return loadFromSDL({ file, assumeValid: true });
-  } else {
-    throw new Error(`Configuration contains an invalid "schema" option`);
   }
 }
