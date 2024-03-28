@@ -1,16 +1,13 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import type { IntrospectionQuery } from 'graphql';
-import type { SchemaLoader } from '@gql.tada/internal';
 
 import {
+  type SchemaOrigin,
   minifyIntrospection,
   outputIntrospectionFile,
-  loadFromSDL,
-  loadFromURL,
+  load,
 } from '@gql.tada/internal';
-
-import type { SchemaOrigin } from './lsp';
 
 /**
  * This function mimics the behavior of the LSP, this so we can ensure
@@ -20,12 +17,12 @@ import type { SchemaOrigin } from './lsp';
  * this function.
  */
 export async function ensureTadaIntrospection(
-  schemaLocation: SchemaOrigin,
+  origin: SchemaOrigin,
   outputLocation: string,
   base: string = process.cwd(),
   shouldPreprocess = true
 ) {
-  const loader = makeLoader(base, schemaLocation);
+  const loader = load({ origin, rootPath: base });
 
   let introspection: IntrospectionQuery | null;
   try {
@@ -50,38 +47,5 @@ export async function ensureTadaIntrospection(
     await fs.writeFile(resolvedOutputLocation, contents);
   } catch (error) {
     console.error('Something went wrong while writing the introspection file', error);
-  }
-}
-
-const getURLConfig = (origin: SchemaOrigin) => {
-  if (typeof origin === 'string') {
-    try {
-      return { url: new URL(origin) };
-    } catch (_error) {
-      return null;
-    }
-  } else if (typeof origin.url === 'string') {
-    try {
-      return {
-        url: new URL(origin.url),
-        headers: origin.headers,
-      };
-    } catch (error) {
-      throw new Error(`Input URL "${origin.url}" is invalid`);
-    }
-  } else {
-    return null;
-  }
-};
-
-export function makeLoader(root: string, origin: SchemaOrigin): SchemaLoader {
-  const urlOrigin = getURLConfig(origin);
-  if (urlOrigin) {
-    return loadFromURL(urlOrigin);
-  } else if (typeof origin === 'string') {
-    const file = path.resolve(root, origin);
-    return loadFromSDL({ file, assumeValid: true });
-  } else {
-    throw new Error(`Configuration contains an invalid "schema" option`);
   }
 }

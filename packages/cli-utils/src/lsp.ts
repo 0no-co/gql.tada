@@ -1,11 +1,5 @@
 import type { TsConfigJson } from 'type-fest';
-
-export type SchemaOrigin =
-  | string
-  | {
-      url: string;
-      headers: HeadersInit;
-    };
+import type { SchemaOrigin } from '@gql.tada/internal';
 
 export type GraphQLSPConfig = {
   name: string;

@@ -1,13 +1,13 @@
-import type { IntrospectionQuery, GraphQLSchema } from 'graphql';
+import type { IntrospectionQuery } from 'graphql';
 import { buildSchema, buildClientSchema, executeSync } from 'graphql';
 import { CombinedError } from '@urql/core';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import type { SupportedFeatures } from './query';
 import { makeIntrospectionQuery } from './query';
+import type { SupportedFeatures } from './query';
 
-import type { SchemaLoader } from './types';
+import type { SchemaLoader, SchemaLoaderResult, OnSchemaUpdate } from './types';
 
 interface LoadFromSDLConfig {
   assumeValid?: boolean;
@@ -21,68 +21,62 @@ const ALL_SUPPORTED_FEATURES: SupportedFeatures = {
 };
 
 export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
-  const subscriptions = new Set<() => void>();
+  const subscriptions = new Set<OnSchemaUpdate>();
 
   let controller: AbortController | null = null;
-  let introspection: IntrospectionQuery | null = null;
-  let schema: GraphQLSchema | null = null;
+  let result: SchemaLoaderResult | null = null;
+
+  const load = async (): Promise<typeof result> => {
+    const ext = path.extname(config.file);
+    const data = await fs.readFile(config.file, { encoding: 'utf8' });
+    if (ext === '.json') {
+      let introspection: IntrospectionQuery | null = null;
+      try {
+        introspection = JSON.parse(data);
+      } catch (_error) {}
+      return (
+        introspection && {
+          introspection,
+          schema: buildClientSchema(introspection, { assumeValid: !!config.assumeValid }),
+        }
+      );
+    } else {
+      const schema = buildSchema(data, { assumeValidSDL: !!config.assumeValid });
+      const query = makeIntrospectionQuery(ALL_SUPPORTED_FEATURES);
+      const queryResult = executeSync({ schema, document: query });
+      if (queryResult.errors) {
+        throw new CombinedError({ graphQLErrors: queryResult.errors as any[] });
+      } else if (queryResult.data) {
+        const introspection = queryResult.data as unknown as IntrospectionQuery;
+        return { introspection, schema };
+      } else {
+        return null;
+      }
+    }
+  };
 
   const watch = async () => {
     controller = new AbortController();
     const watcher = fs.watch(config.file, {
-      persistent: false,
       signal: controller.signal,
+      persistent: false,
     });
-
     try {
-      for await (const event of watcher) {
-        if (event.eventType === 'rename' || !subscriptions.size) break;
-        for (const subscriber of subscriptions) subscriber();
+      for await (const _event of watcher) {
+        if ((result = await load())) {
+          for (const subscriber of subscriptions) subscriber(result);
+        }
       }
     } catch (error: any) {
-      if (error.name === 'AbortError') {
-        return;
-      } else {
-        throw error;
-      }
+      if (error.name !== 'AbortError') throw error;
     } finally {
       controller = null;
     }
   };
 
-  const introspect = async () => {
-    const ext = path.extname(config.file);
-    const data = await fs.readFile(config.file, { encoding: 'utf8' });
-    if (ext === '.json') {
-      introspection = JSON.parse(data) || null;
-      schema =
-        introspection && buildClientSchema(introspection, { assumeValid: !!config.assumeValid });
-      return introspection;
-    } else {
-      schema = buildSchema(data, { assumeValidSDL: !!config.assumeValid });
-      const query = makeIntrospectionQuery(ALL_SUPPORTED_FEATURES);
-      const result = executeSync({ schema, document: query });
-      if (result.errors) {
-        throw new CombinedError({ graphQLErrors: result.errors as any[] });
-      } else if (result.data) {
-        return (introspection = (result.data as any) || null);
-      } else {
-        return (introspection = null);
-      }
-    }
-  };
-
   return {
-    async loadIntrospection() {
-      return introspect();
-    },
-    async loadSchema() {
-      if (schema) {
-        return schema;
-      } else {
-        await this.loadIntrospection();
-        return schema;
-      }
+    async load(reload?: boolean) {
+      return reload || !result ? (result = await load()) : result;
     },
     notifyOnUpdate(onUpdate) {
       if (!subscriptions.size) watch();
@@ -93,6 +87,14 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
           controller.abort();
         }
       };
+    },
+    async loadIntrospection() {
+      const result = await this.load();
+      return result && result.introspection;
+    },
+    async loadSchema() {
+      const result = await this.load();
+      return result && result.schema;
     },
   };
 }
