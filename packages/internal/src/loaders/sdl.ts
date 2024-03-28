@@ -30,21 +30,15 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
   const watch = async () => {
     controller = new AbortController();
     const watcher = fs.watch(config.file, {
-      persistent: false,
       signal: controller.signal,
+      persistent: false,
     });
-
     try {
-      for await (const event of watcher) {
-        if (event.eventType === 'rename' || !subscriptions.size) break;
+      for await (const _event of watcher) {
         for (const subscriber of subscriptions) subscriber();
       }
     } catch (error: any) {
-      if (error.name === 'AbortError') {
-        return;
-      } else {
-        throw error;
-      }
+      if (error.name !== 'AbortError') throw error;
     } finally {
       controller = null;
     }
