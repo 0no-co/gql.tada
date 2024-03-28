@@ -43,6 +43,11 @@ with full editor feedback, auto-completion, and type hints!**
 </div>
 
 <div class="sponsor-item">
+  <img src="https://avatars.githubusercontent.com/u/42573040?s=200&v=4" width="150" alt="The Guild"/>
+  <a href="https://the-guild.dev/" rel="noopener noreferrer nofollow sponsored" target="_blank">The Guild</a>
+</div>
+
+<div class="sponsor-item">
   <img src="https://avatars.githubusercontent.com/u/51333382?s=200&v=4" width="150" alt="BeatGig"/>
   <a href="https://beatgig.com/" rel="noopener noreferrer nofollow sponsored" target="_blank">BeatGig</a>
 </div>
