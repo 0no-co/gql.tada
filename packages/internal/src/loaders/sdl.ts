@@ -30,7 +30,10 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
     const ext = path.extname(config.file);
     const data = await fs.readFile(config.file, { encoding: 'utf8' });
     if (ext === '.json') {
-      const introspection: IntrospectionQuery | null = JSON.parse(data) || null;
+      let introspection: IntrospectionQuery | null = null;
+      try {
+        introspection = JSON.parse(data);
+      } catch (_error) {}
       return (
         introspection && {
           introspection,
