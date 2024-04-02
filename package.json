@@ -41,7 +41,7 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@0no-co/graphql.web": "^1.0.4",
+    "@0no-co/graphql.web": "^1.0.5",
     "@gql.tada/cli-utils": "workspace:*",
     "@gql.tada/internal": "workspace:*"
   },
