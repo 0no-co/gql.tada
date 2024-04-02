@@ -49,7 +49,8 @@
   },
   "dependencies": {
     "@gql.tada/internal": "workspace:*",
-    "graphql": "^16.8.1"
+    "graphql": "^16.8.1",
+    "semiver": "^1.1.0"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"

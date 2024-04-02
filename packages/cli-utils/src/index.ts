@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { parse } from 'json5';
 import { printSchema } from 'graphql';
-
+import semiver from 'semiver';
 import type { GraphQLSchema } from 'graphql';
 import type { TsConfigJson } from 'type-fest';
 import { resolveTypeScriptRootDir, load } from '@gql.tada/internal';
@@ -114,6 +114,77 @@ prog.version(process.env.npm_package_version || '0.0.0');
 
 async function main() {
   prog
+    .command('doctor')
+    .describe('Finds common issues in your gql.tada setup.')
+    .action(async () => {
+      // Check TypeScript version
+      const cwd = process.cwd();
+      const packageJsonPath = path.resolve(cwd, 'package.json');
+      let packageJsonContents: {
+        dependencies: Record<string, string>;
+        devDependencies: Record<string, string>;
+      };
+      try {
+        const file = path.resolve(packageJsonPath);
+        packageJsonContents = JSON.parse(await fs.readFile(file, 'utf-8'));
+      } catch (error) {
+        console.error(
+          'Failed to read package.json in current working directory, try running the doctor command in your workspace folder.'
+        );
+        return;
+      }
+
+      const typeScriptVersion = Object.entries({
+        ...packageJsonContents.dependencies,
+        ...packageJsonContents.devDependencies,
+      }).find((x) => x[0] === 'typescript');
+      if (!typeScriptVersion) {
+        console.error('Failed to find a typescript installation, try installing one.');
+        return;
+      } else if (semiver(typeScriptVersion[1], '4.1.0') === -1) {
+        // TypeScript version lower than v4.1 which is when they introduced template lits
+        console.error('Found an outdated TypeScript version, gql.tada requires at least 4.1.0.');
+        return;
+      }
+
+      const tsconfigpath = path.resolve(cwd, 'tsconfig.json');
+
+      const root = (await resolveTypeScriptRootDir(tsconfigpath)) || cwd;
+
+      let tsconfigContents: string;
+      try {
+        const file = path.resolve(root, 'tsconfig.json');
+        tsconfigContents = await fs.readFile(file, 'utf-8');
+      } catch (error) {
+        console.error(
+          'Failed to read tsconfig.json in current working directory, try adding a "tsconfig.json".'
+        );
+        return;
+      }
+
+      let tsConfig: TsConfigJson;
+      try {
+        tsConfig = parse(tsconfigContents) as TsConfigJson;
+      } catch (err) {
+        console.error('Unable to parse tsconfig.json in current working directory.', err);
+        return;
+      }
+
+      // Check GraphQLSP version, later on we can check if a ts version is > 5.5.0 to use gql.tada/lsp instead of
+      // the LSP package.
+      const config = getGraphQLSPConfig(tsConfig);
+      if (!config) {
+        console.error(`Missing a "@0no-co/graphqlsp" plugin in your tsconfig.`);
+        return;
+      }
+
+      if (!config.tadaOutputLocation) {
+        console.error(`Missing a "tadaOutputLocation" setting in your GraphQLSP configuration.`);
+        return;
+      }
+
+      // TODO: check whether schema is a valid pointer/URL
+    })
     .command('generate-schema <target>')
     .describe(
       'Generate a GraphQL schema from a URL or introspection file, this will be generated from the parameters to this command.'
