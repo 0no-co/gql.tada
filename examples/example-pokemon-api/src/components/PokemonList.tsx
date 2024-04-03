@@ -7,6 +7,7 @@ const PokemonsQuery = graphql(`
   query Pokemons ($limit: Int = 10) {
     pokemons(limit: $limit) {
       id
+      f
       ...PokemonItem
     }
   }
