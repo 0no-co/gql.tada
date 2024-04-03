@@ -32,10 +32,12 @@ export async function executeTadaDoctor() {
     return;
   }
 
-  const typeScriptVersion = Object.entries({
+  const deps = Object.entries({
     ...packageJsonContents.dependencies,
     ...packageJsonContents.devDependencies,
-  }).find((x) => x[0] === 'typescript');
+  });
+
+  const typeScriptVersion = deps.find((x) => x[0] === 'typescript');
   if (!typeScriptVersion) {
     console.error('Failed to find a "typescript" installation, try installing one.');
     return;
@@ -47,10 +49,7 @@ export async function executeTadaDoctor() {
     return;
   }
 
-  const gqlspVersion = Object.entries({
-    ...packageJsonContents.dependencies,
-    ...packageJsonContents.devDependencies,
-  }).find((x) => x[0] === '@0no-co/graphqlsp');
+  const gqlspVersion = deps.find((x) => x[0] === '@0no-co/graphqlsp');
   if (!gqlspVersion) {
     console.error('Failed to find a "@0no-co/graphqlsp" installation, try installing one.');
     return;
@@ -61,10 +60,7 @@ export async function executeTadaDoctor() {
     return;
   }
 
-  const gqlTadaVersion = Object.entries({
-    ...packageJsonContents.dependencies,
-    ...packageJsonContents.devDependencies,
-  }).find((x) => x[0] === 'gql.tada');
+  const gqlTadaVersion = deps.find((x) => x[0] === 'gql.tada');
   if (!gqlTadaVersion) {
     console.error('Failed to find a "gql.tada" installation, try installing one.');
     return;
@@ -76,7 +72,6 @@ export async function executeTadaDoctor() {
   }
 
   const tsconfigpath = path.resolve(cwd, 'tsconfig.json');
-
   const root = (await resolveTypeScriptRootDir(tsconfigpath)) || cwd;
 
   let tsconfigContents: string;
