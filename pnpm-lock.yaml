@@ -156,9 +156,6 @@ importers:
       graphql:
         specifier: ^16.8.1
         version: 16.8.1
-      semiver:
-        specifier: ^1.1.0
-        version: 1.1.0
     devDependencies:
       '@types/node':
         specifier: ^20.11.0
@@ -172,6 +169,9 @@ importers:
       sade:
         specifier: ^1.8.1
         version: 1.8.1
+      semiver:
+        specifier: ^1.1.0
+        version: 1.1.0
       type-fest:
         specifier: ^4.10.2
         version: 4.10.2
@@ -2357,7 +2357,7 @@ packages:
   /@vue/language-core@1.8.27(typescript@5.4.3):
     resolution: {integrity: sha512-L8Kc27VdQserNaCUNiSFdDl9LWT24ly8Hpwf1ECy3aFb9m6bDhBGQYOujDm21N7EW3moKIOKEanQwe1q5BK+mA==}
     peerDependencies:
-      typescript: '*'
+      typescript: ^5.3.3
     peerDependenciesMeta:
       typescript:
         optional: true
@@ -5376,7 +5376,7 @@ packages:
     engines: {node: '>=16'}
     peerDependencies:
       rollup: ^3.29.4 || ^4
-      typescript: ^4.5 || ^5.0
+      typescript: ^5.3.3
     dependencies:
       magic-string: 0.30.5
       rollup: 4.9.4
@@ -5484,7 +5484,7 @@ packages:
   /semiver@1.1.0:
     resolution: {integrity: sha512-QNI2ChmuioGC1/xjyYwyZYADILWyW6AmS1UH6gDj/SFUUUS4MBAWs/7mxnkRPc/F4iHezDP+O8t0dO8WHiEOdg==}
     engines: {node: '>=6'}
-    dev: false
+    dev: true
 
   /semver@5.7.2:
     resolution: {integrity: sha512-cBznnQ9KjJqU67B52RMC65CMarK2600WFnbkcaiwWq3xy/5haFJlshgnpjovMVJ+Hff49d8GEn0b87C5pDQ10g==}
@@ -5926,7 +5926,7 @@ packages:
     resolution: {integrity: sha512-wNMeqtMz5NtwpT/UZGY5alT+VoKdSsOOP/kqHFcUW1P/VRhH2wJ48+DN2WwUliNbQ976ETwDL0Ifd2VVvgonvg==}
     engines: {node: '>=16.13.0'}
     peerDependencies:
-      typescript: '>=4.2.0'
+      typescript: ^5.3.3
     dependencies:
       typescript: 5.3.3
     dev: true
@@ -5958,7 +5958,7 @@ packages:
   /twoslash-vue@0.1.2(typescript@5.4.3):
     resolution: {integrity: sha512-LCD3VTw0+gKVMXou/nP8OAtpajGAoKuzFx9oyGteBkeMRgDj2DO95WDBHy/o+ihkckYZ0lUbvIFFjzmDy7zHag==}
     peerDependencies:
-      typescript: '*'
+      typescript: ^5.3.3
     dependencies:
       '@vue/language-core': 1.8.27(typescript@5.4.3)
       twoslash: 0.1.2(typescript@5.4.3)
@@ -5970,7 +5970,7 @@ packages:
   /twoslash@0.1.2(typescript@5.4.3):
     resolution: {integrity: sha512-q0jnapnD3b0umNGCJCRlo6Em1oSFl2OBPwsXqhLzijtEzuORrGVrJffG7E1k1KPHFlwBSRX2q6yYA61etn5hSg==}
     peerDependencies:
-      typescript: '*'
+      typescript: ^5.3.3
     dependencies:
       '@typescript/vfs': 1.5.0
       typescript: 5.4.3
@@ -6401,7 +6401,7 @@ packages:
   /vue@3.4.21(typescript@5.4.3):
     resolution: {integrity: sha512-5hjyV/jLEIKD/jYl4cavMcnzKwjMKohureP8ejn3hhEjwhWIhWeuzL2kJAjzl/WyVsgPY56Sy4Z40C3lVshxXA==}
     peerDependencies:
-      typescript: '*'
+      typescript: ^5.3.3
     peerDependenciesMeta:
       typescript:
         optional: true

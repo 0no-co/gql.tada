@@ -4,9 +4,9 @@ import { parse } from 'json5';
 import semiver from 'semiver';
 import type { TsConfigJson } from 'type-fest';
 import { resolveTypeScriptRootDir } from '@gql.tada/internal';
-
-import { getGraphQLSPConfig } from './lsp';
 import { existsSync } from 'node:fs';
+
+import { getGraphQLSPConfig } from '../lsp';
 
 const MINIMUM_VERSIONS = {
   typescript: '4.1.0',
@@ -49,7 +49,7 @@ export async function executeTadaDoctor() {
     return;
   }
 
-  const gqlspVersion = deps.find((x) => x[0] === '@0no-co/graphqlsp');
+  const gqlspVersion = deps.find((x) => x[0] === "'@0no-co/graphqlsp'");
   if (!gqlspVersion) {
     console.error('Failed to find a "@0no-co/graphqlsp" installation, try installing one.');
     return;
@@ -60,7 +60,7 @@ export async function executeTadaDoctor() {
     return;
   }
 
-  const gqlTadaVersion = deps.find((x) => x[0] === 'gql.tada');
+  const gqlTadaVersion = deps.find((x) => x[0] === "'gql.tada'");
   if (!gqlTadaVersion) {
     console.error('Failed to find a "gql.tada" installation, try installing one.');
     return;

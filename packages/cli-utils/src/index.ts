@@ -9,7 +9,7 @@ import { resolveTypeScriptRootDir, load } from '@gql.tada/internal';
 
 import { getGraphQLSPConfig } from './lsp';
 import { ensureTadaIntrospection } from './tada';
-import { executeTadaDoctor } from './doctor';
+import { executeTadaDoctor } from './commands/doctor';
 
 interface GenerateSchemaOptions {
   headers?: Record<string, string>;
