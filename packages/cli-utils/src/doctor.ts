@@ -8,6 +8,12 @@ import { resolveTypeScriptRootDir } from '@gql.tada/internal';
 import { getGraphQLSPConfig } from './lsp';
 import { existsSync } from 'node:fs';
 
+const MINIMUM_VERSIONS = {
+  typescript: '4.1.0',
+  tada: '1.0.0',
+  lsp: '1.0.0',
+};
+
 export async function executeTadaDoctor() {
   // Check TypeScript version
   const cwd = process.cwd();
@@ -31,11 +37,13 @@ export async function executeTadaDoctor() {
     ...packageJsonContents.devDependencies,
   }).find((x) => x[0] === 'typescript');
   if (!typeScriptVersion) {
-    console.error('Failed to find a typescript installation, try installing one.');
+    console.error('Failed to find a "typescript" installation, try installing one.');
     return;
-  } else if (semiver(typeScriptVersion[1], '4.1.0') === -1) {
+  } else if (semiver(typeScriptVersion[1], MINIMUM_VERSIONS.typescript) === -1) {
     // TypeScript version lower than v4.1 which is when they introduced template lits
-    console.error('Found an outdated TypeScript version, gql.tada requires at least 4.1.0.');
+    console.error(
+      `Found an outdated "TypeScript" version, gql.tada requires at least ${MINIMUM_VERSIONS.typescript}.`
+    );
     return;
   }
 
@@ -46,10 +54,9 @@ export async function executeTadaDoctor() {
   if (!gqlspVersion) {
     console.error('Failed to find a "@0no-co/graphqlsp" installation, try installing one.');
     return;
-  } else if (semiver(gqlspVersion[1], '1.0.0') === -1) {
-    // TypeScript version lower than v4.1 which is when they introduced template lits
+  } else if (semiver(gqlspVersion[1], MINIMUM_VERSIONS.lsp) === -1) {
     console.error(
-      'Found an outdated "@0no-co/graphqlsp" version, gql.tada requires at least 1.0.0.'
+      `Found an outdated "@0no-co/graphqlsp" version, gql.tada requires at least ${MINIMUM_VERSIONS.lsp}.`
     );
     return;
   }
@@ -62,8 +69,9 @@ export async function executeTadaDoctor() {
     console.error('Failed to find a "gql.tada" installation, try installing one.');
     return;
   } else if (semiver(gqlTadaVersion[1], '1.0.0') === -1) {
-    // TypeScript version lower than v4.1 which is when they introduced template lits
-    console.error('Found an outdated "gql.tada" version, gql.tada requires at least 1.0.0.');
+    console.error(
+      `Found an outdated "gql.tada" version, gql.tada requires at least ${MINIMUM_VERSIONS.tada}.`
+    );
     return;
   }
 
