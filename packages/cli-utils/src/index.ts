@@ -148,6 +148,34 @@ async function main() {
         return;
       }
 
+      const gqlspVersion = Object.entries({
+        ...packageJsonContents.dependencies,
+        ...packageJsonContents.devDependencies,
+      }).find((x) => x[0] === '@0no-co/graphqlsp');
+      if (!gqlspVersion) {
+        console.error('Failed to find a "@0no-co/graphqlsp" installation, try installing one.');
+        return;
+      } else if (semiver(gqlspVersion[1], '1.0.0') === -1) {
+        // TypeScript version lower than v4.1 which is when they introduced template lits
+        console.error(
+          'Found an outdated "@0no-co/graphqlsp" version, gql.tada requires at least 1.0.0.'
+        );
+        return;
+      }
+
+      const gqlTadaVersion = Object.entries({
+        ...packageJsonContents.dependencies,
+        ...packageJsonContents.devDependencies,
+      }).find((x) => x[0] === 'gql.tada');
+      if (!gqlTadaVersion) {
+        console.error('Failed to find a "gql.tada" installation, try installing one.');
+        return;
+      } else if (semiver(gqlTadaVersion[1], '1.0.0') === -1) {
+        // TypeScript version lower than v4.1 which is when they introduced template lits
+        console.error('Found an outdated "gql.tada" version, gql.tada requires at least 1.0.0.');
+        return;
+      }
+
       const tsconfigpath = path.resolve(cwd, 'tsconfig.json');
 
       const root = (await resolveTypeScriptRootDir(tsconfigpath)) || cwd;
