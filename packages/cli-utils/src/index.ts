@@ -10,6 +10,7 @@ import { resolveTypeScriptRootDir, load } from '@gql.tada/internal';
 
 import { getGraphQLSPConfig } from './lsp';
 import { ensureTadaIntrospection } from './tada';
+import { existsSync } from 'node:fs';
 
 interface GenerateSchemaOptions {
   headers?: Record<string, string>;
@@ -178,12 +179,38 @@ async function main() {
         return;
       }
 
+      // TODO: this is optional I guess with the CLI being there and all
       if (!config.tadaOutputLocation) {
         console.error(`Missing a "tadaOutputLocation" setting in your GraphQLSP configuration.`);
         return;
       }
 
-      // TODO: check whether schema is a valid pointer/URL
+      if (!config.schema) {
+        console.error(`Missing a "schema" setting in your GraphQLSP configuration.`);
+        return;
+      } else {
+        const isFile =
+          typeof config.schema === 'string' &&
+          (config.schema.endsWith('.json') || config.schema.endsWith('.graphql'));
+        if (isFile) {
+          const resolvedFile = path.resolve(root, config.schema as string);
+          if (!existsSync(resolvedFile)) {
+            console.error(
+              `The schema setting does not point at an existing file "${resolvedFile}"`
+            );
+            return;
+          }
+        } else {
+          try {
+            typeof config.schema === 'string' ? new URL(config.schema) : new URL(config.schema.url);
+          } catch (e) {
+            console.error(
+              `The schema setting does not point at a valid URL "${JSON.stringify(config.schema)}"`
+            );
+            return;
+          }
+        }
+      }
     })
     .command('generate-schema <target>')
     .describe(
