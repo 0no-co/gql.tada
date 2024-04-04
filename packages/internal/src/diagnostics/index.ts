@@ -11,8 +11,8 @@ const severities: Severity[] = ['error', 'warning', 'info'];
 interface FormattedDisplayableDiagnostic {
   severity: Severity;
   message: string;
-  start: number;
-  end: number;
+  line: number;
+  col: number;
   file: string | undefined;
 }
 
@@ -33,7 +33,6 @@ export async function check(
   });
 
   const rootPath = (await resolveTypeScriptRootDir(projectName)) || path.dirname(projectName);
-
   init({
     typescript: ts as any,
   });
@@ -96,20 +95,43 @@ export async function check(
           { current: schema, version: 1 },
           pluginCreateInfo
         ) || [];
-      return diag.map((diag) => ({
-        severity: (diag.category === ts.DiagnosticCategory.Error
-          ? 'error'
-          : diag.category === ts.DiagnosticCategory.Warning
-            ? 'warning'
-            : 'info') as Severity,
-        message: diag.messageText as string,
-        start: diag.start || 0,
-        end: (diag.start || 0) + (diag.length || 0),
-        file: diag.file && diag.file.fileName,
-      }));
+      return diag.map((diag) => {
+        const text = diag.file && diag.file.getText();
+        const start = diag.start;
+        const [line, col] = getLineCol(text || '', start || 0);
+        return {
+          severity: (diag.category === ts.DiagnosticCategory.Error
+            ? 'error'
+            : diag.category === ts.DiagnosticCategory.Warning
+              ? 'warning'
+              : 'info') as Severity,
+          message: diag.messageText as string,
+          file: diag.file && diag.file.fileName,
+          line,
+          col,
+        };
+      });
     })
     // Filter out diagnostics below the minimum severity
     .filter((diag) => severities.indexOf(diag.severity) <= severities.indexOf(minSeverity));
 
   return allDiagnostics;
+}
+
+function getLineCol(text: string, start: number): [number, number] {
+  if (!text || !start) return [0, 0];
+
+  let counter = 0;
+  const parts = text.split('\n');
+  for (let i = 0; i <= parts.length; i++) {
+    const line = parts[i];
+    if (counter + line.length > start) {
+      return [i + 1, start - counter];
+    } else {
+      counter = counter + (line.length + 1);
+      continue;
+    }
+  }
+
+  return [0, 0];
 }
