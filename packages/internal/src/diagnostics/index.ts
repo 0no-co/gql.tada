@@ -5,8 +5,19 @@ import fs from 'fs';
 import { resolveTypeScriptRootDir } from '../resolve';
 import { load } from '../loaders';
 
-// TODO: introduce severity filter
-export async function check(): Promise<FormattedDisplayableDiagnostic[]> {
+type Severity = 'error' | 'warning' | 'info';
+const severities: Severity[] = ['error', 'warning', 'info'];
+interface FormattedDisplayableDiagnostic {
+  severity: Severity;
+  message: string;
+  start: number;
+  end: number;
+  file: string | undefined;
+}
+
+export async function check(
+  minSeverity: Severity = 'error'
+): Promise<FormattedDisplayableDiagnostic[]> {
   const projectName = path.resolve(process.cwd(), 'tsconfig.json');
 
   const project = new Project({
@@ -74,34 +85,28 @@ export async function check(): Promise<FormattedDisplayableDiagnostic[]> {
     return [];
   }
 
-  const allDiagnostics: FormattedDisplayableDiagnostic[] = sourceFiles.flatMap((sourceFile) => {
-    const diag =
-      getGraphQLDiagnostics(
-        sourceFile.getFilePath(),
-        { current: schema, version: 1 },
-        pluginCreateInfo
-      ) || [];
-    return diag.map((diag) => ({
-      severity:
-        diag.category === ts.DiagnosticCategory.Error
-          ? 'error'
-          : diag.category === ts.DiagnosticCategory.Warning
-            ? 'warning'
-            : 'info',
-      message: diag.messageText as string,
-      start: diag.start || 0,
-      end: (diag.start || 0) + (diag.length || 0),
-      file: diag.file && diag.file.fileName,
-    }));
-  });
+  const allDiagnostics: FormattedDisplayableDiagnostic[] = sourceFiles
+    .flatMap((sourceFile) => {
+      const diag =
+        getGraphQLDiagnostics(
+          sourceFile.getFilePath(),
+          { current: schema, version: 1 },
+          pluginCreateInfo
+        ) || [];
+      return diag.map((diag) => ({
+        severity:
+          diag.category === ts.DiagnosticCategory.Error
+            ? 'error'
+            : diag.category === ts.DiagnosticCategory.Warning
+              ? 'warning'
+              : 'info',
+        message: diag.messageText as string,
+        start: diag.start || 0,
+        end: (diag.start || 0) + (diag.length || 0),
+        file: diag.file && diag.file.fileName,
+      }));
+    })
+    .filter((diag) => severities.indexOf(diag.severity) >= severities.indexOf(minSeverity));
 
   return allDiagnostics;
-}
-
-interface FormattedDisplayableDiagnostic {
-  severity: 'error' | 'warning' | 'info';
-  message: string;
-  start: number;
-  end: number;
-  file: string | undefined;
 }
