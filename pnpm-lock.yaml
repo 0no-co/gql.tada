@@ -185,11 +185,8 @@ importers:
         specifier: ^1.0.5
         version: 1.0.5(graphql@16.8.1)
       '@0no-co/graphqlsp':
-        specifier: ^1.0.0
-        version: 1.0.0
-      ts-morph:
-        specifier: ^22.0.0
-        version: 22.0.0
+        specifier: ^1.8.0
+        version: 1.8.0(typescript@5.4.2)
     devDependencies:
       '@types/node':
         specifier: ^20.11.0
@@ -283,14 +280,6 @@ packages:
     dependencies:
       graphql: 16.8.1
 
-  /@0no-co/graphqlsp@1.0.0:
-    resolution: {integrity: sha512-uzO2wfP4krHRbyH8wRhTvz7irq7PhmCedacgtt+rZ8EHzZ8KRLQGygvibotcDU+4vIaEIUr+Dt7uE9XGcbglvg==}
-    dependencies:
-      node-fetch: 2.7.0
-    transitivePeerDependencies:
-      - encoding
-    dev: false
-
   /@0no-co/graphqlsp@1.5.0:
     resolution: {integrity: sha512-NGMUwzj7m6DfIqudZxfTfUEmzKR2n9xphPssCKqkGsMEKe9qIzrNqLpXXwzXTWrGBS5FBELW+TXGUyTa0v1LAw==}
     dependencies:
@@ -299,6 +288,19 @@ packages:
     transitivePeerDependencies:
       - encoding
     dev: true
+
+  /@0no-co/graphqlsp@1.8.0(typescript@5.4.2):
+    resolution: {integrity: sha512-DVET7krt1doddpSDg97t41mZZru2P/CWv22JXG4N1oFo1A1KFVGdka/chnn4pmB7/FqRCRUJARGvZNwwb1EJjw==}
+    peerDependencies:
+      typescript: ^5.3.3
+    dependencies:
+      '@gql.tada/internal': 0.1.2(graphql@16.8.1)(typescript@5.4.2)
+      graphql: 16.8.1
+      node-fetch: 2.7.0
+      typescript: 5.4.2
+    transitivePeerDependencies:
+      - encoding
+    dev: false
 
   /@0no-co/typescript.js@5.3.2-2:
     resolution: {integrity: sha512-IGQZZ7vcVD/GOUKLJckpQiq8F5raQZLR7kOVhxN5nHOywl1dB9EFMA7FJkyNoCEig7EkCb291X8FswMwwrz9yg==}
@@ -1450,6 +1452,17 @@ packages:
   /@floating-ui/utils@0.2.1:
     resolution: {integrity: sha512-9TANp6GPoMtYzQdt54kfAyMmz1+osLlXdg2ENroU7zzrtflTLrrC/lgrIfaSe+Wu0b89GKccT7vxXA0MoAIO+Q==}
     dev: true
+
+  /@gql.tada/internal@0.1.2(graphql@16.8.1)(typescript@5.4.2):
+    resolution: {integrity: sha512-8I4Z1zxYYGK66FWdB3yIZBn3cITLPnciEgjChp3K2+Ha1e/AEBGtZv9AUlodraO/RZafDMkpFhoi+tMpluBjeg==}
+    peerDependencies:
+      graphql: ^16.8.1
+      typescript: ^5.3.3
+    dependencies:
+      '@0no-co/graphql.web': 1.0.5(graphql@16.8.1)
+      graphql: 16.8.1
+      typescript: 5.4.2
+    dev: false
 
   /@graphql-typed-document-node/core@3.2.0(graphql@16.8.1):
     resolution: {integrity: sha512-mB9oAsNCm9aM3/SOv4YtBMqZbYj10R7dkq8byBqxGY/ncFwhf2oQzMV+LCRlWoDSEBJ3COiR1yeDvMtsoOsuFQ==}
@@ -6081,7 +6094,6 @@ packages:
     resolution: {integrity: sha512-+2/g0Fds1ERlP6JsakQQDXjZdZMM+rqpamFZJEKh4kwTIn3iDkgKtby0CeNd5ATNZ4Ry1ax15TMx0W2V+miizQ==}
     engines: {node: '>=14.17'}
     hasBin: true
-    dev: true
 
   /typescript@5.4.3:
     resolution: {integrity: sha512-KrPd3PKaCLr78MalgiwJnA25Nm8HAmdwN3mYUYZgG/wizIo9EainNVQI9/yDavtVFRN2h3k8uf3GLHuhDMgEHg==}
