@@ -6,7 +6,7 @@ import { printSchema } from 'graphql';
 
 import type { GraphQLSchema } from 'graphql';
 import type { TsConfigJson } from 'type-fest';
-import { resolveTypeScriptRootDir, load } from '@gql.tada/internal';
+import { resolveTypeScriptRootDir, load, check } from '@gql.tada/internal';
 
 import { getGraphQLSPConfig } from './lsp';
 import { ensureTadaIntrospection } from './tada';
@@ -72,31 +72,8 @@ export async function generateSchema(
 }
 
 export async function generateTadaTypes(shouldPreprocess = false, cwd: string = process.cwd()) {
-  const tsconfigpath = path.resolve(cwd, 'tsconfig.json');
-
-  // TODO: Remove redundant read and move tsconfig.json handling to internal package
-  const root = (await resolveTypeScriptRootDir(tsconfigpath)) || cwd;
-
-  let tsconfigContents: string;
-  try {
-    const file = path.resolve(root, 'tsconfig.json');
-    tsconfigContents = await fs.readFile(file, 'utf-8');
-  } catch (error) {
-    console.error('Failed to read tsconfig.json in current working directory.', error);
-    return;
-  }
-
-  let tsConfig: TsConfigJson;
-  try {
-    tsConfig = parse(tsconfigContents) as TsConfigJson;
-  } catch (err) {
-    console.error(err);
-    return;
-  }
-
-  const config = getGraphQLSPConfig(tsConfig);
+  const config = await getConfig();
   if (!config) {
-    console.error(`Could not find a "@0no-co/graphqlsp" plugin in your tsconfig.`);
     return;
   }
 
@@ -155,8 +132,50 @@ async function main() {
       const shouldPreprocess =
         !options['disable-preprocessing'] && options['disable-preprocessing'] !== 'false';
       return generateTadaTypes(shouldPreprocess);
+    })
+    .command('check')
+    .option('--severity', 'The minimum severity of diagnostics to display.')
+    .action(async (opts) => {
+      const config = await getConfig();
+      if (!config) {
+        return;
+      }
+      check(config, opts.severity || 'error');
     });
   prog.parse(process.argv);
 }
+
+const getConfig = async () => {
+  const cwd = process.cwd();
+  const tsconfigpath = path.resolve(cwd, 'tsconfig.json');
+
+  // TODO: Remove redundant read and move tsconfig.json handling to internal package
+  const root = (await resolveTypeScriptRootDir(tsconfigpath)) || cwd;
+
+  let tsconfigContents: string;
+  try {
+    const file = path.resolve(root, 'tsconfig.json');
+    tsconfigContents = await fs.readFile(file, 'utf-8');
+  } catch (error) {
+    console.error('Failed to read tsconfig.json in current working directory.', error);
+    return;
+  }
+
+  let tsConfig: TsConfigJson;
+  try {
+    tsConfig = parse(tsconfigContents) as TsConfigJson;
+  } catch (err) {
+    console.error(err);
+    return;
+  }
+
+  const config = getGraphQLSPConfig(tsConfig);
+  if (!config) {
+    console.error(`Could not find a "@0no-co/graphqlsp" plugin in your tsconfig.`);
+    return;
+  }
+
+  return config;
+};
 
 export default main;
