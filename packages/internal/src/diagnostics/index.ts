@@ -6,9 +6,9 @@ import { resolveTypeScriptRootDir } from '../resolve';
 import type { SchemaOrigin } from '../loaders';
 import { load } from '../loaders';
 
-type Severity = 'error' | 'warning' | 'info';
-const severities: Severity[] = ['error', 'warning', 'info'];
-interface FormattedDisplayableDiagnostic {
+type Severity = 'error' | 'warn' | 'info';
+const severities: Severity[] = ['error', 'warn', 'info'];
+export interface FormattedDisplayableDiagnostic {
   severity: Severity;
   message: string;
   line: number;
@@ -103,7 +103,7 @@ export async function check(
           severity: (diag.category === ts.DiagnosticCategory.Error
             ? 'error'
             : diag.category === ts.DiagnosticCategory.Warning
-              ? 'warning'
+              ? 'warn'
               : 'info') as Severity,
           message: diag.messageText as string,
           file: diag.file && diag.file.fileName,
@@ -126,7 +126,7 @@ function getLineCol(text: string, start: number): [number, number] {
   for (let i = 0; i <= parts.length; i++) {
     const line = parts[i];
     if (counter + line.length > start) {
-      return [i + 1, start - counter];
+      return [i + 1, start + 1 - counter];
     } else {
       counter = counter + (line.length + 1);
       continue;

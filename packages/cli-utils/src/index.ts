@@ -6,7 +6,12 @@ import { printSchema } from 'graphql';
 
 import type { GraphQLSchema } from 'graphql';
 import type { TsConfigJson } from 'type-fest';
-import { resolveTypeScriptRootDir, load, check } from '@gql.tada/internal';
+import {
+  resolveTypeScriptRootDir,
+  load,
+  check,
+  type FormattedDisplayableDiagnostic,
+} from '@gql.tada/internal';
 
 import type { GraphQLSPConfig } from './lsp';
 import { getGraphQLSPConfig } from './lsp';
@@ -141,9 +146,54 @@ async function main() {
       if (!config) {
         return;
       }
-      check(config, opts.severity || 'error');
+      const result = (await check(config, opts.severity || 'error')) || [];
+      const errorDiagnostics = result.filter((d) => d.severity === 'error');
+      const warnDiagnostics = result.filter((d) => d.severity === 'warn');
+      const infoDiagnostics = result.filter((d) => d.severity === 'info');
+      if (
+        errorDiagnostics.length === 0 &&
+        warnDiagnostics.length === 0 &&
+        infoDiagnostics.length === 0
+      ) {
+        // eslint-disable-next-line no-console
+        console.log('No issues found! 🎉');
+        return;
+      } else {
+        const errorReport = errorDiagnostics.length
+          ? `Found ${errorDiagnostics.length} Errors:\n\n${constructDiagnosticsPerFile(
+              errorDiagnostics
+            )}\n\n`
+          : ``;
+        const warningsReport = warnDiagnostics.length
+          ? `Found ${warnDiagnostics.length} Warnings:\n\n${constructDiagnosticsPerFile(
+              warnDiagnostics
+            )}\n\n`
+          : ``;
+        const suggestionsReport = infoDiagnostics.length
+          ? `Found ${infoDiagnostics.length} Suggestions:\n\n${constructDiagnosticsPerFile(
+              infoDiagnostics
+            )}\n\n`
+          : ``;
+        // eslint-disable-next-line no-console
+        console.log(`${errorReport}${warningsReport}${suggestionsReport}`);
+      }
     });
   prog.parse(process.argv);
+}
+
+function constructDiagnosticsPerFile(diagnostics: FormattedDisplayableDiagnostic[]): string {
+  const diagnosticsByFile = diagnostics.reduce<Record<string, string[]>>((acc, diag) => {
+    const file = diag.file || '';
+    if (!acc[file]) {
+      acc[file] = [];
+    }
+    acc[file].push(`[${diag.line}:${diag.col}] ${diag.message}`);
+    return acc;
+  }, {});
+
+  return Object.entries(diagnosticsByFile).reduce((acc, [fileName, diagnostics]) => {
+    return `${acc}${fileName}\n${diagnostics.join('\n')}\n\n`;
+  }, '');
 }
 
 const getConfig = async (): Promise<GraphQLSPConfig | undefined> => {
