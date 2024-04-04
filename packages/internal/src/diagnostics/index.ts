@@ -82,12 +82,10 @@ export async function check(
     const loaderResult = await loader.load();
     schema = loaderResult && loaderResult.schema;
     if (!schema) {
-      console.error(`Failed to load schema`);
-      return [];
+      throw new Error(`Failed to load schema`);
     }
   } catch (error) {
-    console.error(`Failed to load schema: ${error}`);
-    return [];
+    throw new Error(`Failed to load schema: ${error}`);
   }
 
   const allDiagnostics: FormattedDisplayableDiagnostic[] = sourceFiles
@@ -99,12 +97,11 @@ export async function check(
           pluginCreateInfo
         ) || [];
       return diag.map((diag) => ({
-        severity:
-          diag.category === ts.DiagnosticCategory.Error
-            ? 'error'
-            : diag.category === ts.DiagnosticCategory.Warning
-              ? 'warning'
-              : 'info',
+        severity: (diag.category === ts.DiagnosticCategory.Error
+          ? 'error'
+          : diag.category === ts.DiagnosticCategory.Warning
+            ? 'warning'
+            : 'info') as Severity,
         message: diag.messageText as string,
         start: diag.start || 0,
         end: (diag.start || 0) + (diag.length || 0),
