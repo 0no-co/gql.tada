@@ -181,9 +181,6 @@ importers:
       '@0no-co/graphql.web':
         specifier: ^1.0.5
         version: 1.0.5(graphql@16.8.1)
-      graphql:
-        specifier: ^16.8.1
-        version: 16.8.1
     devDependencies:
       '@types/node':
         specifier: ^20.11.0
@@ -197,6 +194,9 @@ importers:
       '@urql/introspection':
         specifier: ^1.0.3
         version: 1.0.3(graphql@16.8.1)
+      graphql:
+        specifier: ^16.8.1
+        version: 16.8.1
       json5:
         specifier: ^2.2.3
         version: 2.2.3
