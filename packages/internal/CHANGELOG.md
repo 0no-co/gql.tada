@@ -1,5 +1,12 @@
 # @gql.tada/internal
 
+## 0.1.3
+
+### Patch Changes
+
+- ⚠️ Fix `subscriptionType` not being fetched during introspection
+  Submitted by [@kitten](https://github.com/kitten) (See [#172](https://github.com/0no-co/gql.tada/pull/172))
+
 ## 0.1.2
 
 ### Patch Changes
