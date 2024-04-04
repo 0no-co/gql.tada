@@ -8,6 +8,7 @@ import type { GraphQLSchema } from 'graphql';
 import type { TsConfigJson } from 'type-fest';
 import { resolveTypeScriptRootDir, load, check } from '@gql.tada/internal';
 
+import type { GraphQLSPConfig } from './lsp';
 import { getGraphQLSPConfig } from './lsp';
 import { ensureTadaIntrospection } from './tada';
 
@@ -145,7 +146,7 @@ async function main() {
   prog.parse(process.argv);
 }
 
-const getConfig = async () => {
+const getConfig = async (): Promise<GraphQLSPConfig | undefined> => {
   const cwd = process.cwd();
   const tsconfigpath = path.resolve(cwd, 'tsconfig.json');
 

@@ -187,6 +187,9 @@ importers:
       '@0no-co/graphqlsp':
         specifier: ^1.8.0
         version: 1.8.0(typescript@5.4.2)
+      ts-morph:
+        specifier: ^22.0.0
+        version: 22.0.0
     devDependencies:
       '@types/node':
         specifier: ^20.11.0
