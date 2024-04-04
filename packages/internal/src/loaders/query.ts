@@ -179,7 +179,7 @@ const _makeSchemaSelection = (support: SupportedFeatures): SelectionSetNode => (
     // subscriptionType { name }
     {
       kind: Kind.FIELD,
-      name: { kind: Kind.NAME, value: 'mutationType' },
+      name: { kind: Kind.NAME, value: 'subscriptionType' },
       selectionSet: {
         kind: Kind.SELECTION_SET,
         selections: [
