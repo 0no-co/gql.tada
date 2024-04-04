@@ -108,7 +108,8 @@ export async function check(
         file: diag.file && diag.file.fileName,
       }));
     })
-    .filter((diag) => severities.indexOf(diag.severity) >= severities.indexOf(minSeverity));
+    // Filter out diagnostics below the minimum severity
+    .filter((diag) => severities.indexOf(diag.severity) <= severities.indexOf(minSeverity));
 
   return allDiagnostics;
 }
