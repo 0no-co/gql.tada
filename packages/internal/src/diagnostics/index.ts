@@ -3,6 +3,7 @@ import { init, getGraphQLDiagnostics } from '@0no-co/graphqlsp/api';
 import path from 'path';
 import fs from 'fs';
 import { resolveTypeScriptRootDir } from '../resolve';
+import type { SchemaOrigin } from '../loaders';
 import { load } from '../loaders';
 
 type Severity = 'error' | 'warning' | 'info';
@@ -15,7 +16,14 @@ interface FormattedDisplayableDiagnostic {
   file: string | undefined;
 }
 
+type GraphQLSPConfig = {
+  name: string;
+  schema: SchemaOrigin;
+  tadaOutputLocation: string;
+};
+
 export async function check(
+  config: GraphQLSPConfig,
   minSeverity: Severity = 'error'
 ): Promise<FormattedDisplayableDiagnostic[]> {
   const projectName = path.resolve(process.cwd(), 'tsconfig.json');
@@ -32,10 +40,7 @@ export async function check(
 
   const languageService = project.getLanguageService();
   const pluginCreateInfo = {
-    // TODO: add in config
-    config: {
-      schema: './schema.graphql',
-    },
+    config,
     languageService: {
       getReferencesAtPosition: (filename, position) => {
         return languageService.compilerObject.getReferencesAtPosition(filename, position);
@@ -71,7 +76,7 @@ export async function check(
   };
 
   const sourceFiles = project.getSourceFiles();
-  const loader = load({ origin, rootPath });
+  const loader = load({ origin: config.schema, rootPath });
   let schema;
   try {
     const loaderResult = await loader.load();
