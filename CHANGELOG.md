@@ -1,5 +1,15 @@
 # gql.tada
 
+## 1.4.2
+
+### Patch Changes
+
+- Upgrade `@0no-co/graphql.web` to `1.0.5`
+  Submitted by [@kitten](https://github.com/kitten) (See [#168](https://github.com/0no-co/gql.tada/pull/168))
+- Updated dependencies (See [#163](https://github.com/0no-co/gql.tada/pull/163), [#168](https://github.com/0no-co/gql.tada/pull/168), [#163](https://github.com/0no-co/gql.tada/pull/163), and [#165](https://github.com/0no-co/gql.tada/pull/165))
+  - @gql.tada/internal@0.1.2
+  - @gql.tada/cli-utils@0.3.2
+
 ## 1.4.1
 
 ### Patch Changes

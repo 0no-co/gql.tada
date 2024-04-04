@@ -1,5 +1,16 @@
 # @gql.tada/cli-utils
 
+## 0.3.2
+
+### Patch Changes
+
+- Update CLI with new schema loaders
+  Submitted by [@kitten](https://github.com/kitten) (See [#163](https://github.com/0no-co/gql.tada/pull/163))
+- Update internal loader to merge them into one and incorporate `SchemaOrigin` parsing
+  Submitted by [@kitten](https://github.com/kitten) (See [#165](https://github.com/0no-co/gql.tada/pull/165))
+- Updated dependencies (See [#163](https://github.com/0no-co/gql.tada/pull/163), [#168](https://github.com/0no-co/gql.tada/pull/168), and [#165](https://github.com/0no-co/gql.tada/pull/165))
+  - @gql.tada/internal@0.1.2
+
 ## 0.3.1
 
 ### Patch Changes
