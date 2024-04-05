@@ -208,16 +208,54 @@ export const repeatChar = (num = 1) => `${CSI}${num}${FnCSI.RepeatChar}`;
 export const insertColumns = (num = 1) => `${CSI}${num}${FnCSI.InsertColumns}`;
 export const deleteColumns = (num = 1) => `${CSI}${num}${FnCSI.DeleteColumns}`;
 
-export const setMode = (modes: Mode[]) => `${CSI}${modes.join(';')}${FnCSI.SetMode}`;
-export const unsetMode = (modes: Mode[]) => `${CSI}${modes.join(';')}${FnCSI.UnsetMode}`;
+const activeModes: (Mode | PrivateMode)[] = [];
 
-export const setPrivateMode = (...modes: PrivateMode[]) =>
-  `${CSI}?${modes.join(';')}${FnCSI.SetMode}`;
-export const unsetPrivateMode = (...modes: PrivateMode[]) =>
-  `${CSI}?${modes.join(';')}${FnCSI.UnsetMode}`;
+export const setMode = (...setModes: (Mode | PrivateMode)[]): void => {
+  if (isTTY) {
+    let normalModes = '';
+    let privateModes = '';
+    for (const mode of setModes) {
+      if (activeModes.includes(mode)) continue;
+      activeModes.push(mode);
+      switch (mode) {
+        case Mode.Insert:
+        case Mode.AutomaticNewline:
+          normalModes = normalModes ? `${normalModes}:${mode}` : `${mode}`;
+          break;
+        default:
+          privateModes = privateModes ? `${privateModes}:${mode}` : `${mode}`;
+      }
+    }
+    if (normalModes) writeRaw(`${CSI}${normalModes}${FnCSI.SetMode}`);
+    if (privateModes) writeRaw(`${CSI}?${privateModes}${FnCSI.SetMode}`);
+  }
+};
 
-export const showCursor = setPrivateMode(PrivateMode.ShowCursor);
-export const hideCursor = unsetPrivateMode(PrivateMode.ShowCursor);
+export const unsetMode = (...unsetModes: (Mode | PrivateMode)[]) => {
+  if (isTTY) {
+    let normalModes = '';
+    let privateModes = '';
+    for (const mode of unsetModes.length ? unsetModes : [...activeModes]) {
+      const index = activeModes.indexOf(mode);
+      if (index === -1) continue;
+      activeModes.splice(index, 1);
+      switch (mode) {
+        case Mode.Insert:
+        case Mode.AutomaticNewline:
+          normalModes = normalModes ? `${normalModes}:${mode}` : `${mode}`;
+          break;
+        default:
+          privateModes = privateModes ? `${privateModes}:${mode}` : `${mode}`;
+      }
+    }
+    if (normalModes) writeRaw(`${CSI}${normalModes}${FnCSI.UnsetMode}`);
+    if (privateModes) writeRaw(`${CSI}?${privateModes}${FnCSI.UnsetMode}`);
+  }
+};
+
+export function showCursor(show = true) {
+  (show ? setMode : unsetMode)(PrivateMode.ShowCursor);
+}
 
 export const reset = `${CSI}${FnCSI.Reset}`;
 
@@ -244,7 +282,20 @@ export const rgb = (r: number, g: number, b: number) =>
 export const onRgb = (r: number, g: number, b: number) =>
   hasColor ? `${CSI}${onRgbStyle(r, g, b)}${FnCSI.Style}` : NONE;
 
-const _write = (input: string) => process.stdout.write(isTTY ? input : stripAnsi(input));
+let buffer = '';
+let frame: any;
+
+function flush() {
+  if (frame != null) clearImmediate(frame);
+  frame = null;
+  process.stdout.write(buffer);
+  buffer = '';
+}
+
+function writeRaw(input: string) {
+  buffer += isTTY ? input : stripAnsi(input);
+  if (frame == null) frame = setImmediate(flush);
+}
 
 function write(input: readonly string[], ...args: readonly string[]): void;
 function write(input: string, ...args: readonly string[]): void;
@@ -253,21 +304,23 @@ function write(input: string | readonly string[], ...args: readonly string[]): v
   if (Array.isArray(input)) {
     let argIndex = 0;
     for (let index = 0; index < input.length; index++) {
-      _write(input[index]);
-      if (argIndex < args.length) _write(args[argIndex++]);
+      writeRaw(input[index]);
+      if (argIndex < args.length) writeRaw(args[argIndex++]);
     }
   } else {
-    _write(input as string);
-    for (const arg of args) _write(arg);
+    writeRaw(input as string);
+    for (const arg of args) writeRaw(arg);
   }
 }
-
-export { write };
 
 export let columns = 0;
 export let rows = 0;
 
 if (isTTY) {
+  writeRaw(`${CSI}?${PrivateMode.ShowCursor}${FnCSI.UnsetMode}`);
+  writeRaw(reset);
+  flush();
+
   columns = process.stdout.columns;
   rows = process.stdout.rows;
   process.stdout.on('resize', () => {
@@ -276,6 +329,13 @@ if (isTTY) {
   });
 
   process.on('exit', () => {
-    process.stdout.write(showCursor + reset + '\n');
+    unsetMode();
+    setMode(PrivateMode.ShowCursor);
+    writeRaw(reset + '\n');
+    flush();
   });
+
+  process.stdout.write(reset);
 }
+
+export { write, writeRaw, flush };
