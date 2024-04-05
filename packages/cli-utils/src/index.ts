@@ -6,10 +6,12 @@ import { printSchema } from 'graphql';
 
 import type { GraphQLSchema } from 'graphql';
 import type { TsConfigJson } from 'type-fest';
-import { resolveTypeScriptRootDir, load } from '@gql.tada/internal';
+import { load } from '@gql.tada/internal';
 
 import { getGraphQLSPConfig } from './lsp';
 import { ensureTadaIntrospection } from './tada';
+import { getTsConfig } from './tsconfig';
+import { check } from './commands/check';
 
 interface GenerateSchemaOptions {
   headers?: Record<string, string>;
@@ -72,31 +74,13 @@ export async function generateSchema(
 }
 
 export async function generateTadaTypes(shouldPreprocess = false, cwd: string = process.cwd()) {
-  const tsconfigpath = path.resolve(cwd, 'tsconfig.json');
-
-  // TODO: Remove redundant read and move tsconfig.json handling to internal package
-  const root = (await resolveTypeScriptRootDir(tsconfigpath)) || cwd;
-
-  let tsconfigContents: string;
-  try {
-    const file = path.resolve(root, 'tsconfig.json');
-    tsconfigContents = await fs.readFile(file, 'utf-8');
-  } catch (error) {
-    console.error('Failed to read tsconfig.json in current working directory.', error);
-    return;
-  }
-
-  let tsConfig: TsConfigJson;
-  try {
-    tsConfig = parse(tsconfigContents) as TsConfigJson;
-  } catch (err) {
-    console.error(err);
+  const tsConfig = await getTsConfig();
+  if (!tsConfig) {
     return;
   }
 
   const config = getGraphQLSPConfig(tsConfig);
   if (!config) {
-    console.error(`Could not find a "@0no-co/graphqlsp" plugin in your tsconfig.`);
     return;
   }
 
@@ -155,6 +139,15 @@ async function main() {
       const shouldPreprocess =
         !options['disable-preprocessing'] && options['disable-preprocessing'] !== 'false';
       return generateTadaTypes(shouldPreprocess);
+    })
+    .command('check')
+    .option('--level', 'The minimum severity of diagnostics to display (error | warn | info).')
+    .option('--exit-on-warn', 'Whether to exit with a non-zero code when there are warnings.')
+    .action(async (opts) => {
+      check({
+        exitOnWarn: opts['exit-on-warn'] !== undefined ? opts['exit-on-warn'] : false,
+        minSeverity: opts.level || 'error',
+      });
     });
   prog.parse(process.argv);
 }
