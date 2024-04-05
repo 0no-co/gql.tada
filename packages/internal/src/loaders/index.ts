@@ -9,14 +9,14 @@ export { loadFromSDL, loadFromURL };
 
 const getURLConfig = (origin: SchemaOrigin | null) => {
   try {
-    return (
-      origin && {
-        url: new URL(typeof origin === 'object' ? origin.url : origin),
-        headers: typeof origin === 'object' ? origin.headers : undefined,
-      }
-    );
+    return origin
+      ? {
+          url: new URL(typeof origin === 'object' ? origin.url : origin),
+          headers: typeof origin === 'object' ? origin.headers : undefined,
+        }
+      : null;
   } catch (_error) {
-    throw new Error(`Configuration contains an invalid "schema" option`);
+    return null;
   }
 };
 
@@ -28,11 +28,11 @@ export interface LoadConfig {
 }
 
 export function load(config: LoadConfig): SchemaLoader {
-  const urlOrigin = getURLConfig(origin);
+  const urlOrigin = getURLConfig(config.origin);
   if (urlOrigin) {
     return loadFromURL({ ...urlOrigin, interval: config.fetchInterval });
-  } else if (typeof origin === 'string') {
-    const file = config.rootPath ? path.resolve(config.rootPath, origin) : origin;
+  } else if (typeof config.origin === 'string') {
+    const file = config.rootPath ? path.resolve(config.rootPath, config.origin) : config.origin;
     const assumeValid = config.assumeValid != null ? config.assumeValid : true;
     return loadFromSDL({ file, assumeValid });
   } else {

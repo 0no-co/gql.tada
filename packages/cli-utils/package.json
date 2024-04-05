@@ -1,6 +1,6 @@
 {
   "name": "@gql.tada/cli-utils",
-  "version": "0.3.1",
+  "version": "0.3.3",
   "public": true,
   "description": "Main logic for gql.tada’s CLI tool.",
   "author": "0no.co <hi@0no.co>",
@@ -50,6 +50,8 @@
   },
   "dependencies": {
     "@gql.tada/internal": "workspace:*",
+    "@0no-co/graphqlsp": "^1.8.0",
+    "ts-morph": "~22.0.0",
     "graphql": "^16.8.1"
   },
   "peerDependencies": {
