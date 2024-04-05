@@ -50,7 +50,7 @@
   "dependencies": {
     "@gql.tada/internal": "workspace:*",
     "@0no-co/graphqlsp": "^1.8.0",
-    "ts-morph": "^22.0.0",
+    "ts-morph": "~22.0.0",
     "graphql": "^16.8.1"
   },
   "peerDependencies": {

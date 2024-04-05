@@ -2,7 +2,6 @@ import path from 'path';
 import JSON5 from 'json5';
 import fs from 'node:fs/promises';
 import type { TsConfigJson } from 'type-fest';
-import { TsConfigResolver } from '@ts-morph/common';
 
 // TODO: Replace config loading with typescript package's native config loading
 export const resolveTypeScriptRootDir = async (

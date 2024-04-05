@@ -125,9 +125,6 @@ importers:
       react-dom:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
-      ts-morph:
-        specifier: ^22.0.0
-        version: 22.0.0
       urql:
         specifier: ^4.0.6
         version: 4.0.6(graphql@16.8.1)(react@18.2.0)
@@ -163,7 +160,7 @@ importers:
         specifier: ^16.8.1
         version: 16.8.1
       ts-morph:
-        specifier: ^22.0.0
+        specifier: ~22.0.0
         version: 22.0.0
     devDependencies:
       '@types/node':
@@ -190,9 +187,6 @@ importers:
       '@0no-co/graphql.web':
         specifier: ^1.0.5
         version: 1.0.5(graphql@16.8.1)
-      '@ts-morph/common':
-        specifier: ^0.23.0
-        version: 0.23.0
     devDependencies:
       '@types/node':
         specifier: ^20.11.0
