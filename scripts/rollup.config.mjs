@@ -143,7 +143,9 @@ const outputPlugins = [
     name: 'outputBundledLicenses',
     async writeBundle() {
       const { resolve } = createRequire(import.meta.url);
-      const rootLicense = await fs.readFile(path.join(__dirname, '../LICENSE.md'), 'utf8');
+      const rootLicense = path.join(__dirname, '../LICENSE.md');
+      const outputLicense = path.resolve('LICENSE.md');
+      if (rootLicense === outputLicense) return;
       const licenses = new Map();
       for (const packageName of externals) {
         let license;
@@ -163,10 +165,10 @@ const outputPlugins = [
         }
         licenses.set(packageName, license);
       }
-      let output = rootLicense.trim();
+      let output = (await fs.readFile(rootLicense, 'utf8')).trim();
       for (const [packageName, licenseText] of licenses)
         output += `\n\n## ${packageName}\n\n${licenseText.trim()}`;
-      await fs.writeFile('LICENSE.md', output);
+      await fs.writeFile(outputLicense, output);
     },
   },
 
