@@ -38,13 +38,12 @@ export async function check(opts: CheckOptions) {
     return;
   }
 
-  const result = ((await runDiagnostics(config)) || []).filter(
-    (diag) => severities.indexOf(diag.severity) <= severities.indexOf(opts.minSeverity)
-  );
+  const result = (await runDiagnostics(config)) || [];
   const errorDiagnostics = result.filter((d) => d.severity === 'error');
   const warnDiagnostics = result.filter((d) => d.severity === 'warn');
   const infoDiagnostics = result.filter((d) => d.severity === 'info');
 
+  const minSeverityForReport = severities.indexOf(opts.minSeverity);
   if (
     errorDiagnostics.length === 0 &&
     warnDiagnostics.length === 0 &&
@@ -57,14 +56,18 @@ export async function check(opts: CheckOptions) {
     const errorReport = errorDiagnostics.length
       ? `Found ${errorDiagnostics.length} Errors:\n${constructDiagnosticsPerFile(errorDiagnostics)}`
       : ``;
-    const warningsReport = warnDiagnostics.length
-      ? `Found ${warnDiagnostics.length} Warnings:\n${constructDiagnosticsPerFile(warnDiagnostics)}`
-      : ``;
-    const suggestionsReport = infoDiagnostics.length
-      ? `Found ${infoDiagnostics.length} Suggestions:\n${constructDiagnosticsPerFile(
-          infoDiagnostics
-        )}`
-      : ``;
+    const warningsReport =
+      minSeverityForReport >= severities.indexOf('warn') && warnDiagnostics.length
+        ? `Found ${warnDiagnostics.length} Warnings:\n${constructDiagnosticsPerFile(
+            warnDiagnostics
+          )}`
+        : ``;
+    const suggestionsReport =
+      minSeverityForReport >= severities.indexOf('info') && infoDiagnostics.length
+        ? `Found ${infoDiagnostics.length} Suggestions:\n${constructDiagnosticsPerFile(
+            infoDiagnostics
+          )}`
+        : ``;
     // eslint-disable-next-line no-console
     console.log(`${errorReport}${warningsReport}${suggestionsReport}`);
     if (errorDiagnostics.length || (opts.exitOnWarn && warnDiagnostics.length)) {
