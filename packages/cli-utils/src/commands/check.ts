@@ -56,19 +56,15 @@ export async function check(opts: CheckOptions) {
     process.exit(0);
   } else {
     const errorReport = errorDiagnostics.length
-      ? `Found ${errorDiagnostics.length} Errors:\n\n${constructDiagnosticsPerFile(
-          errorDiagnostics
-        )}\n\n`
+      ? `Found ${errorDiagnostics.length} Errors:\n${constructDiagnosticsPerFile(errorDiagnostics)}`
       : ``;
     const warningsReport = warnDiagnostics.length
-      ? `Found ${warnDiagnostics.length} Warnings:\n\n${constructDiagnosticsPerFile(
-          warnDiagnostics
-        )}\n\n`
+      ? `Found ${warnDiagnostics.length} Warnings:\n${constructDiagnosticsPerFile(warnDiagnostics)}`
       : ``;
     const suggestionsReport = infoDiagnostics.length
-      ? `Found ${infoDiagnostics.length} Suggestions:\n\n${constructDiagnosticsPerFile(
+      ? `Found ${infoDiagnostics.length} Suggestions:\n${constructDiagnosticsPerFile(
           infoDiagnostics
-        )}\n\n`
+        )}`
       : ``;
     // eslint-disable-next-line no-console
     console.log(`${errorReport}${warningsReport}${suggestionsReport}`);
@@ -196,6 +192,6 @@ function constructDiagnosticsPerFile(diagnostics: FormattedDisplayableDiagnostic
   }, {});
 
   return Object.entries(diagnosticsByFile).reduce((acc, [fileName, diagnostics]) => {
-    return `${acc}${fileName}\n${diagnostics.join('\n')}\n\n`;
+    return `${acc}\n${fileName}\n${diagnostics.join('\n')}\n`;
   }, '');
 }
