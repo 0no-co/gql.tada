@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path/posix';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
+import { createRequire, isBuiltin } from 'node:module';
 
 import * as prettier from 'prettier';
 import commonjs from '@rollup/plugin-commonjs';
@@ -63,7 +63,7 @@ const commonConfig = {
   }, {}),
   onwarn: () => {},
   external(id) {
-    const isExternal = externalRe.test(id);
+    const isExternal = isBuiltin(id) || externalRe.test(id);
     if (!isExternal && moduleRe.test(id))
       externals.add(id);
     return isExternal;
