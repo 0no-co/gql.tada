@@ -4,7 +4,6 @@ export const PokemonItemFragment = graphql(`
   fragment PokemonItem on Pokemon {
     id
     name
-    f
   }
 `);
 
