@@ -14,7 +14,7 @@
     "urql": "^4.0.6"
   },
   "devDependencies": {
-    "@0no-co/graphqlsp": "^1.5.0",
+    "@0no-co/graphqlsp": "^1.8.0",
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.21",
     "@vitejs/plugin-react": "^4.2.1",
