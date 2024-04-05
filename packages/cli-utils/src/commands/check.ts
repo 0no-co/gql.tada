@@ -53,6 +53,7 @@ export async function check(opts: CheckOptions) {
     console.log('No issues found! 🎉');
     process.exit(0);
   } else {
+    // TODO: report a summary at the top and then a list of files with diagnostics sorted by severity.
     const errorReport = errorDiagnostics.length
       ? `Found ${errorDiagnostics.length} Errors:\n${constructDiagnosticsPerFile(errorDiagnostics)}`
       : ``;
@@ -63,7 +64,10 @@ export async function check(opts: CheckOptions) {
           )}`
         : ``;
     const suggestionsReport =
-      minSeverityForReport >= severities.indexOf('info') && infoDiagnostics.length
+      minSeverityForReport >= severities.indexOf('info') &&
+      infoDiagnostics.length &&
+      warnDiagnostics.length &&
+      errorDiagnostics.length
         ? `Found ${infoDiagnostics.length} Suggestions:\n${constructDiagnosticsPerFile(
             infoDiagnostics
           )}`
@@ -79,6 +83,7 @@ export async function check(opts: CheckOptions) {
 }
 
 async function runDiagnostics(config: GraphQLSPConfig): Promise<FormattedDisplayableDiagnostic[]> {
+  // TODO: leverage ts-morph tsconfig resolver
   const projectName = path.resolve(process.cwd(), 'tsconfig.json');
   const rootPath = (await resolveTypeScriptRootDir(projectName)) || path.dirname(projectName);
   const project = new Project({
