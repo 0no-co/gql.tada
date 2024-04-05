@@ -1,7 +1,6 @@
 import { Project, ts } from 'ts-morph';
 import { init, getGraphQLDiagnostics } from '@0no-co/graphqlsp/api';
 import path from 'path';
-import fs from 'fs';
 import { getTsConfig } from '../tsconfig';
 import type { GraphQLSPConfig } from '../lsp';
 import { getGraphQLSPConfig } from '../lsp';
@@ -114,9 +113,6 @@ async function runDiagnostics(config: GraphQLSPConfig): Promise<FormattedDisplay
     languageServiceHost: {} as any,
     project: {
       getProjectName: () => path.resolve(process.cwd(), 'tsconfig.json'),
-      readFile: (p) => {
-        return fs.readFileSync(p);
-      },
       projectService: {
         logger: console,
       },
