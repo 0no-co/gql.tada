@@ -153,12 +153,18 @@ importers:
 
   packages/cli-utils:
     dependencies:
+      '@0no-co/graphqlsp':
+        specifier: ^1.8.0
+        version: 1.8.0(typescript@5.4.2)
       '@gql.tada/internal':
         specifier: workspace:*
         version: link:../internal
       graphql:
         specifier: ^16.8.1
         version: 16.8.1
+      ts-morph:
+        specifier: ^22.0.0
+        version: 22.0.0
     devDependencies:
       '@types/node':
         specifier: ^20.11.0
@@ -184,12 +190,6 @@ importers:
       '@0no-co/graphql.web':
         specifier: ^1.0.5
         version: 1.0.5(graphql@16.8.1)
-      '@0no-co/graphqlsp':
-        specifier: ^1.8.0
-        version: 1.8.0(typescript@5.4.2)
-      ts-morph:
-        specifier: ^22.0.0
-        version: 22.0.0
     devDependencies:
       '@types/node':
         specifier: ^20.11.0

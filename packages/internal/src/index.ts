@@ -8,4 +8,3 @@ export {
 } from './introspection';
 
 export { resolveTypeScriptRootDir } from './resolve';
-export * from './diagnostics';
