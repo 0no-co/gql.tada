@@ -13,6 +13,7 @@ import { getTsConfig } from './tsconfig';
 import { executeTadaDoctor } from './commands/doctor';
 import { check } from './commands/check';
 import { initGqlTada } from './commands/init';
+import { generatePersisted } from './commands/generate-persisted';
 
 interface GenerateSchemaOptions {
   headers?: Record<string, string>;
@@ -138,6 +139,10 @@ async function main() {
         headers: Object.keys(parsedHeaders).length ? parsedHeaders : undefined,
         output: options.output,
       });
+    })
+    .command('generate-persisted <target>')
+    .action(async (target) => {
+      await generatePersisted(target || './po.json');
     })
     .command('generate-output')
     .option(
