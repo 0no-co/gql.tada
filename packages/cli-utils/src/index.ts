@@ -3,7 +3,6 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { parse } from 'json5';
 import { printSchema } from 'graphql';
-
 import type { GraphQLSchema } from 'graphql';
 import type { TsConfigJson } from 'type-fest';
 import { load } from '@gql.tada/internal';
@@ -11,6 +10,7 @@ import { load } from '@gql.tada/internal';
 import { getGraphQLSPConfig } from './lsp';
 import { ensureTadaIntrospection } from './tada';
 import { getTsConfig } from './tsconfig';
+import { executeTadaDoctor } from './commands/doctor';
 import { check } from './commands/check';
 
 interface GenerateSchemaOptions {
@@ -98,6 +98,11 @@ prog.version(process.env.npm_package_version || '0.0.0');
 
 async function main() {
   prog
+    .command('doctor')
+    .describe('Finds common issues in your gql.tada setup.')
+    .action(async () => {
+      return executeTadaDoctor();
+    })
     .command('generate-schema <target>')
     .describe(
       'Generate a GraphQL schema from a URL or introspection file, this will be generated from the parameters to this command.'

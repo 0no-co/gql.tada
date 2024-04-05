@@ -175,6 +175,9 @@ importers:
       sade:
         specifier: ^1.8.1
         version: 1.8.1
+      semiver:
+        specifier: ^1.1.0
+        version: 1.1.0
       type-fest:
         specifier: ^4.10.2
         version: 4.10.2
@@ -5493,6 +5496,11 @@ packages:
 
   /search-insights@2.13.0:
     resolution: {integrity: sha512-Orrsjf9trHHxFRuo9/rzm0KIWmgzE8RMlZMzuhZOJ01Rnz3D0YBAe+V6473t6/H6c7irs6Lt48brULAiRWb3Vw==}
+    dev: true
+
+  /semiver@1.1.0:
+    resolution: {integrity: sha512-QNI2ChmuioGC1/xjyYwyZYADILWyW6AmS1UH6gDj/SFUUUS4MBAWs/7mxnkRPc/F4iHezDP+O8t0dO8WHiEOdg==}
+    engines: {node: '>=6'}
     dev: true
 
   /semver@5.7.2:
