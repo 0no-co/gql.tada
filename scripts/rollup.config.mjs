@@ -1,6 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path/posix';
+import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
+import { createRequire, isBuiltin } from 'node:module';
 
 import * as prettier from 'prettier';
 import commonjs from '@rollup/plugin-commonjs';
@@ -9,6 +11,8 @@ import babel from '@rollup/plugin-babel';
 import terser from '@rollup/plugin-terser';
 import cjsCheck from 'rollup-plugin-cjs-check';
 import dts from 'rollup-plugin-dts';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const normalize = name => []
   .concat(name)
@@ -34,7 +38,8 @@ const externalModules = [
   ...Object.keys(meta.peerDependencies || {}),
 ];
 
-const external = new RegExp(`^(${externalModules.join('|')})($|/)`);
+const moduleRe = /^(?!node:|[.{1,2}\/])(@[\w.-]+\/)?[\w.-]+/;
+const externalRe = new RegExp(`^(${externalModules.join('|')})($|/)`);
 
 const exports = {};
 for (const key in meta.exports) {
@@ -49,6 +54,8 @@ for (const key in meta.exports) {
   }
 }
 
+const externals = new Set();
+
 const commonConfig = {
   input: Object.entries(exports).reduce((input, [exportName, entry]) => {
     input[exportName] = entry.source;
@@ -56,7 +63,10 @@ const commonConfig = {
   }, {}),
   onwarn: () => {},
   external(id) {
-    return external.test(id);
+    const isExternal = isBuiltin(id) || externalRe.test(id);
+    if (!isExternal && moduleRe.test(id))
+      externals.add(id);
+    return isExternal;
   },
   treeshake: {
     unknownGlobalSideEffects: false,
@@ -126,6 +136,39 @@ const outputPlugins = [
           await fs.writeFile(path.join(entry.path, 'package.json'), json);
         }
       }
+    },
+  },
+
+  {
+    name: 'outputBundledLicenses',
+    async writeBundle() {
+      const { resolve } = createRequire(import.meta.url);
+      const rootLicense = path.join(__dirname, '../LICENSE.md');
+      const outputLicense = path.resolve('LICENSE.md');
+      if (rootLicense === outputLicense) return;
+      const licenses = new Map();
+      for (const packageName of externals) {
+        let license;
+        const metaPath = resolve(packageName + '/package.json');
+        const packagePath = path.dirname(metaPath);
+        let licenseName = (await fs.readdir(packagePath))
+          .find((name) => /^licen[sc]e/i.test(name));
+        if (!licenseName) {
+          const meta = require(metaPath);
+          const match = /^SEE LICENSE IN (.*)/i.exec(meta.license || '');
+          licenseName = match ? match[1] : meta.license;
+        }
+        try {
+          license = await fs.readFile(path.join(packagePath, licenseName), 'utf8');
+        } catch (_error) {
+          license = `${licenseName}, Copyright (c) ${meta.author}`;
+        }
+        licenses.set(packageName, license);
+      }
+      let output = (await fs.readFile(rootLicense, 'utf8')).trim();
+      for (const [packageName, licenseText] of licenses)
+        output += `\n\n## ${packageName}\n\n${licenseText.trim()}`;
+      await fs.writeFile(outputLicense, output);
     },
   },
 
