@@ -5,6 +5,7 @@ import { getTsConfig } from '../tsconfig';
 import type { GraphQLSPConfig } from '../lsp';
 import { getGraphQLSPConfig } from '../lsp';
 import { load, resolveTypeScriptRootDir } from '@gql.tada/internal';
+import { createPluginInfo } from '../ts/project';
 
 type Severity = 'error' | 'warn' | 'info';
 const severities: Severity[] = ['error', 'warn', 'info'];
@@ -94,39 +95,7 @@ async function runDiagnostics(config: GraphQLSPConfig): Promise<FormattedDisplay
     typescript: ts as any,
   });
 
-  const languageService = project.getLanguageService();
-  const pluginCreateInfo = {
-    config,
-    languageService: {
-      getReferencesAtPosition: (filename, position) => {
-        return languageService.compilerObject.getReferencesAtPosition(filename, position);
-      },
-      getDefinitionAtPosition: (filename, position) => {
-        return languageService.compilerObject.getDefinitionAtPosition(filename, position);
-      },
-      getProgram: () => {
-        const program = project.getProgram();
-        return {
-          ...program,
-          getTypeChecker: () => project.getTypeChecker(),
-          getSourceFile: (s) => {
-            const source = project.getSourceFile(s);
-            return source && source.compilerNode;
-          },
-        };
-      },
-      // This prevents us from exposing normal diagnostics
-      getSemanticDiagnostics: () => [],
-    } as any,
-    languageServiceHost: {} as any,
-    project: {
-      getProjectName: () => path.resolve(process.cwd(), 'tsconfig.json'),
-      projectService: {
-        logger: console,
-      },
-    } as any,
-    serverHost: {} as any,
-  };
+  const pluginCreateInfo = createPluginInfo(project, config, projectName);
 
   const sourceFiles = project.getSourceFiles();
   const loader = load({ origin: config.schema, rootPath });

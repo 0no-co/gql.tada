@@ -13,6 +13,7 @@ import fs from 'node:fs/promises';
 import { getTsConfig } from '../tsconfig';
 import type { GraphQLSPConfig } from '../lsp';
 import { getGraphQLSPConfig } from '../lsp';
+import { createPluginInfo } from '../ts/project';
 
 export async function generatePersisted(target: string) {
   const tsConfig = await getTsConfig();
@@ -44,39 +45,7 @@ async function getPersistedOperationsFromFiles(
     typescript: ts as any,
   });
 
-  const languageService = project.getLanguageService();
-  const pluginCreateInfo = {
-    config,
-    languageService: {
-      getReferencesAtPosition: (filename, position) => {
-        return languageService.compilerObject.getReferencesAtPosition(filename, position);
-      },
-      getDefinitionAtPosition: (filename, position) => {
-        return languageService.compilerObject.getDefinitionAtPosition(filename, position);
-      },
-      getProgram: () => {
-        const program = project.getProgram();
-        return {
-          ...program,
-          getTypeChecker: () => project.getTypeChecker(),
-          getSourceFile: (s) => {
-            const source = project.getSourceFile(s);
-            return source && source.compilerNode;
-          },
-        };
-      },
-      // This prevents us from exposing normal diagnostics
-      getSemanticDiagnostics: () => [],
-    } as any,
-    languageServiceHost: {} as any,
-    project: {
-      getProjectName: () => path.resolve(process.cwd(), 'tsconfig.json'),
-      projectService: {
-        logger: console,
-      },
-    } as any,
-    serverHost: {} as any,
-  };
+  const pluginCreateInfo = createPluginInfo(project, config, projectName);
 
   const sourceFiles = project.getSourceFiles();
   const loader = load({ origin: config.schema, rootPath });
@@ -98,12 +67,10 @@ async function getPersistedOperationsFromFiles(
       ...persistedCallExpressions.reduce((acc, callExpression) => {
         const hash = callExpression.arguments[0].getText();
         if (!callExpression.typeArguments) {
-          // TODO: do we log an error or not, this should be handled by check...
           return acc;
         }
         const [typeQuery] = callExpression.typeArguments;
         if (!ts.isTypeQueryNode(typeQuery)) {
-          // TODO: do we log an error or not, this should be handled by check...
           return acc;
         }
 
@@ -114,7 +81,6 @@ async function getPersistedOperationsFromFiles(
         );
 
         if (!foundNode) {
-          // TODO: do we log an error or not, this should be handled by check...
           return acc;
         }
 
@@ -124,7 +90,6 @@ async function getPersistedOperationsFromFiles(
           !ts.isCallExpression(initializer) ||
           !ts.isNoSubstitutionTemplateLiteral(initializer.arguments[0])
         ) {
-          // TODO: do we log an error or not, this should be handled by check...
           return acc;
         }
 
