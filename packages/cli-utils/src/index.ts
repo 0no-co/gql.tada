@@ -142,7 +142,7 @@ async function main() {
     })
     .command('generate-persisted <target>')
     .action(async (target) => {
-      await generatePersisted(target || './po.json');
+      await generatePersisted(target);
     })
     .command('generate-output')
     .option(
