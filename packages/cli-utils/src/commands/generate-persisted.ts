@@ -62,25 +62,35 @@ async function getPersistedOperationsFromFiles(
 
   return sourceFiles.reduce((acc, sourceFile) => {
     const persistedCallExpressions = findAllPersistedCallExpressions(sourceFile.compilerNode);
+    const currentFilename = sourceFile.compilerNode.fileName;
     return {
       ...acc,
       ...persistedCallExpressions.reduce((acc, callExpression) => {
         const hash = callExpression.arguments[0].getText();
         if (!callExpression.typeArguments) {
+          console.warn(
+            `Persisted call expression in "${currentFilename}" is missing a type argument like "graphql.persisted<typeof document>". Skipping...`
+          );
           return acc;
         }
         const [typeQuery] = callExpression.typeArguments;
         if (!ts.isTypeQueryNode(typeQuery)) {
+          console.warn(
+            `Persisted call expression in "${currentFilename}" is missing a type argument like "graphql.persisted<typeof document>". Skipping...`
+          );
           return acc;
         }
 
         const { node: foundNode } = getDocumentReferenceFromTypeQuery(
           typeQuery,
-          sourceFile.compilerNode.fileName,
+          currentFilename,
           pluginCreateInfo
         );
 
         if (!foundNode) {
+          console.warn(
+            `Could not find reference for "${typeQuery.getText()}" in "${currentFilename}", if this is unexpected file an issue at "https://github.com/0no-co/gql.tada/issues/new/choose" describing your case.`
+          );
           return acc;
         }
 
@@ -88,8 +98,12 @@ async function getPersistedOperationsFromFiles(
         if (
           !initializer ||
           !ts.isCallExpression(initializer) ||
-          !ts.isNoSubstitutionTemplateLiteral(initializer.arguments[0])
+          (!ts.isNoSubstitutionTemplateLiteral(initializer.arguments[0]) &&
+            !ts.isStringLiteral(initializer.arguments[0]))
         ) {
+          console.warn(
+            `Persisted call expression in "${currentFilename}" is missing a string argument containing the hash. Skipping...`
+          );
           return acc;
         }
 
