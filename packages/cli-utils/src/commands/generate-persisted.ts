@@ -113,7 +113,7 @@ async function getPersistedOperationsFromFiles(
           unrollTadaFragments(initializer.arguments[1], fragments, pluginCreateInfo);
         }
 
-        const document = `${operation}\n${fragments.map((frag) => print(frag)).join('\n')}`;
+        const document = `${operation}\n\n${fragments.map((frag) => print(frag)).join('\n\n')}`;
         acc[hash.slice(1, -1)] = document;
         return acc;
       }, {}),
