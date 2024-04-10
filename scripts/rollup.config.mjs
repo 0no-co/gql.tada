@@ -142,14 +142,14 @@ const outputPlugins = [
   {
     name: 'outputBundledLicenses',
     async writeBundle() {
-      const { resolve } = createRequire(import.meta.url);
+      const require = createRequire(import.meta.url);
       const rootLicense = path.join(__dirname, '../LICENSE.md');
       const outputLicense = path.resolve('LICENSE.md');
       if (rootLicense === outputLicense) return;
       const licenses = new Map();
       for (const packageName of externals) {
         let license;
-        const metaPath = resolve(packageName + '/package.json');
+        const metaPath = require.resolve(packageName + '/package.json');
         const packagePath = path.dirname(metaPath);
         let licenseName = (await fs.readdir(packagePath))
           .find((name) => /^licen[sc]e/i.test(name));
