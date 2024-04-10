@@ -5,10 +5,10 @@ export {
   maskFragments,
   unsafe_readResult,
   initGraphQLTada,
-  Cache,
 } from './api';
 
 export type {
+  SetupCache,
   setupSchema,
   parseDocument,
   AbstractSetupSchema,

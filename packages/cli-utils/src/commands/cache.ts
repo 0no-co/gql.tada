@@ -31,11 +31,11 @@ function createCache(cache: Record<string, string>): string {
   return `import * as gqlTada from 'gql.tada';
 
 declare module 'gql.tada' {
-  interface Cache {
-    properties: { ${Object.keys(cache).reduce((acc, key) => {
+  interface SetupCache {
+    ${Object.keys(cache).reduce((acc, key) => {
       const value = cache[key];
       return `${acc}\n${JSON.stringify(key)}: ${value}`;
-    }, '')} }
+    }, '')}
   }
 }\n`;
 }
