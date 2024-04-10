@@ -1,5 +1,4 @@
 import type { IntrospectionQuery } from 'graphql';
-import { minifyIntrospectionQuery } from '@urql/introspection';
 
 import { TadaError } from '../errors';
 import { PREAMBLE_IGNORE, ANNOTATION_DTS, ANNOTATION_TS } from './constants';
@@ -7,15 +6,6 @@ import { preprocessIntrospection } from './preprocess';
 
 const stringifyJson = (input: unknown | string): string =>
   typeof input === 'string' ? input : JSON.stringify(input, null, 2);
-
-export function minifyIntrospection(introspection: IntrospectionQuery): IntrospectionQuery {
-  return minifyIntrospectionQuery(introspection, {
-    includeDirectives: false,
-    includeEnums: true,
-    includeInputs: true,
-    includeScalars: true,
-  });
-}
 
 interface OutputIntrospectionFileOptions {
   fileType: '.ts' | '.d.ts' | string;
