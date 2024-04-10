@@ -5,8 +5,8 @@ import type { mapIntrospection, addIntrospectionScalars } from '../introspection
 
 describe('mapIntrospection', () => {
   it('prepares sample schema', () => {
-    type expected = addIntrospectionScalars<mapIntrospection<simpleIntrospection>>;
-    expectTypeOf<expected>().toMatchTypeOf<simpleSchema>();
+    type expected = mapIntrospection<simpleIntrospection>;
+    expectTypeOf<simpleSchema>().toMatchTypeOf<expected>();
   });
 
   it('applies scalar types as appropriate', () => {

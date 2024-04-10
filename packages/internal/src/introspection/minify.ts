@@ -89,14 +89,14 @@ function minifyIntrospectionType(type: IntrospectionType): IntrospectionType {
       return {
         kind: 'ENUM',
         name: type.name,
-        enumValues: type.enumValues.map(mapEnumValue).sort(nameCompare),
+        enumValues: type.enumValues.map(mapEnumValue),
       };
 
     case 'INPUT_OBJECT': {
       return {
         kind: 'INPUT_OBJECT',
         name: type.name,
-        inputFields: type.inputFields.map(mapInputField).sort(nameCompare),
+        inputFields: type.inputFields.map(mapInputField),
       };
     }
 
