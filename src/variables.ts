@@ -96,7 +96,7 @@ type _getScalarType<
 > = TypeName extends keyof Introspection['types']
   ? Introspection['types'][TypeName] extends { kind: 'INPUT_OBJECT'; inputFields: any }
     ? getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>
-    : Introspection['types'][TypeName] extends { kind: 'SCALAR' | 'ENUM'; type: any }
+    : Introspection['types'][TypeName] extends { type: any }
       ? Introspection['types'][TypeName]['type']
       : never
   : unknown;
@@ -108,7 +108,7 @@ type getScalarType<
 > = TypeName extends keyof Introspection['types']
   ? Introspection['types'][TypeName] extends { kind: 'INPUT_OBJECT'; inputFields: any }
     ? getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection> | OrType
-    : Introspection['types'][TypeName] extends { kind: 'SCALAR' | 'ENUM'; type: any }
+    : Introspection['types'][TypeName] extends { type: any }
       ? Introspection['types'][TypeName]['type'] | OrType
       : never
   : never;
