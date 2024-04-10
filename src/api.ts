@@ -133,7 +133,7 @@ interface GraphQLTadaAPI<Schema extends SchemaLike, Config extends AbstractConfi
   <const In extends string, const Fragments extends readonly FragmentShape[]>(
     input: In,
     fragments?: Fragments
-  ): setupCache[In] extends TadaDocumentNode
+  ): setupCache[In] extends DocumentNodeLike
     ? setupCache[In]
     : getDocumentNode<
         parseDocument<In>,
