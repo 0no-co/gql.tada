@@ -24,7 +24,7 @@ type getInputObjectTypeRec<
         : {}) &
         InputObject
     >
-  : InputObject;
+  : obj<InputObject>;
 
 type unwrapTypeRec<TypeRef, Introspection extends SchemaLike, IsOptional> = TypeRef extends {
   kind: 'NON_NULL';
@@ -102,7 +102,7 @@ type _getScalarType<
   ? Introspection['types'][TypeName] extends { kind: 'SCALAR' | 'ENUM'; type: any }
     ? Introspection['types'][TypeName]['type']
     : Introspection['types'][TypeName] extends { kind: 'INPUT_OBJECT'; inputFields: any }
-      ? obj<getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>>
+      ? getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>
       : never
   : unknown;
 
@@ -115,9 +115,7 @@ type getScalarType<
     ? Introspection['types'][TypeName]['type'] | OrType
     : Introspection['types'][TypeName] extends { kind: 'INPUT_OBJECT'; inputFields: any }
       ?
-          | obj<
-              getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>
-            >
+          | getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>
           | OrType
       : never
   : never;
