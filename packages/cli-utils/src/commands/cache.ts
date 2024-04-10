@@ -45,7 +45,7 @@ async function getPersistedOperationsFromFiles(
         }
 
         const returnType = resolvedSignature.getReturnType();
-        acc[callExpression.getText()] = typeChecker.typeToString(
+        acc[callExpression.arguments[0].getText().slice(1, -1)] = typeChecker.typeToString(
           returnType,
           undefined,
           BUILDER_FLAGS
