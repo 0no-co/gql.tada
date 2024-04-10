@@ -8,10 +8,11 @@ export {
 } from './api';
 
 export type {
-  SetupCache,
+  setupCache,
   setupSchema,
   parseDocument,
   AbstractSetupSchema,
+  AbstractSetupCache,
   GraphQLTadaAPI,
   TadaDocumentNode,
   TadaPersistedDocumentNode,

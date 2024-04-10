@@ -1,5 +1,4 @@
 import { Project, TypeFormatFlags, ts } from 'ts-morph';
-import { EmitHint, NewLineKind, createPrinter } from 'typescript';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 
@@ -48,14 +47,7 @@ async function getGraphqlInvocationCache(config: GraphQLSPConfig): Promise<Recor
   });
 
   const pluginCreateInfo = createPluginInfo(project, config, projectName);
-
   const sourceFiles = project.getSourceFiles();
-  const printer = createPrinter({
-    newLine: NewLineKind.LineFeed,
-    removeComments: true,
-    omitTrailingSemicolon: true,
-    noEmitHelpers: true,
-  });
 
   return sourceFiles.reduce((acc, sourceFile) => {
     const tadaCallExpressions = findAllCallExpressions(sourceFile.compilerNode, pluginCreateInfo);
@@ -63,24 +55,21 @@ async function getGraphqlInvocationCache(config: GraphQLSPConfig): Promise<Recor
       ...acc,
       ...tadaCallExpressions.reduce((acc, callExpression) => {
         const typeChecker = project.getTypeChecker().compilerObject;
-        const resolvedSignature = typeChecker.getResolvedSignature(callExpression);
-        if (!resolvedSignature) return acc;
+        const type = typeChecker.getTypeAtLocation(callExpression);
+        if (type.symbol.getEscapedName() !== 'TadaDocumentNode') {
+          return acc; // TODO: error?
+        }
 
-        const returnType = resolvedSignature.getReturnType();
-        const typeNode = typeChecker.typeToTypeNode(returnType, undefined, BUILDER_FLAGS);
-        if (!typeNode) return acc;
-        acc[callExpression.arguments[0].getText().slice(1, -1)] = printer.printNode(
-          EmitHint.Unspecified,
-          typeNode,
-          sourceFile.compilerNode
-        );
+        const valueString = typeChecker.typeToString(type, callExpression, BUILDER_FLAGS);
+
+        acc[callExpression.arguments[0].getText().slice(1, -1)] = valueString;
         return acc;
       }, {}),
     };
   }, {});
 }
 
-const BUILDER_FLAGS =
+const BUILDER_FLAGS: TypeFormatFlags =
   TypeFormatFlags.NoTruncation |
   TypeFormatFlags.NoTypeReduction |
   TypeFormatFlags.InTypeAlias |
