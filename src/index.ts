@@ -5,6 +5,7 @@ export {
   maskFragments,
   unsafe_readResult,
   initGraphQLTada,
+  Cache,
 } from './api';
 
 export type {

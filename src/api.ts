@@ -84,6 +84,11 @@ interface setupSchema extends AbstractSetupSchema {
   /*empty*/
 }
 
+interface AbstractCache {
+  cache: Record<string, TadaDocumentNode>;
+}
+interface Cache extends AbstractCache {}
+
 interface GraphQLTadaAPI<Schema extends SchemaLike, Config extends AbstractConfig> {
   /** Function to create and compose GraphQL documents with result and variable types.
    *
