@@ -90,7 +90,7 @@ export const initGqlTada = async (cwd: string) => {
     true
   );
 
-  const tadaLocation = await question(
+  let tadaLocation = await question(
     'What directory do you want us to write the tadaOutputFile to?',
     async (value: string) => {
       const dir = path.resolve(cwd, value);
@@ -105,9 +105,21 @@ export const initGqlTada = async (cwd: string) => {
     true
   );
 
+  if (isCancel(tadaLocation)) {
+    cancel('Operation cancelled.');
+    process.exit(0);
+  }
+
+  tadaLocation = path.resolve(tadaLocation, 'graphql-env.d.ts');
+
   const shouldInstallDependencies = await confirm({
     message: 'Do you want us to install the dependencies?',
   });
+
+  if (isCancel(shouldInstallDependencies)) {
+    cancel('Operation cancelled.');
+    process.exit(0);
+  }
 
   if (shouldInstallDependencies) {
     s.start('Installing packages.');
