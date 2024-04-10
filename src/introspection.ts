@@ -31,12 +31,6 @@ interface IntrospectionSchema {
   readonly types: readonly any[];
 }
 
-interface IntrospectionScalarType {
-  readonly kind: 'SCALAR';
-  readonly name: string;
-  readonly specifiedByURL?: string | null;
-}
-
 export interface IntrospectionObjectType {
   readonly kind: 'OBJECT';
   readonly name: string;
@@ -49,33 +43,27 @@ export interface IntrospectionObjectType {
 interface IntrospectionInterfaceType {
   readonly kind: 'INTERFACE';
   readonly name: string;
-  // Usually this would be `IntrospectionField`.
-  // However, to save TypeScript some work, instead, we constraint it to `any` here.
-  readonly fields: readonly any[];
-  readonly possibleTypes: readonly IntrospectionNamedTypeRef[];
-  // The `interfaces` field isn't used. It's omitted here
+  readonly fields: readonly any[] /*readonly IntrospectionField[]*/;
+  readonly possibleTypes: readonly any[] /*readonly IntrospectionNamedTypeRef[]*/;
+  // NOTE: The `interfaces` field isn't used. It's omitted here
 }
 
 interface IntrospectionUnionType {
   readonly kind: 'UNION';
   readonly name: string;
-  readonly possibleTypes: readonly IntrospectionNamedTypeRef[];
-}
-
-interface IntrospectionEnumValue {
-  readonly name: string;
+  readonly possibleTypes: readonly any[] /*readonly IntrospectionNamedTypeRef[]*/;
 }
 
 interface IntrospectionEnumType {
   readonly kind: 'ENUM';
   readonly name: string;
-  readonly enumValues: readonly IntrospectionEnumValue[];
+  readonly enumValues: readonly any[] /*readonly IntrospectionEnumValue[]*/;
 }
 
 interface IntrospectionInputObjectType {
   readonly kind: 'INPUT_OBJECT';
   readonly name: string;
-  readonly inputFields: readonly IntrospectionInputValue[];
+  readonly inputFields: readonly any[] /*readonly IntrospectionInputValue[]*/;
 }
 
 export interface IntrospectionListTypeRef {
@@ -101,12 +89,6 @@ export interface IntrospectionField {
   readonly name: string;
   readonly type: IntrospectionTypeRef;
   // The `args` field isn't used. It's omitted here
-}
-
-interface IntrospectionInputValue {
-  readonly name: string;
-  readonly type: IntrospectionTypeRef;
-  readonly defaultValue?: string | null;
 }
 
 interface DefaultScalars {
