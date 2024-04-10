@@ -148,6 +148,7 @@ const outputPlugins = [
       if (rootLicense === outputLicense) return;
       const licenses = new Map();
       for (const packageName of externals) {
+        try {
         let license;
         const metaPath = require.resolve(packageName + '/package.json');
         const packagePath = path.dirname(metaPath);
@@ -164,6 +165,9 @@ const outputPlugins = [
           license = `${licenseName}, Copyright (c) ${meta.author}`;
         }
         licenses.set(packageName, license);
+      } catch (error) {
+        // Failed to get license, probably becaues it's not in the export mapping
+      }
       }
       let output = (await fs.readFile(rootLicense, 'utf8')).trim();
       for (const [packageName, licenseText] of licenses)
