@@ -12,6 +12,7 @@ import { ensureTadaIntrospection } from './tada';
 import { getTsConfig } from './tsconfig';
 import { executeTadaDoctor } from './commands/doctor';
 import { check } from './commands/check';
+import { initGqlTada } from './commands/init';
 
 interface GenerateSchemaOptions {
   headers?: Record<string, string>;
@@ -98,6 +99,12 @@ prog.version(process.env.npm_package_version || '0.0.0');
 
 async function main() {
   prog
+    .command('init <folder>')
+    .describe('Bootstraps your project with gql.tada.')
+    .action(async (folder) => {
+      const target = path.resolve(process.cwd(), folder);
+      await initGqlTada(target);
+    })
     .command('doctor')
     .describe('Finds common issues in your gql.tada setup.')
     .action(async () => {
