@@ -94,10 +94,10 @@ type _getScalarType<
   TypeName,
   Introspection extends SchemaLike,
 > = TypeName extends keyof Introspection['types']
-  ? Introspection['types'][TypeName] extends { kind: 'SCALAR' | 'ENUM'; type: any }
-    ? Introspection['types'][TypeName]['type']
-    : Introspection['types'][TypeName] extends { kind: 'INPUT_OBJECT'; inputFields: any }
-      ? getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>
+  ? Introspection['types'][TypeName] extends { kind: 'INPUT_OBJECT'; inputFields: any }
+    ? getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>
+    : Introspection['types'][TypeName] extends { kind: 'SCALAR' | 'ENUM'; type: any }
+      ? Introspection['types'][TypeName]['type']
       : never
   : unknown;
 
@@ -106,12 +106,10 @@ type getScalarType<
   Introspection extends SchemaLike,
   OrType = never,
 > = TypeName extends keyof Introspection['types']
-  ? Introspection['types'][TypeName] extends { kind: 'SCALAR' | 'ENUM'; type: any }
-    ? Introspection['types'][TypeName]['type'] | OrType
-    : Introspection['types'][TypeName] extends { kind: 'INPUT_OBJECT'; inputFields: any }
-      ?
-          | getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>
-          | OrType
+  ? Introspection['types'][TypeName] extends { kind: 'INPUT_OBJECT'; inputFields: any }
+    ? getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection> | OrType
+    : Introspection['types'][TypeName] extends { kind: 'SCALAR' | 'ENUM'; type: any }
+      ? Introspection['types'][TypeName]['type'] | OrType
       : never
   : never;
 
