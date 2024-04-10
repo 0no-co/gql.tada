@@ -14,4 +14,10 @@ describe('mapIntrospection', () => {
     type idScalar = expected['types']['ID']['type'];
     expectTypeOf<idScalar>().toEqualTypeOf<'ID'>();
   });
+
+  it('still uses default scalars when applying custom scalars', () => {
+    type expected = addIntrospectionScalars<mapIntrospection<simpleIntrospection>, { ID: 'ID' }>;
+    type intScalar = expected['types']['Int']['type'];
+    expectTypeOf<intScalar>().toEqualTypeOf<number>();
+  });
 });
