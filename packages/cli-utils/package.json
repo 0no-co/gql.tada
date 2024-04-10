@@ -40,7 +40,9 @@
     "prepublishOnly": "run-s clean build"
   },
   "devDependencies": {
+    "@clack/prompts": "^0.7.0",
     "@types/node": "^20.11.0",
+    "execa": "^8.0.1",
     "json5": "^2.2.3",
     "rollup": "^4.9.4",
     "sade": "^1.8.1",
