@@ -14,4 +14,23 @@ describe('mapIntrospection', () => {
     type idScalar = expected['types']['ID']['type'];
     expectTypeOf<idScalar>().toEqualTypeOf<'ID'>();
   });
+
+  it('still uses default scalars when applying custom scalars', () => {
+    type expected = addIntrospectionScalars<mapIntrospection<simpleIntrospection>, { ID: 'ID' }>;
+    type intScalar = expected['types']['Int']['type'];
+    expectTypeOf<intScalar>().toEqualTypeOf<number>();
+  });
+
+  it('allows enums to be remapped', () => {
+    enum TestEnum {
+      test = 'test',
+      value = 'value',
+    }
+    type expected = addIntrospectionScalars<
+      mapIntrospection<simpleIntrospection>,
+      { test: TestEnum }
+    >;
+    type testEnum = expected['types']['test']['type'];
+    expectTypeOf<testEnum>().toEqualTypeOf<TestEnum>();
+  });
 });

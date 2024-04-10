@@ -149,11 +149,17 @@ describe('graphql()', () => {
 });
 
 describe('graphql() with custom scalars', () => {
+  enum TestEnum {
+    value = 'value',
+    test = 'test',
+  }
+
   const graphql = initGraphQLTada<{
     introspection: simpleIntrospection;
     scalars: {
       ID: [string];
       String: { value: string };
+      test: TestEnum;
     };
   }>();
 
@@ -162,6 +168,7 @@ describe('graphql() with custom scalars', () => {
       fragment Fields on Todo @_unmask {
         id
         text
+        test
       }
     `);
 
@@ -179,6 +186,7 @@ describe('graphql() with custom scalars', () => {
     expectTypeOf<FragmentOf<typeof fragment>>().toEqualTypeOf<{
       id: [string];
       text: { value: string };
+      test: TestEnum | null;
     }>();
 
     expectTypeOf<ResultOf<typeof query>>().toEqualTypeOf<{
@@ -186,6 +194,7 @@ describe('graphql() with custom scalars', () => {
         | ({
             id: [string];
             text: { value: string };
+            test: TestEnum | null;
           } | null)[]
         | null;
     }>();

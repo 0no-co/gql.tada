@@ -501,9 +501,11 @@ declare module 'gql.tada' {
 This is used either via [`setupSchema`](#setupschema) or [`initGraphQLTada()`](#initgraphqltada) to set
 up your schema and scalars. Your configuration objects must match the shape of this type.
 
-The `scalars` option is optional and can be used to set up more scalars, apart
-from the default ones (like: Int, Float, String, Boolean).
+The `scalars` option is optional and can be used to set up custom scalar and enum types.
 It must be an object map of scalar names to their desired TypeScript types.
+When a scalar or enum is missing in your custom `scalars` object, a fallback will be
+used for the built-in scalars (`Int`, `Float`, `String`, `Boolean`, and `ID`) and for
+enums, the `enumValues` defined by the schema will be used.
 
 The `disableMasking` flag may be set to `true` instead of using `@_unmask` on individual fragments
 and allows fragment masking to be disabled globally.

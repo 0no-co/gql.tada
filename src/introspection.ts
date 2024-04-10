@@ -31,12 +31,6 @@ interface IntrospectionSchema {
   readonly types: readonly any[];
 }
 
-interface IntrospectionScalarType {
-  readonly kind: 'SCALAR';
-  readonly name: string;
-  readonly specifiedByURL?: string | null;
-}
-
 export interface IntrospectionObjectType {
   readonly kind: 'OBJECT';
   readonly name: string;
@@ -49,33 +43,27 @@ export interface IntrospectionObjectType {
 interface IntrospectionInterfaceType {
   readonly kind: 'INTERFACE';
   readonly name: string;
-  // Usually this would be `IntrospectionField`.
-  // However, to save TypeScript some work, instead, we constraint it to `any` here.
-  readonly fields: readonly any[];
-  readonly possibleTypes: readonly IntrospectionNamedTypeRef[];
-  // The `interfaces` field isn't used. It's omitted here
+  readonly fields: readonly any[] /*readonly IntrospectionField[]*/;
+  readonly possibleTypes: readonly any[] /*readonly IntrospectionNamedTypeRef[]*/;
+  // NOTE: The `interfaces` field isn't used. It's omitted here
 }
 
 interface IntrospectionUnionType {
   readonly kind: 'UNION';
   readonly name: string;
-  readonly possibleTypes: readonly IntrospectionNamedTypeRef[];
-}
-
-interface IntrospectionEnumValue {
-  readonly name: string;
+  readonly possibleTypes: readonly any[] /*readonly IntrospectionNamedTypeRef[]*/;
 }
 
 interface IntrospectionEnumType {
   readonly kind: 'ENUM';
   readonly name: string;
-  readonly enumValues: readonly IntrospectionEnumValue[];
+  readonly enumValues: readonly any[] /*readonly IntrospectionEnumValue[]*/;
 }
 
 interface IntrospectionInputObjectType {
   readonly kind: 'INPUT_OBJECT';
   readonly name: string;
-  readonly inputFields: readonly IntrospectionInputValue[];
+  readonly inputFields: readonly any[] /*readonly IntrospectionInputValue[]*/;
 }
 
 export interface IntrospectionListTypeRef {
@@ -103,24 +91,17 @@ export interface IntrospectionField {
   // The `args` field isn't used. It's omitted here
 }
 
-interface IntrospectionInputValue {
-  readonly name: string;
-  readonly type: IntrospectionTypeRef;
-  readonly defaultValue?: string | null;
-}
-
 interface DefaultScalars {
-  ID: string;
-  Boolean: boolean;
-  String: string;
-  Float: number;
-  Int: number;
+  readonly ID: string;
+  readonly Boolean: boolean;
+  readonly String: string;
+  readonly Float: number;
+  readonly Int: number;
 }
 
 type mapEnum<T extends IntrospectionEnumType> = {
-  kind: 'ENUM';
   name: T['name'];
-  type: T['enumValues'][number]['name'];
+  enumValues: T['enumValues'][number]['name'];
 };
 
 type mapField<T> = T extends IntrospectionField
@@ -179,9 +160,7 @@ type mapType<Type> = Type extends IntrospectionEnumType
         ? mapUnion<Type>
         : Type extends IntrospectionInputObjectType
           ? mapInputObject<Type>
-          : Type extends IntrospectionScalarType
-            ? unknown
-            : never;
+          : unknown;
 
 /** @internal */
 type mapIntrospectionTypes<Query extends IntrospectionQuery> = obj<{
@@ -195,7 +174,6 @@ type mapIntrospectionTypes<Query extends IntrospectionQuery> = obj<{
 /** @internal */
 type mapIntrospectionScalarTypes<Scalars extends ScalarsLike = DefaultScalars> = obj<{
   [P in keyof Scalars | keyof DefaultScalars]: {
-    kind: 'SCALAR';
     name: P;
     type: P extends keyof Scalars
       ? Scalars[P]
@@ -234,7 +212,7 @@ type addIntrospectionScalars<
 export type IntrospectionLikeInput = SchemaLike | IntrospectionQuery;
 
 export type ScalarsLike = {
-  [name: string]: any;
+  readonly [name: string]: any;
 };
 
 export type SchemaLike = {

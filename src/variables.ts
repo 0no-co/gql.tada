@@ -24,7 +24,7 @@ type getInputObjectTypeRec<
         : {}) &
         InputObject
     >
-  : InputObject;
+  : obj<InputObject>;
 
 type unwrapTypeRec<TypeRef, Introspection extends SchemaLike, IsOptional> = TypeRef extends {
   kind: 'NON_NULL';
@@ -83,27 +83,22 @@ type _getVariablesRec<
         : {}) &
         VariablesObject
     >
-  : VariablesObject;
+  : obj<VariablesObject>;
 
 type getVariablesType<
   Document extends DocumentNodeLike,
   Introspection extends SchemaLike,
-> = Document['definitions'][0] extends {
-  kind: Kind.OPERATION_DEFINITION;
-  variableDefinitions: any;
-}
-  ? obj<_getVariablesRec<Document['definitions'][0]['variableDefinitions'], Introspection>>
-  : {};
+> = _getVariablesRec<Document['definitions'][0]['variableDefinitions'], Introspection>;
 
 type _getScalarType<
   TypeName,
   Introspection extends SchemaLike,
 > = TypeName extends keyof Introspection['types']
-  ? Introspection['types'][TypeName] extends { kind: 'SCALAR' | 'ENUM'; type: any }
-    ? Introspection['types'][TypeName]['type']
-    : Introspection['types'][TypeName] extends { kind: 'INPUT_OBJECT'; inputFields: any }
-      ? obj<getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>>
-      : never
+  ? Introspection['types'][TypeName] extends { kind: 'INPUT_OBJECT'; inputFields: any }
+    ? getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>
+    : Introspection['types'][TypeName] extends { type: any }
+      ? Introspection['types'][TypeName]['type']
+      : Introspection['types'][TypeName]['enumValues']
   : unknown;
 
 type getScalarType<
@@ -111,15 +106,13 @@ type getScalarType<
   Introspection extends SchemaLike,
   OrType = never,
 > = TypeName extends keyof Introspection['types']
-  ? Introspection['types'][TypeName] extends { kind: 'SCALAR' | 'ENUM'; type: any }
-    ? Introspection['types'][TypeName]['type'] | OrType
-    : Introspection['types'][TypeName] extends { kind: 'INPUT_OBJECT'; inputFields: any }
-      ?
-          | obj<
-              getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>
-            >
-          | OrType
-      : never
+  ? Introspection['types'][TypeName] extends { kind: 'INPUT_OBJECT'; inputFields: any }
+    ? getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection> | OrType
+    : Introspection['types'][TypeName] extends { type: any }
+      ? Introspection['types'][TypeName]['type'] | OrType
+      : Introspection['types'][TypeName] extends { enumValues: any }
+        ? Introspection['types'][TypeName]['enumValues'] | OrType
+        : never
   : never;
 
 export type { getVariablesType, getScalarType };
