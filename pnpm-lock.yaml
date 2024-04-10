@@ -130,8 +130,8 @@ importers:
         version: 4.0.6(graphql@16.8.1)(react@18.2.0)
     devDependencies:
       '@0no-co/graphqlsp':
-        specifier: ^1.8.0
-        version: 1.8.0(typescript@5.4.2)
+        specifier: ^1.9.1
+        version: 1.9.1(typescript@5.4.2)
       '@types/react':
         specifier: ^18.2.64
         version: 18.2.64
@@ -151,8 +151,8 @@ importers:
   packages/cli-utils:
     dependencies:
       '@0no-co/graphqlsp':
-        specifier: ^1.8.0
-        version: 1.8.0(typescript@5.4.2)
+        specifier: ^1.9.1
+        version: 1.9.1(typescript@5.4.2)
       '@gql.tada/internal':
         specifier: workspace:*
         version: link:../internal
@@ -289,8 +289,8 @@ packages:
     dependencies:
       graphql: 16.8.1
 
-  /@0no-co/graphqlsp@1.8.0(typescript@5.4.2):
-    resolution: {integrity: sha512-DVET7krt1doddpSDg97t41mZZru2P/CWv22JXG4N1oFo1A1KFVGdka/chnn4pmB7/FqRCRUJARGvZNwwb1EJjw==}
+  /@0no-co/graphqlsp@1.9.1(typescript@5.4.2):
+    resolution: {integrity: sha512-3mLLCNponLK84hVbBUZIXZhw1nvmWblRwFTJE7WCs312iqlCdLW+SZEt+HfhEgM03XhN0D0gQB/8KnZHKs9qwg==}
     peerDependencies:
       typescript: ^5.3.3
     dependencies:
