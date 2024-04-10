@@ -98,7 +98,7 @@ type _getScalarType<
     ? getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>
     : Introspection['types'][TypeName] extends { type: any }
       ? Introspection['types'][TypeName]['type']
-      : never
+      : Introspection['types'][TypeName]['enumValues']
   : unknown;
 
 type getScalarType<
@@ -110,7 +110,9 @@ type getScalarType<
     ? getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection> | OrType
     : Introspection['types'][TypeName] extends { type: any }
       ? Introspection['types'][TypeName]['type'] | OrType
-      : never
+      : Introspection['types'][TypeName] extends { enumValues: any }
+        ? Introspection['types'][TypeName]['enumValues'] | OrType
+        : never
   : never;
 
 export type { getVariablesType, getScalarType };

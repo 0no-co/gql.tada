@@ -101,7 +101,7 @@ interface DefaultScalars {
 
 type mapEnum<T extends IntrospectionEnumType> = {
   name: T['name'];
-  type: T['enumValues'][number]['name'];
+  enumValues: T['enumValues'][number]['name'];
 };
 
 type mapField<T> = T extends IntrospectionField

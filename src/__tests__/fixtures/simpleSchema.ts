@@ -65,7 +65,7 @@ export type simpleSchema = {
 
     test: {
       name: 'test';
-      type: 'value' | 'more';
+      enumValues: 'value' | 'more';
     };
 
     SmallTodo: {

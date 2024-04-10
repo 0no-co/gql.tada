@@ -57,7 +57,7 @@ const printFields = (fields: readonly IntrospectionField[]) => {
 export const printIntrospectionType = (type: IntrospectionType) => {
   if (type.kind === 'ENUM') {
     const values = printNamedTypes(type.enumValues);
-    return `{ name: ${printName(type.name)}; type: ${values}; }`;
+    return `{ name: ${printName(type.name)}; enumValues: ${values}; }`;
   } else if (type.kind === 'INPUT_OBJECT') {
     const fields = printInputFields(type.inputFields);
     return `{ kind: 'INPUT_OBJECT'; name: ${printName(type.name)}; inputFields: ${fields}; }`;

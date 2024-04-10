@@ -47,9 +47,13 @@ type unwrapTypeRec<
                 Fragments
               >
           : unknown
-        : IsOptional extends false
-          ? Introspection['types'][Type['name']]['type']
-          : null | Introspection['types'][Type['name']]['type']
+        : Introspection['types'][Type['name']] extends { type: any }
+          ? IsOptional extends false
+            ? Introspection['types'][Type['name']]['type']
+            : Introspection['types'][Type['name']]['type'] | null
+          : IsOptional extends false
+            ? Introspection['types'][Type['name']]['enumValues']
+            : Introspection['types'][Type['name']]['enumValues'] | null
       : unknown;
 
 type getTypeDirective<Node> = Node extends { directives: any[] }
