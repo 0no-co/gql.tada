@@ -107,7 +107,7 @@ async function main() {
       const target = path.resolve(process.cwd(), folder);
       await initGqlTada(target);
     })
-    .command('cache')
+    .command('turbo')
     .action(async () => {
       await generateGraphQLCache();
     })
