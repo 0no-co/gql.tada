@@ -6,40 +6,6 @@ import { parse } from 'json5';
 
 const s = spinner();
 
-const question = async (
-  msg: string,
-  validate: (value: string) => Promise<boolean>,
-  repeat?: boolean
-): Promise<string> => {
-  let value: string | symbol = '';
-  if (repeat) {
-    // while there is no value or the value is not a cancel symbol and the value is not a string or the value is a string but the validation fails
-    let done = false;
-    while (!done) {
-      value = await text({
-        message: msg,
-      });
-      if (isCancel(value)) {
-        done = true;
-        cancel('Operation cancelled.');
-        process.exit(0);
-      } else if (await validate(value)) {
-        done = true;
-      }
-    }
-  } else {
-    value = await text({
-      message: msg,
-    });
-    if (isCancel(value)) {
-      cancel('Operation cancelled.');
-      process.exit(0);
-    }
-  }
-
-  return value as string;
-};
-
 const TADA_VERSION = '^1.4.3';
 const LSP_VERSION = '^1.8.0';
 export const initGqlTada = async (cwd: string) => {
@@ -123,7 +89,7 @@ export const initGqlTada = async (cwd: string) => {
 
   if (shouldInstallDependencies) {
     s.start('Installing packages.');
-    await installPackages(['gql.tada', '@0no-co/graphqlsp'], getPkgManager(), cwd);
+    await installPackages(getPkgManager(), cwd);
     s.stop('Installed packages.');
   } else {
     s.start('Writing to package.json.');
@@ -131,18 +97,16 @@ export const initGqlTada = async (cwd: string) => {
       const packageJsonPath = path.resolve(cwd, 'package.json');
       const packageJsonContents = await fs.readFile(packageJsonPath, 'utf-8');
       const packageJson = JSON.parse(packageJsonContents);
-      if (!packageJson.devDependencies["'gql.tada'"]) {
-        packageJson.devDependencies = {
-          ...packageJson.devDependencies,
-          'gql.tada': TADA_VERSION,
-        };
+      if (!packageJson.dependencies) packageJson.dependencies = {};
+      if (!packageJson.dependencies['gql.tada']) {
+        packageJson.dependencies['gql.tada'] = TADA_VERSION;
       }
-      if (packageJson.devDependencies["'@0no-co/graphqlsp'"]) {
-        packageJson.devDependencies = {
-          ...packageJson.devDependencies,
-          '@0no-co/graphqlsp': LSP_VERSION,
-        };
+
+      if (!packageJson.devDependencies) packageJson.devDependencies = {};
+      if (!packageJson.devDependencies['@0no-co/graphqlsp']) {
+        packageJson.devDependencies['@0no-co/graphqlsp'] = LSP_VERSION;
       }
+
       await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
       s.stop('Written to package.json.');
     } catch (e) {
@@ -177,24 +141,63 @@ export const initGqlTada = async (cwd: string) => {
 };
 
 type PackageManager = 'yarn' | 'pnpm' | 'npm';
-function installPackages(pkgs: Array<string>, packageManager: PackageManager, cwd: string) {
-  return execa(
+async function installPackages(packageManager: PackageManager, cwd: string) {
+  await execa(
     packageManager,
     [
       // `yarn add` will fail if nothing is provided
-      packageManager === 'yarn' ? (pkgs.length ? 'add' : '') : 'install',
+      packageManager === 'yarn' ? 'add' : 'install',
       '-D',
-      ...pkgs,
-    ].filter(Boolean),
+      '@0no-co/graphqlsp',
+    ],
     {
       stdio: 'ignore',
       cwd,
     }
   );
+  await execa(packageManager, [packageManager === 'yarn' ? 'add' : 'install', 'gql.tada'], {
+    stdio: 'ignore',
+    cwd,
+  });
 }
+
 function getPkgManager(): PackageManager {
   const userAgent = process.env.npm_config_user_agent || '';
   if (userAgent.startsWith('yarn')) return 'yarn';
   if (userAgent.startsWith('pnpm')) return 'pnpm';
   return 'npm';
 }
+
+const question = async (
+  msg: string,
+  validate: (value: string) => Promise<boolean>,
+  repeat?: boolean
+): Promise<string> => {
+  let value: string | symbol = '';
+  if (repeat) {
+    // while there is no value or the value is not a cancel symbol and the value is not a string or the value is a string but the validation fails
+    let done = false;
+    while (!done) {
+      value = await text({
+        message: msg,
+      });
+      if (isCancel(value)) {
+        done = true;
+        cancel('Operation cancelled.');
+        process.exit(0);
+      } else if (await validate(value)) {
+        done = true;
+      }
+    }
+  } else {
+    value = await text({
+      message: msg,
+    });
+    if (isCancel(value)) {
+      cancel('Operation cancelled.');
+      process.exit(0);
+    }
+  }
+
+  return value as string;
+};
