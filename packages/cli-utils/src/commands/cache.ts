@@ -7,6 +7,15 @@ import type { GraphQLSPConfig } from '../lsp';
 import { getGraphQLSPConfig } from '../lsp';
 import { createPluginInfo } from '../ts/project';
 
+const PREAMBLE_IGNORE = ['/* eslint-disable */', '/* prettier-ignore */'].join('\n') + '\n';
+
+const existsFile = async (file: string): Promise<boolean> => {
+  return fs
+    .stat(file)
+    .then((stat) => stat.isFile())
+    .catch(() => false);
+};
+
 export async function generateGraphQLCache() {
   const tsConfig = await getTsConfig();
   if (!tsConfig) {
@@ -18,16 +27,20 @@ export async function generateGraphQLCache() {
     return;
   }
 
-  const cache = await getGraphqlInvocationCache(config);
-  await fs.writeFile(
-    path.resolve(config.tadaOutputLocation, '..', 'graphql-cache.d.ts'),
-    createCache(cache),
-    'utf-8'
-  );
+  const cacheFileName = path.resolve(config.tadaOutputLocation, '..', 'graphql-cache.d.ts');
+  const tmpFileName = cacheFileName + '.temp';
+
+  if (await existsFile(cacheFileName)) await fs.rename(cacheFileName, tmpFileName);
+  try {
+    const cache = await getGraphqlInvocationCache(config);
+    await fs.writeFile(tmpFileName, createCache(cache));
+  } finally {
+    await fs.rename(tmpFileName, cacheFileName);
+  }
 }
 
 function createCache(cache: Record<string, string>): string {
-  return `import type { TadaDocumentNode, $tada } from 'gql.tada';
+  return `${PREAMBLE_IGNORE}import type { TadaDocumentNode, $tada } from 'gql.tada';
 
 declare module 'gql.tada' {
   interface setupCache {
@@ -55,9 +68,6 @@ async function getGraphqlInvocationCache(config: GraphQLSPConfig): Promise<Recor
     return {
       ...acc,
       ...tadaCallExpressions.reduce((acc, callExpression) => {
-        // TODO: We can't trust the `returnType` here, because it may use
-        // the prior cache. It'd be a little unreliable to rely on deletion
-        // timing here. Maybe there's a better way to filter it out in `Project`?
         const returnType = typeChecker.getTypeAtLocation(callExpression);
         const argumentType = typeChecker.getTypeAtLocation(callExpression.arguments[0]);
         if (returnType.symbol.getEscapedName() !== 'TadaDocumentNode') {
