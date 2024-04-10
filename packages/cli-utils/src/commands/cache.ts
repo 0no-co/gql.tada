@@ -40,16 +40,20 @@ export async function generateGraphQLCache() {
 }
 
 function createCache(cache: Record<string, string>): string {
-  return `${PREAMBLE_IGNORE}import type { TadaDocumentNode, $tada } from 'gql.tada';
-
-declare module 'gql.tada' {
-  interface setupCache {
-    ${Object.keys(cache).reduce((acc, key) => {
-      const value = cache[key];
-      return `${acc}\n${JSON.stringify(key)}: ${value}`;
-    }, '')}
+  let output = '';
+  for (const key in cache) {
+    if (output) output += '\n';
+    output += `    ${key}:\n      ${cache[key]};`;
   }
-}\n`;
+  return (
+    PREAMBLE_IGNORE +
+    "import type { TadaDocumentNode, $tada } from 'gql.tada';\n\n" +
+    "declare module 'gql.tada' {\n" +
+    ' interface setupCache {\n' +
+    output +
+    '\n  }' +
+    '\n}\n'
+  );
 }
 
 async function getGraphqlInvocationCache(config: GraphQLSPConfig): Promise<Record<string, string>> {
@@ -72,15 +76,14 @@ async function getGraphqlInvocationCache(config: GraphQLSPConfig): Promise<Recor
         const argumentType = typeChecker.getTypeAtLocation(callExpression.arguments[0]);
         if (returnType.symbol.getEscapedName() !== 'TadaDocumentNode') {
           return acc; // TODO: we could collect this and warn if all extracted types have some kind of error
-        } else if ((argumentType.flags & TypeFlags.StringLiteral) === 0) {
-          return acc; // TODO: we could collect this and warn if all extracted types have some kind of error
         }
-
+        const keyString: string =
+          'value' in argumentType &&
+          typeof argumentType.value === 'string' &&
+          (argumentType.flags & TypeFlags.StringLiteral) === 0
+            ? JSON.stringify(argumentType.value)
+            : typeChecker.typeToString(argumentType, callExpression, BUILDER_FLAGS);
         const valueString = typeChecker.typeToString(returnType, callExpression, BUILDER_FLAGS);
-        const keyString =
-          !('value' in argumentType) || typeof argumentType.value !== 'string'
-            ? JSON.parse(typeChecker.typeToString(argumentType, callExpression, BUILDER_FLAGS))
-            : argumentType.value;
         acc[keyString] = valueString;
         return acc;
       }, {}),
