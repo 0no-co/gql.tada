@@ -178,9 +178,7 @@ type mapType<Type> = Type extends IntrospectionEnumType
         ? mapUnion<Type>
         : Type extends IntrospectionInputObjectType
           ? mapInputObject<Type>
-          : Type extends IntrospectionScalarType
-            ? unknown
-            : never;
+          : unknown;
 
 /** @internal */
 type mapIntrospectionTypes<Query extends IntrospectionQuery> = obj<{
