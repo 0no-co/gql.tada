@@ -2,7 +2,7 @@ import { intro, outro, isCancel, cancel, text, confirm, spinner } from '@clack/p
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { execa } from 'execa';
-import { ensureTadaIntrospection } from '../tada';
+import { parse, stringify } from 'json5';
 
 const s = spinner();
 
@@ -31,6 +31,8 @@ const question = async (
   return value as string;
 };
 
+const TADA_VERSION = '^1.4.3';
+const LSP_VERSION = '^1.8.0';
 export const initGqlTada = async (cwd: string) => {
   intro(`GQL.Tada`);
   const schemaLocation = await question(
@@ -38,8 +40,18 @@ export const initGqlTada = async (cwd: string) => {
     async (value: string) => {
       // TODO: spinner during validation
       try {
-        new URL(value);
-        // TODO: do we do a simple fetch call to validate the URL?
+        const url = new URL(value);
+        s.start('Validating the URL.');
+        const response = await fetch(url.toString());
+        s.stop('Validated the URL.');
+        if (!response.ok) {
+          const urlFailureIsOkay = await confirm({
+            message: `Got ${
+              response.status
+            } from ${url.toString()}, continue anyway? You can add headers later.`,
+          });
+          return !!urlFailureIsOkay;
+        }
         return true;
       } catch (e) {}
       const isFile = value.endsWith('.json') || value.endsWith('.graphql');
@@ -47,36 +59,26 @@ export const initGqlTada = async (cwd: string) => {
         return false;
       }
 
-      const fileExists = !!(await fs.readFile(path.resolve(cwd, value)));
-      // TODO: if the file doesn't exist leave a message
+      const filePath = path.resolve(cwd, value);
+      const fileExists = !!(await fs.readFile(filePath));
+      // eslint-disable-next-line no-console
+      console.log(`Could not find "${filePath}"`);
       return fileExists;
     },
     true
   );
 
-  const isFile = schemaLocation.endsWith('.json') || schemaLocation.endsWith('.graphql');
-  if (!isFile) {
-    // Ask if we need a header
-  }
-
   const tadaLocation = await question(
     'What directory do you want us to write the tadaOutputFile to?',
     async (value: string) => {
-      const directoryExists = !!(await fs.stat(path.resolve(cwd, value)));
-      // TODO: if the directory doesn't exist leave a message
+      const dir = path.resolve(cwd, value);
+      const directoryExists = !!(await fs.stat(dir));
+      // eslint-disable-next-line no-console
+      console.log(`Could not find "${dir}"`);
       return directoryExists;
     },
     true
   );
-
-  s.start('Writing your tada-output types.');
-  await ensureTadaIntrospection(
-    isFile ? schemaLocation : { url: schemaLocation },
-    tadaLocation,
-    cwd,
-    true
-  );
-  s.stop('Tada-output types written.');
 
   const shouldInstallDependencies = await confirm({
     message: 'Do you want us to install the dependencies?',
@@ -87,11 +89,44 @@ export const initGqlTada = async (cwd: string) => {
     await installPackages(['gql.tada', '@0no-co/graphqlsp'], getPkgManager(), cwd);
     s.stop('Installed packages.');
   } else {
-    // TODO: add deps in the package.json manually
+    s.start('Writing to package.json.');
+    try {
+      const packageJsonPath = path.resolve(cwd, 'package.json');
+      const packageJsonContents = await fs.readFile(packageJsonPath, 'utf-8');
+      const packageJson = JSON.parse(packageJsonContents);
+      packageJson.devDependencies = {
+        ...packageJson.devDependencies,
+        'gql.tada': TADA_VERSION,
+        '@0no-co/graphqlsp': LSP_VERSION,
+      };
+      await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
+      s.stop('Written to package.json.');
+    } catch (e) {
+      s.stop(
+        'Failed to write to package.json, you can try adding "gql.tada" and "@0no-co/graphqlsp" yourself.'
+      );
+    }
   }
 
-  // TODO: add plugin in tsconfig.json and ensure tadaOutputLocation is
-  // in the "include" property.
+  s.start('Writing to tsconfig.json.');
+  try {
+    const tsConfigPath = path.resolve(cwd, 'tsconfig.json');
+    const tsConfigContents = await fs.readFile(tsConfigPath, 'utf-8');
+    const tsConfig = parse(tsConfigContents);
+    // TODO: do we need to ensure that include contains the tadaOutputLocation?
+    tsConfig.compilerOptions = {
+      ...tsConfig.compilerOptions,
+      plugins: [
+        {
+          name: '@0no-co/graphqlsp',
+          schema: schemaLocation,
+          tadaOutputLocation: tadaLocation,
+        },
+      ],
+    };
+    await fs.writeFile(tsConfigPath, stringify(tsConfig, null, 2));
+  } catch (e) {}
+  s.stop('Written to tsconfig.json.');
 
   outro(`Off to the races!`);
 };
