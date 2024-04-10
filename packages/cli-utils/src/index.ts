@@ -14,6 +14,7 @@ import { executeTadaDoctor } from './commands/doctor';
 import { check } from './commands/check';
 import { initGqlTada } from './commands/init';
 import { generatePersisted } from './commands/generate-persisted';
+import { generateGraphQLCache } from './commands/cache';
 
 interface GenerateSchemaOptions {
   headers?: Record<string, string>;
@@ -105,6 +106,10 @@ async function main() {
     .action(async (folder) => {
       const target = path.resolve(process.cwd(), folder);
       await initGqlTada(target);
+    })
+    .command('cache')
+    .action(async () => {
+      await generateGraphQLCache();
     })
     .command('doctor')
     .describe('Finds common issues in your gql.tada setup.')
