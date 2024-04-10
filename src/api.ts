@@ -84,6 +84,12 @@ interface setupSchema extends AbstractSetupSchema {
   /*empty*/
 }
 
+interface AbstractSetupCache {
+  [key: string]: unknown;
+}
+
+interface setupCache extends AbstractSetupCache {}
+
 interface GraphQLTadaAPI<Schema extends SchemaLike, Config extends AbstractConfig> {
   /** Function to create and compose GraphQL documents with result and variable types.
    *
@@ -127,12 +133,14 @@ interface GraphQLTadaAPI<Schema extends SchemaLike, Config extends AbstractConfi
   <const In extends string, const Fragments extends readonly FragmentShape[]>(
     input: In,
     fragments?: Fragments
-  ): getDocumentNode<
-    parseDocument<In>,
-    Schema,
-    getFragmentsOfDocuments<Fragments>,
-    Config['isMaskingDisabled']
-  >;
+  ): setupCache[In] extends DocumentNodeLike
+    ? setupCache[In]
+    : getDocumentNode<
+        parseDocument<In>,
+        Schema,
+        getFragmentsOfDocuments<Fragments>,
+        Config['isMaskingDisabled']
+      >;
 
   /** Function to validate the type of a given scalar or enum value.
    *
@@ -645,9 +653,11 @@ const graphql: GraphQLTadaAPI<
 export { parse, graphql, readFragment, maskFragments, unsafe_readResult, initGraphQLTada };
 
 export type {
+  setupCache,
   setupSchema,
   parseDocument,
   AbstractSetupSchema,
+  AbstractSetupCache,
   GraphQLTadaAPI,
   TadaDocumentNode,
   TadaPersistedDocumentNode,
