@@ -27,10 +27,10 @@ export async function generateGraphQLCache() {
 }
 
 function createCache(cache: Record<string, string>): string {
-  return `import * as gqlTada from 'gql.tada';
+  return `import type { TadaDocumentNode, $tada } from 'gql.tada';
 
 declare module 'gql.tada' {
-  interface SetupCache {
+  interface setupCache {
     ${Object.keys(cache).reduce((acc, key) => {
       const value = cache[key];
       return `${acc}\n${JSON.stringify(key)}: ${value}`;
@@ -57,7 +57,7 @@ async function getGraphqlInvocationCache(config: GraphQLSPConfig): Promise<Recor
         const typeChecker = project.getTypeChecker().compilerObject;
         const type = typeChecker.getTypeAtLocation(callExpression);
         if (type.symbol.getEscapedName() !== 'TadaDocumentNode') {
-          return acc; // TODO: error?
+          return acc; // TODO: we could collect this and warn if all extracted types have some kind of error
         }
 
         const valueString = typeChecker.typeToString(type, callExpression, BUILDER_FLAGS);
@@ -74,7 +74,10 @@ const BUILDER_FLAGS: TypeFormatFlags =
   TypeFormatFlags.NoTypeReduction |
   TypeFormatFlags.InTypeAlias |
   TypeFormatFlags.UseFullyQualifiedType |
-  TypeFormatFlags.GenerateNamesForShadowedTypeParams;
+  TypeFormatFlags.GenerateNamesForShadowedTypeParams |
+  TypeFormatFlags.UseAliasDefinedOutsideCurrentScope |
+  TypeFormatFlags.AllowUniqueESSymbolType |
+  TypeFormatFlags.WriteTypeArgumentsOfSignature;
 
 function findAllCallExpressions(
   sourceFile: ts.SourceFile,
