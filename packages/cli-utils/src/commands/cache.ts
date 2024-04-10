@@ -1,4 +1,4 @@
-import { Project, TypeFormatFlags, ts } from 'ts-morph';
+import { Project, TypeFormatFlags, TypeFlags, ts } from 'ts-morph';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 
@@ -47,6 +47,7 @@ async function getGraphqlInvocationCache(config: GraphQLSPConfig): Promise<Recor
   });
 
   const pluginCreateInfo = createPluginInfo(project, config, projectName);
+  const typeChecker = project.getTypeChecker().compilerObject;
   const sourceFiles = project.getSourceFiles();
 
   return sourceFiles.reduce((acc, sourceFile) => {
@@ -54,15 +55,23 @@ async function getGraphqlInvocationCache(config: GraphQLSPConfig): Promise<Recor
     return {
       ...acc,
       ...tadaCallExpressions.reduce((acc, callExpression) => {
-        const typeChecker = project.getTypeChecker().compilerObject;
-        const type = typeChecker.getTypeAtLocation(callExpression);
-        if (type.symbol.getEscapedName() !== 'TadaDocumentNode') {
+        // TODO: We can't trust the `returnType` here, because it may use
+        // the prior cache. It'd be a little unreliable to rely on deletion
+        // timing here. Maybe there's a better way to filter it out in `Project`?
+        const returnType = typeChecker.getTypeAtLocation(callExpression);
+        const argumentType = typeChecker.getTypeAtLocation(callExpression.arguments[0]);
+        if (returnType.symbol.getEscapedName() !== 'TadaDocumentNode') {
+          return acc; // TODO: we could collect this and warn if all extracted types have some kind of error
+        } else if ((argumentType.flags & TypeFlags.StringLiteral) === 0) {
           return acc; // TODO: we could collect this and warn if all extracted types have some kind of error
         }
 
-        const valueString = typeChecker.typeToString(type, callExpression, BUILDER_FLAGS);
-
-        acc[callExpression.arguments[0].getText().slice(1, -1)] = valueString;
+        const valueString = typeChecker.typeToString(returnType, callExpression, BUILDER_FLAGS);
+        const keyString =
+          !('value' in argumentType) || typeof argumentType.value !== 'string'
+            ? JSON.parse(typeChecker.typeToString(argumentType, callExpression, BUILDER_FLAGS))
+            : argumentType.value;
+        acc[keyString] = valueString;
         return acc;
       }, {}),
     };
