@@ -83,17 +83,12 @@ type _getVariablesRec<
         : {}) &
         VariablesObject
     >
-  : VariablesObject;
+  : obj<VariablesObject>;
 
 type getVariablesType<
   Document extends DocumentNodeLike,
   Introspection extends SchemaLike,
-> = Document['definitions'][0] extends {
-  kind: Kind.OPERATION_DEFINITION;
-  variableDefinitions: any;
-}
-  ? obj<_getVariablesRec<Document['definitions'][0]['variableDefinitions'], Introspection>>
-  : {};
+> = _getVariablesRec<Document['definitions'][0]['variableDefinitions'], Introspection>;
 
 type _getScalarType<
   TypeName,
