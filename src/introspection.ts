@@ -118,7 +118,6 @@ interface DefaultScalars {
 }
 
 type mapEnum<T extends IntrospectionEnumType> = {
-  kind: 'ENUM';
   name: T['name'];
   type: T['enumValues'][number]['name'];
 };
@@ -195,7 +194,6 @@ type mapIntrospectionTypes<Query extends IntrospectionQuery> = obj<{
 /** @internal */
 type mapIntrospectionScalarTypes<Scalars extends ScalarsLike = DefaultScalars> = obj<{
   [P in keyof Scalars | keyof DefaultScalars]: {
-    kind: 'SCALAR';
     name: P;
     type: P extends keyof Scalars
       ? Scalars[P]

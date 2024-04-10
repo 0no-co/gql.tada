@@ -64,7 +64,6 @@ export type simpleSchema = {
     };
 
     test: {
-      kind: 'ENUM';
       name: 'test';
       type: 'value' | 'more';
     };
