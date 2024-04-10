@@ -92,11 +92,11 @@ export interface IntrospectionField {
 }
 
 interface DefaultScalars {
-  ID: string;
-  Boolean: boolean;
-  String: string;
-  Float: number;
-  Int: number;
+  readonly ID: string;
+  readonly Boolean: boolean;
+  readonly String: string;
+  readonly Float: number;
+  readonly Int: number;
 }
 
 type mapEnum<T extends IntrospectionEnumType> = {
@@ -212,7 +212,7 @@ type addIntrospectionScalars<
 export type IntrospectionLikeInput = SchemaLike | IntrospectionQuery;
 
 export type ScalarsLike = {
-  [name: string]: any;
+  readonly [name: string]: any;
 };
 
 export type SchemaLike = {
