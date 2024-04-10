@@ -1,4 +1,4 @@
-import { Project, ts } from 'ts-morph';
+import { Project, TypeFormatFlags, ts } from 'ts-morph';
 import path from 'node:path';
 
 import { getTsConfig } from '../tsconfig';
@@ -45,12 +45,23 @@ async function getPersistedOperationsFromFiles(
         }
 
         const returnType = resolvedSignature.getReturnType();
-        acc[callExpression.getText()] = typeChecker.typeToString(returnType);
+        acc[callExpression.getText()] = typeChecker.typeToString(
+          returnType,
+          undefined,
+          BUILDER_FLAGS
+        );
         return acc;
       }, {}),
     };
   }, {});
 }
+
+const BUILDER_FLAGS =
+  TypeFormatFlags.NoTruncation |
+  TypeFormatFlags.NoTypeReduction |
+  TypeFormatFlags.InTypeAlias |
+  TypeFormatFlags.UseFullyQualifiedType |
+  TypeFormatFlags.GenerateNamesForShadowedTypeParams;
 
 function findAllCallExpressions(
   sourceFile: ts.SourceFile,
