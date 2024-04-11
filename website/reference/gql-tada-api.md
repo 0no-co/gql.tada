@@ -172,6 +172,69 @@ function validateMediaEnum(value: 'Book' | 'Song' | 'Video') {
 type Media = ReturnType<typeof graphql.scalar<'Media'>>;
 ```
 
+### `graphql.persisted()`
+
+|                  | Description                                    |
+| ---------------- | ---------------------------------------------- |
+| `hash` argument  | A hash associated with this query.             |
+
+Generates a faux-document containing a property called `documentId` which
+can be used to send off queries as [Persisted Operations](https://github.com/graphql/graphql-over-http/blob/main/rfcs/PersistedOperations.md).
+
+#### Example
+
+```ts twoslash
+// @filename: graphq-env.d.ts
+export type introspection = {
+  "__schema": {
+    "queryType": {
+      "name": "Query"
+    },
+    "mutationType": null,
+    "subscriptionType": null,
+    "types": [
+      {
+        "kind": "OBJECT",
+        "name": "Query",
+        "fields": [],
+        "interfaces": []
+      },
+      {
+        "kind": "ENUM",
+        "name": "Media",
+        "enumValues": [
+          { "name": "Book" },
+          { "name": "Song" },
+          { "name": "Video" }
+        ]
+      }
+    ],
+    "directives": []
+  }
+};
+
+import * as gqlTada from 'gql.tada';
+
+declare module 'gql.tada' {
+  interface setupSchema {
+    introspection: introspection
+  }
+}
+
+// @filename: index.ts
+// ---cut-before---
+import { graphql } from 'gql.tada';
+
+const query = graphql(`
+  query Pokemon($id: ID!) {
+    pokemon(id: $id) { id }
+  }
+`)
+
+// You can now use this in your `useQuery` calls.
+const persistedOperation = graphql.persisted<typeof query>("sha256:x")
+```
+
 ### `readFragment()`
 
 |                               | Description                                                              |

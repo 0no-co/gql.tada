@@ -129,6 +129,10 @@ export default defineConfig({
             link: '/reference/gql-tada-api',
           },
           {
+            text: 'gql.tada CLI',
+            link: '/reference/gql-tada-cli',
+          },
+          {
             text: 'GraphQLSP Config',
             link: '/reference/graphqlsp-config',
           },
