@@ -208,17 +208,31 @@ export type introspection = {
       {
         "kind": "OBJECT",
         "name": "Query",
-        "fields": [],
+        "fields": [
+          {
+            "name": "hello",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "args": []
+          },
+          {
+            "name": "world",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "args": []
+          }
+        ],
         "interfaces": []
       },
       {
-        "kind": "ENUM",
-        "name": "Media",
-        "enumValues": [
-          { "name": "Book" },
-          { "name": "Song" },
-          { "name": "Video" }
-        ]
+        "kind": "SCALAR",
+        "name": "String"
       }
     ],
     "directives": []
@@ -238,8 +252,8 @@ declare module 'gql.tada' {
 import { graphql } from 'gql.tada';
 
 const query = graphql(`
-  query Pokemon($id: ID!) {
-    pokemon(id: $id) { id }
+  query Hello {
+    hello
   }
 `)
 
