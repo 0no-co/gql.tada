@@ -1,99 +1,13 @@
 import sade from 'sade';
-import fs from 'node:fs/promises';
 import path from 'node:path';
-import { parse } from 'json5';
-import { printSchema } from 'graphql';
-import type { GraphQLSchema } from 'graphql';
-import type { TsConfigJson } from 'type-fest';
-import { load } from '@gql.tada/internal';
 
-import { getGraphQLSPConfig } from './lsp';
-import { ensureTadaIntrospection } from './tada';
-import { getTsConfig } from './tsconfig';
 import { executeTadaDoctor } from './commands/doctor';
 import { check } from './commands/check';
 import { initGqlTada } from './commands/init';
 import { generatePersisted } from './commands/generate-persisted';
 import { generateGraphQLCache } from './commands/cache';
-
-interface GenerateSchemaOptions {
-  headers?: Record<string, string>;
-  output?: string;
-  cwd?: string;
-}
-
-export async function generateSchema(
-  target: string,
-  { headers, output, cwd = process.cwd() }: GenerateSchemaOptions
-) {
-  const origin = headers ? { url: target, headers } : target;
-  const loader = load({ origin, rootPath: cwd });
-
-  let schema: GraphQLSchema | null;
-  try {
-    schema = await loader.loadSchema();
-  } catch (error) {
-    console.error('Something went wrong while trying to load the schema.', error);
-    return;
-  }
-
-  if (!schema) {
-    console.error('Could not load the schema.');
-    return;
-  }
-
-  let destination = output;
-  if (!destination) {
-    let tsconfigContents: string;
-    try {
-      tsconfigContents = await fs.readFile('tsconfig.json', 'utf-8');
-    } catch (error) {
-      console.error('Failed to read tsconfig.json in current working directory.', error);
-      return;
-    }
-
-    let tsConfig: TsConfigJson;
-    try {
-      tsConfig = parse(tsconfigContents) as TsConfigJson;
-    } catch (err) {
-      console.error(err);
-      return;
-    }
-
-    const config = getGraphQLSPConfig(tsConfig);
-    if (!config) {
-      console.error(`Could not find a "@0no-co/graphqlsp" plugin in your tsconfig.`);
-      return;
-    } else if (typeof config.schema !== 'string' || !config.schema.endsWith('.graphql')) {
-      console.error(`Found "${config.schema}" which is not a path to a .graphql SDL file.`);
-      return;
-    } else {
-      destination = config.schema;
-    }
-  }
-
-  // TODO: Should the output be relative to the relevant `tsconfig.json` file?
-  await fs.writeFile(path.resolve(cwd, destination), printSchema(schema), 'utf-8');
-}
-
-export async function generateTadaTypes(shouldPreprocess = false, cwd: string = process.cwd()) {
-  const tsConfig = await getTsConfig();
-  if (!tsConfig) {
-    return;
-  }
-
-  const config = getGraphQLSPConfig(tsConfig);
-  if (!config) {
-    return;
-  }
-
-  return await ensureTadaIntrospection(
-    config.schema,
-    config.tadaOutputLocation,
-    cwd,
-    shouldPreprocess
-  );
-}
+import { generateSchema } from './commands/generate-schema';
+import { generateTadaTypes } from './commands/generate-output';
 
 const prog = sade('gql.tada');
 
@@ -108,6 +22,7 @@ async function main() {
       await initGqlTada(target);
     })
     .command('turbo')
+    .describe('Caches all your existing types resulting from invocations of graphql().')
     .action(async () => {
       await generateGraphQLCache();
     })
@@ -146,16 +61,20 @@ async function main() {
       });
     })
     .command('generate-persisted <target>')
+    .describe(
+      'This will run over your codebase looking for the graphql.persisted calls and come back with a persisted-operations JSON key-value mapping.'
+    )
+    .example('generate-example ./persisted-operations.json')
     .action(async (target) => {
       await generatePersisted(target);
     })
     .command('generate-output')
+    .describe(
+      'Generate the gql.tada types file, this will look for your "tsconfig.json" and use the "@0no-co/graphqlsp" configuration to generate the file.'
+    )
     .option(
       '--disable-preprocessing',
       'Disables pre-processing, which is an internal introspection format generated ahead of time'
-    )
-    .describe(
-      'Generate the gql.tada types file, this will look for your "tsconfig.json" and use the "@0no-co/graphqlsp" configuration to generate the file.'
     )
     .action((options) => {
       const shouldPreprocess =
@@ -163,10 +82,13 @@ async function main() {
       return generateTadaTypes(shouldPreprocess);
     })
     .command('check')
+    .describe(
+      'Check runs the diagnostics that the LSP runs as a CLI process, this can be run alongside tsc to ensure your GraphQL documents are well structured.'
+    )
     .option('--level', 'The minimum severity of diagnostics to display (error | warn | info).')
     .option('--exit-on-warn', 'Whether to exit with a non-zero code when there are warnings.')
     .action(async (opts) => {
-      check({
+      await check({
         exitOnWarn: opts['exit-on-warn'] !== undefined ? opts['exit-on-warn'] : false,
         minSeverity: opts.level || 'error',
       });
@@ -174,4 +96,5 @@ async function main() {
   prog.parse(process.argv);
 }
 
+export { generateTadaTypes, generateSchema };
 export default main;
