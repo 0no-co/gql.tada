@@ -6,6 +6,7 @@ import type { TsConfigJson } from 'type-fest';
 import { resolveTypeScriptRootDir } from '@gql.tada/internal';
 import { existsSync } from 'node:fs';
 
+import { cmd, write } from '../term';
 import { getGraphQLSPConfig } from '../lsp';
 
 const MINIMUM_VERSIONS = {
@@ -26,6 +27,7 @@ export async function executeTadaDoctor() {
     const file = path.resolve(packageJsonPath);
     packageJsonContents = JSON.parse(await fs.readFile(file, 'utf-8'));
   } catch (error) {
+    write([cmd(cmd.Style, cmd.style.BrightRed), '']);
     console.error(
       'Failed to read package.json in current working directory, try running the doctor command in your workspace folder.'
     );
