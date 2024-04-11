@@ -4,7 +4,7 @@ import { emitKeypressEvents } from 'node:readline';
 import type { Source } from 'wonka';
 import { make, pipe, share, takeLast, takeUntil, onPush, toPromise, map } from 'wonka';
 
-import { cmd, _setColor, Mode, PrivateMode } from './csi';
+import { cmd, _setColor, CSI, Mode, PrivateMode } from './csi';
 import { text } from './write';
 
 export interface KeypressEvent {
@@ -50,7 +50,7 @@ export function initTTY(): TTY {
 
   const inputSource = pipe(
     make<KeypressEvent>((observer) => {
-      if (isTTY) output.write(cmd(cmd.UnsetPrivateMode, PrivateMode.ShowCursor));
+      if (isTTY) output.write(cmd(CSI.UnsetPrivateMode, PrivateMode.ShowCursor));
       if (process.stdin.isTTY) process.stdin.setRawMode(true);
 
       let isEnding = false;
@@ -59,9 +59,9 @@ export function initTTY(): TTY {
           isEnding = true;
           if (isTTY)
             output.write(
-              cmd(cmd.Reset) +
-                cmd(cmd.ResetPrivateMode) +
-                cmd(cmd.SetPrivateMode, PrivateMode.ShowCursor)
+              cmd(CSI.Reset) +
+                cmd(CSI.ResetPrivateMode) +
+                cmd(CSI.SetPrivateMode, PrivateMode.ShowCursor)
             );
           if (process.stdin.isTTY) process.stdin.setRawMode(false);
           observer.complete();
@@ -121,8 +121,8 @@ export function initTTY(): TTY {
           privateModes.push(mode);
         }
       }
-      if (normalModes.length) output.write(cmd(cmd.SetMode, normalModes));
-      if (privateModes.length) output.write(cmd(cmd.SetPrivateMode, privateModes));
+      if (normalModes.length) output.write(cmd(CSI.SetMode, normalModes));
+      if (privateModes.length) output.write(cmd(CSI.SetPrivateMode, privateModes));
     }
   };
 
@@ -140,8 +140,8 @@ export function initTTY(): TTY {
           privateModes.push(mode);
         }
       }
-      if (normalModes.length) output.write(cmd(cmd.UnsetMode, normalModes));
-      if (privateModes.length) output.write(cmd(cmd.UnsetPrivateMode, privateModes));
+      if (normalModes.length) output.write(cmd(CSI.UnsetMode, normalModes));
+      if (privateModes.length) output.write(cmd(CSI.UnsetPrivateMode, privateModes));
     }
   };
 

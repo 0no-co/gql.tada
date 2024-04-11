@@ -5,7 +5,7 @@ export function _setColor(color: boolean) {
 }
 
 // See: http://xtermjs.org/docs/api/vtfeatures/#csi
-enum Command {
+const enum CSI {
   InsertChars = '@',
   ScrollLeft = 'SP@',
   Up = 'A',
@@ -47,35 +47,35 @@ enum Command {
   DeleteColumns = "'~",
 }
 
-enum TabClear {
+const enum TabClear {
   Current = 0,
   All = 3,
 }
 
-enum Erase {
+const enum Erase {
   Forward = 0,
   Backward = 1,
   All = 2,
   Scrollback = 3,
 }
 
-enum EraseLine {
+const enum EraseLine {
   Forward = 0,
   Backward = 1,
   All = 2,
 }
 
-enum Protect {
+const enum Protect {
   Insert = 4,
   AutomaticNewline = 20,
 }
 
-enum Mode {
+const enum Mode {
   Insert = 4,
   AutomaticNewline = 20,
 }
 
-enum PrivateMode {
+const enum PrivateMode {
   AppCursorKeys = 1,
   USASCII = 2,
   Column132 = 3,
@@ -100,7 +100,7 @@ enum PrivateMode {
   BracketedPaste = 2004,
 }
 
-enum Cursor {
+const enum Cursor {
   Empty = 0,
   Block = 1,
   BlinkBlock = 2,
@@ -110,7 +110,7 @@ enum Cursor {
   BlinkBar = 6,
 }
 
-enum Style {
+const enum Style {
   Reset = 0,
   Bold = 1,
   Faint = 2,
@@ -174,38 +174,34 @@ enum Style {
   DashedUnderline = '4:5',
 }
 
-type CSI = '\x1B[';
-const CSI = '\x1B[';
+type escapeCSI = '\x1B[';
+const escapeCSI = '\x1B[';
 
-type CommandNoParam =
-  | Command.Reset
-  | Command.SaveCursor
-  | Command.RestoreCursor
-  | Command.ResetPrivateMode;
+type CommandNoParam = CSI.Reset | CSI.SaveCursor | CSI.RestoreCursor | CSI.ResetPrivateMode;
 
 type CommandSingleParam =
-  | Command.ScrollLeft
-  | Command.ScrollRight
-  | Command.ScrollUp
-  | Command.ScrollDown
-  | Command.Up
-  | Command.Down
-  | Command.Backward
-  | Command.Forward
-  | Command.PrevLine
-  | Command.NextLine
-  | Command.DownLine
-  | Command.ToColumn
-  | Command.ToRow
-  | Command.Tab
-  | Command.TabBackwards
-  | Command.InsertChars
-  | Command.InsertLines
-  | Command.InsertColumns
-  | Command.DeleteChars
-  | Command.DeleteLines
-  | Command.DeleteColumns
-  | Command.RepeatChar;
+  | CSI.ScrollLeft
+  | CSI.ScrollRight
+  | CSI.ScrollUp
+  | CSI.ScrollDown
+  | CSI.Up
+  | CSI.Down
+  | CSI.Backward
+  | CSI.Forward
+  | CSI.PrevLine
+  | CSI.NextLine
+  | CSI.DownLine
+  | CSI.ToColumn
+  | CSI.ToRow
+  | CSI.Tab
+  | CSI.TabBackwards
+  | CSI.InsertChars
+  | CSI.InsertLines
+  | CSI.InsertColumns
+  | CSI.DeleteChars
+  | CSI.DeleteLines
+  | CSI.DeleteColumns
+  | CSI.RepeatChar;
 
 type CommandParam =
   | number
@@ -221,60 +217,57 @@ type CommandParam =
   | readonly PrivateMode[]
   | readonly Style[];
 
-function _cmd(code: CommandNoParam): `${CSI}${CommandNoParam}`;
-function _cmd(code: CommandSingleParam, count?: number): `${CSI}${number}${CommandSingleParam}`;
-function _cmd(code: Command.TabClear, mode?: TabClear): `${CSI}${TabClear}${Command.TabClear}`;
-function _cmd(code: Command.Erase, mode?: Erase): `${CSI}${Erase}${Command.Erase}`;
-function _cmd(code: Command.EraseLine, mode?: EraseLine): `${CSI}${EraseLine}${Command.EraseLine}`;
-function _cmd(code: Command.Protect, mode?: Protect): `${CSI}${Protect}${Command.Protect}`;
-function _cmd(code: Command.Cursor, style: Cursor): `${CSI}${Cursor}${Command.Cursor}`;
+function cmd(code: CommandNoParam): `${escapeCSI}${CommandNoParam}`;
+function cmd(
+  code: CommandSingleParam,
+  count?: number
+): `${escapeCSI}${number}${CommandSingleParam}`;
+function cmd(code: CSI.TabClear, mode?: TabClear): `${escapeCSI}${TabClear}${CSI.TabClear}`;
+function cmd(code: CSI.Erase, mode?: Erase): `${escapeCSI}${Erase}${CSI.Erase}`;
+function cmd(code: CSI.EraseLine, mode?: EraseLine): `${escapeCSI}${EraseLine}${CSI.EraseLine}`;
+function cmd(code: CSI.Protect, mode?: Protect): `${escapeCSI}${Protect}${CSI.Protect}`;
+function cmd(code: CSI.Cursor, style: Cursor): `${escapeCSI}${Cursor}${CSI.Cursor}`;
 
-function _cmd(
-  code: Command.ToPosition,
+function cmd(
+  code: CSI.ToPosition,
   row: number,
   column: number
-): `${CSI}${number};${number}${Command.ToPosition}`;
+): `${escapeCSI}${number};${number}${CSI.ToPosition}`;
 
-function _cmd(
-  code: Command.SetMargin,
+function cmd(
+  code: CSI.SetMargin,
   top: number,
   bottom: number
-): `${CSI}${number};${number}${Command.SetMargin}`;
+): `${escapeCSI}${number};${number}${CSI.SetMargin}`;
 
-function _cmd(
-  code: Command.SetMode,
-  modes: Mode | readonly Mode[]
-): `${CSI}${Mode}${Command.SetMode}`;
+function cmd(code: CSI.SetMode, modes: Mode | readonly Mode[]): `${escapeCSI}${Mode}${CSI.SetMode}`;
 
-function _cmd(
-  code: Command.SetPrivateMode,
+function cmd(
+  code: CSI.SetPrivateMode,
   modes: PrivateMode | readonly PrivateMode[]
-): `${CSI}?${PrivateMode}${Command.SetMode}`;
+): `${escapeCSI}?${PrivateMode}${CSI.SetMode}`;
 
-function _cmd(
-  code: Command.UnsetMode,
+function cmd(
+  code: CSI.UnsetMode,
   modes: Mode | readonly Mode[]
-): `${CSI}${Mode}${Command.UnsetMode}`;
+): `${escapeCSI}${Mode}${CSI.UnsetMode}`;
 
-function _cmd(
-  code: Command.UnsetPrivateMode,
+function cmd(
+  code: CSI.UnsetPrivateMode,
   modes: PrivateMode | readonly PrivateMode[]
-): `${CSI}?${PrivateMode}${Command.UnsetMode}`;
+): `${escapeCSI}?${PrivateMode}${CSI.UnsetMode}`;
 
-function _cmd(
-  code: Command.Style,
-  styles: Style | readonly Style[]
-): `${CSI}${Style}${Command.Style}`;
+function cmd(code: CSI.Style, styles: Style | readonly Style[]): `${escapeCSI}${Style}${CSI.Style}`;
 
-function _cmd(code: Command, a?: CommandParam, b?: number): cmdCode {
-  if (!hasColor && code === Command.Style) return '';
-  let out = CSI;
-  if (code === Command.SetPrivateMode) {
+function cmd(code: CSI, a?: CommandParam, b?: number): cmdCode {
+  if (!hasColor && code === CSI.Style) return '';
+  let out = escapeCSI;
+  if (code === CSI.SetPrivateMode) {
     out += '?';
-    code = Command.SetMode;
-  } else if (code === Command.UnsetPrivateMode) {
+    code = CSI.SetMode;
+  } else if (code === CSI.UnsetPrivateMode) {
     out += '?';
-    code = Command.UnsetMode;
+    code = CSI.UnsetMode;
   }
   if (Array.isArray(a)) {
     out += a.join(';');
@@ -286,30 +279,6 @@ function _cmd(code: Command, a?: CommandParam, b?: number): cmdCode {
   return out as cmdCode;
 }
 
-interface cmdCodes {
-  tabClear: typeof TabClear;
-  erase: typeof Erase;
-  eraseLine: typeof EraseLine;
-  protect: typeof Protect;
-  cursor: typeof Cursor;
-  mode: typeof Mode;
-  privateMode: typeof PrivateMode;
-  style: typeof Style;
-}
+export type cmdCode = `${escapeCSI}${string}${CSI}` | '';
 
-type cmd = typeof _cmd & cmdCodes & typeof Command;
-
-export const cmd: cmd = Object.assign(_cmd as cmd, Command, {
-  tabClear: TabClear,
-  erase: Erase,
-  eraseLine: EraseLine,
-  protect: Protect,
-  cursor: Cursor,
-  mode: Mode,
-  privateMode: PrivateMode,
-  style: Style,
-});
-
-export type cmdCode = `${CSI}${string}${Command}` | '';
-
-export { Command, TabClear, Erase, EraseLine, Protect, Mode, PrivateMode, Cursor, Style };
+export { cmd, CSI, TabClear, Erase, EraseLine, Protect, Mode, PrivateMode, Cursor, Style };
