@@ -88,7 +88,7 @@ async function main() {
     .option('--level', 'The minimum severity of diagnostics to display (error | warn | info).')
     .option('--exit-on-warn', 'Whether to exit with a non-zero code when there are warnings.')
     .action(async (opts) => {
-      check({
+      await check({
         exitOnWarn: opts['exit-on-warn'] !== undefined ? opts['exit-on-warn'] : false,
         minSeverity: opts.level || 'error',
       });
