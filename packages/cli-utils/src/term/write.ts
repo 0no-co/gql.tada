@@ -30,9 +30,8 @@ function text(input: string | readonly string[], ...args: readonly string[]): st
 function error(input: readonly string[], ...args: readonly string[]): CLIError;
 function error(...input: readonly string[]): CLIError;
 
-function error(): CLIError {
-  // eslint-disable-next-line prefer-rest-params
-  return new CLIError(text.apply(arguments));
+function error(...input: any[]): CLIError {
+  return new CLIError(text(...input));
 }
 
 export { text, error };

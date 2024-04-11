@@ -1,14 +1,26 @@
-import type { WriteStream } from 'node:tty';
-import { emitKeypressEvents } from 'node:readline';
+import {
+  fromValue,
+  make,
+  concat,
+  pipe,
+  filter,
+  share,
+  takeUntil,
+  toPromise,
+  onPush,
+  onStart,
+  onEnd,
+} from 'wonka';
 
 import type { Source } from 'wonka';
-import { make, pipe, share, takeLast, takeUntil, onPush, toPromise, map } from 'wonka';
+import type { WriteStream, ReadStream } from 'node:tty';
+import { emitKeypressEvents } from 'node:readline';
 
 import { cmd, _setColor, CSI, Mode, PrivateMode } from './csi';
 import { text } from './write';
 
 export interface KeypressEvent {
-  text?: string;
+  data?: string;
   sequence: string;
   name: string;
   ctrl: boolean;
@@ -20,7 +32,7 @@ export interface TTY {
   output: WriteStream;
   pipeTo: WriteStream | null;
   inputSource: Source<KeypressEvent>;
-  cancelSource: Source<void>;
+  cancelSource: Source<unknown>;
 
   write(input: readonly string[], ...args: readonly string[]): void;
   write(...input: readonly string[]): void;
@@ -29,6 +41,37 @@ export interface TTY {
 
   mode(...modes: readonly (Mode | PrivateMode)[]): void;
   modeOff(...modes: readonly (Mode | PrivateMode)[]): void;
+}
+
+function fromReadStream(stream: ReadStream): Source<KeypressEvent> {
+  return make((observer) => {
+    function onKeypress(data: string | undefined, event: KeypressEvent) {
+      switch (event.name) {
+        case 'c':
+        case 'd':
+        case 'x':
+          if (event.ctrl) cleanup();
+        case 'escape':
+          cleanup();
+        default:
+          observer.next({ ...event, data });
+      }
+    }
+
+    function cleanup() {
+      observer.complete();
+      stream.removeListener('keypress', onKeypress);
+      stream.setRawMode(false);
+      stream.unref();
+    }
+
+    emitKeypressEvents(stream);
+    stream.setRawMode(true);
+    stream.setEncoding('utf8');
+    stream.resume();
+    stream.addListener('keypress', onKeypress);
+    return cleanup;
+  });
 }
 
 export function initTTY(): TTY {
@@ -44,71 +87,46 @@ export function initTTY(): TTY {
 
   const hasColorArg = process.argv.includes('--color');
   const hasColorEnv = 'FORCE_COLOR' in process.env || (!process.env.NO_COLOR && !process.env.CI);
-
   _setColor((isTTY && hasColorEnv) || hasColorArg);
-  emitKeypressEvents(process.stdin);
 
-  const inputSource = pipe(
-    make<KeypressEvent>((observer) => {
-      if (isTTY) output.write(cmd(CSI.UnsetPrivateMode, PrivateMode.ShowCursor));
-      if (process.stdin.isTTY) process.stdin.setRawMode(true);
+  function _start() {
+    _setColor((isTTY && hasColorEnv) || hasColorArg);
+    if (isTTY) {
+      output.write(cmd(CSI.UnsetPrivateMode, PrivateMode.ShowCursor));
+    }
+  }
 
-      let isEnding = false;
-      const onEnd = () => {
-        if (!isEnding) {
-          isEnding = true;
-          if (isTTY)
-            output.write(
-              cmd(CSI.Reset) +
-                cmd(CSI.ResetPrivateMode) +
-                cmd(CSI.SetPrivateMode, PrivateMode.ShowCursor)
-            );
-          if (process.stdin.isTTY) process.stdin.setRawMode(false);
-          observer.complete();
-        }
-      };
+  function _end() {
+    if (isTTY) {
+      output.write(
+        cmd(CSI.Reset) +
+          cmd(CSI.ResetPrivateMode) +
+          cmd(CSI.SetPrivateMode, PrivateMode.ShowCursor) +
+          '\n'
+      );
+    }
+  }
 
-      const onKeypress = (text: string | undefined, event: KeypressEvent) => {
-        if (
-          (event.ctrl && (event.name === 'x' || event.name === 'c' || event.name === 'd')) ||
-          event.name === 'escape'
-        ) {
-          observer.complete();
-        } else if (!isEnding) {
-          observer.next({ ...event, text });
-        }
-      };
+  const inputSource = pipe(fromReadStream(process.stdin), onStart(_start), onEnd(_end), share);
 
-      process.stdin.on('keypress', onKeypress);
-      process.stdin.on('end', onEnd);
-      process.on('SIGKILL', onEnd);
-      process.on('SIGINT', onEnd);
-      process.on('SIGTERM', onEnd);
-      process.on('exit', onEnd);
-
-      return () => {
-        process.stdin.off('keypress', onKeypress);
-        process.stdin.off('end', onEnd);
-        process.off('SIGKILL', onEnd);
-        process.off('SIGINT', onEnd);
-        process.off('SIGTERM', onEnd);
-        process.off('exit', onEnd);
-        onEnd();
-      };
-    }),
+  const cancelSource = pipe(
+    concat([
+      pipe(
+        inputSource,
+        filter(() => false)
+      ),
+      fromValue(null),
+    ]),
     share
   );
 
-  const cancelSource = pipe(
-    inputSource,
-    takeLast(1),
-    map(() => undefined)
-  );
-
-  function write() {
-    // eslint-disable-next-line prefer-rest-params
-    output.write(text.apply(arguments));
+  function write(...input: any[]) {
+    output.write(text(...input));
   }
+
+  const pipeOutput = (input: Source<string>) => {
+    return pipe(input, onPush(write), takeUntil(cancelSource), toPromise);
+  };
 
   const mode = (...modes: readonly (Mode | PrivateMode)[]): void => {
     if (isTTY) {
@@ -125,9 +143,6 @@ export function initTTY(): TTY {
       if (privateModes.length) output.write(cmd(CSI.SetPrivateMode, privateModes));
     }
   };
-
-  const pipeOutput = (input: Source<string>) =>
-    pipe(input, onPush(write), takeUntil(cancelSource), toPromise);
 
   const modeOff = (...modes: readonly (Mode | PrivateMode)[]): void => {
     if (isTTY) {
