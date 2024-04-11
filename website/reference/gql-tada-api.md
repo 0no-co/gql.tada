@@ -181,6 +181,18 @@ type Media = ReturnType<typeof graphql.scalar<'Media'>>;
 Generates a faux-document containing a property called `documentId` which
 can be used to send off queries as [Persisted Operations](https://github.com/graphql/graphql-over-http/blob/main/rfcs/PersistedOperations.md).
 
+In the LSP we'll check the `generic` associated with `graphql.persisted<typeof document>()`
+and give you a code-action to generate a hash.
+
+Because we use a generic and no explicit reference to the document these will
+be seen as dead-code in your front-end bundle and hence, given the appropriate
+bundler configuration, removed.
+
+> [!NOTE]
+> As it stands we'll omit the document-definitions from the AST which
+> could give problems with some GraphQL Client caches. We'll work on
+> adding support for this.
+
 #### Example
 
 ```ts twoslash
