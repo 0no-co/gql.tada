@@ -50,8 +50,10 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
     const calls = findAllPersistedCallExpressions(sourceFile);
     for (const call of calls) {
       const position = getFilePosition(sourceFile, call.getStart());
-      const hash = call.arguments[0];
-      if (!hash || !ts.isStringLiteral(hash)) {
+      const hashArg = call.arguments[0];
+      const docArg = call.arguments[1];
+      const typeQuery = call.typeArguments && call.typeArguments[0];
+      if (!hashArg || !ts.isStringLiteral(hashArg)) {
         warnings.push({
           message:
             '"graphql.persisted" must be called with a string literal as the first argument.',
@@ -60,10 +62,11 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
           col: position.col,
         });
         continue;
-      } else if (!call.typeArguments || !ts.isTypeQueryNode(call.typeArguments[0])) {
+      } else if (!docArg && !typeQuery) {
         warnings.push({
           message:
-            '"graphql.persisted" is missing a generic such as `graphql.persisted<typeof document>`.',
+            '"graphql.persisted" is missing a document.\n' +
+              'This may be passed as a generic such as `graphql.persisted<typeof document>` or as the second argument.',
           file: filePath,
           line: position.line,
           col: position.col,
@@ -71,16 +74,24 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
         continue;
       }
 
-      const typeQuery = call.typeArguments[0];
-      const { node: foundNode } = getDocumentReferenceFromTypeQuery(
-        typeQuery,
-        filePath,
-        pluginInfo
-      );
+      let foundNode: ts.VariableDeclaration | null = null;
+      let referencingNode: ts.Node = call;
+      if (docArg && (ts.isCallExpression(docArg) || ts.isIdentifier(docArg))) {
+      } else if (typeQuery && ts.isTypeQueryNode(typeQuery)) {
+        const result = getDocumentReferenceFromTypeQuery(
+          typeQuery,
+          filePath,
+          pluginInfo
+        );
+        foundNode = result.node;
+        referencingNode = typeQuery;
+      }
+
+
       if (!foundNode) {
         warnings.push({
           message:
-            `Could not find reference for "${typeQuery.getText()}".\n` +
+            `Could not find reference for "${referencingNode.getText()}".\n` +
             'If this is unexpected, please file an issue describing your case.',
           file: filePath,
           line: position.line,
@@ -98,7 +109,7 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
       ) {
         warnings.push({
           message:
-            `The referenced document of "${typeQuery.getText()}" contains no document string literal.\n` +
+            `The referenced document of "${referencingNode.getText()}" contains no document string literal.\n` +
             'If this is unexpected, please file an issue describing your case.',
           file: filePath,
           line: position.line,
@@ -115,7 +126,7 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
 
       let document = operation;
       for (const fragment of fragments) document += '\n\n' + print(fragment);
-      documents[JSON.parse(hash.getFullText())] = document;
+      documents[JSON.parse(hashArg.getFullText())] = document;
     }
 
     yield {
