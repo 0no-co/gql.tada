@@ -1,4 +1,8 @@
-import { hasColor } from './tty';
+let hasColor = false;
+
+export function _setColor(color: boolean) {
+  hasColor = color;
+}
 
 // See: http://xtermjs.org/docs/api/vtfeatures/#csi
 enum Command {
