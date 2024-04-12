@@ -1,17 +1,15 @@
 import type { WorkerOptions } from 'node:worker_threads';
 import { Worker, isMainThread, parentPort, SHARE_ENV } from 'node:worker_threads';
 
-let ids = 0;
-
 const port = parentPort!;
 if (!isMainThread && !port) {
   throw new ReferenceError('Failed to receive parent message port');
 }
 
 const enum MainMessageCodes {
-  Start = 10,
-  Close,
-  Pull,
+  Start = 'START',
+  Close = 'CLOSE',
+  Pull = 'PULL',
 }
 
 interface MainMessage {
@@ -21,9 +19,9 @@ interface MainMessage {
 }
 
 const enum ThreadMessageCodes {
-  Next = 20,
-  Throw,
-  Return,
+  Next = 'NEXT',
+  Throw = 'THROW',
+  Return = 'RETURN',
 }
 
 interface ThreadMessage {
@@ -34,6 +32,9 @@ interface ThreadMessage {
 
 const workerOpts: WorkerOptions = {
   env: SHARE_ENV,
+  stderr: false,
+  stdout: false,
+  stdin: false,
 };
 
 const asyncIteratorSymbol = (): typeof Symbol.asyncIterator =>
@@ -41,24 +42,27 @@ const asyncIteratorSymbol = (): typeof Symbol.asyncIterator =>
 
 /** Capture the stack above the caller */
 function captureStack(): NodeJS.CallSite[] {
-  const _error = new Error();
+  const _error: any = new Error();
   const _prepareStackTrace = Error.prepareStackTrace;
   try {
     let stack: NodeJS.CallSite[] | undefined;
     Error.prepareStackTrace = (_error, _stack) => (stack = _stack);
     Error.captureStackTrace(_error);
-    void _error.stack;
+    if (!_error.stack) throw _error;
     return (stack && stack.slice(2)) || [];
   } finally {
     Error.prepareStackTrace = _prepareStackTrace;
   }
 }
 
-interface Generator<Args extends readonly any[], Next> {
-  (...args: Args): AsyncIterator<Next>;
+export interface Generator<Args extends readonly any[], Next> {
+  // TODO: Update to support for AsyncGenerator interface
+  (...args: Args): AsyncIterableIterator<Next>;
 }
 
-function main<Args extends readonly any[], Next>(worker: Worker): Generator<Args, Next> {
+function main<Args extends readonly any[], Next>(url: string | URL): Generator<Args, Next> {
+  const worker = new Worker(url, workerOpts);
+  let ids = 0;
   return (...args: Args) => {
     const id = ++ids | 0;
     const buffer: ThreadMessage[] = [];
@@ -69,8 +73,27 @@ function main<Args extends readonly any[], Next>(worker: Worker): Generator<Args
     let resolve: ((value: IteratorResult<Next>) => void) | void;
     let reject: ((error: any) => void) | void;
 
+    function cleanup() {
+      ended = true;
+      resolve = undefined;
+      reject = undefined;
+      worker.removeListener('message', receiveMessage);
+      worker.removeListener('error', receiveError);
+      worker.unref();
+    }
+
     function sendMessage(kind: MainMessageCodes) {
       worker.postMessage({ id, kind });
+    }
+
+    function receiveError(error: any) {
+      cleanup();
+      buffer.length = 1;
+      buffer[0] = {
+        id,
+        kind: ThreadMessageCodes.Throw,
+        data: error,
+      };
     }
 
     function receiveMessage(data: unknown) {
@@ -79,22 +102,23 @@ function main<Args extends readonly any[], Next>(worker: Worker): Generator<Args
       if (!message) {
         return;
       } else if (reject && message.kind === ThreadMessageCodes.Throw) {
-        ended = true;
         reject(message.data);
+        cleanup();
       } else if (resolve && message.kind === ThreadMessageCodes.Return) {
-        ended = true;
         resolve({ done: true, value: message.data });
+        cleanup();
       } else if (resolve && message.kind === ThreadMessageCodes.Next) {
+        pulled = false;
         resolve({ done: false, value: message.data });
       } else if (
         message.kind === ThreadMessageCodes.Throw ||
         message.kind === ThreadMessageCodes.Return
       ) {
-        ended = true;
-        port.removeListener('message', receiveMessage);
         buffer.push(message);
+        cleanup();
       } else if (message.kind === ThreadMessageCodes.Next) {
         buffer.push(message);
+        pulled = false;
       }
     }
 
@@ -102,7 +126,8 @@ function main<Args extends readonly any[], Next>(worker: Worker): Generator<Args
       async next() {
         if (!started) {
           started = true;
-          port.addListener('message', receiveMessage);
+          worker.addListener('message', receiveMessage);
+          worker.addListener('error', receiveError);
           worker.postMessage({
             id,
             kind: MainMessageCodes.Start,
@@ -117,12 +142,10 @@ function main<Args extends readonly any[], Next>(worker: Worker): Generator<Args
         }
         const message = buffer.shift();
         if (message && message.kind === ThreadMessageCodes.Throw) {
-          ended = true;
-          port.removeListener('message', receiveMessage);
+          cleanup();
           throw message.data;
         } else if (message && message.kind === ThreadMessageCodes.Return) {
-          ended = true;
-          port.removeListener('message', receiveMessage);
+          cleanup();
           return { value: message.data, done: true };
         } else if (message && message.kind === ThreadMessageCodes.Next) {
           return { value: message.data, done: false };
@@ -143,11 +166,8 @@ function main<Args extends readonly any[], Next>(worker: Worker): Generator<Args
       },
       async return() {
         if (!ended) {
-          ended = true;
-          port.removeListener('message', receiveMessage);
+          cleanup();
           sendMessage(MainMessageCodes.Close);
-          resolve = undefined;
-          reject = undefined;
         }
         return { done: true } as IteratorReturnResult<any>;
       },
@@ -163,19 +183,23 @@ function thread<Args extends readonly any[], Next>(
   generator: Generator<Args, Next>
 ): void {
   if (message.kind !== MainMessageCodes.Start) return;
-  const iterator = generator(...(message.data as any));
   const id = message.id;
+  const iterator = generator(...(message.data as any));
 
   let ended = false;
   let pulled = false;
   let looping = false;
 
+  function cleanup() {
+    ended = true;
+    port.removeListener('message', receiveMessage);
+  }
+
   async function sendMessage(kind: ThreadMessageCodes, data?: any) {
     try {
       port.postMessage({ id, kind, data });
     } catch (error) {
-      ended = true;
-      port.removeListener('message', receiveMessage);
+      cleanup();
       if (iterator.throw) {
         let result = await iterator.throw();
         if (result.done === false && iterator.return) {
@@ -197,8 +221,7 @@ function thread<Args extends readonly any[], Next>(
     if (!message) {
       return;
     } else if (message.kind === MainMessageCodes.Close) {
-      ended = true;
-      port.removeListener('message', receiveMessage);
+      cleanup();
       if (iterator.return) iterator.return();
     } else if (message.kind === MainMessageCodes.Pull && looping) {
       pulled = true;
@@ -206,20 +229,19 @@ function thread<Args extends readonly any[], Next>(
       for (pulled = looping = true; pulled && !ended; ) {
         try {
           if ((next = await iterator.next()).done) {
-            ended = true;
+            cleanup();
             if (iterator.return) next = await iterator.return();
-            port.removeListener('message', receiveMessage);
             sendMessage(ThreadMessageCodes.Return, next.value);
           } else {
             pulled = false;
             sendMessage(ThreadMessageCodes.Next, next.value);
           }
         } catch (error) {
-          ended = true;
-          port.removeListener('message', receiveMessage);
+          cleanup();
           sendMessage(ThreadMessageCodes.Throw, error);
         }
       }
+      looping = false;
     }
   }
 
@@ -234,8 +256,7 @@ export function expose<Args extends readonly any[], Return>(
     const file = call && call.getFileName();
     if (!file) throw new ReferenceError('Captured stack trace is empty');
     const url = file.startsWith('file://') ? new URL(file) : file;
-    const worker = new Worker(url, workerOpts);
-    return main(worker);
+    return main(url);
   } else {
     port.addListener('message', (data) => {
       const message: MainMessage | null =
