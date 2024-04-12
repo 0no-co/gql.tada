@@ -1,4 +1,5 @@
 #!/usr/bin/env node
 
 import cli from '@gql.tada/cli-utils';
-(cli as any).default();
+
+('default' in cli ? (cli.default as typeof cli) : cli)();
