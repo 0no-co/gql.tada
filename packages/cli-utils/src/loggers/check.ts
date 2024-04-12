@@ -2,6 +2,36 @@ import { pipe, interval, map } from 'wonka';
 
 import * as t from '../term';
 
+export function code(text: string) {
+  return t.text`${t.cmd(t.CSI.Style, t.Style.Underline)}${text}${t.cmd(
+    t.CSI.Style,
+    t.Style.NoUnderline
+  )}`;
+}
+
+export function bold(text: string) {
+  return t.text`${t.cmd(t.CSI.Style, t.Style.Bold)}${text}${t.cmd(t.CSI.Style, t.Style.Normal)}`;
+}
+
+export function hint(text: string) {
+  return t.text([
+    t.cmd(t.CSI.Style, t.Style.BrightBlack),
+    `${t.HeavyBox.BottomLeft} `,
+    t.cmd(t.CSI.Style, t.Style.BrightBlue),
+    `${t.Icons.Info} `,
+    t.cmd(t.CSI.Style, t.Style.Blue),
+    text,
+  ]);
+}
+
+export function console(error: any) {
+  return t.text([
+    t.cmd(t.CSI.Style, t.Style.BrightBlack),
+    `${t.HeavyBox.BottomLeft} `,
+    error && error instanceof Error ? error.message : `${error}`,
+  ]);
+}
+
 export function emptyLine() {
   return t.text([t.cmd(t.CSI.Style, t.Style.BrightBlack), t.HeavyBox.Vertical, '\n']);
 }
@@ -86,8 +116,8 @@ export function success() {
 export function errorMessage(message: string) {
   return t.error([
     '\n',
-    t.cmd(t.CSI.Style, [t.Style.BrightRed, t.Style.Invert]),
-    ' Error ',
+    t.cmd(t.CSI.Style, [t.Style.Red, t.Style.Invert]),
+    ` ${t.Icons.Warning} Error `,
     t.cmd(t.CSI.Style, t.Style.NoInvert),
     `\n${message.trim()}\n`,
   ]);

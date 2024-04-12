@@ -59,7 +59,9 @@ function clear(text: string) {
   let lines = 0;
   for (let index = 0; index < text.length; index++)
     if (text.charCodeAt(index) === 10 /*'\n'*/) lines++;
-  return (lines > 0 ? cmd(CSI.PrevLine, lines) : '') + cmd(CSI.DeleteLines, lines + 1);
+  return (
+    (lines > 0 ? cmd(CSI.PrevLine, lines) : cmd(CSI.ToColumn, 1)) + cmd(CSI.DeleteLines, lines + 1)
+  );
 }
 
 type ComposeInput = undefined | string | Source<string> | AsyncIterable<ComposeInput>;
