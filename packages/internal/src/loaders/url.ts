@@ -18,12 +18,16 @@ const ALL_SUPPORTED_FEATURES: SupportedFeatures = {
   directiveIsRepeatable: true,
   specifiedByURL: true,
   inputValueDeprecation: true,
+  supportsDirectiveIsDeprecatedArgument: true,
+  supportsFieldIsDeprecatedArgument: true,
 };
 
 const NO_SUPPORTED_FEATURES: SupportedFeatures = {
   directiveIsRepeatable: false,
   specifiedByURL: false,
   inputValueDeprecation: false,
+  supportsDirectiveIsDeprecatedArgument: false,
+  supportsFieldIsDeprecatedArgument: false,
 };
 
 export function loadFromURL(config: LoadFromURLConfig): SchemaLoader {
