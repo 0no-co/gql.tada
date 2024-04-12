@@ -13,12 +13,15 @@ export interface SupportedFeatures {
   directiveIsRepeatable: boolean;
   specifiedByURL: boolean;
   inputValueDeprecation: boolean;
+  supportsDirectiveIsDeprecatedArgument: boolean;
+  supportsFieldIsDeprecatedArgument: boolean;
 }
 
 /** Data from a {@link makeIntrospectSupportQuery} result */
 export interface IntrospectSupportQueryData {
-  directive: { fields: { name: string }[] | null } | null;
+  directive: { fields: { name: string; args: { name: string }[] | null }[] | null } | null;
   type: { fields: { name: string }[] | null } | null;
+  field: { fields: { name: string; args: { name: string }[] | null }[] | null } | null;
   inputValue: { fields: { name: string }[] | null } | null;
 }
 
@@ -28,11 +31,29 @@ const _hasField = (
 ): boolean => !!data && !!data.fields && data.fields.some((field) => field.name === fieldName);
 
 /** Evaluates data from a {@link makeIntrospectSupportQuery} result to {@link SupportedFeatures} */
-export const toSupportedFeatures = (data: IntrospectSupportQueryData): SupportedFeatures => ({
-  directiveIsRepeatable: _hasField(data.directive, 'isRepeatable'),
-  specifiedByURL: _hasField(data.type, 'specifiedByURL'),
-  inputValueDeprecation: _hasField(data.inputValue, 'isDeprecated'),
-});
+export const toSupportedFeatures = (data: IntrospectSupportQueryData): SupportedFeatures => {
+  const directiveArgs =
+    data.directive &&
+    data.directive.fields &&
+    data.directive.fields.find((field) => field.name === 'args');
+  const fieldArgs =
+    data.field && data.field.fields && data.field.fields.find((field) => field.name === 'args');
+  return {
+    directiveIsRepeatable: _hasField(data.directive, 'isRepeatable'),
+    specifiedByURL: _hasField(data.type, 'specifiedByURL'),
+    inputValueDeprecation: _hasField(data.inputValue, 'isDeprecated'),
+    supportsDirectiveIsDeprecatedArgument: !!(
+      directiveArgs &&
+      directiveArgs.args &&
+      directiveArgs.args.find((arg) => arg.name === 'includeDeprecated')
+    ),
+    supportsFieldIsDeprecatedArgument: !!(
+      fieldArgs &&
+      fieldArgs.args &&
+      fieldArgs.args.find((arg) => arg.name === 'includeDeprecated')
+    ),
+  };
+};
 
 let _introspectionQuery: DocumentNode | undefined;
 let _previousSupport: SupportedFeatures | undefined;
@@ -92,7 +113,20 @@ export const makeIntrospectSupportQuery = (): DocumentNode => ({
                 value: { kind: Kind.STRING, value: '__Directive' },
               },
             ],
-            selectionSet: _makeFieldNamesSelection(),
+            selectionSet: _makeFieldNamesSelection({ includeArgs: true }),
+          },
+          {
+            kind: Kind.FIELD,
+            alias: { kind: Kind.NAME, value: 'field' },
+            name: { kind: Kind.NAME, value: '__field' },
+            arguments: [
+              {
+                kind: Kind.ARGUMENT,
+                name: { kind: Kind.NAME, value: 'name' },
+                value: { kind: Kind.STRING, value: '__Field' },
+              },
+            ],
+            selectionSet: _makeFieldNamesSelection({ includeArgs: true }),
           },
           {
             kind: Kind.FIELD,
@@ -105,7 +139,7 @@ export const makeIntrospectSupportQuery = (): DocumentNode => ({
                 value: { kind: Kind.STRING, value: '__Type' },
               },
             ],
-            selectionSet: _makeFieldNamesSelection(),
+            selectionSet: _makeFieldNamesSelection({ includeArgs: false }),
           },
           {
             kind: Kind.FIELD,
@@ -118,7 +152,7 @@ export const makeIntrospectSupportQuery = (): DocumentNode => ({
                 value: { kind: Kind.STRING, value: '__InputValue' },
               },
             ],
-            selectionSet: _makeFieldNamesSelection(),
+            selectionSet: _makeFieldNamesSelection({ includeArgs: false }),
           },
         ],
       },
@@ -126,7 +160,7 @@ export const makeIntrospectSupportQuery = (): DocumentNode => ({
   ],
 });
 
-const _makeFieldNamesSelection = (): SelectionSetNode => ({
+const _makeFieldNamesSelection = (options: { includeArgs: boolean }): SelectionSetNode => ({
   kind: Kind.SELECTION_SET,
   selections: [
     {
@@ -139,6 +173,23 @@ const _makeFieldNamesSelection = (): SelectionSetNode => ({
             kind: Kind.FIELD,
             name: { kind: Kind.NAME, value: 'name' },
           },
+          ...(options.includeArgs
+            ? ([
+                {
+                  kind: Kind.FIELD,
+                  name: { kind: Kind.NAME, value: 'args' },
+                  selectionSet: {
+                    kind: Kind.SELECTION_SET,
+                    selections: [
+                      {
+                        kind: Kind.FIELD,
+                        name: { kind: Kind.NAME, value: 'name' },
+                      },
+                    ],
+                  },
+                },
+              ] as const)
+            : []),
         ],
       },
     },
@@ -223,7 +274,7 @@ const _makeSchemaSelection = (support: SupportedFeatures): SelectionSetNode => (
             kind: Kind.FIELD,
             name: { kind: Kind.NAME, value: 'locations' },
           },
-          _makeSchemaArgsField(support),
+          _makeSchemaArgsField(support.supportsDirectiveIsDeprecatedArgument),
           ...(support.directiveIsRepeatable
             ? ([
                 {
@@ -268,13 +319,15 @@ const _makeSchemaFullTypeFragment = (support: SupportedFeatures): FragmentDefini
       {
         kind: Kind.FIELD,
         name: { kind: Kind.NAME, value: 'fields' },
-        arguments: [
-          {
-            kind: Kind.ARGUMENT,
-            name: { kind: Kind.NAME, value: 'includeDeprecated' },
-            value: { kind: Kind.BOOLEAN, value: true },
-          },
-        ],
+        arguments: support.supportsFieldIsDeprecatedArgument
+          ? [
+              {
+                kind: Kind.ARGUMENT,
+                name: { kind: Kind.NAME, value: 'includeDeprecated' },
+                value: { kind: Kind.BOOLEAN, value: true },
+              },
+            ]
+          : undefined,
         selectionSet: {
           kind: Kind.SELECTION_SET,
           selections: [
@@ -294,7 +347,7 @@ const _makeSchemaFullTypeFragment = (support: SupportedFeatures): FragmentDefini
               kind: Kind.FIELD,
               name: { kind: Kind.NAME, value: 'deprecationReason' },
             },
-            _makeSchemaArgsField(support),
+            _makeSchemaArgsField(support.inputValueDeprecation),
             {
               kind: Kind.FIELD,
               name: { kind: Kind.NAME, value: 'type' },
@@ -396,10 +449,10 @@ const _makeSchemaFullTypeFragment = (support: SupportedFeatures): FragmentDefini
   },
 });
 
-const _makeSchemaArgsField = (support: SupportedFeatures): FieldNode => ({
+const _makeSchemaArgsField = (supportsValueDeprecation: boolean): FieldNode => ({
   kind: Kind.FIELD,
   name: { kind: Kind.NAME, value: 'args' },
-  arguments: support.inputValueDeprecation
+  arguments: supportsValueDeprecation
     ? [
         {
           kind: Kind.ARGUMENT,
