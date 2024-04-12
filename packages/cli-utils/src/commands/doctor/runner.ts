@@ -6,15 +6,19 @@ import type { TsConfigJson } from 'type-fest';
 import { resolveTypeScriptRootDir } from '@gql.tada/internal';
 import { existsSync } from 'node:fs';
 
-import { initTTY } from '../../term';
 import * as logger from './logger';
 
 // NOTE: Currently, most tasks in this command complete too quickly
 // We slow them down to make the CLI output easier to follow along to
-const delay = (ms = 700) =>
-  new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
+const delay = (ms = 700) => {
+  if (process.env.CI) {
+    return Promise.resolve();
+  } else {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
+};
 
 const enum Messages {
   TITLE = 'Doctor',
@@ -30,10 +34,6 @@ const MINIMUM_VERSIONS = {
   tada: '1.0.0',
   lsp: '1.0.0',
 };
-
-export async function executeTadaDoctor() {
-  await initTTY().start(run());
-}
 
 export async function* run() {
   yield logger.title(Messages.TITLE, Messages.DESCRIPTION);
