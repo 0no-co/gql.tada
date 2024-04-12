@@ -18,6 +18,7 @@ const ALL_SUPPORTED_FEATURES: SupportedFeatures = {
   directiveIsRepeatable: true,
   specifiedByURL: true,
   inputValueDeprecation: true,
+  argsValueDeprecation: true,
 };
 
 export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
