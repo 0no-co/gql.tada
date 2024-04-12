@@ -16,8 +16,9 @@ import type { Source } from 'wonka';
 import type { WriteStream, ReadStream } from 'node:tty';
 import { emitKeypressEvents } from 'node:readline';
 
+import type { ComposeInput } from './write';
+import { text, compose } from './write';
 import { cmd, _setColor, CSI, Mode, PrivateMode } from './csi';
-import { text } from './write';
 
 export interface KeypressEvent {
   data?: string;
@@ -37,7 +38,7 @@ export interface TTY {
   write(input: readonly string[], ...args: readonly string[]): void;
   write(...input: readonly string[]): void;
 
-  pipeOutput(input: Source<string>): Promise<unknown>;
+  start(outputs: AsyncIterable<ComposeInput>): Promise<void>;
 
   mode(...modes: readonly (Mode | PrivateMode)[]): void;
   modeOff(...modes: readonly (Mode | PrivateMode)[]): void;
@@ -124,11 +125,11 @@ export function initTTY(): TTY {
     output.write(text(...input));
   }
 
-  const pipeOutput = (input: Source<string>) => {
-    return pipe(input, onPush(write), takeUntil(cancelSource), toPromise);
-  };
+  function start(outputs: AsyncIterable<ComposeInput>) {
+    return pipe(compose(outputs), onPush(write), takeUntil(cancelSource), toPromise);
+  }
 
-  const mode = (...modes: readonly (Mode | PrivateMode)[]): void => {
+  function mode(...modes: readonly (Mode | PrivateMode)[]): void {
     if (isTTY) {
       const normalModes: Mode[] = [];
       const privateModes: PrivateMode[] = [];
@@ -142,9 +143,9 @@ export function initTTY(): TTY {
       if (normalModes.length) output.write(cmd(CSI.SetMode, normalModes));
       if (privateModes.length) output.write(cmd(CSI.SetPrivateMode, privateModes));
     }
-  };
+  }
 
-  const modeOff = (...modes: readonly (Mode | PrivateMode)[]): void => {
+  function modeOff(...modes: readonly (Mode | PrivateMode)[]): void {
     if (isTTY) {
       const normalModes: Mode[] = [];
       const privateModes: PrivateMode[] = [];
@@ -158,7 +159,7 @@ export function initTTY(): TTY {
       if (normalModes.length) output.write(cmd(CSI.UnsetMode, normalModes));
       if (privateModes.length) output.write(cmd(CSI.UnsetPrivateMode, privateModes));
     }
-  };
+  }
 
   return {
     output,
@@ -166,7 +167,7 @@ export function initTTY(): TTY {
     inputSource,
     cancelSource,
     write,
-    pipeOutput,
+    start,
     mode,
     modeOff,
   };

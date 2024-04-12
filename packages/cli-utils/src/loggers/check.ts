@@ -1,188 +1,94 @@
-import {
-  pipe,
-  interval,
-  fromValue,
-  fromAsyncIterable,
-  switchMap,
-  concat,
-  delay,
-  map,
-  scan,
-} from 'wonka';
+import { pipe, interval, map } from 'wonka';
 
 import * as t from '../term';
-export { error } from '../term';
 
-const clearLine = () => t.cmd(t.CSI.DeleteLines, 1) + t.cmd(t.CSI.ToColumn, 1);
+export function emptyLine() {
+  return t.text([t.cmd(t.CSI.Style, t.Style.BrightBlack), t.HeavyBox.Vertical, '\n']);
+}
 
-function printTitle(title: string) {
-  return fromValue(
-    t.text([
+export function title(title: string, description?: string) {
+  let out = t.text([
+    t.cmd(t.CSI.Style, t.Style.BrightBlack),
+    t.HeavyBox.TopLeft,
+    ' ',
+    t.cmd(t.CSI.Style, [t.Style.Magenta, t.Style.Invert]),
+    ` ${title.trim()} `,
+    t.cmd(t.CSI.Style, [t.Style.NoInvert]),
+    '\n',
+  ]);
+  if (description) {
+    out += t.text([
       t.cmd(t.CSI.Style, t.Style.BrightBlack),
-      t.HeavyBox.TopLeft,
-      ' ',
-      t.cmd(t.CSI.Style, [t.Style.Magenta, t.Style.Invert]),
-      ` ${title.trim()} `,
-      t.cmd(t.CSI.Style, t.Style.Reset),
-      '\n',
-    ])
-  );
+      t.HeavyBox.Vertical,
+      ` ${description}\n`,
+    ]);
+  }
+  return out;
 }
 
-function printLine(text?: string) {
-  let out = t.text([t.cmd(t.CSI.Style, t.Style.BrightBlack), t.HeavyBox.Vertical]);
-  if (text) out += t.text` ${text}\n${t.HeavyBox.Vertical}`;
-  out += t.text([t.cmd(t.CSI.Style, t.Style.Reset), '\n']);
-  return fromValue(out);
+export function completedTask(description: string, isLast = false) {
+  return t.text([
+    emptyLine(),
+    t.cmd(t.CSI.Style, t.Style.BrightBlack),
+    isLast ? t.HeavyBox.BottomLeft : t.HeavyBox.VerticalRight,
+    ' ',
+    t.cmd(t.CSI.Style, t.Style.Green),
+    t.Icons.TickSwoosh,
+    ' ',
+    t.cmd(t.CSI.Style, t.Style.Foreground),
+    description,
+    '\n',
+  ]);
 }
 
-function printCompletedTask(description: string, isLast = false) {
-  return fromValue(
-    t.text([
-      t.cmd(t.CSI.Style, t.Style.BrightBlack),
-      isLast ? t.HeavyBox.BottomLeft : t.HeavyBox.VerticalRight,
-      ' ',
-      t.cmd(t.CSI.Style, t.Style.Green),
-      t.Icons.TickSwoosh,
-      ' ',
-      t.cmd(t.CSI.Style, t.Style.Foreground),
-      description,
-      t.cmd(t.CSI.Style, t.Style.Reset),
-      '\n',
-    ])
-  );
+export function failedTask(description: string) {
+  return t.text([
+    emptyLine(),
+    t.cmd(t.CSI.Style, t.Style.BrightBlack),
+    t.HeavyBox.BottomLeft,
+    ' ',
+    t.cmd(t.CSI.Style, t.Style.BrightRed),
+    t.Icons.CrossSwoosh,
+    ' ',
+    t.cmd(t.CSI.Style, t.Style.Foreground),
+    description,
+    '\n',
+  ]);
 }
 
-function printFailedTask(description: string) {
-  return fromValue(
-    t.text([
-      t.cmd(t.CSI.Style, t.Style.BrightBlack),
-      t.HeavyBox.BottomLeft,
-      ' ',
-      t.cmd(t.CSI.Style, t.Style.BrightRed),
-      t.Icons.CrossSwoosh,
-      ' ',
-      t.cmd(t.CSI.Style, t.Style.Foreground),
-      description,
-      t.cmd(t.CSI.Style, t.Style.Reset),
-      '\n',
-    ])
-  );
-}
-
-function printRunningTask(description: string) {
+export function runningTask(description: string) {
   return pipe(
     interval(150),
-    map((state) =>
-      t.text([
-        clearLine(),
+    map((state) => {
+      return t.text([
+        emptyLine(),
         t.cmd(t.CSI.Style, t.Style.Magenta),
         t.circleSpinner[state % t.circleSpinner.length],
         ' ',
         t.cmd(t.CSI.Style, t.Style.Foreground),
         description,
-        t.cmd(t.CSI.Style, t.Style.Reset),
-      ])
-    )
+      ]);
+    })
   );
 }
 
-function printSuccess() {
-  return fromValue(
-    t.text([
-      t.Chars.Newline,
-      t.cmd(t.CSI.Style, [t.Style.Green, t.Style.Invert]),
-      ' Done ',
-      t.cmd(t.CSI.Style, t.Style.NoInvert),
-      t.Chars.Space,
-      'You are all set and ready to go.',
-    ])
-  );
-}
-
-function printError(error: Error) {
-  if (error instanceof t.CLIError) {
-    return fromValue(
-      t.text([
-        t.Chars.Newline,
-        t.cmd(t.CSI.Style, [t.Style.BrightRed, t.Style.Invert]),
-        ' Error ',
-        t.cmd(t.CSI.Style, t.Style.NoInvert),
-        t.Chars.Newline,
-        `${error.output}`,
-      ])
-    );
-  } else {
-    return fromValue(
-      t.text([
-        t.Chars.Newline,
-        t.cmd(t.CSI.Style, [t.Style.BrightRed, t.Style.Invert]),
-        ' Unexpected Error ',
-        t.cmd(t.CSI.Style, t.Style.NoInvert),
-        t.Chars.Newline,
-        `${error}`,
-      ])
-    );
-  }
-}
-
-async function* printTask(task: () => AsyncIterable<PrintSignal>): AsyncIterable<PrintSignal> {
-  try {
-    for await (const signal of task()) {
-      yield signal;
-      if (signal.kind && signal.kind !== 'update') return;
-    }
-    yield { kind: 'complete' };
-  } catch (error: any) {
-    yield { kind: 'error', error };
-  }
-}
-
-type PrintSignal =
-  | { kind: 'complete' }
-  | { kind: 'error'; error: Error }
-  | { kind?: 'update'; text: string };
-
-interface PrintState {
-  prev: { kind?: 'update'; text: string } | null;
-  task: PrintSignal;
-}
-
-interface PrintConfig {
-  title: string;
-  description?: string;
-  task(): AsyncIterable<PrintSignal>;
-}
-
-export async function print(config: PrintConfig) {
-  const tty = t.initTTY();
-
-  const print = concat([
-    printTitle(config.title),
-    printLine(config.description),
-    pipe(
-      fromAsyncIterable(printTask(config.task)),
-      delay(700),
-      scan((state: PrintState, task) => ({ task, prev: state.task as PrintState['prev'] }), {
-        prev: null,
-        task: null,
-      } as any),
-      switchMap(({ prev, task }) => {
-        const sources = [fromValue(clearLine())];
-        if (task.kind === 'complete') {
-          if (prev) sources.push(printCompletedTask(prev.text, true));
-          sources.push(printSuccess());
-        } else if (task.kind === 'error') {
-          if (prev) sources.push(printFailedTask(prev.text));
-          sources.push(printError(task.error));
-        } else {
-          if (prev) sources.push(printCompletedTask(prev.text));
-          sources.push(printRunningTask(task.text));
-        }
-        return concat(sources);
-      })
-    ),
+export function success() {
+  return t.text([
+    '\n',
+    t.cmd(t.CSI.Style, [t.Style.Green, t.Style.Invert]),
+    ' Done ',
+    t.cmd(t.CSI.Style, t.Style.NoInvert),
+    t.Chars.Space,
+    'You are all set and ready to go.\n',
   ]);
+}
 
-  return await tty.pipeOutput(print);
+export function errorMessage(message: string) {
+  return t.error([
+    '\n',
+    t.cmd(t.CSI.Style, [t.Style.BrightRed, t.Style.Invert]),
+    ' Error ',
+    t.cmd(t.CSI.Style, t.Style.NoInvert),
+    `\n${message.trim()}\n`,
+  ]);
 }
