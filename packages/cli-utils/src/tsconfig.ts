@@ -1,20 +1,20 @@
-import { resolveTypeScriptRootDir } from '@gql.tada/internal';
-import path from 'path';
 import type { TsConfigJson } from 'type-fest';
+
+import { resolveTypeScriptRootDir } from '@gql.tada/internal';
+import path from 'node:path';
 import fs from 'node:fs/promises';
 import { parse } from 'json5';
 
-export const getTsConfig = async (): Promise<TsConfigJson | undefined> => {
-  const cwd = process.cwd();
-  const tsconfigpath = path.resolve(cwd, 'tsconfig.json');
-
-  // TODO: Remove redundant read and move tsconfig.json handling to internal package
-  const root = (await resolveTypeScriptRootDir(tsconfigpath)) || cwd;
+export const getTsConfig = async (target = process.cwd()): Promise<TsConfigJson | undefined> => {
+  const tsconfigpath =
+    path.extname(target) !== '.json' ? path.resolve(target, 'tsconfig.json') : target;
+  const root = (await resolveTypeScriptRootDir(tsconfigpath)) || target;
 
   let tsconfigContents: string;
   try {
-    const file = path.resolve(root, 'tsconfig.json');
-    tsconfigContents = await fs.readFile(file, 'utf-8');
+    const tsconfigpath =
+      path.extname(root) !== '.json' ? path.resolve(root, 'tsconfig.json') : root;
+    tsconfigContents = await fs.readFile(tsconfigpath, 'utf-8');
   } catch (error) {
     console.error('Failed to read tsconfig.json in current working directory.', error);
     return;
@@ -22,7 +22,7 @@ export const getTsConfig = async (): Promise<TsConfigJson | undefined> => {
 
   let tsConfig: TsConfigJson;
   try {
-    tsConfig = parse(tsconfigContents) as TsConfigJson;
+    tsConfig = parse<TsConfigJson>(tsconfigContents);
   } catch (err) {
     console.error(err);
     return;
