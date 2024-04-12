@@ -102,7 +102,7 @@ describe('toSupportedFeatures', () => {
     };
 
     expect(toSupportedFeatures(input)).toMatchObject({
-      inputValueDeprecation: true,
+      argsValueDeprecation: true,
     });
   });
 });
