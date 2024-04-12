@@ -190,6 +190,9 @@ importers:
       typescript:
         specifier: ^5.3.3
         version: 5.4.2
+      wonka:
+        specifier: ^6.3.4
+        version: 6.3.4
 
   packages/internal:
     dependencies:

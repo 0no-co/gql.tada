@@ -48,13 +48,14 @@
     "sade": "^1.8.1",
     "semiver": "^1.1.0",
     "type-fest": "^4.10.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "wonka": "^6.3.4"
   },
   "dependencies": {
-    "@gql.tada/internal": "workspace:*",
     "@0no-co/graphqlsp": "^1.9.1",
-    "ts-morph": "~22.0.0",
-    "graphql": "^16.8.1"
+    "@gql.tada/internal": "workspace:*",
+    "graphql": "^16.8.1",
+    "ts-morph": "~22.0.0"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
