@@ -2,11 +2,18 @@ import { expect, describe, it } from 'vitest';
 import { print } from '@0no-co/graphql.web';
 
 import { makeIntrospectionQuery, makeIntrospectSupportQuery, toSupportedFeatures } from '../query';
+import { DirectiveLocation } from 'graphql';
 
 describe('makeIntrospectSupportQuery', () => {
   it('prints to introspection support query', () => {
     expect(print(makeIntrospectSupportQuery())).toMatchInlineSnapshot(`
       "query IntrospectSupportQuery {
+        schema: __schema {
+          directives {
+            name
+            locations
+          }
+        }
         directive: __type(name: "__Directive") {
           fields {
             name
@@ -29,15 +36,19 @@ describe('makeIntrospectSupportQuery', () => {
 
 describe('toSupportedFeatures', () => {
   it('outputs default with no features enabled', () => {
-    expect(toSupportedFeatures({ type: null, inputValue: null, directive: null })).toEqual({
+    expect(
+      toSupportedFeatures({ type: null, inputValue: null, directive: null, schema: null })
+    ).toEqual({
       directiveIsRepeatable: false,
       specifiedByURL: false,
       inputValueDeprecation: false,
+      argsValueDeprecation: false,
     });
   });
 
   it('detects `isRepeatable` support on directives', () => {
     const input = {
+      schema: null, // stubbed
       type: null, // stubbed
       inputValue: null, // stubbed
       directive: {
@@ -52,6 +63,7 @@ describe('toSupportedFeatures', () => {
 
   it('detects `specifiedByURL` support on scalars', () => {
     const input = {
+      schema: null, // stubbed
       inputValue: null, // stubbed
       directive: null, // stubbed
       type: {
@@ -66,11 +78,27 @@ describe('toSupportedFeatures', () => {
 
   it('detects `isDeprecated` support on input values', () => {
     const input = {
+      schema: null, // stubbed
       type: null, // stubbed
       directive: null, // stubbed
       inputValue: {
         fields: [{ name: 'isDeprecated' }],
       },
+    };
+
+    expect(toSupportedFeatures(input)).toMatchObject({
+      inputValueDeprecation: true,
+    });
+  });
+
+  it('detects `isDeprecated` support on argumeent values', () => {
+    const input = {
+      schema: {
+        directives: [{ name: 'deprecated', locations: [DirectiveLocation.ARGUMENT_DEFINITION] }],
+      },
+      type: null, // stubbed
+      directive: null, // stubbed
+      inputValue: null, // stubbed
     };
 
     expect(toSupportedFeatures(input)).toMatchObject({
@@ -85,6 +113,7 @@ describe('makeIntrospectionQuery', () => {
       directiveIsRepeatable: true,
       specifiedByURL: true,
       inputValueDeprecation: true,
+      argsValueDeprecation: true,
     };
 
     const output = print(makeIntrospectionQuery(support));
@@ -213,6 +242,7 @@ describe('makeIntrospectionQuery', () => {
       directiveIsRepeatable: false,
       specifiedByURL: false,
       inputValueDeprecation: false,
+      argsValueDeprecation: false,
     };
 
     const output = print(makeIntrospectionQuery(support));

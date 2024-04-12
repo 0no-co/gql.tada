@@ -7,32 +7,45 @@ import type {
   FieldNode,
   DocumentNode,
 } from '@0no-co/graphql.web';
+import { DirectiveLocation } from 'graphql';
 
 /** Support matrix to be used in the {@link makeIntrospectionQuery} builder */
 export interface SupportedFeatures {
   directiveIsRepeatable: boolean;
   specifiedByURL: boolean;
   inputValueDeprecation: boolean;
+  argsValueDeprecation: boolean;
 }
 
 /** Data from a {@link makeIntrospectSupportQuery} result */
 export interface IntrospectSupportQueryData {
+  schema: { directives: { name: string; locations: DirectiveLocation[] }[] | null } | null;
   directive: { fields: { name: string }[] | null } | null;
   type: { fields: { name: string }[] | null } | null;
   inputValue: { fields: { name: string }[] | null } | null;
 }
 
 const _hasField = (
-  data: IntrospectSupportQueryData[keyof IntrospectSupportQueryData],
+  data: IntrospectSupportQueryData['directive' | 'type' | 'inputValue'],
   fieldName: string
 ): boolean => !!data && !!data.fields && data.fields.some((field) => field.name === fieldName);
 
 /** Evaluates data from a {@link makeIntrospectSupportQuery} result to {@link SupportedFeatures} */
-export const toSupportedFeatures = (data: IntrospectSupportQueryData): SupportedFeatures => ({
-  directiveIsRepeatable: _hasField(data.directive, 'isRepeatable'),
-  specifiedByURL: _hasField(data.type, 'specifiedByURL'),
-  inputValueDeprecation: _hasField(data.inputValue, 'isDeprecated'),
-});
+export const toSupportedFeatures = (data: IntrospectSupportQueryData): SupportedFeatures => {
+  const deprecatedDirective =
+    data.schema &&
+    data.schema.directives &&
+    data.schema.directives.find((directive) => directive.name === 'deprecated');
+  const supportsArgDeprecation = deprecatedDirective
+    ? deprecatedDirective.locations.includes(DirectiveLocation.ARGUMENT_DEFINITION)
+    : false;
+  return {
+    directiveIsRepeatable: _hasField(data.directive, 'isRepeatable'),
+    specifiedByURL: _hasField(data.type, 'specifiedByURL'),
+    inputValueDeprecation: _hasField(data.inputValue, 'isDeprecated'),
+    argsValueDeprecation: supportsArgDeprecation,
+  };
+};
 
 let _introspectionQuery: DocumentNode | undefined;
 let _previousSupport: SupportedFeatures | undefined;
@@ -83,6 +96,13 @@ export const makeIntrospectSupportQuery = (): DocumentNode => ({
         selections: [
           {
             kind: Kind.FIELD,
+            alias: { kind: Kind.NAME, value: 'schema' },
+            name: { kind: Kind.NAME, value: '__schema' },
+            arguments: undefined,
+            selectionSet: _makeSchemaDirectivesSelection(),
+          },
+          {
+            kind: Kind.FIELD,
             alias: { kind: Kind.NAME, value: 'directive' },
             name: { kind: Kind.NAME, value: '__type' },
             arguments: [
@@ -123,6 +143,29 @@ export const makeIntrospectSupportQuery = (): DocumentNode => ({
         ],
       },
     } satisfies OperationDefinitionNode,
+  ],
+});
+
+const _makeSchemaDirectivesSelection = (): SelectionSetNode => ({
+  kind: Kind.SELECTION_SET,
+  selections: [
+    {
+      kind: Kind.FIELD,
+      name: { kind: Kind.NAME, value: 'directives' },
+      selectionSet: {
+        kind: Kind.SELECTION_SET,
+        selections: [
+          {
+            kind: Kind.FIELD,
+            name: { kind: Kind.NAME, value: 'name' },
+          },
+          {
+            kind: Kind.FIELD,
+            name: { kind: Kind.NAME, value: 'locations' },
+          },
+        ],
+      },
+    },
   ],
 });
 
@@ -399,7 +442,7 @@ const _makeSchemaFullTypeFragment = (support: SupportedFeatures): FragmentDefini
 const _makeSchemaArgsField = (support: SupportedFeatures): FieldNode => ({
   kind: Kind.FIELD,
   name: { kind: Kind.NAME, value: 'args' },
-  arguments: support.inputValueDeprecation
+  arguments: support.argsValueDeprecation
     ? [
         {
           kind: Kind.ARGUMENT,
