@@ -46,8 +46,8 @@ describe('toSupportedFeatures', () => {
       directiveIsRepeatable: false,
       specifiedByURL: false,
       inputValueDeprecation: false,
-      supportsDirectiveIsDeprecatedArgument: false,
-      supportsFieldIsDeprecatedArgument: false,
+      directiveArgumentsIsDeprecated: false,
+      fieldArgumentsIsDeprecated: false,
     });
   });
 
@@ -66,7 +66,7 @@ describe('toSupportedFeatures', () => {
 
     expect(toSupportedFeatures(input)).toMatchObject({
       directiveIsRepeatable: true,
-      supportsDirectiveIsDeprecatedArgument: true,
+      directiveArgumentsIsDeprecated: true,
     });
   });
 
@@ -81,7 +81,7 @@ describe('toSupportedFeatures', () => {
     };
 
     expect(toSupportedFeatures(input)).toMatchObject({
-      supportsFieldIsDeprecatedArgument: true,
+      fieldArgumentsIsDeprecated: true,
     });
   });
 
@@ -122,8 +122,8 @@ describe('makeIntrospectionQuery', () => {
       directiveIsRepeatable: true,
       specifiedByURL: true,
       inputValueDeprecation: true,
-      supportsDirectiveIsDeprecatedArgument: true,
-      supportsFieldIsDeprecatedArgument: true,
+      directiveArgumentsIsDeprecated: true,
+      fieldArgumentsIsDeprecated: true,
     };
 
     const output = print(makeIntrospectionQuery(support));
@@ -252,8 +252,8 @@ describe('makeIntrospectionQuery', () => {
       directiveIsRepeatable: false,
       specifiedByURL: false,
       inputValueDeprecation: false,
-      supportsDirectiveIsDeprecatedArgument: false,
-      supportsFieldIsDeprecatedArgument: false,
+      directiveArgumentsIsDeprecated: false,
+      fieldArgumentsIsDeprecated: false,
     };
 
     const output = print(makeIntrospectionQuery(support));

@@ -13,8 +13,8 @@ export interface SupportedFeatures {
   directiveIsRepeatable: boolean;
   specifiedByURL: boolean;
   inputValueDeprecation: boolean;
-  supportsDirectiveIsDeprecatedArgument: boolean;
-  supportsFieldIsDeprecatedArgument: boolean;
+  directiveArgumentsIsDeprecated: boolean;
+  fieldArgumentsIsDeprecated: boolean;
 }
 
 /** Data from a {@link makeIntrospectSupportQuery} result */
@@ -30,30 +30,25 @@ const _hasField = (
   fieldName: string
 ): boolean => !!data && !!data.fields && data.fields.some((field) => field.name === fieldName);
 
-/** Evaluates data from a {@link makeIntrospectSupportQuery} result to {@link SupportedFeatures} */
-export const toSupportedFeatures = (data: IntrospectSupportQueryData): SupportedFeatures => {
-  const directiveArgs =
-    data.directive &&
-    data.directive.fields &&
-    data.directive.fields.find((field) => field.name === 'args');
-  const fieldArgs =
-    data.field && data.field.fields && data.field.fields.find((field) => field.name === 'args');
-  return {
-    directiveIsRepeatable: _hasField(data.directive, 'isRepeatable'),
-    specifiedByURL: _hasField(data.type, 'specifiedByURL'),
-    inputValueDeprecation: _hasField(data.inputValue, 'isDeprecated'),
-    supportsDirectiveIsDeprecatedArgument: !!(
-      directiveArgs &&
-      directiveArgs.args &&
-      directiveArgs.args.find((arg) => arg.name === 'includeDeprecated')
-    ),
-    supportsFieldIsDeprecatedArgument: !!(
-      fieldArgs &&
-      fieldArgs.args &&
-      fieldArgs.args.find((arg) => arg.name === 'includeDeprecated')
-    ),
-  };
+const _supportsDeprecatedArgumentsArg = (
+  data: IntrospectSupportQueryData['field' | 'directive']
+): boolean => {
+  const argsField = data && data.fields && data.fields.find((field) => field.name === 'args');
+  return !!(
+    argsField &&
+    argsField.args &&
+    argsField.args.find((arg) => arg.name === 'includeDeprecated')
+  );
 };
+
+/** Evaluates data from a {@link makeIntrospectSupportQuery} result to {@link SupportedFeatures} */
+export const toSupportedFeatures = (data: IntrospectSupportQueryData): SupportedFeatures => ({
+  directiveIsRepeatable: _hasField(data.directive, 'isRepeatable'),
+  specifiedByURL: _hasField(data.type, 'specifiedByURL'),
+  inputValueDeprecation: _hasField(data.inputValue, 'isDeprecated'),
+  directiveArgumentsIsDeprecated: _supportsDeprecatedArgumentsArg(data.directive),
+  fieldArgumentsIsDeprecated: _supportsDeprecatedArgumentsArg(data.field),
+});
 
 let _introspectionQuery: DocumentNode | undefined;
 let _previousSupport: SupportedFeatures | undefined;
@@ -274,7 +269,7 @@ const _makeSchemaSelection = (support: SupportedFeatures): SelectionSetNode => (
             kind: Kind.FIELD,
             name: { kind: Kind.NAME, value: 'locations' },
           },
-          _makeSchemaArgsField(support.supportsDirectiveIsDeprecatedArgument),
+          _makeSchemaArgsField(support.directiveArgumentsIsDeprecated),
           ...(support.directiveIsRepeatable
             ? ([
                 {
@@ -345,7 +340,7 @@ const _makeSchemaFullTypeFragment = (support: SupportedFeatures): FragmentDefini
               kind: Kind.FIELD,
               name: { kind: Kind.NAME, value: 'deprecationReason' },
             },
-            _makeSchemaArgsField(support.supportsFieldIsDeprecatedArgument),
+            _makeSchemaArgsField(support.fieldArgumentsIsDeprecated),
             {
               kind: Kind.FIELD,
               name: { kind: Kind.NAME, value: 'type' },
