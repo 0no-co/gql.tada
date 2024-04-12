@@ -46,6 +46,8 @@ describe('toSupportedFeatures', () => {
       directiveIsRepeatable: false,
       specifiedByURL: false,
       inputValueDeprecation: false,
+      supportsDirectiveIsDeprecatedArgument: false,
+      supportsFieldIsDeprecatedArgument: false,
     });
   });
 
@@ -55,7 +57,10 @@ describe('toSupportedFeatures', () => {
       inputValue: null, // stubbed
       field: null, // stubbed
       directive: {
-        fields: [{ name: 'isRepeatable', args: [{ name: 'includeDeprecated' }] }],
+        fields: [
+          { name: 'isRepeatable', args: [] },
+          { name: 'args', args: [{ name: 'includeDeprecated' }] },
+        ],
       },
     };
 
@@ -71,7 +76,7 @@ describe('toSupportedFeatures', () => {
       inputValue: null, // stubbed
       directive: null, // stubbed
       field: {
-        fields: [{ name: 'test', args: [{ name: 'includeDeprecated' }] }],
+        fields: [{ name: 'args', args: [{ name: 'includeDeprecated' }] }],
       },
     };
 

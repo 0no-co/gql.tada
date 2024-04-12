@@ -118,7 +118,7 @@ export const makeIntrospectSupportQuery = (): DocumentNode => ({
           {
             kind: Kind.FIELD,
             alias: { kind: Kind.NAME, value: 'field' },
-            name: { kind: Kind.NAME, value: '__field' },
+            name: { kind: Kind.NAME, value: '__type' },
             arguments: [
               {
                 kind: Kind.ARGUMENT,
@@ -319,15 +319,13 @@ const _makeSchemaFullTypeFragment = (support: SupportedFeatures): FragmentDefini
       {
         kind: Kind.FIELD,
         name: { kind: Kind.NAME, value: 'fields' },
-        arguments: support.supportsFieldIsDeprecatedArgument
-          ? [
-              {
-                kind: Kind.ARGUMENT,
-                name: { kind: Kind.NAME, value: 'includeDeprecated' },
-                value: { kind: Kind.BOOLEAN, value: true },
-              },
-            ]
-          : undefined,
+        arguments: [
+          {
+            kind: Kind.ARGUMENT,
+            name: { kind: Kind.NAME, value: 'includeDeprecated' },
+            value: { kind: Kind.BOOLEAN, value: true },
+          },
+        ],
         selectionSet: {
           kind: Kind.SELECTION_SET,
           selections: [
@@ -347,7 +345,7 @@ const _makeSchemaFullTypeFragment = (support: SupportedFeatures): FragmentDefini
               kind: Kind.FIELD,
               name: { kind: Kind.NAME, value: 'deprecationReason' },
             },
-            _makeSchemaArgsField(support.inputValueDeprecation),
+            _makeSchemaArgsField(support.supportsFieldIsDeprecatedArgument),
             {
               kind: Kind.FIELD,
               name: { kind: Kind.NAME, value: 'type' },
