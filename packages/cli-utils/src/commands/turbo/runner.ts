@@ -2,10 +2,10 @@ import { Project, TypeFormatFlags, TypeFlags, ts } from 'ts-morph';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 
-import { getTsConfig } from '../tsconfig';
-import type { GraphQLSPConfig } from '../lsp';
-import { getGraphQLSPConfig } from '../lsp';
-import { createPluginInfo } from '../ts/project';
+import type { GraphQLSPConfig } from '../../lsp';
+import { getGraphQLSPConfig } from '../../lsp';
+import { getTsConfig } from '../../tsconfig';
+import { createPluginInfo } from '../../ts/project';
 
 const PREAMBLE_IGNORE = ['/* eslint-disable */', '/* prettier-ignore */'].join('\n') + '\n';
 
@@ -16,8 +16,12 @@ const existsFile = async (file: string): Promise<boolean> => {
     .catch(() => false);
 };
 
-export async function generateGraphQLCache() {
-  const tsConfig = await getTsConfig();
+interface Options {
+  tsconfig: string | undefined;
+}
+
+export async function run(opts: Options) {
+  const tsConfig = await getTsConfig(opts.tsconfig);
   if (!tsConfig) {
     return;
   }
