@@ -9,6 +9,7 @@ import {
   init,
   findAllPersistedCallExpressions,
   getDocumentReferenceFromTypeQuery,
+  getDocumentReferenceFromDocumentNode,
   unrollTadaFragments,
 } from '@0no-co/graphqlsp/api';
 
@@ -74,9 +75,16 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
         continue;
       }
 
-      let foundNode: ts.VariableDeclaration | null = null;
+      let foundNode: ts.CallExpression | null = null;
       let referencingNode: ts.Node = call;
       if (docArg && (ts.isCallExpression(docArg) || ts.isIdentifier(docArg))) {
+        const result = getDocumentReferenceFromDocumentNode(
+          docArg,
+          filePath,
+          pluginInfo
+        );
+        foundNode = result.node;
+        referencingNode = docArg;
       } else if (typeQuery && ts.isTypeQueryNode(typeQuery)) {
         const result = getDocumentReferenceFromTypeQuery(
           typeQuery,
@@ -86,7 +94,6 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
         foundNode = result.node;
         referencingNode = typeQuery;
       }
-
 
       if (!foundNode) {
         warnings.push({
@@ -100,12 +107,11 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
         continue;
       }
 
-      const { initializer } = foundNode;
       if (
-        !initializer ||
-        !ts.isCallExpression(initializer) ||
-        (!ts.isNoSubstitutionTemplateLiteral(initializer.arguments[0]) &&
-          !ts.isStringLiteral(initializer.arguments[0]))
+        !foundNode ||
+        !ts.isCallExpression(foundNode) ||
+        (!ts.isNoSubstitutionTemplateLiteral(foundNode.arguments[0]) &&
+          !ts.isStringLiteral(foundNode.arguments[0]))
       ) {
         warnings.push({
           message:
@@ -119,9 +125,9 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
       }
 
       const fragments: FragmentDefinitionNode[] = [];
-      const operation = initializer.arguments[0].getText().slice(1, -1);
-      if (initializer.arguments[1] && ts.isArrayLiteralExpression(initializer.arguments[1])) {
-        unrollTadaFragments(initializer.arguments[1], fragments, pluginInfo);
+      const operation = foundNode.arguments[0].getText().slice(1, -1);
+      if (foundNode.arguments[1] && ts.isArrayLiteralExpression(foundNode.arguments[1])) {
+        unrollTadaFragments(foundNode.arguments[1], fragments, pluginInfo);
       }
 
       let document = operation;
