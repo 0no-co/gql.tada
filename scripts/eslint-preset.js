@@ -91,6 +91,13 @@ module.exports = {
     },
 
     {
+      files: ['packages/cli-utils/**/*.ts'],
+      rules: {
+        'no-restricted-syntax': 'off',
+      },
+    },
+
+    {
       files: ['src/**/__tests__/**/*.ts'],
       rules: {
         'no-restricted-syntax': 'off',

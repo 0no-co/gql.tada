@@ -6,15 +6,20 @@ import type { TsConfigJson } from 'type-fest';
 import { resolveTypeScriptRootDir } from '@gql.tada/internal';
 import { existsSync } from 'node:fs';
 
-import { initTTY } from '../term';
-import * as logger from '../loggers/check';
+import type { ComposeInput } from '../../term';
+import * as logger from './logger';
 
 // NOTE: Currently, most tasks in this command complete too quickly
 // We slow them down to make the CLI output easier to follow along to
-const delay = (ms = 700) =>
-  new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
+const delay = (ms = 700) => {
+  if (process.env.CI) {
+    return Promise.resolve();
+  } else {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
+};
 
 const enum Messages {
   TITLE = 'Doctor',
@@ -31,11 +36,7 @@ const MINIMUM_VERSIONS = {
   lsp: '1.0.0',
 };
 
-export async function executeTadaDoctor() {
-  await initTTY().start(run());
-}
-
-async function* run() {
+export async function* run(): AsyncIterable<ComposeInput> {
   yield logger.title(Messages.TITLE, Messages.DESCRIPTION);
   yield logger.runningTask(Messages.CHECK_TS_VERSION);
   await delay();

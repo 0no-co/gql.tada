@@ -42,11 +42,13 @@
   "devDependencies": {
     "@clack/prompts": "^0.7.0",
     "@types/node": "^20.11.0",
+    "clipanion": "4.0.0-rc.3",
     "execa": "^8.0.1",
     "json5": "^2.2.3",
     "rollup": "^4.9.4",
     "sade": "^1.8.1",
     "semiver": "^1.1.0",
+    "typanion": "^3.14.0",
     "type-fest": "^4.10.2",
     "typescript": "^5.3.3",
     "wonka": "^6.3.4"

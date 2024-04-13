@@ -1,51 +1,73 @@
 import { Project, ts } from 'ts-morph';
 import { print } from '@0no-co/graphql.web';
+
 import {
   init,
   findAllPersistedCallExpressions,
   getDocumentReferenceFromTypeQuery,
   unrollTadaFragments,
 } from '@0no-co/graphqlsp/api';
+
 import { load, resolveTypeScriptRootDir } from '@gql.tada/internal';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 
-import { getTsConfig } from '../tsconfig';
-import type { GraphQLSPConfig } from '../lsp';
-import { getGraphQLSPConfig } from '../lsp';
-import { createPluginInfo } from '../ts/project';
+import type { TTY } from '../../term';
+import type { GraphQLSPConfig } from '../../lsp';
+import { getGraphQLSPConfig } from '../../lsp';
+import { getTsConfig } from '../../tsconfig';
+import { createPluginInfo } from '../../ts/project';
 
-export async function generatePersisted(target: string) {
-  const tsConfig = await getTsConfig();
-  if (!tsConfig) {
+interface Options {
+  tsconfig: string | undefined;
+  output: string | undefined;
+}
+
+export async function run(tty: TTY, opts: Options) {
+  const tsconfig = await getTsConfig(opts.tsconfig);
+  if (!tsconfig) {
     return;
   }
 
-  const config = getGraphQLSPConfig(tsConfig);
+  const config = getGraphQLSPConfig(tsconfig);
   if (!config) {
     return;
   }
 
-  const persistedOperations = await getPersistedOperationsFromFiles(config);
-
-  return fs.writeFile(target, JSON.stringify(persistedOperations, null, 2));
+  const persistedOperations = await getPersistedOperationsFromFiles(opts, config);
+  const json = JSON.stringify(persistedOperations, null, 2);
+  if (opts.output) {
+    const resolved = path.resolve(process.cwd(), opts.output);
+    await fs.writeFile(resolved, json);
+  } else {
+    const stream = tty.pipeTo || process.stdout;
+    stream.write(json);
+  }
 }
 
+const CWD = process.cwd();
+
 async function getPersistedOperationsFromFiles(
+  opts: Options,
   config: GraphQLSPConfig
 ): Promise<Record<string, string>> {
-  // TODO: leverage ts-morph tsconfig resolver
-  const projectName = path.resolve(process.cwd(), 'tsconfig.json');
-  const rootPath = (await resolveTypeScriptRootDir(projectName)) || path.dirname(projectName);
+  let tsconfigPath = opts.tsconfig || CWD;
+  tsconfigPath =
+    path.extname(tsconfigPath) !== '.json'
+      ? path.resolve(CWD, tsconfigPath, 'tsconfig.json')
+      : path.resolve(CWD, tsconfigPath);
+
+  const projectPath = path.dirname(tsconfigPath);
+  const rootPath = (await resolveTypeScriptRootDir(tsconfigPath)) || tsconfigPath;
   const project = new Project({
-    tsConfigFilePath: projectName,
+    tsConfigFilePath: tsconfigPath,
   });
 
   init({
     typescript: ts as any,
   });
 
-  const pluginCreateInfo = createPluginInfo(project, config, projectName);
+  const pluginCreateInfo = createPluginInfo(project, config, projectPath);
 
   const sourceFiles = project.getSourceFiles();
   const loader = load({ origin: config.schema, rootPath });

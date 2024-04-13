@@ -16,7 +16,7 @@ import type { Source } from 'wonka';
 import type { WriteStream, ReadStream } from 'node:tty';
 import { emitKeypressEvents } from 'node:readline';
 
-import type { ComposeInput } from './write';
+import type { ComposeInput, CLIError } from './write';
 import { text, compose } from './write';
 import { cmd, _setColor, CSI, Mode, PrivateMode } from './csi';
 
@@ -38,7 +38,7 @@ export interface TTY {
   write(input: readonly string[], ...args: readonly string[]): void;
   write(...input: readonly string[]): void;
 
-  start(outputs: AsyncIterable<ComposeInput>): Promise<void>;
+  start(outputs: AsyncIterable<ComposeInput>): Promise<string | CLIError>;
 
   mode(...modes: readonly (Mode | PrivateMode)[]): void;
   modeOff(...modes: readonly (Mode | PrivateMode)[]): void;
@@ -125,7 +125,8 @@ export function initTTY(): TTY {
     output.write(text(...input));
   }
 
-  function start(outputs: AsyncIterable<ComposeInput>) {
+  function start(outputs: AsyncIterable<ComposeInput>): Promise<string | CLIError> {
+    const write = (input: string | CLIError) => output.write('' + input);
     return pipe(compose(outputs), onPush(write), takeUntil(cancelSource), toPromise);
   }
 

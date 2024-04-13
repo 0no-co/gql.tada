@@ -1,6 +1,6 @@
 import { pipe, interval, map } from 'wonka';
 
-import * as t from '../term';
+import * as t from '../../term';
 
 export function code(text: string) {
   return t.text`${t.cmd(t.CSI.Style, t.Style.Underline)}${text}${t.cmd(

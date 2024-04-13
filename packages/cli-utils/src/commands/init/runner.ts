@@ -8,8 +8,10 @@ const s = spinner();
 
 const TADA_VERSION = '^1.4.3';
 const LSP_VERSION = '^1.8.0';
-export const initGqlTada = async (cwd: string) => {
+
+export async function run(target: string) {
   intro(`GQL.Tada`);
+
   const schemaLocation = await question(
     'Where can we get your schema? Point us at an introspection JSON-file, a GraphQL schema file or an endpoint',
     async (value: string) => {
@@ -44,7 +46,7 @@ export const initGqlTada = async (cwd: string) => {
         return false;
       }
 
-      const filePath = path.resolve(cwd, value);
+      const filePath = path.resolve(target, value);
       const fileExists = !!(await fs.readFile(filePath));
       if (!fileExists) {
         // eslint-disable-next-line no-console
@@ -59,7 +61,7 @@ export const initGqlTada = async (cwd: string) => {
   let tadaLocation = await question(
     'What directory do you want us to write the tadaOutputFile to?',
     async (value: string) => {
-      const dir = path.resolve(cwd, value);
+      const dir = path.resolve(target, value);
       const directoryExists = !!(await fs.stat(dir));
       if (!directoryExists) {
         // eslint-disable-next-line no-console
@@ -89,12 +91,12 @@ export const initGqlTada = async (cwd: string) => {
 
   if (shouldInstallDependencies) {
     s.start('Installing packages.');
-    await installPackages(getPkgManager(), cwd);
+    await installPackages(getPkgManager(), target);
     s.stop('Installed packages.');
   } else {
     s.start('Writing to package.json.');
     try {
-      const packageJsonPath = path.resolve(cwd, 'package.json');
+      const packageJsonPath = path.resolve(target, 'package.json');
       const packageJsonContents = await fs.readFile(packageJsonPath, 'utf-8');
       const packageJson = JSON.parse(packageJsonContents);
       if (!packageJson.dependencies) packageJson.dependencies = {};
@@ -118,7 +120,7 @@ export const initGqlTada = async (cwd: string) => {
 
   s.start('Writing to tsconfig.json.');
   try {
-    const tsConfigPath = path.resolve(cwd, 'tsconfig.json');
+    const tsConfigPath = path.resolve(target, 'tsconfig.json');
     const tsConfigContents = await fs.readFile(tsConfigPath, 'utf-8');
     const tsConfig = parse(tsConfigContents);
     // TODO: do we need to ensure that include contains the tadaOutputLocation?
@@ -128,8 +130,8 @@ export const initGqlTada = async (cwd: string) => {
       plugins: [
         {
           name: '@0no-co/graphqlsp',
-          schema: isFile ? path.relative(cwd, schemaLocation) : schemaLocation,
-          tadaOutputLocation: path.relative(cwd, tadaLocation),
+          schema: isFile ? path.relative(target, schemaLocation) : schemaLocation,
+          tadaOutputLocation: path.relative(target, tadaLocation),
         },
       ],
     };
@@ -138,10 +140,10 @@ export const initGqlTada = async (cwd: string) => {
   s.stop('Written to tsconfig.json.');
 
   outro(`Off to the races!`);
-};
+}
 
 type PackageManager = 'yarn' | 'pnpm' | 'npm';
-async function installPackages(packageManager: PackageManager, cwd: string) {
+async function installPackages(packageManager: PackageManager, target: string) {
   await execa(
     packageManager,
     [
@@ -152,12 +154,12 @@ async function installPackages(packageManager: PackageManager, cwd: string) {
     ],
     {
       stdio: 'ignore',
-      cwd,
+      cwd: target,
     }
   );
   await execa(packageManager, [packageManager === 'yarn' ? 'add' : 'install', 'gql.tada'], {
     stdio: 'ignore',
-    cwd,
+    cwd: target,
   });
 }
 
