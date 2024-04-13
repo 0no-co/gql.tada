@@ -1,14 +1,16 @@
 import { Project, ts } from 'ts-morph';
 import { init, getGraphQLDiagnostics } from '@0no-co/graphqlsp/api';
-import path from 'path';
-import { getTsConfig } from '../tsconfig';
-import type { GraphQLSPConfig } from '../lsp';
-import { getGraphQLSPConfig } from '../lsp';
 import { load, resolveTypeScriptRootDir } from '@gql.tada/internal';
-import { createPluginInfo } from '../ts/project';
+import path from 'node:path';
+
+import type { GraphQLSPConfig } from '../../lsp';
+import { getGraphQLSPConfig } from '../../lsp';
+import { getTsConfig } from '../../tsconfig';
+import { createPluginInfo } from '../../ts/project';
 
 type Severity = 'error' | 'warn' | 'info';
 const severities: Severity[] = ['error', 'warn', 'info'];
+
 export interface FormattedDisplayableDiagnostic {
   severity: Severity;
   message: string;
@@ -17,18 +19,12 @@ export interface FormattedDisplayableDiagnostic {
   file: string | undefined;
 }
 
-export type CheckOptions = {
-  /**
-   * Exit with a non-zero code if there are any warnings.
-   */
-  exitOnWarn: boolean;
-  /**
-   * The minimum severity to report for.
-   */
+export interface Options {
+  failOnWarn: boolean | undefined;
   minSeverity: Severity;
-};
+}
 
-export async function check(opts: CheckOptions) {
+export async function run(opts: Options) {
   const tsConfig = await getTsConfig();
   if (!tsConfig) {
     return;
@@ -75,7 +71,7 @@ export async function check(opts: CheckOptions) {
         : ``;
     // eslint-disable-next-line no-console
     console.log(`${errorReport}${warningsReport}${suggestionsReport}`);
-    if (errorDiagnostics.length || (opts.exitOnWarn && warnDiagnostics.length)) {
+    if (errorDiagnostics.length || (opts.failOnWarn && warnDiagnostics.length)) {
       process.exit(1);
     } else {
       process.exit(0);
