@@ -5,16 +5,24 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import { parse } from 'json5';
 
-export const getTsConfig = async (target = process.cwd()): Promise<TsConfigJson | undefined> => {
-  const tsconfigpath =
-    path.extname(target) !== '.json' ? path.resolve(target, 'tsconfig.json') : target;
-  const root = (await resolveTypeScriptRootDir(tsconfigpath)) || target;
+const CWD = process.cwd();
+
+export const getTsConfig = async (target?: string): Promise<TsConfigJson | undefined> => {
+  let tsconfigPath = target || CWD;
+  tsconfigPath =
+    path.extname(tsconfigPath) !== '.json'
+      ? path.resolve(CWD, tsconfigPath, 'tsconfig.json')
+      : path.resolve(CWD, tsconfigPath);
+
+  const root = (await resolveTypeScriptRootDir(tsconfigPath)) || tsconfigPath;
 
   let tsconfigContents: string;
   try {
-    const tsconfigpath =
-      path.extname(root) !== '.json' ? path.resolve(root, 'tsconfig.json') : root;
-    tsconfigContents = await fs.readFile(tsconfigpath, 'utf-8');
+    tsconfigPath =
+      path.extname(root) !== '.json'
+        ? path.resolve(CWD, root, 'tsconfig.json')
+        : path.resolve(CWD, root);
+    tsconfigContents = await fs.readFile(tsconfigPath, 'utf-8');
   } catch (error) {
     console.error('Failed to read tsconfig.json in current working directory.', error);
     return;
