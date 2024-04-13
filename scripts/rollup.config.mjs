@@ -148,21 +148,23 @@ const outputPlugins = [
       if (rootLicense === outputLicense) return;
       const licenses = new Map();
       for (const packageName of externals) {
-        try {
+      try {
         let license;
         const metaPath = require.resolve(packageName + '/package.json');
+        const meta = require(metaPath);
         const packagePath = path.dirname(metaPath);
         let licenseName = (await fs.readdir(packagePath))
           .find((name) => /^licen[sc]e/i.test(name));
         if (!licenseName) {
-          const meta = require(metaPath);
           const match = /^SEE LICENSE IN (.*)/i.exec(meta.license || '');
           licenseName = match ? match[1] : meta.license;
         }
         try {
           license = await fs.readFile(path.join(packagePath, licenseName), 'utf8');
         } catch (_error) {
-          license = `${licenseName}, Copyright (c) ${meta.author}`;
+          license = meta.author
+            ? `${licenseName}, Copyright (c) ${meta.author.name || meta.author}`
+            : `${licenseName}, See license at: ${meta.repository.url || meta.repository}`;
         }
         licenses.set(packageName, license);
       } catch (error) {
