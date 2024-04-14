@@ -1,5 +1,5 @@
+import type { GraphQLSPConfig } from '@gql.tada/internal';
 import type { Project } from 'ts-morph';
-import type { GraphQLSPConfig } from '../lsp';
 
 export const createPluginInfo = (
   project: Project,

@@ -1,10 +1,10 @@
 import * as path from 'node:path';
 import { Project, ts } from 'ts-morph';
 
+import type { GraphQLSPConfig } from '@gql.tada/internal';
 import { load, resolveTypeScriptRootDir } from '@gql.tada/internal';
 import { init, getGraphQLDiagnostics } from '@0no-co/graphqlsp/api';
 
-import type { GraphQLSPConfig } from '../../lsp';
 import { createPluginInfo } from '../../ts/project';
 import { expose } from '../../threads';
 
@@ -35,20 +35,26 @@ const loadSchema = async (rootPath: string, config: GraphQLSPConfig) => {
 };
 
 export interface DiagnosticsParams {
-  config: GraphQLSPConfig;
-  tsconfigPath: string;
+  rootPath: string;
+  configPath: string;
+  pluginConfig: GraphQLSPConfig;
 }
 
 async function* _runDiagnostics(
   params: DiagnosticsParams
 ): AsyncIterableIterator<DiagnosticSignal> {
   init({ typescript: ts as any });
-  const projectPath = path.dirname(params.tsconfigPath);
-  const rootPath = (await resolveTypeScriptRootDir(params.tsconfigPath)) || params.tsconfigPath;
-  const schemaRef = await loadSchema(rootPath, params.config);
-  const project = new Project({ tsConfigFilePath: params.tsconfigPath });
-  const pluginInfo = createPluginInfo(project, params.config, projectPath);
-  const sourceFiles = project.getSourceFiles();
+  const projectPath = path.dirname(params.configPath);
+  const schemaRef = await loadSchema(projectPath, params.pluginConfig);
+  const project = new Project({ tsConfigFilePath: params.configPath });
+  const pluginInfo = createPluginInfo(project, params.pluginConfig, projectPath);
+
+  // Filter source files by whether they're under the relevant root path
+  const sourceFiles = project.getSourceFiles().filter((sourceFile) => {
+    const filePath = path.resolve(projectPath, sourceFile.getFilePath());
+    const relative = path.relative(params.rootPath, filePath);
+    return !relative.startsWith('..');
+  });
 
   yield {
     kind: 'FILE_COUNT',
