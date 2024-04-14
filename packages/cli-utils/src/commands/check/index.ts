@@ -1,5 +1,7 @@
 import * as t from 'typanion';
 import { Command, Option } from 'clipanion';
+
+import { initTTY } from '../../term';
 import { run } from './runner';
 
 export class CheckCommand extends Command {
@@ -20,9 +22,13 @@ export class CheckCommand extends Command {
     }) || 'error';
 
   async execute() {
-    await run({
-      failOnWarn: this.failOnWarn,
-      minSeverity: this.minSeverity,
-    });
+    const result = await initTTY().start(
+      run({
+        failOnWarn: this.failOnWarn,
+        minSeverity: this.minSeverity,
+        tsconfig: this.tsconfig,
+      })
+    );
+    return typeof result === 'object' ? result.exit : 0;
   }
 }
