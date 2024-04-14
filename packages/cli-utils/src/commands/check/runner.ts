@@ -22,20 +22,21 @@ export interface FormattedDisplayableDiagnostic {
 export interface Options {
   failOnWarn: boolean | undefined;
   minSeverity: Severity;
+  tsconfig: string | undefined;
 }
 
 export async function run(opts: Options) {
-  const tsConfig = await getTsConfig();
-  if (!tsConfig) {
+  const tsconfig = await getTsConfig(opts.tsconfig);
+  if (!tsconfig) {
     return;
   }
 
-  const config = getGraphQLSPConfig(tsConfig);
+  const config = getGraphQLSPConfig(tsconfig);
   if (!config) {
     return;
   }
 
-  const result = (await runDiagnostics(config)) || [];
+  const result = await runDiagnostics(opts, config);
   const errorDiagnostics = result.filter((d) => d.severity === 'error');
   const warnDiagnostics = result.filter((d) => d.severity === 'warn');
   const infoDiagnostics = result.filter((d) => d.severity === 'info');
@@ -79,19 +80,29 @@ export async function run(opts: Options) {
   }
 }
 
-async function runDiagnostics(config: GraphQLSPConfig): Promise<FormattedDisplayableDiagnostic[]> {
-  // TODO: leverage ts-morph tsconfig resolver
-  const projectName = path.resolve(process.cwd(), 'tsconfig.json');
-  const rootPath = (await resolveTypeScriptRootDir(projectName)) || path.dirname(projectName);
+const CWD = process.cwd();
+
+async function runDiagnostics(
+  opts: Options,
+  config: GraphQLSPConfig
+): Promise<FormattedDisplayableDiagnostic[]> {
+  let tsconfigPath = opts.tsconfig || CWD;
+  tsconfigPath =
+    path.extname(tsconfigPath) !== '.json'
+      ? path.resolve(CWD, tsconfigPath, 'tsconfig.json')
+      : path.resolve(CWD, tsconfigPath);
+
+  const projectPath = path.dirname(tsconfigPath);
+  const rootPath = (await resolveTypeScriptRootDir(tsconfigPath)) || tsconfigPath;
   const project = new Project({
-    tsConfigFilePath: projectName,
+    tsConfigFilePath: tsconfigPath,
   });
 
   init({
     typescript: ts as any,
   });
 
-  const pluginCreateInfo = createPluginInfo(project, config, projectName);
+  const pluginCreateInfo = createPluginInfo(project, config, projectPath);
 
   const sourceFiles = project.getSourceFiles();
   const loader = load({ origin: config.schema, rootPath });
