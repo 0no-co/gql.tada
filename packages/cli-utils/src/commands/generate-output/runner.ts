@@ -1,17 +1,18 @@
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
+import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
 import type { IntrospectionQuery } from 'graphql';
 
 import {
+  load,
+  loadConfig,
+  parseConfig,
   minifyIntrospection,
   outputIntrospectionFile,
-  resolveTypeScriptRootDir,
-  load,
 } from '@gql.tada/internal';
 
 import type { TTY } from '../../term';
-import { getGraphQLSPConfig } from '../../lsp';
-import { getTsConfig } from '../../tsconfig';
+import * as logger from './logger';
 
 interface Options {
   disablePreprocessing: boolean;
@@ -19,63 +20,68 @@ interface Options {
   tsconfig: string | undefined;
 }
 
-const CWD = process.cwd();
-
-export async function run(tty: TTY, opts: Options) {
-  const tsConfig = await getTsConfig(opts.tsconfig);
-  if (!tsConfig) {
-    return;
+export async function* run(tty: TTY, opts: Options) {
+  let configResult: LoadConfigResult;
+  let pluginConfig: GraphQLSPConfig;
+  try {
+    configResult = await loadConfig(opts.tsconfig);
+    pluginConfig = parseConfig(configResult.pluginConfig);
+  } catch (error) {
+    throw logger.externalError('Failed to load configuration.', error);
   }
-
-  const config = getGraphQLSPConfig(tsConfig);
-  if (!config) {
-    return;
-  }
-
-  let tsconfigPath = opts.tsconfig || CWD;
-  tsconfigPath =
-    path.extname(tsconfigPath) !== '.json'
-      ? path.resolve(CWD, tsconfigPath, 'tsconfig.json')
-      : path.resolve(CWD, tsconfigPath);
-  const rootPath = (await resolveTypeScriptRootDir(tsconfigPath)) || path.dirname(tsconfigPath);
 
   // TODO: allow this to be overwritten using arguments (like in `generate schema`)
   const loader = load({
-    origin: config.schema,
-    rootPath,
+    origin: pluginConfig.schema,
+    rootPath: path.dirname(configResult.configPath),
   });
 
   let introspection: IntrospectionQuery | null;
   try {
     introspection = await loader.loadIntrospection();
   } catch (error) {
-    console.error('Something went wrong while trying to load the schema.', error);
-    return;
+    throw logger.externalError('Failed to load introspection.', error);
   }
 
   if (!introspection) {
-    console.error('Could not retrieve introspection schema.');
+    throw logger.errorMessage('Failed to load introspection.');
+  }
+
+  let contents: string;
+  try {
+    contents = outputIntrospectionFile(minifyIntrospection(introspection), {
+      fileType: pluginConfig.tadaOutputLocation || '.d.ts',
+      shouldPreprocess: !opts.disablePreprocessing,
+    });
+  } catch (error) {
+    throw logger.externalError('Could not generate introspection output', error);
+  }
+
+  let destination: string;
+  if (!opts.output && tty.pipeTo) {
+    tty.pipeTo.write(contents);
     return;
+  } else if (opts.output) {
+    destination = path.resolve(process.cwd(), opts.output);
+  } else if (pluginConfig.tadaOutputLocation) {
+    destination = path.resolve(
+      path.dirname(configResult.configPath),
+      pluginConfig.tadaOutputLocation
+    );
+  } else {
+    throw logger.errorMessage(
+      'No output path was specified to write the output file to.\n' +
+        logger.hint(
+          `You have to either set ${logger.code('"tadaOutputLocation"')} in your configuration,\n` +
+            `pass an ${logger.code('--output')} argument to this command,\n` +
+            'or pipe this command to an output file.'
+        )
+    );
   }
 
   try {
-    const contents = outputIntrospectionFile(minifyIntrospection(introspection), {
-      fileType: config.tadaOutputLocation,
-      shouldPreprocess: !opts.disablePreprocessing,
-    });
-
-    let destination: string;
-    if (!opts.output && tty.pipeTo) {
-      tty.pipeTo.write(contents);
-      return;
-    } else if (!opts.output) {
-      destination = path.resolve(rootPath, config.tadaOutputLocation);
-    } else {
-      destination = path.resolve(CWD, opts.output);
-    }
-
     await fs.writeFile(destination, contents);
   } catch (error) {
-    console.error('Something went wrong while writing the introspection file', error);
+    throw logger.externalError('Something went wrong while writing the introspection file', error);
   }
 }

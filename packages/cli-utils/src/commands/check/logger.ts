@@ -5,6 +5,8 @@ import * as t from '../../term';
 import type { DiagnosticMessage } from './types';
 import type { SeveritySummary } from './types';
 
+export * from '../shared/logger';
+
 const CWD = process.cwd();
 
 export function code(text: string) {

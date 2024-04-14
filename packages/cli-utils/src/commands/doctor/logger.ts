@@ -2,28 +2,6 @@ import { pipe, interval, map } from 'wonka';
 
 import * as t from '../../term';
 
-export function code(text: string) {
-  return t.text`${t.cmd(t.CSI.Style, t.Style.Underline)}${text}${t.cmd(
-    t.CSI.Style,
-    t.Style.NoUnderline
-  )}`;
-}
-
-export function bold(text: string) {
-  return t.text`${t.cmd(t.CSI.Style, t.Style.Bold)}${text}${t.cmd(t.CSI.Style, t.Style.Normal)}`;
-}
-
-export function hint(text: string) {
-  return t.text([
-    t.cmd(t.CSI.Style, t.Style.BrightBlack),
-    `${t.HeavyBox.BottomLeft} `,
-    t.cmd(t.CSI.Style, t.Style.BrightBlue),
-    `${t.Icons.Info} `,
-    t.cmd(t.CSI.Style, t.Style.Blue),
-    text,
-  ]);
-}
-
 export function console(error: any) {
   return t.text([
     t.cmd(t.CSI.Style, t.Style.BrightBlack),
