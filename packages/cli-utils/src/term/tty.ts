@@ -19,6 +19,7 @@ import { emitKeypressEvents } from 'node:readline';
 import type { ComposeInput, CLIError } from './write';
 import { text, compose } from './write';
 import { cmd, _setColor, CSI, Mode, PrivateMode } from './csi';
+import { isGithubCI } from './github';
 
 export interface KeypressEvent {
   data?: string;
@@ -79,7 +80,10 @@ export function initTTY(): TTY {
   let isTTY = process.env.TERM !== 'dumb' && !process.env.CI;
   let pipeTo: WriteStream | null = null;
   let output: WriteStream = process.stdout;
-  if (!output.isTTY && process.stderr.isTTY) {
+  if (isGithubCI) {
+    output = process.stderr;
+    if (!output.isTTY) pipeTo = process.stdout;
+  } else if (!output.isTTY && process.stderr.isTTY) {
     output = process.stderr;
     pipeTo = process.stdout;
   } else {
@@ -88,7 +92,7 @@ export function initTTY(): TTY {
 
   const hasColorArg = process.argv.includes('--color');
   const hasColorEnv = 'FORCE_COLOR' in process.env || (!process.env.NO_COLOR && !process.env.CI);
-  _setColor((isTTY && hasColorEnv) || hasColorArg);
+  _setColor((isTTY && hasColorEnv) || hasColorArg || isGithubCI);
 
   function _start() {
     _setColor((isTTY && hasColorEnv) || hasColorArg);
