@@ -4,6 +4,7 @@ import { getGraphQLSPConfig } from '../../lsp';
 import { getTsConfig } from '../../tsconfig';
 import * as logger from './logger';
 
+import type { ComposeInput } from '../../term';
 import type { Severity, SeveritySummary } from './types';
 
 const isMinSeverity = (severity: Severity, minSeverity: Severity) => {
@@ -31,7 +32,7 @@ export interface Options {
   tsconfig: string | undefined;
 }
 
-export async function* run(opts: Options) {
+export async function* run(opts: Options): AsyncIterable<ComposeInput> {
   const CWD = process.cwd();
   const { runDiagnostics } = await import('./thread');
 
