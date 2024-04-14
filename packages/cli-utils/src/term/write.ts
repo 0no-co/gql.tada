@@ -23,14 +23,15 @@ export const stripAnsi = (input: string) => input.replace(ansiRegex, '');
 
 export class CLIError extends Error {
   output: string;
-  exit: number;
+  exit: number | undefined;
   constructor(message: string, exitCode?: number) {
     super(stripAnsi(message));
     this.output = message;
-    this.exit = exitCode || 1;
+    this.exit = exitCode;
   }
 
   toString() {
+    if (this.exit != null) process.exitCode = this.exit;
     return this.output;
   }
 }
