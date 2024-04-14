@@ -1,3 +1,5 @@
+import { pipe, interval, map } from 'wonka';
+
 import * as path from 'node:path';
 import * as t from '../../term';
 import type { DiagnosticMessage } from './types';
@@ -87,4 +89,22 @@ export function diagnosticMessageGithub(message: DiagnosticMessage): void {
     line: message.line,
     col: message.col,
   });
+}
+
+export function runningDiagnostics(file: number, ofFiles?: number) {
+  const progress = ofFiles ? `(${file} / ${ofFiles})` : `(${file})`;
+  return pipe(
+    interval(150),
+    map((state) => {
+      return t.text([
+        t.cmd(t.CSI.Style, t.Style.Magenta),
+        t.dotSpinner[state % t.dotSpinner.length],
+        ' ',
+        t.cmd(t.CSI.Style, t.Style.Foreground),
+        `Checking files${t.Chars.Ellipsis} `,
+        t.cmd(t.CSI.Style, t.Style.BrightBlack),
+        progress,
+      ]);
+    })
+  );
 }

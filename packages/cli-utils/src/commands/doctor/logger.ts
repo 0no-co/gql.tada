@@ -96,7 +96,7 @@ export function runningTask(description: string) {
         t.circleSpinner[state % t.circleSpinner.length],
         ' ',
         t.cmd(t.CSI.Style, t.Style.Foreground),
-        description,
+        description.trim(),
       ]);
     })
   );
