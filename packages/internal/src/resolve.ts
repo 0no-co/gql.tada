@@ -1,36 +1,144 @@
-import path from 'path';
-import JSON5 from 'json5';
-import fs from 'node:fs/promises';
-import type { TsConfigJson } from 'type-fest';
+import * as path from 'node:path';
+import * as fs from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import type { Stats } from 'node:fs';
 
-// TODO: Replace config loading with typescript package's native config loading
+import type { TsConfigJson } from 'type-fest';
+import { parseConfigFileTextToJson } from 'typescript';
+
+import { TSError, TadaError } from './errors';
+
+const TSCONFIG = 'tsconfig.json';
+
+const cwd = process.cwd();
+const isFile = (stat: Stats): boolean => stat.isFile();
+const isDir = (stat: Stats): boolean => stat.isDirectory();
+
+const stat = (file: string, predicate = isFile): Promise<boolean> =>
+  fs
+    .stat(file)
+    .then(predicate)
+    .catch(() => false);
+
+const maybeRelative = (filePath: string): string => {
+  if (path.extname(filePath)) filePath = path.dirname(filePath);
+  const relative = path.relative(cwd, filePath);
+  return !relative.startsWith('..') ? relative : filePath;
+};
+
+const _resolve =
+  typeof require !== 'undefined'
+    ? require.resolve.bind(require)
+    : createRequire(import.meta.url).resolve;
+const resolveExtend = async (extend: string, from: string) => {
+  try {
+    return toTSConfigPath(_resolve(extend, { paths: [from] }));
+  } catch (_error) {
+    return null;
+  }
+};
+
+const toTSConfigPath = (tsconfigPath: string): string =>
+  path.extname(tsconfigPath) !== '.json'
+    ? path.resolve(cwd, tsconfigPath, TSCONFIG)
+    : path.resolve(cwd, tsconfigPath);
+
+export const readTSConfigFile = async (filePath: string): Promise<TsConfigJson> => {
+  const tsconfigPath = toTSConfigPath(filePath);
+  const contents = await fs.readFile(tsconfigPath, 'utf8');
+  const result = parseConfigFileTextToJson(tsconfigPath, contents);
+  if (result.error) throw new TSError(result.error);
+  return result.config || {};
+};
+
+export const findTSConfigFile = async (targetPath?: string): Promise<string | null> => {
+  let tsconfigPath = toTSConfigPath(targetPath || cwd);
+  const rootPath = toTSConfigPath(path.resolve(tsconfigPath, '/'));
+  while (tsconfigPath !== rootPath) {
+    if (await stat(tsconfigPath)) return tsconfigPath;
+    const gitPath = path.resolve(tsconfigPath, '..', '.git');
+    if (await stat(gitPath, isDir)) return null;
+    const parentPath = toTSConfigPath(path.resolve(tsconfigPath, '..', '..'));
+    if (parentPath === tsconfigPath) break;
+    tsconfigPath = parentPath;
+  }
+  return null;
+};
+
+const getPluginConfig = (tsconfig: TsConfigJson | null): Record<string, unknown> | null =>
+  (tsconfig &&
+    tsconfig.compilerOptions &&
+    tsconfig.compilerOptions.plugins &&
+    tsconfig.compilerOptions.plugins.find(
+      (x) => x.name === '@0no-co/graphqlsp' || x.name === 'gql.tada/lsp'
+    )) ||
+  null;
+
+interface LoadConfigResult {
+  pluginConfig: Record<string, unknown>;
+  configPath: string;
+  rootPath: string;
+}
+
+export const loadConfig = async (targetPath?: string): Promise<LoadConfigResult> => {
+  const rootTsconfigPath = await findTSConfigFile(targetPath);
+  if (!rootTsconfigPath) {
+    throw new TadaError(
+      targetPath
+        ? `No tsconfig.json found at or above: ${maybeRelative(targetPath)}`
+        : 'No tsconfig.json found at or above current working directory'
+    );
+  }
+  const tsconfig = await readTSConfigFile(rootTsconfigPath);
+  const pluginConfig = getPluginConfig(tsconfig);
+  if (pluginConfig) {
+    return {
+      pluginConfig,
+      configPath: rootTsconfigPath,
+      rootPath: path.dirname(rootTsconfigPath),
+    };
+  }
+
+  if (Array.isArray(tsconfig.extends)) {
+    for (let extend of tsconfig.extends) {
+      if (path.extname(extend) !== '.json') extend += '.json';
+      try {
+        const tsconfigPath = await resolveExtend(extend, path.dirname(rootTsconfigPath));
+        if (tsconfigPath) {
+          const config = loadConfig(targetPath);
+          return {
+            ...config,
+            rootPath: path.dirname(rootTsconfigPath),
+          };
+        }
+      } catch (_error) {}
+    }
+  } else if (tsconfig.extends) {
+    try {
+      const tsconfigPath = await resolveExtend(tsconfig.extends, path.dirname(rootTsconfigPath));
+      if (tsconfigPath) {
+        const config = loadConfig(targetPath);
+        return {
+          ...config,
+          rootPath: path.dirname(rootTsconfigPath),
+        };
+      }
+    } catch (_error) {}
+  }
+
+  throw new TadaError(
+    `Could not find a valid GraphQLSP plugin entry in: ${maybeRelative(rootTsconfigPath)}`
+  );
+};
+
+/** @deprecated Use {@link loadConfig} instead */
 export const resolveTypeScriptRootDir = async (
   tsconfigPath: string
 ): Promise<string | undefined> => {
-  const tsconfigContents = await fs.readFile(tsconfigPath, { encoding: 'utf8' });
-  const parsed = JSON5.parse<TsConfigJson>(tsconfigContents);
-
-  if (
-    parsed.compilerOptions &&
-    parsed.compilerOptions.plugins &&
-    parsed.compilerOptions.plugins.find(
-      (x) => x.name === '@0no-co/graphqlsp' || x.name === 'gql.tada/lsp'
-    )
-  ) {
-    return path.dirname(tsconfigPath);
-  } else if (Array.isArray(parsed.extends)) {
-    return parsed.extends.find((p) => {
-      // TODO: This doesn't account for *.json being omitted
-      // See: https://www.typescriptlang.org/tsconfig#extends
-      const resolved = require.resolve(p, {
-        paths: [path.dirname(tsconfigPath)],
-      });
-      return resolveTypeScriptRootDir(resolved);
-    });
-  } else if (parsed.extends) {
-    const resolved = require.resolve(parsed.extends, {
-      paths: [path.dirname(tsconfigPath)],
-    });
-    return resolveTypeScriptRootDir(resolved);
+  try {
+    const result = await loadConfig(tsconfigPath);
+    return path.dirname(result.configPath);
+  } catch (_error) {
+    return undefined;
   }
 };

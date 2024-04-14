@@ -1,15 +1,21 @@
 import type { Diagnostic } from 'typescript';
 
 export class TSError extends Error {
-  diagnostics: readonly Diagnostic[];
-  constructor(message: string, diagnostics?: readonly Diagnostic[]) {
-    super(message);
+  readonly name: 'TSError';
+  readonly diagnostic: Diagnostic;
+  constructor(diagnostic: Diagnostic) {
+    super(
+      typeof diagnostic.messageText !== 'string'
+        ? diagnostic.messageText.messageText
+        : diagnostic.messageText
+    );
     this.name = 'TSError';
-    this.diagnostics = diagnostics || [];
+    this.diagnostic = diagnostic;
   }
 }
 
 export class TadaError extends Error {
+  readonly name: 'TadaError';
   constructor(message: string) {
     super(message);
     this.name = 'TadaError';
