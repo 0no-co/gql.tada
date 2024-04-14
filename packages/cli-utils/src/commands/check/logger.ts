@@ -7,6 +7,13 @@ import type { SeveritySummary } from './types';
 
 const CWD = process.cwd();
 
+export function code(text: string) {
+  return t.text`${t.cmd(t.CSI.Style, t.Style.Underline)}${text}${t.cmd(
+    t.CSI.Style,
+    t.Style.NoUnderline
+  )}`;
+}
+
 export function diagnosticFile(filePath: string) {
   const relativePath = path.relative(CWD, filePath);
   if (!relativePath.startsWith('..')) filePath = relativePath;

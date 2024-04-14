@@ -37,12 +37,21 @@ export async function* run(opts: Options) {
 
   const tsconfig = await getTsConfig(opts.tsconfig);
   if (!tsconfig) {
-    return;
+    const relative = opts.tsconfig
+      ? logger.code(path.relative(process.cwd(), opts.tsconfig))
+      : 'the current working directory';
+    throw logger.errorMessage(
+      `The ${logger.code('tsconfig.json')} file at ${relative} could not be loaded.\n`
+    );
   }
 
   const config = getGraphQLSPConfig(tsconfig);
   if (!config) {
-    return;
+    throw logger.errorMessage(
+      `No ${logger.code('"@0no-co/graphqlsp"')} plugin was found in your ${logger.code(
+        'tsconfig.json'
+      )}.\n`
+    );
   }
 
   let tsconfigPath = opts.tsconfig || CWD;
