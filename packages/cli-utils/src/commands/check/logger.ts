@@ -69,7 +69,7 @@ export function infoSummary(summary: SeveritySummary) {
       ` ${error + warn} problems (${error} errors, ${warn} warnings)\n`,
     ]);
   } else {
-    out += t.text([t.cmd(t.CSI.Style, t.Style.BrightGreen), t.Icons.Tick, ` No problems found`]);
+    out += t.text([t.cmd(t.CSI.Style, t.Style.BrightGreen), t.Icons.Tick, ` No problems found\n`]);
   }
   return out;
 }
