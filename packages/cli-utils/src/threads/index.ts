@@ -61,9 +61,14 @@ export interface Generator<Args extends readonly any[], Next> {
 }
 
 function main<Args extends readonly any[], Next>(url: string | URL): Generator<Args, Next> {
-  const worker = new Worker(url, workerOpts);
+  let worker: Worker;
   let ids = 0;
   return (...args: Args) => {
+    if (!worker) {
+      worker = new Worker(url, workerOpts);
+      worker.unref();
+    }
+
     const id = ++ids | 0;
     const buffer: ThreadMessage[] = [];
 
@@ -79,7 +84,6 @@ function main<Args extends readonly any[], Next>(url: string | URL): Generator<A
       reject = undefined;
       worker.removeListener('message', receiveMessage);
       worker.removeListener('error', receiveError);
-      worker.unref();
     }
 
     function sendMessage(kind: MainMessageCodes) {
