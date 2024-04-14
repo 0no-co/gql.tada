@@ -15,10 +15,10 @@ const toCommandValue = (input: unknown): string =>
     : JSON.stringify(input);
 
 const escapeData = (input: unknown) =>
-  toCommandValue(s).replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+  toCommandValue(input).replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
 
 const escapeProperty = (input: unknown): string =>
-  toCommandValue(s)
+  toCommandValue(input)
     .replace(/%/g, '%25')
     .replace(/\r/g, '%0D')
     .replace(/\n/g, '%0A')
@@ -30,13 +30,13 @@ export function githubAnnotation(
   message: string,
   properties?: AnnotationProperties
 ) {
-  if (isGitHubCI) {
+  if (isGithubCI) {
     let out = `::${kind}`;
-    const propsOut = '';
+    let propsOut = '';
     if (properties) {
       for (const key in properties) {
-        if (properties) properties += ',';
-        if (properties[key]) cmdStr += `${key}=${escapeProperty(propreties[key])}`;
+        if (properties) propsOut += ',';
+        if (properties[key]) propsOut += `${key}=${escapeProperty(properties[key])}`;
       }
     }
     if (propsOut) out += ` ${propsOut}`;

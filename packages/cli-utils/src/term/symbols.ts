@@ -136,7 +136,7 @@ export const enum Heart {
 export const enum Icons {
   Tick = '✓',
   TickSwoosh = '✔',
-  Cross = '×',
+  Cross = '✖',
   CrossSwoosh = '✘',
   Home = '⌂',
   Note = '♪',
