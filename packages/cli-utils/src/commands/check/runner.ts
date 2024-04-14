@@ -4,8 +4,18 @@ import { getGraphQLSPConfig } from '../../lsp';
 import { getTsConfig } from '../../tsconfig';
 import * as logger from './logger';
 
-type Severity = 'error' | 'warn' | 'info';
-const severities: Severity[] = ['error', 'warn', 'info'];
+import type { Severity, SeveritySummary } from './types';
+
+const isMinSeverity = (severity: Severity, minSeverity: Severity) => {
+  switch (severity) {
+    case 'info':
+      return minSeverity !== 'warn' && minSeverity !== 'error';
+    case 'warn':
+      return minSeverity !== 'error';
+    case 'error':
+      return true;
+  }
+};
 
 export interface FormattedDisplayableDiagnostic {
   severity: Severity;
@@ -41,11 +51,31 @@ export async function* run(opts: Options) {
       ? path.resolve(CWD, tsconfigPath, 'tsconfig.json')
       : path.resolve(CWD, tsconfigPath);
 
+  const summary: SeveritySummary = { warn: 0, error: 0, info: 0 };
+  const minSeverity = opts.minSeverity;
   const generator = runDiagnostics({ tsconfigPath, config });
 
   for await (const signal of generator) {
-    if (signal.messages.length) {
-      yield logger.diagnosticFile(signal.filePath, signal.messages);
+    let buffer = '';
+    for (const message of signal.messages) {
+      summary[message.severity]++;
+      if (isMinSeverity(message.severity, minSeverity)) {
+        buffer += logger.diagnosticMessage(message);
+        logger.diagnosticMessageGithub(message);
+      }
     }
+    if (buffer) {
+      yield logger.diagnosticFile(signal.filePath);
+      yield buffer + '\n';
+    }
+  }
+
+  // Reset notice count if it's outside of min severity
+  if (minSeverity !== 'info') summary.info = 0;
+
+  if ((opts.failOnWarn && summary.warn) || summary.error) {
+    throw logger.problemsSummary(summary);
+  } else {
+    yield logger.infoSummary(summary);
   }
 }

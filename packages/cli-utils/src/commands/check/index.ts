@@ -19,7 +19,7 @@ export class CheckCommand extends Command {
     Option.String('--level,-l', {
       description: 'The minimum severity of diagnostics to display (info, warn, error)',
       validator: t.isOneOf([t.isLiteral('info'), t.isLiteral('warn'), t.isLiteral('error')]),
-    }) || 'error';
+    }) || 'info';
 
   async execute() {
     const result = await initTTY().start(
@@ -29,6 +29,6 @@ export class CheckCommand extends Command {
         tsconfig: this.tsconfig,
       })
     );
-    return typeof result === 'object' ? result.exit : 0;
+    return process.exitCode || (typeof result === 'object' ? result.exit : 0);
   }
 }

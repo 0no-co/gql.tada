@@ -1,16 +1,19 @@
+import * as path from 'node:path';
 import * as t from '../../term';
 import type { DiagnosticMessage } from './types';
+import type { SeveritySummary } from './types';
 
-export function diagnosticFile(filePath: string, messages: DiagnosticMessage[]) {
-  let output = t.text([
+const CWD = process.cwd();
+
+export function diagnosticFile(filePath: string) {
+  const relativePath = path.relative(CWD, filePath);
+  if (!relativePath.startsWith('..')) filePath = relativePath;
+  return t.text([
     t.cmd(t.CSI.Style, t.Style.Underline),
     filePath,
     t.cmd(t.CSI.Style, t.Style.NoUnderline),
     '\n',
   ]);
-  for (const message of messages) output += diagnosticMessage(message);
-  output += '\n';
-  return output;
 }
 
 export function diagnosticMessage(message: DiagnosticMessage) {
@@ -42,4 +45,46 @@ export function diagnosticMessage(message: DiagnosticMessage) {
     text,
     t.Chars.Newline,
   ]);
+}
+
+export function infoSummary(summary: SeveritySummary) {
+  const { info, error, warn } = summary;
+  let out = '';
+  if (info) {
+    out += t.text([t.cmd(t.CSI.Style, t.Style.Blue), t.Icons.Info, ` ${info} notices\n`]);
+  }
+  if (error || warn) {
+    out += t.text([
+      t.cmd(t.CSI.Style, t.Style.BrightYellow),
+      t.Icons.Warning,
+      ` ${error + warn} problems (${error} errors, ${warn} warnings)\n`,
+    ]);
+  } else {
+    out += t.text([t.cmd(t.CSI.Style, t.Style.BrightGreen), t.Icons.Tick, ` No problems found`]);
+  }
+  return out;
+}
+
+export function problemsSummary(summary: SeveritySummary) {
+  const { info, error, warn } = summary;
+  let out = '';
+  if (info) {
+    out += t.text([t.cmd(t.CSI.Style, t.Style.Blue), t.Icons.Info, ` ${info} notices\n`]);
+  }
+  out += t.text([
+    t.cmd(t.CSI.Style, t.Style.Red),
+    t.Icons.Cross,
+    ` ${error + warn} problems (${error} errors, ${warn} warnings)\n`,
+  ]);
+  return t.error(out);
+}
+
+export function diagnosticMessageGithub(message: DiagnosticMessage): void {
+  const kind =
+    message.severity === 'warn' ? 'warning' : message.severity === 'error' ? 'error' : 'notice';
+  t.githubAnnotation(kind, message.message, {
+    file: message.file,
+    line: message.line,
+    col: message.col,
+  });
 }

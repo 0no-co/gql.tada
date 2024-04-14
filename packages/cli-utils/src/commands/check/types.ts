@@ -1,5 +1,7 @@
 export type Severity = 'error' | 'warn' | 'info';
 
+export type SeveritySummary = Record<Severity, number>;
+
 export interface DiagnosticMessage {
   severity: Severity;
   message: string;
