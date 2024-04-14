@@ -1,5 +1,6 @@
 export * from './vfs';
 export * from './loaders';
+export * from './errors';
 
 export {
   minifyIntrospection,
