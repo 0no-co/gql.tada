@@ -16,4 +16,9 @@ export interface FileDiagnosticsSignal {
   messages: DiagnosticMessage[];
 }
 
-export type DiagnosticSignal = FileDiagnosticsSignal;
+export interface FileCountSignal {
+  kind: 'FILE_COUNT';
+  fileCount: number;
+}
+
+export type DiagnosticSignal = FileDiagnosticsSignal | FileCountSignal;

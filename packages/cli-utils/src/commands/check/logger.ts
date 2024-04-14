@@ -92,7 +92,7 @@ export function diagnosticMessageGithub(message: DiagnosticMessage): void {
 }
 
 export function runningDiagnostics(file: number, ofFiles?: number) {
-  const progress = ofFiles ? `(${file} / ${ofFiles})` : `(${file})`;
+  const progress = ofFiles ? `(${file}/${ofFiles})` : `(${file})`;
   return pipe(
     interval(150),
     map((state) => {

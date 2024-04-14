@@ -50,6 +50,11 @@ async function* _runDiagnostics(
   const pluginInfo = createPluginInfo(project, params.config, projectPath);
   const sourceFiles = project.getSourceFiles();
 
+  yield {
+    kind: 'FILE_COUNT',
+    fileCount: sourceFiles.length,
+  };
+
   for (const sourceFile of sourceFiles) {
     const filePath = sourceFile.getFilePath();
     const diagnostics = getGraphQLDiagnostics(filePath, schemaRef, pluginInfo);

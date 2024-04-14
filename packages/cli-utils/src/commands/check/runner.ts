@@ -55,10 +55,15 @@ export async function* run(opts: Options) {
   const minSeverity = opts.minSeverity;
   const generator = runDiagnostics({ tsconfigPath, config });
 
-  let fileCount = 1;
-  yield logger.runningDiagnostics(++fileCount);
+  let totalFileCount = 0;
+  let fileCount = 0;
 
   for await (const signal of generator) {
+    if (signal.kind === 'FILE_COUNT') {
+      totalFileCount = signal.fileCount;
+      continue;
+    }
+
     let buffer = '';
     for (const message of signal.messages) {
       summary[message.severity]++;
@@ -71,7 +76,7 @@ export async function* run(opts: Options) {
       yield logger.diagnosticFile(signal.filePath) + buffer + '\n';
     }
 
-    yield logger.runningDiagnostics(++fileCount);
+    yield logger.runningDiagnostics(++fileCount, totalFileCount);
   }
 
   // Reset notice count if it's outside of min severity
