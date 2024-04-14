@@ -1,14 +1,16 @@
 import type { Diagnostic } from 'typescript';
+import { maybeRelative } from './helpers';
 
 export class TSError extends Error {
   readonly name: 'TSError';
   readonly diagnostic: Diagnostic;
   constructor(diagnostic: Diagnostic) {
-    super(
+    let message =
       typeof diagnostic.messageText !== 'string'
         ? diagnostic.messageText.messageText
-        : diagnostic.messageText
-    );
+        : diagnostic.messageText;
+    if (diagnostic.file) message += ` (${maybeRelative(diagnostic.file.fileName)})`;
+    super(message);
     this.name = 'TSError';
     this.diagnostic = diagnostic;
   }

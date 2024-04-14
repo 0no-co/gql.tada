@@ -6,25 +6,18 @@ import type { Stats } from 'node:fs';
 import type { TsConfigJson } from 'type-fest';
 import { parseConfigFileTextToJson } from 'typescript';
 
+import { cwd, maybeRelative } from './helpers';
 import { TSError, TadaError } from './errors';
 
 const TSCONFIG = 'tsconfig.json';
 
-const cwd = process.cwd();
 const isFile = (stat: Stats): boolean => stat.isFile();
 const isDir = (stat: Stats): boolean => stat.isDirectory();
-
 const stat = (file: string, predicate = isFile): Promise<boolean> =>
   fs
     .stat(file)
     .then(predicate)
     .catch(() => false);
-
-const maybeRelative = (filePath: string): string => {
-  if (path.extname(filePath)) filePath = path.dirname(filePath);
-  const relative = path.relative(cwd, filePath);
-  return !relative.startsWith('..') ? relative : filePath;
-};
 
 const _resolve =
   typeof require !== 'undefined'
