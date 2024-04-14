@@ -71,7 +71,7 @@ function clear(text: string) {
   if (lines) {
     return cmd(CSI.PrevLine, lines) + cmd(CSI.DeleteLines, lines + 1);
   } else if (stripAnsi(text)) {
-    return cmd(CSI.EraseLine, EraseLine.Backward), cmd(CSI.ToColumn, 1);
+    return cmd(CSI.EraseLine, EraseLine.Backward) + cmd(CSI.ToColumn, 1);
   } else {
     return '';
   }
