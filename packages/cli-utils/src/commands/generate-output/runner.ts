@@ -12,6 +12,8 @@ import {
 } from '@gql.tada/internal';
 
 import type { TTY } from '../../term';
+import type { WriteTarget } from '../shared';
+import { writeOutput } from '../shared';
 import * as logger from './logger';
 
 interface Options {
@@ -57,10 +59,9 @@ export async function* run(tty: TTY, opts: Options) {
     throw logger.externalError('Could not generate introspection output', error);
   }
 
-  let destination: string;
+  let destination: WriteTarget;
   if (!opts.output && tty.pipeTo) {
-    tty.pipeTo.write(contents);
-    return;
+    destination = tty.pipeTo;
   } else if (opts.output) {
     destination = path.resolve(process.cwd(), opts.output);
   } else if (pluginConfig.tadaOutputLocation) {
@@ -80,7 +81,7 @@ export async function* run(tty: TTY, opts: Options) {
   }
 
   try {
-    await fs.writeFile(destination, contents);
+    await writeOutput(destination, contents);
   } catch (error) {
     throw logger.externalError('Something went wrong while writing the introspection file', error);
   }

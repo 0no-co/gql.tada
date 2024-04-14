@@ -6,8 +6,8 @@ import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
 import { load, loadConfig, parseConfig } from '@gql.tada/internal';
 
 import type { TTY } from '../../term';
-import { getGraphQLSPConfig } from '../../lsp';
-import { getTsConfig } from '../../tsconfig';
+import type { WriteTarget } from '../shared';
+import { writeOutput } from '../shared';
 import * as logger from './logger';
 
 interface Options {
@@ -32,10 +32,9 @@ export async function* run(tty: TTY, opts: Options) {
     throw logger.errorMessage('Failed to load schema.');
   }
 
-  let destination: string;
+  let destination: WriteTarget;
   if (!opts.output && tty.pipeTo) {
-    tty.pipeTo.write(printSchema(schema));
-    return;
+    destination = tty.pipeTo;
   } else if (opts.output) {
     destination = path.resolve(process.cwd(), opts.output);
   } else {
@@ -70,7 +69,7 @@ export async function* run(tty: TTY, opts: Options) {
   }
 
   try {
-    await fs.writeFile(destination, printSchema(schema));
+    await writeOutput(destination, printSchema(schema));
   } catch (error) {
     throw logger.externalError('Something went wrong while writing the introspection file', error);
   }
