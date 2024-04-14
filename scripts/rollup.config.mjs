@@ -147,13 +147,18 @@ const outputPlugins = [
       const outputLicense = path.resolve('LICENSE.md');
       if (rootLicense === outputLicense) return;
       const licenses = new Map();
-      for (const packageName of externals) {
-      try {
+      for (const packageName of [...externals].sort()) {
         let license;
-        const metaPath = require.resolve(packageName + '/package.json');
-        const meta = require(metaPath);
+        let metaPath;
+        let meta;
+        try {
+          metaPath = require.resolve(path.join(packageName, '/package.json'));
+          meta = require(metaPath);
+        } catch (_error) {
+          continue;
+        }
         const packagePath = path.dirname(metaPath);
-        let licenseName = (await fs.readdir(packagePath))
+        let licenseName = (await fs.readdir(packagePath).catch(() => []))
           .find((name) => /^licen[sc]e/i.test(name));
         if (!licenseName) {
           const match = /^SEE LICENSE IN (.*)/i.exec(meta.license || '');
@@ -167,9 +172,6 @@ const outputPlugins = [
             : `${licenseName}, See license at: ${meta.repository.url || meta.repository}`;
         }
         licenses.set(packageName, license);
-      } catch (error) {
-        // Failed to get license, probably becaues it's not in the export mapping
-      }
       }
       let output = (await fs.readFile(rootLicense, 'utf8')).trim();
       for (const [packageName, licenseText] of licenses)
