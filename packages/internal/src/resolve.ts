@@ -74,7 +74,7 @@ const getPluginConfig = (tsconfig: TsConfigJson | null): Record<string, unknown>
     )) ||
   null;
 
-interface LoadConfigResult {
+export interface LoadConfigResult {
   pluginConfig: Record<string, unknown>;
   configPath: string;
   rootPath: string;
