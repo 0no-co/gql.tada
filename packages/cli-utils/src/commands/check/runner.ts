@@ -58,25 +58,29 @@ export async function* run(opts: Options) {
   let totalFileCount = 0;
   let fileCount = 0;
 
-  for await (const signal of generator) {
-    if (signal.kind === 'FILE_COUNT') {
-      totalFileCount = signal.fileCount;
-      continue;
-    }
-
-    let buffer = '';
-    for (const message of signal.messages) {
-      summary[message.severity]++;
-      if (isMinSeverity(message.severity, minSeverity)) {
-        buffer += logger.diagnosticMessage(message);
-        logger.diagnosticMessageGithub(message);
+  try {
+    for await (const signal of generator) {
+      if (signal.kind === 'FILE_COUNT') {
+        totalFileCount = signal.fileCount;
+        continue;
       }
-    }
-    if (buffer) {
-      yield logger.diagnosticFile(signal.filePath) + buffer + '\n';
-    }
 
-    yield logger.runningDiagnostics(++fileCount, totalFileCount);
+      let buffer = '';
+      for (const message of signal.messages) {
+        summary[message.severity]++;
+        if (isMinSeverity(message.severity, minSeverity)) {
+          buffer += logger.diagnosticMessage(message);
+          logger.diagnosticMessageGithub(message);
+        }
+      }
+      if (buffer) {
+        yield logger.diagnosticFile(signal.filePath) + buffer + '\n';
+      }
+
+      yield logger.runningDiagnostics(++fileCount, totalFileCount);
+    }
+  } catch (error: any) {
+    throw logger.errorMessage(error.message || `${error}`);
   }
 
   // Reset notice count if it's outside of min severity

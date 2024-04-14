@@ -108,3 +108,13 @@ export function runningDiagnostics(file: number, ofFiles?: number) {
     })
   );
 }
+
+export function errorMessage(message: string) {
+  return t.error([
+    '\n',
+    t.cmd(t.CSI.Style, [t.Style.Red, t.Style.Invert]),
+    ` ${t.Icons.Warning} Error `,
+    t.cmd(t.CSI.Style, t.Style.NoInvert),
+    `\n${message.trim()}\n`,
+  ]);
+}
