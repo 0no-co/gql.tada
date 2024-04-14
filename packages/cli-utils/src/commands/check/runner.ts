@@ -1,15 +1,22 @@
-import { Project, ts } from 'ts-morph';
-import { init, getGraphQLDiagnostics } from '@0no-co/graphqlsp/api';
-import { load, resolveTypeScriptRootDir } from '@gql.tada/internal';
 import path from 'node:path';
 
-import type { GraphQLSPConfig } from '../../lsp';
 import { getGraphQLSPConfig } from '../../lsp';
 import { getTsConfig } from '../../tsconfig';
-import { createPluginInfo } from '../../ts/project';
+import * as logger from './logger';
 
-type Severity = 'error' | 'warn' | 'info';
-const severities: Severity[] = ['error', 'warn', 'info'];
+import type { ComposeInput } from '../../term';
+import type { Severity, SeveritySummary } from './types';
+
+const isMinSeverity = (severity: Severity, minSeverity: Severity) => {
+  switch (severity) {
+    case 'info':
+      return minSeverity !== 'warn' && minSeverity !== 'error';
+    case 'warn':
+      return minSeverity !== 'error';
+    case 'error':
+      return true;
+  }
+};
 
 export interface FormattedDisplayableDiagnostic {
   severity: Severity;
@@ -22,145 +29,76 @@ export interface FormattedDisplayableDiagnostic {
 export interface Options {
   failOnWarn: boolean | undefined;
   minSeverity: Severity;
+  tsconfig: string | undefined;
 }
 
-export async function run(opts: Options) {
-  const tsConfig = await getTsConfig();
-  if (!tsConfig) {
-    return;
+export async function* run(opts: Options): AsyncIterable<ComposeInput> {
+  const CWD = process.cwd();
+  const { runDiagnostics } = await import('./thread');
+
+  const tsconfig = await getTsConfig(opts.tsconfig);
+  if (!tsconfig) {
+    const relative = opts.tsconfig
+      ? logger.code(path.relative(process.cwd(), opts.tsconfig))
+      : 'the current working directory';
+    throw logger.errorMessage(
+      `The ${logger.code('tsconfig.json')} file at ${relative} could not be loaded.\n`
+    );
   }
 
-  const config = getGraphQLSPConfig(tsConfig);
+  const config = getGraphQLSPConfig(tsconfig);
   if (!config) {
-    return;
+    throw logger.errorMessage(
+      `No ${logger.code('"@0no-co/graphqlsp"')} plugin was found in your ${logger.code(
+        'tsconfig.json'
+      )}.\n`
+    );
   }
 
-  const result = (await runDiagnostics(config)) || [];
-  const errorDiagnostics = result.filter((d) => d.severity === 'error');
-  const warnDiagnostics = result.filter((d) => d.severity === 'warn');
-  const infoDiagnostics = result.filter((d) => d.severity === 'info');
+  let tsconfigPath = opts.tsconfig || CWD;
+  tsconfigPath =
+    path.extname(tsconfigPath) !== '.json'
+      ? path.resolve(CWD, tsconfigPath, 'tsconfig.json')
+      : path.resolve(CWD, tsconfigPath);
 
-  const minSeverityForReport = severities.indexOf(opts.minSeverity);
-  if (
-    errorDiagnostics.length === 0 &&
-    warnDiagnostics.length === 0 &&
-    infoDiagnostics.length === 0
-  ) {
-    // eslint-disable-next-line no-console
-    console.log('No issues found! 🎉');
-    process.exit(0);
-  } else {
-    // TODO: report a summary at the top and then a list of files with diagnostics sorted by severity.
-    const errorReport = errorDiagnostics.length
-      ? `Found ${errorDiagnostics.length} Errors:\n${constructDiagnosticsPerFile(errorDiagnostics)}`
-      : ``;
-    const warningsReport =
-      minSeverityForReport >= severities.indexOf('warn') && warnDiagnostics.length
-        ? `Found ${warnDiagnostics.length} Warnings:\n${constructDiagnosticsPerFile(
-            warnDiagnostics
-          )}`
-        : ``;
-    const suggestionsReport =
-      minSeverityForReport >= severities.indexOf('info') &&
-      infoDiagnostics.length &&
-      warnDiagnostics.length &&
-      errorDiagnostics.length
-        ? `Found ${infoDiagnostics.length} Suggestions:\n${constructDiagnosticsPerFile(
-            infoDiagnostics
-          )}`
-        : ``;
-    // eslint-disable-next-line no-console
-    console.log(`${errorReport}${warningsReport}${suggestionsReport}`);
-    if (errorDiagnostics.length || (opts.failOnWarn && warnDiagnostics.length)) {
-      process.exit(1);
-    } else {
-      process.exit(0);
-    }
-  }
-}
+  const summary: SeveritySummary = { warn: 0, error: 0, info: 0 };
+  const minSeverity = opts.minSeverity;
+  const generator = runDiagnostics({ tsconfigPath, config });
 
-async function runDiagnostics(config: GraphQLSPConfig): Promise<FormattedDisplayableDiagnostic[]> {
-  // TODO: leverage ts-morph tsconfig resolver
-  const projectName = path.resolve(process.cwd(), 'tsconfig.json');
-  const rootPath = (await resolveTypeScriptRootDir(projectName)) || path.dirname(projectName);
-  const project = new Project({
-    tsConfigFilePath: projectName,
-  });
+  let totalFileCount = 0;
+  let fileCount = 0;
 
-  init({
-    typescript: ts as any,
-  });
-
-  const pluginCreateInfo = createPluginInfo(project, config, projectName);
-
-  const sourceFiles = project.getSourceFiles();
-  const loader = load({ origin: config.schema, rootPath });
-  let schema;
   try {
-    const loaderResult = await loader.load();
-    schema = loaderResult && loaderResult.schema;
-    if (!schema) {
-      throw new Error(`Failed to load schema`);
+    for await (const signal of generator) {
+      if (signal.kind === 'FILE_COUNT') {
+        totalFileCount = signal.fileCount;
+        continue;
+      }
+
+      let buffer = '';
+      for (const message of signal.messages) {
+        summary[message.severity]++;
+        if (isMinSeverity(message.severity, minSeverity)) {
+          buffer += logger.diagnosticMessage(message);
+          logger.diagnosticMessageGithub(message);
+        }
+      }
+      if (buffer) {
+        yield logger.diagnosticFile(signal.filePath) + buffer + '\n';
+      }
+
+      yield logger.runningDiagnostics(++fileCount, totalFileCount);
     }
-  } catch (error) {
-    throw new Error(`Failed to load schema: ${error}`);
+  } catch (error: any) {
+    throw logger.errorMessage(error.message || `${error}`);
   }
 
-  return sourceFiles.flatMap<FormattedDisplayableDiagnostic>((sourceFile) => {
-    const diag =
-      getGraphQLDiagnostics(
-        sourceFile.getFilePath(),
-        { current: schema, version: 1 },
-        pluginCreateInfo
-      ) || [];
-    return diag.map((diag) => {
-      const text = diag.file && diag.file.getText();
-      const start = diag.start;
-      const [line, col] = getLineCol(text || '', start || 0);
-      return {
-        severity: (diag.category === ts.DiagnosticCategory.Error
-          ? 'error'
-          : diag.category === ts.DiagnosticCategory.Warning
-            ? 'warn'
-            : 'info') as Severity,
-        message: diag.messageText as string,
-        file: diag.file && diag.file.fileName,
-        line,
-        col,
-      };
-    });
-  });
-}
+  // Reset notice count if it's outside of min severity
+  if (minSeverity !== 'info') summary.info = 0;
 
-function getLineCol(text: string, start: number): [number, number] {
-  if (!text || !start) return [0, 0];
-
-  let counter = 0;
-  const parts = text.split('\n');
-  for (let i = 0; i <= parts.length; i++) {
-    const line = parts[i];
-    if (counter + line.length > start) {
-      return [i + 1, start + 1 - counter];
-    } else {
-      counter = counter + (line.length + 1);
-      continue;
-    }
+  if ((opts.failOnWarn && summary.warn) || summary.error) {
+    throw logger.problemsSummary(summary);
+  } else {
+    yield logger.infoSummary(summary);
   }
-
-  return [0, 0];
-}
-
-function constructDiagnosticsPerFile(diagnostics: FormattedDisplayableDiagnostic[]): string {
-  const diagnosticsByFile = diagnostics.reduce<Record<string, string[]>>((acc, diag) => {
-    const file = diag.file || '';
-    if (!acc[file]) {
-      acc[file] = [];
-    }
-    acc[file].push(`[${diag.line}:${diag.col}] ${diag.message}`);
-    return acc;
-  }, {});
-
-  return Object.entries(diagnosticsByFile).reduce((acc, [fileName, diagnostics]) => {
-    return `${acc}\n${fileName}\n${diagnostics.join('\n')}\n`;
-  }, '');
 }

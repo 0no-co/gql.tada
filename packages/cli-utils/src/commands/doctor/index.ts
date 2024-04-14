@@ -7,6 +7,6 @@ export class DoctorCommand extends Command {
 
   async execute() {
     const result = await initTTY().start(run());
-    return typeof result === 'object' ? result.exit : 0;
+    return process.exitCode || (typeof result === 'object' ? result.exit : 0);
   }
 }

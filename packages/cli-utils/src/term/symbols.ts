@@ -3,6 +3,7 @@ export const enum Chars {
   Newline = '\x0a',
   Tab = '\x09',
   Space = ' ',
+  Ellipsis = '…',
 }
 
 export const enum Box {
@@ -136,7 +137,7 @@ export const enum Heart {
 export const enum Icons {
   Tick = '✓',
   TickSwoosh = '✔',
-  Cross = '×',
+  Cross = '✖',
   CrossSwoosh = '✘',
   Home = '⌂',
   Note = '♪',
