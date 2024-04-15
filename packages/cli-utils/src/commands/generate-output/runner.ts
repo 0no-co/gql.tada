@@ -15,7 +15,7 @@ import type { WriteTarget } from '../shared';
 import { writeOutput } from '../shared';
 import * as logger from './logger';
 
-interface Options {
+export interface Options {
   disablePreprocessing: boolean;
   output: string | undefined;
   tsconfig: string | undefined;

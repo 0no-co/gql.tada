@@ -1,6 +1,7 @@
 import * as t from 'typanion';
 import { Command, Option } from 'clipanion';
 
+import type { Options } from './runner';
 import { initTTY } from '../../term';
 import { run } from './runner';
 
@@ -53,5 +54,13 @@ export class GenerateSchema extends Command {
       })
     );
     return process.exitCode || (typeof result === 'object' ? result.exit : 0);
+  }
+}
+
+export async function generateSchema(opts: Options) {
+  const tty = initTTY({ disableTTY: true });
+  const result = await tty.start(run(tty, opts));
+  if (result instanceof Error) {
+    throw result;
   }
 }
