@@ -12,10 +12,13 @@ const PokemonsQuery = graphql(`
   }
 `, [PokemonItemFragment]);
 
-export const persisted = graphql.persisted<typeof PokemonsQuery>("sha256:fc073da8e9719deb51cdb258d7c35865708852c5ce9031a257588370d3cd42f3")
+const PersistedQuery = graphql.persisted(
+  "sha256:fc073da8e9719deb51cdb258d7c35865708852c5ce9031a257588370d3cd42f3",
+  PokemonsQuery,
+);
 
 const PokemonList = () => {
-  const [result] = useQuery({ query: PokemonsQuery });
+  const [result] = useQuery({ query: PersistedQuery });
 
   const { data, fetching, error } = result;
 

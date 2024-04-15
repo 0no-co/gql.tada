@@ -36,6 +36,7 @@ Check out the [“Get Started” section’s Installation page](https://gql-tada
   - **[Writing GraphQL](https://gql-tada.0no.co/get-started/writing-graphql/)** — how to write GraphQL documents
 - API Reference
   - **[`gql.tada` API](https://gql-tada.0no.co/reference/gql-tada-api/)** — `gql.tada` API Reference docs
+  - **[`gql.tada` CLI](https://gql-tada.0no.co/reference/gql-tada-cli/)** — `gql.tada` CLI Reference docs
   - **[GraphQLSP Config](https://gql-tada.0no.co/reference/graphqlsp-config/)** — GraphQLSP Configuration Reference docs
 
 Furthermore, all APIs and packages are self-documented using TSDocs. If you’re using a language
