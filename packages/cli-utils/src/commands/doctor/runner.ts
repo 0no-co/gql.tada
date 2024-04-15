@@ -1,10 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { parse } from 'json5';
 import semiver from 'semiver';
-import type { TsConfigJson } from 'type-fest';
-import { resolveTypeScriptRootDir } from '@gql.tada/internal';
-import { existsSync } from 'node:fs';
+
+import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
+import { load, loadConfig, parseConfig } from '@gql.tada/internal';
 
 import type { ComposeInput } from '../../term';
 import * as logger from './logger';
@@ -132,91 +131,28 @@ export async function* run(): AsyncIterable<ComposeInput> {
   yield logger.runningTask(Messages.CHECK_TSCONFIG);
   await delay();
 
-  const tsconfigpath = path.resolve(cwd, 'tsconfig.json');
-
-  let tsconfigContents: string;
+  let configResult: LoadConfigResult;
   try {
-    tsconfigContents = await fs.readFile(tsconfigpath, 'utf-8');
-  } catch (_error) {
+    configResult = await loadConfig();
+  } catch (error) {
     yield logger.failedTask(Messages.CHECK_TSCONFIG);
-    throw logger.errorMessage(
-      `A ${logger.code('tsconfig.json')} file was not found in the current working directory.\n` +
-        logger.hint(
-          `Set up a new ${logger.code('tsconfig.json')} containing ${logger.code(
-            '@0no-co/graphqlp'
-          )}.`
-        )
+    throw logger.externalError(
+      `A ${logger.code('tsconfig.json')} file was not found in the current working directory.`,
+      error
     );
   }
 
-  let tsConfig: TsConfigJson;
+  let pluginConfig: GraphQLSPConfig;
   try {
-    tsConfig = parse(tsconfigContents) as TsConfigJson;
-  } catch (error: any) {
-    yield logger.failedTask(Messages.CHECK_TSCONFIG);
-    throw logger.errorMessage(
-      `Your ${logger.code('tsconfig.json')} file could not be parsed.\n` +
-        logger.console(error.message)
+    pluginConfig = parseConfig(configResult.pluginConfig);
+  } catch (error) {
+    throw logger.externalError(
+      `The plugin configuration for ${logger.code('"@0no-co/graphqlsp"')} seems to be invalid.`,
+      error
     );
   }
 
-  let root: string;
-  try {
-    root = (await resolveTypeScriptRootDir(tsconfigpath)) || cwd;
-  } catch (error: any) {
-    yield logger.failedTask(Messages.CHECK_TSCONFIG);
-    throw logger.errorMessage(
-      `Failed to resolve a ${logger.code('"extends"')} reference in your ${logger.code(
-        'tsconfig.json'
-      )}.\n` + logger.console(error.message)
-    );
-  }
-
-  if (root !== cwd) {
-    try {
-      tsconfigContents = await fs.readFile(path.resolve(root, 'tsconfig.json'), 'utf-8');
-      tsConfig = parse(tsconfigContents) as TsConfigJson;
-    } catch (error: any) {
-      const relative = path.relative(process.cwd(), root);
-      yield logger.failedTask(Messages.CHECK_TSCONFIG);
-      throw logger.errorMessage(
-        `The ${logger.code('tsconfig.json')} file at ${logger.code(
-          relative
-        )} could not be loaded.\n` + logger.console(error.message)
-      );
-    }
-  }
-
-  // Check GraphQLSP version, later on we can check if a ts version is > 5.5.0 to use gql.tada/lsp instead of
-  // the LSP package.
-  const config =
-    tsConfig &&
-    tsConfig.compilerOptions &&
-    tsConfig.compilerOptions.plugins &&
-    (tsConfig.compilerOptions.plugins.find(
-      (plugin) => plugin.name === '@0no-co/graphqlsp' || plugin.name === 'gql.tada/lsp'
-    ) as any);
-  if (!config) {
-    yield logger.failedTask(Messages.CHECK_TSCONFIG);
-    throw logger.errorMessage(
-      `No ${logger.code('"@0no-co/graphqlsp"')} plugin was found in your ${logger.code(
-        'tsconfig.json'
-      )}.\n` + logger.hint(`Have you set up ${logger.code('"@0no-co/graphqlsp"')} yet?`)
-    );
-  }
-
-  // TODO: this is optional I guess with the CLI being there and all
-  if (!config.tadaOutputLocation) {
-    yield logger.failedTask(Messages.CHECK_TSCONFIG);
-    throw logger.errorMessage(
-      `No ${logger.code('"tadaOutputLocation"')} option was found in your configuration.\n` +
-        logger.hint(
-          `Have you chosen an output path for ${logger.code('gql.tada')}'s declaration file yet?`
-        )
-    );
-  }
-
-  if (!config.schema) {
+  if (!pluginConfig.schema) {
     yield logger.failedTask(Messages.CHECK_TSCONFIG);
     throw logger.errorMessage(
       `No ${logger.code('"schema"')} option was found in your configuration.\n` +
@@ -228,29 +164,19 @@ export async function* run(): AsyncIterable<ComposeInput> {
   yield logger.runningTask(Messages.CHECK_SCHEMA);
   await delay();
 
-  // TODO: This doesn't match laoders. Should we just use loaders here?
-  const isFile =
-    typeof config.schema === 'string' &&
-    (config.schema.endsWith('.json') || config.schema.endsWith('.graphql'));
-  if (isFile) {
-    const resolvedFile = path.resolve(root, config.schema as string);
-    if (!existsSync(resolvedFile)) {
-      yield logger.failedTask(Messages.CHECK_TSCONFIG);
-      throw logger.errorMessage(
-        `Could not find the SDL file that ${logger.code('"schema"')} is specifying.\n` +
-          logger.hint(`Have you specified a valid SDL file in your configuration?`)
-      );
-    }
-  } else {
-    try {
-      typeof config.schema === 'string' ? new URL(config.schema) : new URL(config.schema.url);
-    } catch (_error) {
-      yield logger.failedTask(Messages.CHECK_TSCONFIG);
-      throw logger.errorMessage(
-        `The ${logger.code('"schema"')} option is neither a valid URL nor a valid file.\n` +
-          logger.hint(`Have you specified a valid URL in your configuration?`)
-      );
-    }
+  const loader = load({
+    origin: pluginConfig.schema,
+    rootPath: path.dirname(configResult.configPath),
+  });
+
+  let hasSchema = false;
+  try {
+    hasSchema = !!(await loader.loadIntrospection());
+  } catch (error) {
+    throw logger.externalError('Failed to load schema.', error);
+  }
+  if (!hasSchema) {
+    throw logger.errorMessage('Failed to load schema.');
   }
 
   yield logger.completedTask(Messages.CHECK_SCHEMA, true);
