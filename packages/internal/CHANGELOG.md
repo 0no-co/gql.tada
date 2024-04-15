@@ -2,6 +2,8 @@
 
 ## 0.2.0
 
+**Read the full release announcement post at: https://gql-tada.0no.co/devlog/2024-04-15**
+
 ### Minor Changes
 
 - Add `check` as a way to run the GraphQLSP diagnostics as part of our CLI

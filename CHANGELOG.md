@@ -2,6 +2,8 @@
 
 ## 1.5.0
 
+**Read the full release announcement post at: https://gql-tada.0no.co/devlog/2024-04-15**
+
 ### Minor Changes
 
 - Allow GraphQL enum types to be remapped with the `scalars` configuration option

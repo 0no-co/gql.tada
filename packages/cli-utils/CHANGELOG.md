@@ -2,6 +2,8 @@
 
 ## 1.0.0
 
+**Read the full release announcement post at: https://gql-tada.0no.co/devlog/2024-04-15**
+
 ### Major Changes
 
 - Add stdout-piping support in some commands and adjust command arguments for consistency
