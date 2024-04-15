@@ -6,15 +6,10 @@ import type { DiagnosticMessage } from './types';
 import type { SeveritySummary } from './types';
 
 export * from '../shared/logger';
+import { indent } from '../shared/logger';
 
 const CWD = process.cwd();
-
-export function code(text: string) {
-  return t.text`${t.cmd(t.CSI.Style, t.Style.Underline)}${text}${t.cmd(
-    t.CSI.Style,
-    t.Style.NoUnderline
-  )}`;
-}
+const INDENT = '  ';
 
 export function diagnosticFile(filePath: string) {
   const relativePath = path.relative(CWD, filePath);
@@ -28,8 +23,6 @@ export function diagnosticFile(filePath: string) {
 }
 
 export function diagnosticMessage(message: DiagnosticMessage) {
-  const indent = t.Chars.Space.repeat(2);
-
   let color = t.Style.Foreground;
   if (message.severity === 'info') {
     color = t.Style.BrightBlue;
@@ -39,13 +32,8 @@ export function diagnosticMessage(message: DiagnosticMessage) {
     color = t.Style.BrightRed;
   }
 
-  let text = message.message.trim();
-  if (text.includes('\n')) {
-    text = text.split('\n').join(t.text([t.Chars.Newline, indent, t.Chars.Tab, t.Chars.Tab]));
-  }
-
   return t.text([
-    indent,
+    INDENT,
     t.cmd(t.CSI.Style, t.Style.BrightBlack),
     `${message.line}:${message.col}`,
     t.Chars.Tab,
@@ -53,7 +41,7 @@ export function diagnosticMessage(message: DiagnosticMessage) {
     message.severity,
     t.Chars.Tab,
     t.cmd(t.CSI.Style, t.Style.Foreground),
-    text,
+    indent(message.message.trim(), t.text([INDENT, t.Chars.Tab, t.Chars.Tab])),
     t.Chars.Newline,
   ]);
 }
@@ -118,49 +106,4 @@ export function runningDiagnostics(file: number, ofFiles?: number) {
       ]);
     })
   );
-}
-
-export function errorMessage(message: string) {
-  return t.error([
-    '\n',
-    t.cmd(t.CSI.Style, [t.Style.Red, t.Style.Invert]),
-    ` ${t.Icons.Warning} Error `,
-    t.cmd(t.CSI.Style, t.Style.NoInvert),
-    `\n${message.trim()}\n`,
-  ]);
-}
-
-export function externalError(message: string, error: unknown) {
-  let title: string;
-  let text: string;
-  if (error && typeof error === 'object') {
-    if (
-      'name' in error &&
-      (error.name === 'TSError' || error.name === 'TadaError' || 'code' in error)
-    ) {
-      title = 'code' in error ? 'System Error' : 'Error';
-      text = (error as Error).message.trim();
-    } else if ('message' in error && typeof error.message === 'string') {
-      title = 'Unexpected Error';
-      text = `${error.message}`;
-    } else {
-      title = 'Unexpected Error';
-      text = `${error}`;
-    }
-  } else {
-    title = 'Unexpected Error';
-    text = `${error}`;
-  }
-
-  if (text.includes('\n')) text = text.split('\n').join(t.text([t.Chars.Newline, '  ']));
-  return t.error([
-    '\n',
-    t.cmd(t.CSI.Style, [t.Style.Red, t.Style.Invert]),
-    ` ${t.Icons.Warning} ${title} `,
-    t.cmd(t.CSI.Style, t.Style.NoInvert),
-    `\n${message.trim()}\n`,
-    t.cmd(t.CSI.Style, t.Style.BrightBlack),
-    `${t.HeavyBox.BottomLeft} `,
-    text,
-  ]);
 }
