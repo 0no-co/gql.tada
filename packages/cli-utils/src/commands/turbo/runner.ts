@@ -91,19 +91,12 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
     throw logger.externalError('Could not build cache', error);
   }
 
-  try {
-    const contents = createCacheContents(cache);
-    await writeOutput(destination, contents);
-  } catch (error) {
-    throw logger.externalError('Something went wrong while writing the cache file', error);
-  }
-
   const documentCount = Object.keys(cache).length;
   if (warnings && opts.failOnWarn) {
     throw logger.warningSummary(warnings, documentCount);
   } else {
     try {
-      const contents = JSON.stringify(cache, null, 2);
+      const contents = createCacheContents(cache);
       await writeOutput(destination, contents);
     } catch (error) {
       throw logger.externalError('Something went wrong while writing the cache file', error);
