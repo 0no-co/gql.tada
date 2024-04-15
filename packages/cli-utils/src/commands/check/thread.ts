@@ -2,30 +2,13 @@ import * as path from 'node:path';
 import { Project, ts } from 'ts-morph';
 
 import type { GraphQLSPConfig } from '@gql.tada/internal';
-import { load, resolveTypeScriptRootDir } from '@gql.tada/internal';
+import { load } from '@gql.tada/internal';
 import { init, getGraphQLDiagnostics } from '@0no-co/graphqlsp/api';
 
-import { createPluginInfo } from '../../ts/project';
+import { createPluginInfo, getFilePosition } from '../../ts';
 import { expose } from '../../threads';
 
 import type { Severity, DiagnosticMessage, DiagnosticSignal } from './types';
-
-const getLineCol = (text: string, start: number | undefined): [number, number] => {
-  if (text && start) {
-    let counter = 0;
-    const parts = text.split('\n');
-    for (let i = 0; i <= parts.length; i++) {
-      const line = parts[i];
-      if (counter + line.length > start) {
-        return [i + 1, start + 1 - counter];
-      } else {
-        counter = counter + (line.length + 1);
-        continue;
-      }
-    }
-  }
-  return [0, 0];
-};
 
 const loadSchema = async (rootPath: string, config: GraphQLSPConfig) => {
   const loader = load({ origin: config.schema, rootPath });
@@ -61,33 +44,35 @@ async function* _runDiagnostics(
     fileCount: sourceFiles.length,
   };
 
-  for (const sourceFile of sourceFiles) {
-    const filePath = sourceFile.getFilePath();
+  for (const { compilerNode: sourceFile } of sourceFiles) {
+    const filePath = sourceFile.fileName;
     const diagnostics = getGraphQLDiagnostics(filePath, schemaRef, pluginInfo);
     const messages: DiagnosticMessage[] = [];
 
     if (diagnostics && diagnostics.length) {
-      const sourceText = sourceFile.getText();
       for (const diagnostic of diagnostics) {
         if (
           !('messageText' in diagnostic) ||
           typeof diagnostic.messageText !== 'string' ||
           !diagnostic.file
-        )
+        ) {
           continue;
+        }
         let severity: Severity = 'info';
         if (diagnostic.category === ts.DiagnosticCategory.Error) {
           severity = 'error';
         } else if (diagnostic.category === ts.DiagnosticCategory.Warning) {
           severity = 'warn';
         }
-        const [line, col] = getLineCol(sourceText, diagnostic.start);
+        const position = getFilePosition(sourceFile, diagnostic.start, diagnostic.length);
         messages.push({
           severity,
           message: diagnostic.messageText,
           file: diagnostic.file.fileName,
-          line,
-          col,
+          line: position.line,
+          col: position.col,
+          endLine: position.endLine,
+          endColumn: position.endColumn,
         });
       }
     }

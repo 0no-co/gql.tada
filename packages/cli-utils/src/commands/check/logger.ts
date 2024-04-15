@@ -97,6 +97,8 @@ export function diagnosticMessageGithub(message: DiagnosticMessage): void {
     file: message.file,
     line: message.line,
     col: message.col,
+    endLine: message.endLine,
+    endColumn: message.endColumn,
   });
 }
 
