@@ -1,5 +1,5 @@
 import * as path from 'node:path';
-import { Project, TypeFormatFlags, TypeFlags, ts } from 'ts-morph';
+import { Project, TypeFormatFlags, TypeFlags, ScriptKind, ts } from 'ts-morph';
 
 import type { GraphQLSPConfig } from '@gql.tada/internal';
 import { init } from '@0no-co/graphqlsp/api';
@@ -19,8 +19,19 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
   init({ typescript: ts as any });
 
   const projectPath = path.dirname(params.configPath);
-  const project = new Project({ tsConfigFilePath: params.configPath });
-  const checker = project.getTypeChecker().compilerObject;
+  const project = new Project({
+    tsConfigFilePath: params.configPath,
+    skipAddingFilesFromTsConfig: true,
+  });
+
+  // NOTE: We add our override declaration here before loading all files
+  // This sets `__cacheDisabled` on the turbo cache, which disables the cache temporarily
+  // If we don't disable the cache then we couldn't regenerate it from inferred types
+  project.createSourceFile('__gql-tada-override__.d.ts', DECLARATION_OVERRIDE, {
+    overwrite: true,
+    scriptKind: ScriptKind.TS,
+  });
+  project.addSourceFilesFromTsConfig(params.configPath);
 
   // Filter source files by whether they're under the relevant root path
   const sourceFiles = project.getSourceFiles().filter((sourceFile) => {
@@ -34,6 +45,7 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
     fileCount: sourceFiles.length,
   };
 
+  const checker = project.getTypeChecker().compilerObject;
   for (const { compilerNode: sourceFile } of sourceFiles) {
     const filePath = sourceFile.fileName;
     const cache: Record<string, string> = {};
@@ -86,6 +98,15 @@ const BUILDER_FLAGS: TypeFormatFlags =
   TypeFormatFlags.UseAliasDefinedOutsideCurrentScope |
   TypeFormatFlags.AllowUniqueESSymbolType |
   TypeFormatFlags.WriteTypeArgumentsOfSignature;
+
+const DECLARATION_OVERRIDE = `
+import * as _gqlTada from 'gql.tada';
+declare module 'gql.tada' {
+  interface setupCache {
+    readonly __cacheDisabled: true;
+  }
+}
+`.trim();
 
 function findAllCallExpressions(
   sourceFile: ts.SourceFile,
