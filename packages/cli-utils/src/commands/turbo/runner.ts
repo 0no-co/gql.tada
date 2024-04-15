@@ -84,7 +84,8 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
       }
 
       cache = Object.assign(cache, signal.cache);
-      if ((warnings += signal.warnings.length)) {
+      warnings += signal.warnings.length;
+      if (signal.warnings.length) {
         let buffer = logger.warningFile(signal.filePath);
         for (const warning of signal.warnings) {
           buffer += logger.warningMessage(warning);
