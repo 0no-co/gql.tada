@@ -28,20 +28,21 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
   let controller: AbortController | null = null;
   let result: SchemaLoaderResult | null = null;
 
-  const load = async (): Promise<typeof result> => {
+  const load = async (): Promise<SchemaLoaderResult> => {
     const ext = path.extname(config.file);
     const data = await fs.readFile(config.file, { encoding: 'utf8' });
     if (ext === '.json') {
-      let introspection: IntrospectionQuery | null = null;
-      try {
-        introspection = JSON.parse(data);
-      } catch (_error) {}
-      return (
-        introspection && {
-          introspection,
-          schema: buildClientSchema(introspection, { assumeValid: !!config.assumeValid }),
-        }
-      );
+      const introspection = JSON.parse(data) as IntrospectionQuery | null;
+      if (!introspection || !introspection.__schema) {
+        throw new Error(
+          'Parsing JSON introspection data failed.\n' +
+            'The JSON payload did not evaluate to an introspection schema.'
+        );
+      }
+      return {
+        introspection,
+        schema: buildClientSchema(introspection, { assumeValid: !!config.assumeValid }),
+      };
     } else {
       const schema = buildSchema(data, { assumeValidSDL: !!config.assumeValid });
       const query = makeIntrospectionQuery(ALL_SUPPORTED_FEATURES);
@@ -52,7 +53,10 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
         const introspection = queryResult.data as unknown as IntrospectionQuery;
         return { introspection, schema };
       } else {
-        return null;
+        throw new Error(
+          'Executing introspection against SDL schema failed.\n' +
+            '`graphql` failed to return any schema data or error.'
+        );
       }
     }
   };
