@@ -73,4 +73,6 @@ export async function* run(tty: TTY, opts: Options) {
   } catch (error) {
     throw logger.externalError('Something went wrong while writing the introspection file', error);
   }
+
+  yield logger.summary();
 }
