@@ -6,6 +6,7 @@ export interface GraphQLSPConfig {
   tadaOutputLocation?: string;
   tadaTurboLocation?: string;
   tadaPersistedLocation?: string;
+  template?: string;
 }
 
 export const parseConfig = (input: Record<string, unknown>) => {
@@ -54,6 +55,8 @@ export const parseConfig = (input: Record<string, unknown>) => {
     throw new TadaError(
       "Configuration contains a `tadaPersistedLocation` property, but it's not a file path"
     );
+  } else if ('template' in input && input.template && typeof input.template !== 'string') {
+    throw new TadaError("Configuration contains a `template` property, but it's not a string");
   }
 
   return input as any as GraphQLSPConfig;

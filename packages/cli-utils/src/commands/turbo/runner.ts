@@ -1,10 +1,8 @@
 import * as path from 'node:path';
-import { Project, TypeFormatFlags, TypeFlags, ts } from 'ts-morph';
 import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
 
 import { loadConfig, parseConfig } from '@gql.tada/internal';
 
-import { createPluginInfo } from '../../ts/project';
 import type { TTY } from '../../term';
 import type { WriteTarget } from '../shared';
 import { writeOutput } from '../shared';
@@ -18,6 +16,8 @@ interface Options {
 }
 
 export async function* run(tty: TTY, opts: Options) {
+  const { runTurbo } = await import('./thread');
+
   let configResult: LoadConfigResult;
   let pluginConfig: GraphQLSPConfig;
   try {
@@ -56,27 +56,36 @@ export async function* run(tty: TTY, opts: Options) {
     );
   }
 
-  let contents: string;
+  let cache: Record<string, string> = {};
+  const generator = runTurbo({
+    rootPath: configResult.rootPath,
+    configPath: configResult.configPath,
+    pluginConfig,
+  });
+
+  let totalFileCount = 0;
   try {
-    contents = createCache(
-      await getGraphqlInvocationCache({
-        rootPath: configResult.rootPath,
-        configPath: configResult.configPath,
-        pluginConfig,
-      })
-    );
+    for await (const signal of generator) {
+      if (signal.kind === 'FILE_COUNT') {
+        totalFileCount = signal.fileCount;
+        continue;
+      }
+
+      cache = Object.assign(cache, signal.cache);
+    }
   } catch (error) {
-    throw logger.externalError('Could not generate turbo output', error);
+    throw logger.externalError('Could not build cache', error);
   }
 
   try {
+    const contents = createCacheContents(cache);
     await writeOutput(destination, contents);
   } catch (error) {
-    throw logger.externalError('Something went wrong while writing the introspection file', error);
+    throw logger.externalError('Something went wrong while writing the cache file', error);
   }
 }
 
-function createCache(cache: Record<string, string>): string {
+function createCacheContents(cache: Record<string, string>): string {
   let output = '';
   for (const key in cache) {
     if (output) output += '\n';
@@ -91,76 +100,4 @@ function createCache(cache: Record<string, string>): string {
     '\n  }' +
     '\n}\n'
   );
-}
-
-interface CacheParams {
-  rootPath: string;
-  configPath: string;
-  pluginConfig: GraphQLSPConfig;
-}
-
-async function getGraphqlInvocationCache(params: CacheParams): Promise<Record<string, string>> {
-  const projectPath = path.dirname(params.configPath);
-  const project = new Project({ tsConfigFilePath: params.configPath });
-
-  const pluginCreateInfo = createPluginInfo(project, params.pluginConfig, projectPath);
-  const typeChecker = project.getTypeChecker().compilerObject;
-
-  // Filter source files by whether they're under the relevant root path
-  const sourceFiles = project.getSourceFiles().filter((sourceFile) => {
-    const filePath = path.resolve(projectPath, sourceFile.getFilePath());
-    const relative = path.relative(params.rootPath, filePath);
-    return !relative.startsWith('..');
-  });
-
-  return sourceFiles.reduce((acc, sourceFile) => {
-    const tadaCallExpressions = findAllCallExpressions(sourceFile.compilerNode, pluginCreateInfo);
-    return {
-      ...acc,
-      ...tadaCallExpressions.reduce((acc, callExpression) => {
-        const returnType = typeChecker.getTypeAtLocation(callExpression);
-        const argumentType = typeChecker.getTypeAtLocation(callExpression.arguments[0]);
-        if (returnType.symbol.getEscapedName() !== 'TadaDocumentNode') {
-          return acc; // TODO: we could collect this and warn if all extracted types have some kind of error
-        }
-        const keyString: string =
-          'value' in argumentType &&
-          typeof argumentType.value === 'string' &&
-          (argumentType.flags & TypeFlags.StringLiteral) === 0
-            ? JSON.stringify(argumentType.value)
-            : typeChecker.typeToString(argumentType, callExpression, BUILDER_FLAGS);
-        const valueString = typeChecker.typeToString(returnType, callExpression, BUILDER_FLAGS);
-        acc[keyString] = valueString;
-        return acc;
-      }, {}),
-    };
-  }, {});
-}
-
-const BUILDER_FLAGS: TypeFormatFlags =
-  TypeFormatFlags.NoTruncation |
-  TypeFormatFlags.NoTypeReduction |
-  TypeFormatFlags.InTypeAlias |
-  TypeFormatFlags.UseFullyQualifiedType |
-  TypeFormatFlags.GenerateNamesForShadowedTypeParams |
-  TypeFormatFlags.UseAliasDefinedOutsideCurrentScope |
-  TypeFormatFlags.AllowUniqueESSymbolType |
-  TypeFormatFlags.WriteTypeArgumentsOfSignature;
-
-function findAllCallExpressions(
-  sourceFile: ts.SourceFile,
-  info: ts.server.PluginCreateInfo
-): Array<ts.CallExpression> {
-  const result: Array<ts.CallExpression> = [];
-  const templates = new Set([info.config.template, 'graphql', 'gql'].filter(Boolean));
-  function find(node: ts.Node) {
-    if (ts.isCallExpression(node) && templates.has(node.expression.getText())) {
-      result.push(node);
-      return;
-    } else {
-      ts.forEachChild(node, find);
-    }
-  }
-  find(sourceFile);
-  return result;
 }
