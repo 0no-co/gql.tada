@@ -8,6 +8,10 @@ title: gql.tada CLI
 
 ### `init`
 
+| Option               | Description                                                                                |
+| -------------------- | ------------------------------------------------------------------------------------------ |
+| `dir`              | A relative location from your current working directory where we should be running `init`.   |
+
 The `init` command takes care of everything required to setup a `gql.tada`
 project. The main tasks involved here are:
 
@@ -67,14 +71,15 @@ bun gql-tada doctor
 
 ### `check`
 
+| Option               | Description                                                                                     |
+| -------------------- | ----------------------------------------------------------------------------------------------- |
+| `--tsconfig,-c`      | A relative location from your current working directory where we can find your `tsconfig`.      |
+| `--fail-on-warn,-w`  | Triggers an error and a non-zero exit code if any warnings have been reported (default: false). |
+| `--level,-l`         | The minimum severity of diagnostics to display: info, warn or error (default: info).            |
+
 One of the short-comings of the LSP plugin method is that these don't run during `tsc`
 hence we added the `check` command which will run the same diagnostics logic of our LSP
 on your project.
-
-It has two options
-
-- `level` allowing you to tweak what level of diagnostics we'll try to find, the options for this are `error`, `warn` and `info`. (Default: Error)
-- `exit-on-warn` by default we will do a non-zero exit when we find errors, with this option you can tell us to do the same for warnings. (Default: false)
 
 Example usage could look like the following:
 
@@ -100,14 +105,16 @@ bun gql-tada check --level warn --exit-on-warn
 
 ### `generate-schema`
 
+| Option               | Description                                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------------------------ |
+| `schema`             | A relative location from your current working directory where we should write the schema to.           |
+| `--tsconfig,-c`      | A relative location from your current working directory where we can find your `tsconfig`.             |
+| `--output,-o`        | Specify where to output the file to. (Default: The `schema` configuration option, if it's a file path) |
+| `--header,`          | A header key-value string to use when retrieving the introspection from a URL.                         |
+
 Generating your schema can sometimes be behind auth, ... with this command you can
 generate the schema from a URL and use environment variables in your shell rather than
 having to add them in the `tsconfig.json`.
-
-You can feed in a URL or an introspection JSON file and a two other options:
-
-- `header` a header key-value string to use when retrieving the introspection from a URL.
-- `output` a specified location to output the schema to, for instance `./schema.graphql`. (by default this will take the `schema` option from your `@0no-co/graphqlsp` plugin configuration)
 
 Example usage could look like the following:
 
@@ -132,6 +139,13 @@ bun gql-tada generate-schema http://example.com --header 'Authorization: Bearer 
 :::
 
 ### `generate-output`
+
+| Option               | Description                                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------------------------ |
+| `--disable-pre`             | A relative location from your current working directory where we should write the schema to.           |
+| `--tsconfig,-c`      | A relative location from your current working directory where we can find your `tsconfig`.             |
+| `--output,-o`        | Specify where to output the file to. (Default: The `schema` configuration option, if it's a file path) |
+| `--header,`          | A header key-value string to use when retrieving the introspection from a URL.                         |
 
 The `generate-output` command mimics the behavior of our LSP where it will look at
 your configured `schema` and output the `graphql-env` to your configured
@@ -164,6 +178,12 @@ bun gql-tada generate-output
 
 ### `turbo`
 
+| Option               | Description                                                                                     |
+| -------------------- | ----------------------------------------------------------------------------------------------- |
+| `--tsconfig,-c`      | A relative location from your current working directory where we can find your `tsconfig`.      |
+| `--fail-on-warn,-w`  | Triggers an error and a non-zero exit code if any warnings have been reported (default: false). |
+| `--output,-o`        | Specifies where to output the file to. (Default: The `tadaTurboLocation` configuration option)  |
+
 The `turbo` command allows you to cache all the existing GraphQL query types ahead
 of time. This step can make checking out the repository faster for other people and
 reduce the time spent calculating the types. See it as taking a snapshot of your
@@ -193,6 +213,12 @@ bun gql-tada turbo
 :::
 
 ### `generate-persisted`
+
+| Option               | Description                                                                                     |
+| -------------------- | ----------------------------------------------------------------------------------------------- |
+| `--tsconfig,-c`      | A relative location from your current working directory where we can find your `tsconfig`.      |
+| `--fail-on-warn,-w`  | Triggers an error and a non-zero exit code if any warnings have been reported (default: false). |
+| `--output,-o`        | Specifies where to output the file to. (Default: The `tadaTurboLocation` configuration option)  |
 
 This will look for all the `graphql.persisted()` calls in your codebase and generate
 a JSON-file containing a mapping of `hash: document` which can then be used with
