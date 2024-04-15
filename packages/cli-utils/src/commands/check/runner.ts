@@ -2,7 +2,7 @@ import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
 import { loadConfig, parseConfig } from '@gql.tada/internal';
 
 import * as logger from './logger';
-import type { ComposeInput } from '../../term';
+import type { TTY, ComposeInput } from '../../term';
 import type { Severity, SeveritySummary } from './types';
 
 const isMinSeverity = (severity: Severity, minSeverity: Severity) => {
@@ -30,7 +30,7 @@ export interface Options {
   tsconfig: string | undefined;
 }
 
-export async function* run(opts: Options): AsyncIterable<ComposeInput> {
+export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput> {
   const { runDiagnostics } = await import('./thread');
 
   let configResult: LoadConfigResult;
@@ -72,7 +72,7 @@ export async function* run(opts: Options): AsyncIterable<ComposeInput> {
         yield logger.diagnosticFile(signal.filePath) + buffer + '\n';
       }
 
-      yield logger.runningDiagnostics(++fileCount, totalFileCount);
+      if (tty.isInteractive) yield logger.runningDiagnostics(++fileCount, totalFileCount);
     }
   } catch (error: any) {
     throw logger.externalError('Could not check files', error);
