@@ -1,11 +1,10 @@
-import fs from 'node:fs/promises';
 import path from 'node:path';
 import { printSchema } from 'graphql';
 import type { GraphQLSchema } from 'graphql';
 import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
 import { load, loadConfig, parseConfig } from '@gql.tada/internal';
 
-import type { TTY } from '../../term';
+import type { TTY, ComposeInput } from '../../term';
 import type { WriteTarget } from '../shared';
 import { writeOutput } from '../shared';
 import * as logger from './logger';
@@ -17,7 +16,7 @@ interface Options {
   tsconfig: string | undefined;
 }
 
-export async function* run(tty: TTY, opts: Options) {
+export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput> {
   const origin = opts.headers ? { url: opts.input, headers: opts.headers } : opts.input;
   const loader = load({ rootPath: process.cwd(), origin });
 

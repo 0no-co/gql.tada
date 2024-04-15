@@ -3,7 +3,7 @@ import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
 
 import { loadConfig, parseConfig } from '@gql.tada/internal';
 
-import type { TTY } from '../../term';
+import type { TTY, ComposeInput } from '../../term';
 import type { WriteTarget } from '../shared';
 import { writeOutput } from '../shared';
 import * as logger from './logger';
@@ -14,7 +14,7 @@ interface Options {
   failOnWarn: boolean;
 }
 
-export async function* run(tty: TTY, opts: Options) {
+export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput> {
   const { runPersisted } = await import('./thread');
 
   let configResult: LoadConfigResult;
@@ -98,6 +98,7 @@ export async function* run(tty: TTY, opts: Options) {
         );
       }
     }
+
     yield logger.infoSummary(warnings, documentCount);
   }
 }

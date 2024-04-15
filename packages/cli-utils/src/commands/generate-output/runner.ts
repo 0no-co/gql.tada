@@ -1,5 +1,4 @@
 import * as path from 'node:path';
-import * as fs from 'node:fs/promises';
 import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
 import type { IntrospectionQuery } from 'graphql';
 
@@ -11,7 +10,7 @@ import {
   outputIntrospectionFile,
 } from '@gql.tada/internal';
 
-import type { TTY } from '../../term';
+import type { TTY, ComposeInput } from '../../term';
 import type { WriteTarget } from '../shared';
 import { writeOutput } from '../shared';
 import * as logger from './logger';
@@ -22,7 +21,7 @@ interface Options {
   tsconfig: string | undefined;
 }
 
-export async function* run(tty: TTY, opts: Options) {
+export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput> {
   let configResult: LoadConfigResult;
   let pluginConfig: GraphQLSPConfig;
   try {
