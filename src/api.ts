@@ -85,6 +85,7 @@ interface setupSchema extends AbstractSetupSchema {
 }
 
 interface AbstractSetupCache {
+  readonly __cacheDisabled: unknown;
   [key: string]: unknown;
 }
 
@@ -134,7 +135,14 @@ interface GraphQLTadaAPI<Schema extends SchemaLike, Config extends AbstractConfi
     input: In,
     fragments?: Fragments
   ): setupCache[In] extends DocumentNodeLike
-    ? setupCache[In]
+    ? unknown extends setupCache['__cacheDisabled']
+      ? setupCache[In]
+      : getDocumentNode<
+          parseDocument<In>,
+          Schema,
+          getFragmentsOfDocuments<Fragments>,
+          Config['isMaskingDisabled']
+        >
     : getDocumentNode<
         parseDocument<In>,
         Schema,
