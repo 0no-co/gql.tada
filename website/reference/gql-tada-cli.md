@@ -140,19 +140,15 @@ bun gql-tada generate-schema http://example.com --header 'Authorization: Bearer 
 
 ### `generate-output`
 
-| Option               | Description                                                                                            |
-| -------------------- | ------------------------------------------------------------------------------------------------------ |
-| `--disable-pre`             | A relative location from your current working directory where we should write the schema to.           |
-| `--tsconfig,-c`      | A relative location from your current working directory where we can find your `tsconfig`.             |
-| `--output,-o`        | Specify where to output the file to. (Default: The `schema` configuration option, if it's a file path) |
-| `--header,`          | A header key-value string to use when retrieving the introspection from a URL.                         |
+| Option                    | Description                                                                                            |
+| ------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `--disable-preprocessing` | Whether to use our less-efficient legacy format. (Default: false)                                      |
+| `--tsconfig,-c`           | A relative location from your current working directory where we can find your `tsconfig`.             |
+| `--output,-o`             | Specify where to output the file to. (Default: The `tadaOutputLocation` configuration option)          |
 
 The `generate-output` command mimics the behavior of our LSP where it will look at
 your configured `schema` and output the `graphql-env` to your configured
 `tadaOutputLocation`.
-
-This command accepts 1 option `disable-preprocessing` when used this will give you the
-old introspection types output which is slower.
 
 Example usage could look like the following:
 
