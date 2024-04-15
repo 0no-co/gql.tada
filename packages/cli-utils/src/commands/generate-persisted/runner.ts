@@ -1,144 +1,104 @@
-import { Project, ts } from 'ts-morph';
-import { print } from '@0no-co/graphql.web';
+import * as path from 'node:path';
+import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
 
-import {
-  init,
-  findAllPersistedCallExpressions,
-  getDocumentReferenceFromTypeQuery,
-  unrollTadaFragments,
-} from '@0no-co/graphqlsp/api';
+import { loadConfig, parseConfig } from '@gql.tada/internal';
 
-import { load, resolveTypeScriptRootDir } from '@gql.tada/internal';
-import path from 'node:path';
-import fs from 'node:fs/promises';
-
-import type { TTY } from '../../term';
-import type { GraphQLSPConfig } from '../../lsp';
-import { getGraphQLSPConfig } from '../../lsp';
-import { getTsConfig } from '../../tsconfig';
-import { createPluginInfo } from '../../ts/project';
+import type { TTY, ComposeInput } from '../../term';
+import type { WriteTarget } from '../shared';
+import { writeOutput } from '../shared';
+import * as logger from './logger';
 
 interface Options {
   tsconfig: string | undefined;
   output: string | undefined;
+  failOnWarn: boolean;
 }
 
-export async function run(tty: TTY, opts: Options) {
-  const tsconfig = await getTsConfig(opts.tsconfig);
-  if (!tsconfig) {
-    return;
-  }
+export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput> {
+  const { runPersisted } = await import('./thread');
 
-  const config = getGraphQLSPConfig(tsconfig);
-  if (!config) {
-    return;
-  }
-
-  const persistedOperations = await getPersistedOperationsFromFiles(opts, config);
-  const json = JSON.stringify(persistedOperations, null, 2);
-  if (opts.output) {
-    const resolved = path.resolve(process.cwd(), opts.output);
-    await fs.writeFile(resolved, json);
-  } else {
-    const stream = tty.pipeTo || process.stdout;
-    stream.write(json);
-  }
-}
-
-const CWD = process.cwd();
-
-async function getPersistedOperationsFromFiles(
-  opts: Options,
-  config: GraphQLSPConfig
-): Promise<Record<string, string>> {
-  let tsconfigPath = opts.tsconfig || CWD;
-  tsconfigPath =
-    path.extname(tsconfigPath) !== '.json'
-      ? path.resolve(CWD, tsconfigPath, 'tsconfig.json')
-      : path.resolve(CWD, tsconfigPath);
-
-  const projectPath = path.dirname(tsconfigPath);
-  const rootPath = (await resolveTypeScriptRootDir(tsconfigPath)) || tsconfigPath;
-  const project = new Project({
-    tsConfigFilePath: tsconfigPath,
-  });
-
-  init({
-    typescript: ts as any,
-  });
-
-  const pluginCreateInfo = createPluginInfo(project, config, projectPath);
-
-  const sourceFiles = project.getSourceFiles();
-  const loader = load({ origin: config.schema, rootPath });
-  let schema;
+  let configResult: LoadConfigResult;
+  let pluginConfig: GraphQLSPConfig;
   try {
-    const loaderResult = await loader.load();
-    schema = loaderResult && loaderResult.schema;
-    if (!schema) {
-      throw new Error(`Failed to load schema`);
+    configResult = await loadConfig(opts.tsconfig);
+    pluginConfig = parseConfig(configResult.pluginConfig);
+  } catch (error) {
+    throw logger.externalError('Failed to load configuration.', error);
+  }
+
+  let destination: WriteTarget;
+  if (!opts.output && tty.pipeTo) {
+    destination = tty.pipeTo;
+  } else if (opts.output) {
+    destination = path.resolve(process.cwd(), opts.output);
+  } else if (pluginConfig.tadaPersistedLocation) {
+    destination = path.resolve(
+      path.dirname(configResult.configPath),
+      pluginConfig.tadaPersistedLocation
+    );
+  } else {
+    throw logger.errorMessage(
+      'No output path was specified to write the persisted manifest file to.\n' +
+        logger.hint(
+          `You have to either set ${logger.code(
+            '"tadaPersistedLocation"'
+          )} in your configuration,\n` +
+            `pass an ${logger.code('--output')} argument to this command,\n` +
+            'or pipe this command to an output file.'
+        )
+    );
+  }
+
+  let documents: Record<string, string> = {};
+  const generator = runPersisted({
+    rootPath: configResult.rootPath,
+    configPath: configResult.configPath,
+    pluginConfig,
+  });
+
+  let warnings = 0;
+  let totalFileCount = 0;
+  let fileCount = 0;
+
+  try {
+    for await (const signal of generator) {
+      if (signal.kind === 'FILE_COUNT') {
+        totalFileCount = signal.fileCount;
+        continue;
+      }
+
+      documents = Object.assign(documents, signal.documents);
+      if ((warnings += signal.warnings.length)) {
+        let buffer = logger.warningFile(signal.filePath);
+        for (const warning of signal.warnings) {
+          buffer += logger.warningMessage(warning);
+          logger.warningGithub(warning);
+        }
+        yield buffer + '\n';
+      }
+
+      yield logger.runningPersisted(++fileCount, totalFileCount);
     }
   } catch (error) {
-    throw new Error(`Failed to load schema: ${error}`);
+    throw logger.externalError('Could not generate persisted manifest file', error);
   }
 
-  return sourceFiles.reduce((acc, sourceFile) => {
-    const persistedCallExpressions = findAllPersistedCallExpressions(sourceFile.compilerNode);
-    const currentFilename = sourceFile.compilerNode.fileName;
-    return {
-      ...acc,
-      ...persistedCallExpressions.reduce((acc, callExpression) => {
-        const hash = callExpression.arguments[0].getText();
-        if (!callExpression.typeArguments) {
-          console.warn(
-            `Persisted call expression in "${currentFilename}" is missing a type argument like "graphql.persisted<typeof document>". Skipping...`
-          );
-          return acc;
-        }
-        const [typeQuery] = callExpression.typeArguments;
-        if (!ts.isTypeQueryNode(typeQuery)) {
-          console.warn(
-            `Persisted call expression in "${currentFilename}" is missing a type argument like "graphql.persisted<typeof document>". Skipping...`
-          );
-          return acc;
-        }
-
-        const { node: foundNode } = getDocumentReferenceFromTypeQuery(
-          typeQuery,
-          currentFilename,
-          pluginCreateInfo
+  const documentCount = Object.keys(documents).length;
+  if (warnings && opts.failOnWarn) {
+    throw logger.warningSummary(warnings, documentCount);
+  } else {
+    if (documentCount) {
+      try {
+        const contents = JSON.stringify(documents, null, 2);
+        await writeOutput(destination, contents);
+      } catch (error) {
+        throw logger.externalError(
+          'Something went wrong while writing the introspection file',
+          error
         );
+      }
+    }
 
-        if (!foundNode) {
-          console.warn(
-            `Could not find reference for "${typeQuery.getText()}" in "${currentFilename}", if this is unexpected file an issue at "https://github.com/0no-co/gql.tada/issues/new/choose" describing your case.`
-          );
-          return acc;
-        }
-
-        const initializer = foundNode.initializer;
-        if (
-          !initializer ||
-          !ts.isCallExpression(initializer) ||
-          (!ts.isNoSubstitutionTemplateLiteral(initializer.arguments[0]) &&
-            !ts.isStringLiteral(initializer.arguments[0]))
-        ) {
-          console.warn(
-            `Persisted call expression in "${currentFilename}" is missing a string argument containing the hash. Skipping...`
-          );
-          return acc;
-        }
-
-        const fragments = [];
-        const operation = initializer.arguments[0].getText().slice(1, -1);
-        if (initializer.arguments[1] && ts.isArrayLiteralExpression(initializer.arguments[1])) {
-          unrollTadaFragments(initializer.arguments[1], fragments, pluginCreateInfo);
-        }
-
-        const document = `${operation}\n\n${fragments.map((frag) => print(frag)).join('\n\n')}`;
-        acc[hash.slice(1, -1)] = document;
-        return acc;
-      }, {}),
-    };
-  }, {});
+    yield logger.infoSummary(warnings, documentCount);
+  }
 }

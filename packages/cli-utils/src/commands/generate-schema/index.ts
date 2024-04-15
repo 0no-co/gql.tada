@@ -43,13 +43,15 @@ export class GenerateSchema extends Command {
   });
 
   async execute() {
-    await run(initTTY(), {
-      input: this.input,
-      headers: parseHeaders(this.headers),
-      output: this.output,
-      tsconfig: this.tsconfig,
-    });
-
-    return 0;
+    const tty = initTTY();
+    const result = await tty.start(
+      run(tty, {
+        input: this.input,
+        headers: parseHeaders(this.headers),
+        output: this.output,
+        tsconfig: this.tsconfig,
+      })
+    );
+    return process.exitCode || (typeof result === 'object' ? result.exit : 0);
   }
 }

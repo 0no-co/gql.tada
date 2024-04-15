@@ -21,10 +21,14 @@ export class GenerateOutputCommand extends Command {
   });
 
   async execute() {
-    await run(initTTY(), {
-      disablePreprocessing: this.disablePreprocessing,
-      output: this.output,
-      tsconfig: this.tsconfig,
-    });
+    const tty = initTTY();
+    const result = await tty.start(
+      run(tty, {
+        disablePreprocessing: this.disablePreprocessing,
+        output: this.output,
+        tsconfig: this.tsconfig,
+      })
+    );
+    return process.exitCode || (typeof result === 'object' ? result.exit : 0);
   }
 }

@@ -1,9 +1,7 @@
-import path from 'node:path';
+import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
+import { loadConfig, parseConfig } from '@gql.tada/internal';
 
-import { getGraphQLSPConfig } from '../../lsp';
-import { getTsConfig } from '../../tsconfig';
 import * as logger from './logger';
-
 import type { ComposeInput } from '../../term';
 import type { Severity, SeveritySummary } from './types';
 
@@ -33,37 +31,24 @@ export interface Options {
 }
 
 export async function* run(opts: Options): AsyncIterable<ComposeInput> {
-  const CWD = process.cwd();
   const { runDiagnostics } = await import('./thread');
 
-  const tsconfig = await getTsConfig(opts.tsconfig);
-  if (!tsconfig) {
-    const relative = opts.tsconfig
-      ? logger.code(path.relative(process.cwd(), opts.tsconfig))
-      : 'the current working directory';
-    throw logger.errorMessage(
-      `The ${logger.code('tsconfig.json')} file at ${relative} could not be loaded.\n`
-    );
+  let configResult: LoadConfigResult;
+  let pluginConfig: GraphQLSPConfig;
+  try {
+    configResult = await loadConfig(opts.tsconfig);
+    pluginConfig = parseConfig(configResult.pluginConfig);
+  } catch (error) {
+    throw logger.externalError('Failed to load configuration.', error);
   }
-
-  const config = getGraphQLSPConfig(tsconfig);
-  if (!config) {
-    throw logger.errorMessage(
-      `No ${logger.code('"@0no-co/graphqlsp"')} plugin was found in your ${logger.code(
-        'tsconfig.json'
-      )}.\n`
-    );
-  }
-
-  let tsconfigPath = opts.tsconfig || CWD;
-  tsconfigPath =
-    path.extname(tsconfigPath) !== '.json'
-      ? path.resolve(CWD, tsconfigPath, 'tsconfig.json')
-      : path.resolve(CWD, tsconfigPath);
 
   const summary: SeveritySummary = { warn: 0, error: 0, info: 0 };
   const minSeverity = opts.minSeverity;
-  const generator = runDiagnostics({ tsconfigPath, config });
+  const generator = runDiagnostics({
+    rootPath: configResult.rootPath,
+    configPath: configResult.configPath,
+    pluginConfig,
+  });
 
   let totalFileCount = 0;
   let fileCount = 0;
@@ -90,7 +75,7 @@ export async function* run(opts: Options): AsyncIterable<ComposeInput> {
       yield logger.runningDiagnostics(++fileCount, totalFileCount);
     }
   } catch (error: any) {
-    throw logger.errorMessage(error.message || `${error}`);
+    throw logger.externalError('Could not check files', error);
   }
 
   // Reset notice count if it's outside of min severity

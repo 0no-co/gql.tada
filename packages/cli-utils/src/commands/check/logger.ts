@@ -5,14 +5,11 @@ import * as t from '../../term';
 import type { DiagnosticMessage } from './types';
 import type { SeveritySummary } from './types';
 
-const CWD = process.cwd();
+export * from '../shared/logger';
+import { indent } from '../shared/logger';
 
-export function code(text: string) {
-  return t.text`${t.cmd(t.CSI.Style, t.Style.Underline)}${text}${t.cmd(
-    t.CSI.Style,
-    t.Style.NoUnderline
-  )}`;
-}
+const CWD = process.cwd();
+const INDENT = '  ';
 
 export function diagnosticFile(filePath: string) {
   const relativePath = path.relative(CWD, filePath);
@@ -26,8 +23,6 @@ export function diagnosticFile(filePath: string) {
 }
 
 export function diagnosticMessage(message: DiagnosticMessage) {
-  const indent = t.Chars.Space.repeat(2);
-
   let color = t.Style.Foreground;
   if (message.severity === 'info') {
     color = t.Style.BrightBlue;
@@ -37,13 +32,8 @@ export function diagnosticMessage(message: DiagnosticMessage) {
     color = t.Style.BrightRed;
   }
 
-  let text = message.message.trim();
-  if (text.includes('\n')) {
-    text = text.split('\n').join(t.text([t.Chars.Newline, indent, t.Chars.Tab, t.Chars.Tab]));
-  }
-
   return t.text([
-    indent,
+    INDENT,
     t.cmd(t.CSI.Style, t.Style.BrightBlack),
     `${message.line}:${message.col}`,
     t.Chars.Tab,
@@ -51,7 +41,7 @@ export function diagnosticMessage(message: DiagnosticMessage) {
     message.severity,
     t.Chars.Tab,
     t.cmd(t.CSI.Style, t.Style.Foreground),
-    text,
+    indent(message.message.trim(), t.text([INDENT, t.Chars.Tab, t.Chars.Tab])),
     t.Chars.Newline,
   ]);
 }
@@ -95,6 +85,8 @@ export function diagnosticMessageGithub(message: DiagnosticMessage): void {
     file: message.file,
     line: message.line,
     col: message.col,
+    endLine: message.endLine,
+    endColumn: message.endColumn,
   });
 }
 
@@ -114,14 +106,4 @@ export function runningDiagnostics(file: number, ofFiles?: number) {
       ]);
     })
   );
-}
-
-export function errorMessage(message: string) {
-  return t.error([
-    '\n',
-    t.cmd(t.CSI.Style, [t.Style.Red, t.Style.Invert]),
-    ` ${t.Icons.Warning} Error `,
-    t.cmd(t.CSI.Style, t.Style.NoInvert),
-    `\n${message.trim()}\n`,
-  ]);
 }

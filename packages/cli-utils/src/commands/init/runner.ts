@@ -2,7 +2,8 @@ import { intro, outro, isCancel, cancel, text, confirm, spinner } from '@clack/p
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { execa } from 'execa';
-import { parse } from 'json5';
+
+import { readTSConfigFile } from '@gql.tada/internal';
 
 const s = spinner();
 
@@ -121,8 +122,7 @@ export async function run(target: string) {
   s.start('Writing to tsconfig.json.');
   try {
     const tsConfigPath = path.resolve(target, 'tsconfig.json');
-    const tsConfigContents = await fs.readFile(tsConfigPath, 'utf-8');
-    const tsConfig = parse(tsConfigContents);
+    const tsConfig = await readTSConfigFile(tsConfigPath);
     // TODO: do we need to ensure that include contains the tadaOutputLocation?
     const isFile = schemaLocation.endsWith('.json') || schemaLocation.endsWith('.graphql');
     tsConfig.compilerOptions = {
@@ -132,7 +132,7 @@ export async function run(target: string) {
           name: '@0no-co/graphqlsp',
           schema: isFile ? path.relative(target, schemaLocation) : schemaLocation,
           tadaOutputLocation: path.relative(target, tadaLocation),
-        },
+        } as any,
       ],
     };
     await fs.writeFile(tsConfigPath, JSON.stringify(tsConfig, null, 2));

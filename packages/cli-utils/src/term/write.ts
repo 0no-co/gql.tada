@@ -27,11 +27,10 @@ export class CLIError extends Error {
   constructor(message: string, exitCode?: number) {
     super(stripAnsi(message));
     this.output = message;
-    this.exit = exitCode == null ? 0 : 1;
+    this.exit = exitCode != null ? exitCode : 1;
   }
 
   toString() {
-    if (this.exit) process.exitCode = this.exit;
     return this.output;
   }
 }

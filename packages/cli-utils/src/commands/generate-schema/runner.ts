@@ -1,12 +1,13 @@
-import fs from 'node:fs/promises';
 import path from 'node:path';
 import { printSchema } from 'graphql';
 import type { GraphQLSchema } from 'graphql';
-import { load } from '@gql.tada/internal';
+import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
+import { load, loadConfig, parseConfig } from '@gql.tada/internal';
 
-import type { TTY } from '../../term';
-import { getGraphQLSPConfig } from '../../lsp';
-import { getTsConfig } from '../../tsconfig';
+import type { TTY, ComposeInput } from '../../term';
+import type { WriteTarget } from '../shared';
+import { writeOutput } from '../shared';
+import * as logger from './logger';
 
 interface Options {
   input: string;
@@ -15,7 +16,7 @@ interface Options {
   tsconfig: string | undefined;
 }
 
-export async function run(tty: TTY, opts: Options) {
+export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput> {
   const origin = opts.headers ? { url: opts.input, headers: opts.headers } : opts.input;
   const loader = load({ rootPath: process.cwd(), origin });
 
@@ -23,38 +24,54 @@ export async function run(tty: TTY, opts: Options) {
   try {
     schema = await loader.loadSchema();
   } catch (error) {
-    console.error('Something went wrong while trying to load the schema.', error);
-    return;
+    throw logger.externalError('Failed to load schema.', error);
   }
 
   if (!schema) {
-    console.error('Could not load the schema.');
-    return;
+    throw logger.errorMessage('Failed to load schema.');
   }
 
-  let destination: string;
+  let destination: WriteTarget;
   if (!opts.output && tty.pipeTo) {
-    tty.pipeTo.write(printSchema(schema));
-    return;
+    destination = tty.pipeTo;
   } else if (opts.output) {
-    destination = opts.output;
+    destination = path.resolve(process.cwd(), opts.output);
   } else {
-    const tsconfig = await getTsConfig(opts.tsconfig);
-    const config = tsconfig && getGraphQLSPConfig(tsconfig);
-    if (!tsconfig) {
-      console.error('Could not find a tsconfig.json file');
-      return;
-    } else if (!config) {
-      console.error('Could not find a "@0no-co/graphqlsp" plugin in your tsconfig.');
-      return;
-    } else if (typeof config.schema !== 'string' || !config.schema.endsWith('.graphql')) {
-      console.error(`Found "${config.schema}" which is not a path to a .graphql SDL file.`);
-      return;
+    let configResult: LoadConfigResult;
+    let pluginConfig: GraphQLSPConfig;
+    try {
+      configResult = await loadConfig(opts.tsconfig);
+      pluginConfig = parseConfig(configResult.pluginConfig);
+    } catch (error) {
+      throw logger.externalError('Failed to load configuration.', error);
+    }
+
+    if (
+      typeof pluginConfig.schema === 'string' &&
+      path.extname(pluginConfig.schema) === '.graphql'
+    ) {
+      destination = path.resolve(path.dirname(configResult.configPath), pluginConfig.schema);
     } else {
-      destination = config.schema;
+      throw logger.errorMessage(
+        `No output path was specified but writing to ${logger.code(
+          'schema'
+        )} is not a file path.\n` +
+          logger.hint(
+            `You have to either set ${logger.code('"schema"')} to a ${logger.code(
+              '.graphql'
+            )} file in your configuration,\n` +
+              `pass an ${logger.code('--output')} argument to this command,\n` +
+              'or pipe this command to an output file.'
+          )
+      );
     }
   }
 
-  const resolved = path.resolve(process.cwd(), destination);
-  await fs.writeFile(resolved, printSchema(schema));
+  try {
+    await writeOutput(destination, printSchema(schema));
+  } catch (error) {
+    throw logger.externalError('Something went wrong while writing the introspection file', error);
+  }
+
+  yield logger.summary();
 }

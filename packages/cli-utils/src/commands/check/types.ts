@@ -8,6 +8,8 @@ export interface DiagnosticMessage {
   file: string;
   line: number;
   col: number;
+  endLine: number | undefined;
+  endColumn: number | undefined;
 }
 
 export interface FileDiagnosticsSignal {
