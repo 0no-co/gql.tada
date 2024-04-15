@@ -9,6 +9,7 @@ import {
   init,
   findAllPersistedCallExpressions,
   getDocumentReferenceFromTypeQuery,
+  getDocumentReferenceFromDocumentNode,
   unrollTadaFragments,
 } from '@0no-co/graphqlsp/api';
 
@@ -50,8 +51,10 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
     const calls = findAllPersistedCallExpressions(sourceFile);
     for (const call of calls) {
       const position = getFilePosition(sourceFile, call.getStart());
-      const hash = call.arguments[0];
-      if (!hash || !ts.isStringLiteral(hash)) {
+      const hashArg = call.arguments[0];
+      const docArg = call.arguments[1];
+      const typeQuery = call.typeArguments && call.typeArguments[0];
+      if (!hashArg || !ts.isStringLiteral(hashArg)) {
         warnings.push({
           message:
             '"graphql.persisted" must be called with a string literal as the first argument.',
@@ -60,10 +63,11 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
           col: position.col,
         });
         continue;
-      } else if (!call.typeArguments || !ts.isTypeQueryNode(call.typeArguments[0])) {
+      } else if (!docArg && !typeQuery) {
         warnings.push({
           message:
-            '"graphql.persisted" is missing a generic such as `graphql.persisted<typeof document>`.',
+            '"graphql.persisted" is missing a document.\n' +
+            'This may be passed as a generic such as `graphql.persisted<typeof document>` or as the second argument.',
           file: filePath,
           line: position.line,
           col: position.col,
@@ -71,16 +75,22 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
         continue;
       }
 
-      const typeQuery = call.typeArguments[0];
-      const { node: foundNode } = getDocumentReferenceFromTypeQuery(
-        typeQuery,
-        filePath,
-        pluginInfo
-      );
+      let foundNode: ts.CallExpression | null = null;
+      let referencingNode: ts.Node = call;
+      if (docArg && (ts.isCallExpression(docArg) || ts.isIdentifier(docArg))) {
+        const result = getDocumentReferenceFromDocumentNode(docArg, filePath, pluginInfo);
+        foundNode = result.node;
+        referencingNode = docArg;
+      } else if (typeQuery && ts.isTypeQueryNode(typeQuery)) {
+        const result = getDocumentReferenceFromTypeQuery(typeQuery, filePath, pluginInfo);
+        foundNode = result.node;
+        referencingNode = typeQuery;
+      }
+
       if (!foundNode) {
         warnings.push({
           message:
-            `Could not find reference for "${typeQuery.getText()}".\n` +
+            `Could not find reference for "${referencingNode.getText()}".\n` +
             'If this is unexpected, please file an issue describing your case.',
           file: filePath,
           line: position.line,
@@ -89,16 +99,15 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
         continue;
       }
 
-      const { initializer } = foundNode;
       if (
-        !initializer ||
-        !ts.isCallExpression(initializer) ||
-        (!ts.isNoSubstitutionTemplateLiteral(initializer.arguments[0]) &&
-          !ts.isStringLiteral(initializer.arguments[0]))
+        !foundNode ||
+        !ts.isCallExpression(foundNode) ||
+        (!ts.isNoSubstitutionTemplateLiteral(foundNode.arguments[0]) &&
+          !ts.isStringLiteral(foundNode.arguments[0]))
       ) {
         warnings.push({
           message:
-            `The referenced document of "${typeQuery.getText()}" contains no document string literal.\n` +
+            `The referenced document of "${referencingNode.getText()}" contains no document string literal.\n` +
             'If this is unexpected, please file an issue describing your case.',
           file: filePath,
           line: position.line,
@@ -108,14 +117,14 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
       }
 
       const fragments: FragmentDefinitionNode[] = [];
-      const operation = initializer.arguments[0].getText().slice(1, -1);
-      if (initializer.arguments[1] && ts.isArrayLiteralExpression(initializer.arguments[1])) {
-        unrollTadaFragments(initializer.arguments[1], fragments, pluginInfo);
+      const operation = foundNode.arguments[0].getText().slice(1, -1);
+      if (foundNode.arguments[1] && ts.isArrayLiteralExpression(foundNode.arguments[1])) {
+        unrollTadaFragments(foundNode.arguments[1], fragments, pluginInfo);
       }
 
       let document = operation;
       for (const fragment of fragments) document += '\n\n' + print(fragment);
-      documents[JSON.parse(hash.getFullText())] = document;
+      documents[JSON.parse(hashArg.getFullText())] = document;
     }
 
     yield {

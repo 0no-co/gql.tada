@@ -209,7 +209,8 @@ interface GraphQLTadaAPI<Schema extends SchemaLike, Config extends AbstractConfi
    * ```
    */
   persisted<Document extends DocumentNodeLike = never>(
-    documentId: string
+    documentId: string,
+    document?: Document
   ): Document extends DocumentDecoration<infer Result, infer Variables>
     ? TadaPersistedDocumentNode<Result, Variables>
     : never;
@@ -279,10 +280,13 @@ function initGraphQLTada<const Setup extends AbstractSetupSchema>() {
     return value;
   };
 
-  graphql.persisted = function persisted(documentId: string): TadaPersistedDocumentNode {
+  graphql.persisted = function persisted(
+    documentId: string,
+    document?: TadaDocumentNode
+  ): TadaPersistedDocumentNode {
     return {
       kind: Kind.DOCUMENT,
-      definitions: [],
+      definitions: document ? document.definitions : [],
       documentId,
     };
   };
@@ -354,7 +358,7 @@ interface TadaPersistedDocumentNode<
   Variables = { [key: string]: any },
 > extends DocumentNode,
     DocumentDecoration<Result, Variables> {
-  definitions: readonly [];
+  definitions: readonly DefinitionNode[];
   documentId: string;
 }
 
