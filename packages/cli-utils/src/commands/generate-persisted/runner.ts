@@ -8,7 +8,7 @@ import type { WriteTarget } from '../shared';
 import { writeOutput } from '../shared';
 import * as logger from './logger';
 
-interface Options {
+export interface Options {
   tsconfig: string | undefined;
   output: string | undefined;
   failOnWarn: boolean;

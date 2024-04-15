@@ -10,7 +10,7 @@ import * as logger from './logger';
 
 const PREAMBLE_IGNORE = ['/* eslint-disable */', '/* prettier-ignore */'].join('\n') + '\n';
 
-interface Options {
+export interface Options {
   failOnWarn: boolean;
   tsconfig: string | undefined;
   output: string | undefined;

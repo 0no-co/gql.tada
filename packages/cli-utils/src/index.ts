@@ -1,4 +1,5 @@
 import { Cli } from 'clipanion';
+import * as api from './api';
 
 import { CheckCommand } from './commands/check/index';
 import { DoctorCommand } from './commands/doctor/index';
@@ -8,7 +9,7 @@ import { GenerateSchema } from './commands/generate-schema/index';
 import { InitCommand } from './commands/init/index';
 import { TurboCommand } from './commands/turbo/index';
 
-function main() {
+async function _main() {
   const cli = new Cli({
     binaryVersion: process.env.npm_package_version || '0.0.0',
     binaryLabel: 'gql.tada CLI',
@@ -23,7 +24,11 @@ function main() {
   cli.register(InitCommand);
   cli.register(TurboCommand);
 
-  cli.runExit(process.argv.slice(2));
+  await cli.runExit(process.argv.slice(2));
 }
 
+type MainFn = typeof _main & typeof api;
+const main = Object.assign(_main, api) as MainFn;
+
+export * from './api';
 export default main;
