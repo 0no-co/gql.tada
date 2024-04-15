@@ -175,9 +175,6 @@ importers:
       execa:
         specifier: ^8.0.1
         version: 8.0.1
-      json5:
-        specifier: ^2.2.3
-        version: 2.2.3
       rollup:
         specifier: ^4.9.4
         version: 4.9.4
