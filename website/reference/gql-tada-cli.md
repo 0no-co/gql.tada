@@ -2,183 +2,100 @@
 title: gql.tada CLI
 ---
 
-# `gql.tada` CLI (BETA)
+# `gql.tada` CLI <Badge type="warning" text="beta" />
 
 ## Commands
 
 ### `init`
 
+> [!NOTE]
+>
+> The `gql.tada init` command is still a work in progress.
+> If you run into any trouble, feel free to let us know what you’d like to see added or changed.
+
 | Option               | Description                                                                                |
 | -------------------- | ------------------------------------------------------------------------------------------ |
-| `dir`              | A relative location from your current working directory where we should be running `init`.   |
+| `dir`              | A relative location from your current working directory where the project should be initialized.   |
 
 The `init` command takes care of everything required to setup a `gql.tada`
 project. The main tasks involved here are:
 
-- Getting to the schema
-- Locating where we need to output your `graphql-env`
+- Locating the schema
+- Locating where `gql.tada`’s `graphql-env.d.ts` shall be placed
 - Configuring the `tsconfig.json`
-- Installing the dependencies
+- Installing required dependencies
 
-You can run this command with
+You can run this command with your preferred package manager:
 
 ::: code-group
 
 ```sh [npm]
-npx gql-tada init ./my-project
+npx gql.tada init ./my-project
 ```
 
 ```sh [pnpm]
-pnpm gql-tada init ./my-project
-```
-
-```sh [yarn]
-yarn gql-tada init ./my-project
+pnpx gql.tada init ./my-project
 ```
 
 ```sh [bun]
-bun gql-tada init ./my-project
+bunx gql.tada init ./my-project
 ```
 
 :::
 
 ### `doctor`
 
-The `doctor` command will check for common mistakes in the configuration of `gql.tada`
-by checking the versions of `typescript`, your `tsconfig`, ...
+> [!NOTE]
+>
+> The `gql.tada doctor` command is still a work in progress.
+> If you run into any trouble, feel free to let us know what you’d like to see added or changed.
 
-You can run this command with
-
-::: code-group
-
-```sh [npm]
-npx gql-tada doctor
-```
-
-```sh [pnpm]
-pnpm gql-tada doctor
-```
-
-```sh [yarn]
-yarn gql-tada doctor
-```
-
-```sh [bun]
-bun gql-tada doctor
-```
-
-:::
+The `doctor` command will check for common mistakes in the `gql.tada`’s setup and configuration. It will check installed versions of packages, check the configuration, and check the schema.
 
 ### `check`
 
 | Option               | Description                                                                                     |
 | -------------------- | ----------------------------------------------------------------------------------------------- |
-| `--tsconfig,-c`      | A relative location from your current working directory where we can find your `tsconfig`.      |
+| `--tsconfig,-c`      | Optionally, an alternative relative location to the project’s `tsconfig.json`.      |
 | `--fail-on-warn,-w`  | Triggers an error and a non-zero exit code if any warnings have been reported (default: false). |
-| `--level,-l`         | The minimum severity of diagnostics to display: info, warn or error (default: info).            |
+| `--level,-l`         | The minimum severity of diagnostics to display: `info`, `warn` or `error` (default: `info`).            |
 
-One of the short-comings of the LSP plugin method is that these don't run during `tsc`
-hence we added the `check` command which will run the same diagnostics logic of our LSP
-on your project.
+Usually, `@0no-co/graphqlsp` runs as a TypeScript language server plugin to report warnings and errors. However, these diagnostics don’t show up when `tsc` is run.
 
-Example usage could look like the following:
+The `gql.tada check` command exists to run these diagnostics in a standalone command, outside of editing the relevant files and reports these errors to the console.
 
-::: code-group
-
-```sh [npm]
-npx gql-tada check --level warn --exit-on-warn
-```
-
-```sh [pnpm]
-pnpm gql-tada check --level warn --exit-on-warn
-```
-
-```sh [yarn]
-yarn gql-tada check --level warn --exit-on-warn
-```
-
-```sh [bun]
-bun gql-tada check --level warn --exit-on-warn
-```
-
-:::
+When this command is run inside a GitHub Action, [workflow commands](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions) are used to annotate errors within the GitHub UI.
 
 ### `generate-schema`
 
 | Option               | Description                                                                                            |
 | -------------------- | ------------------------------------------------------------------------------------------------------ |
-| `schema`             | A relative location from your current working directory where we should write the schema to.           |
-| `--tsconfig,-c`      | A relative location from your current working directory where we can find your `tsconfig`.             |
-| `--output,-o`        | Specify where to output the file to. (Default: The `schema` configuration option, if it's a file path) |
-| `--header,`          | A header key-value string to use when retrieving the introspection from a URL.                         |
+| `schema`             | A relative file path to a schema or URL to a GraphQL API to introspect.           |
+| `--tsconfig,-c`      | Optionally, an alternative relative location to the project’s `tsconfig.json`.      |
+| `--output,-o`        | An output location to write the `.graphql` schema file to. (Default: The `schema` configuration option) |
+| `--header,`          | A key-value header entry to use when retrieving the introspection from a GraphQL API.                         |
 
-Generating your schema can sometimes be behind auth, ... with this command you can
-generate the schema from a URL and use environment variables in your shell rather than
-having to add them in the `tsconfig.json`.
+Oftentimes, an API may not be running in development, is maintained in a separate repository, or requires authorization headers, and specifying a URL in the `schema` configuration can slow down development.
 
-Example usage could look like the following:
-
-::: code-group
-
-```sh [npm]
-npx gql-tada generate-schema http://example.com --header 'Authorization: Bearer token'
-```
-
-```sh [pnpm]
-pnpm gql-tada generate-schema http://example.com --header 'Authorization: Bearer token'
-```
-
-```sh [yarn]
-yarn gql-tada generate-schema http://example.com --header 'Authorization: Bearer token'
-```
-
-```sh [bun]
-bun gql-tada generate-schema http://example.com --header 'Authorization: Bearer token'
-```
-
-:::
+The `gql.tada generate-schema` command can output a `.graphql` SDL file from a URL and use environment variables. Using this command we can avoid having to add a URL in the `tsconfig.json` configuration.
 
 ### `generate-output`
 
 | Option                    | Description                                                                                            |
 | ------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `--disable-preprocessing` | Whether to use our less-efficient legacy format. (Default: false)                                      |
-| `--tsconfig,-c`           | A relative location from your current working directory where we can find your `tsconfig`.             |
-| `--output,-o`             | Specify where to output the file to. (Default: The `tadaOutputLocation` configuration option)          |
+| `--disable-preprocessing` | Whether to use the less efficient `.d.ts` introspection format. (Default: false)                                   |
+| `--tsconfig,-c`      | Optionally, an alternative relative location to the project’s `tsconfig.json`.      |
+| `--output,-o`        | Specify where to output the file to. (Default: The `tadaOutputLocation` configuration option) |
 
-The `generate-output` command mimics the behavior of our LSP where it will look at
-your configured `schema` and output the `graphql-env` to your configured
-`tadaOutputLocation`.
-
-Example usage could look like the following:
-
-::: code-group
-
-```sh [npm]
-npx gql-tada generate-output
-```
-
-```sh [pnpm]
-pnpm gql-tada generate-output
-```
-
-```sh [yarn]
-yarn gql-tada generate-output
-```
-
-```sh [bun]
-bun gql-tada generate-output
-```
-
-:::
+The `gql.tada generate-output` command mimics the behavior of `@0no-co/graphqlsp`, outputting the `gql.tada` output file manually. It will load the schema from the specified `schema` configuration option and write the output file.
 
 ### `turbo`
 
 | Option               | Description                                                                                     |
 | -------------------- | ----------------------------------------------------------------------------------------------- |
-| `--tsconfig,-c`      | A relative location from your current working directory where we can find your `tsconfig`.      |
-| `--fail-on-warn,-w`  | Triggers an error and a non-zero exit code if any warnings have been reported (default: false). |
-| `--output,-o`        | Specifies where to output the file to. (Default: The `tadaTurboLocation` configuration option)  |
+| `--tsconfig,-c`      | Optionally, an alternative relative location to the project’s `tsconfig.json`.      |
+| `--fail-on-warn,-w`  | Triggers an error and a non-zero exit code if any warnings have been reported. |
+| `--output,-o`        | Specify where to output the file to. (Default: The `tadaTurboLocation` configuration option) |
 
 The `turbo` command allows you to cache all the existing GraphQL query types ahead
 of time. This step can make checking out the repository faster for other people and
@@ -186,57 +103,18 @@ reduce the time spent calculating the types. See it as taking a snapshot of your
 current types, when you start editing your queries it will not find it in the cache
 anymore and revert to the runtime behavior.
 
-Example usage could look like the following:
-
-::: code-group
-
-```sh [npm]
-npx gql-tada turbo
-```
-
-```sh [pnpm]
-pnpm gql-tada turbo
-```
-
-```sh [yarn]
-yarn gql-tada turbo
-```
-
-```sh [bun]
-bun gql-tada turbo
-```
-
-:::
+When this command is run inside a GitHub Action, [workflow commands](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions) are used to annotate errors within the GitHub UI.
 
 ### `generate-persisted`
 
 | Option               | Description                                                                                     |
 | -------------------- | ----------------------------------------------------------------------------------------------- |
-| `--tsconfig,-c`      | A relative location from your current working directory where we can find your `tsconfig`.      |
-| `--fail-on-warn,-w`  | Triggers an error and a non-zero exit code if any warnings have been reported (default: false). |
-| `--output,-o`        | Specifies where to output the file to. (Default: The `tadaTurboLocation` configuration option)  |
+| `--tsconfig,-c`      | Optionally, an alternative relative location to the project’s `tsconfig.json`.      |
+| `--fail-on-warn,-w`  | Triggers an error and a non-zero exit code if any warnings have been reported. |
+| `--output,-o`        | Specify where to output the file to. (Default: The `tadaPersistedLocation` configuration option) |
 
-This will look for all the `graphql.persisted()` calls in your codebase and generate
-a JSON-file containing a mapping of `hash: document` which can then be used with
-a server implementation to lock down your API with the documents that are allowed
-to be sent.
+The `gql.tada generate-persisted` command will scan your code for `graphql.persisted()` calls and generate
+a JSON file containing a mapping of document IDs to the GraphQL document strings.
+These can then be used to register known and accepted documents (known as “persisted operations”) with your GraphQL API to lock down accepted documents that are allowed to be sent.
 
-::: code-group
-
-```sh [npm]
-npx gql-tada generate-persisted ./persisted-operations.json
-```
-
-```sh [pnpm]
-pnpm gql-tada generate-persisted ./persisted-operations.json
-```
-
-```sh [yarn]
-yarn gql-tada generate-persisted ./persisted-operations.json
-```
-
-```sh [bun]
-bun gql-tada generate-persisted ./persisted-operations.json
-```
-
-:::
+When this command is run inside a GitHub Action, [workflow commands](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions) are used to annotate errors within the GitHub UI.

@@ -177,21 +177,23 @@ type Media = ReturnType<typeof graphql.scalar<'Media'>>;
 |                  | Description                                    |
 | ---------------- | ---------------------------------------------- |
 | `hash` argument  | A hash associated with this query.             |
+| `document` optional argument  | Optionally, the document, if it's supposed to be accessible during runtime.             |
 
 Generates a faux-document containing a property called `documentId` which
 can be used to send off queries as [Persisted Operations](https://github.com/graphql/graphql-over-http/blob/main/rfcs/PersistedOperations.md).
 
-In the LSP we'll check the `generic` associated with `graphql.persisted<typeof document>()`
-and give you a code-action to generate a hash.
+We must either pass the document as a generic type argument or as the second argument:
+- `graphql.persisted<typeof document>("abc...")`
+- `graphql.persisted("abc...", document)`
 
-Because we use a generic and no explicit reference to the document these will
-be seen as dead-code in your front-end bundle and hence, given the appropriate
-bundler configuration, removed.
+`@0no-co/graphqlsp` will then check that the document is available and offer a code action to automatically update the hash to a SHA256-hash of the document.
+
+This is useful to implement and extract persisted operations using the CLI. Additionally, when the document is passed as a generic — as long as our GraphQL cache supports this — it can be fully omitted during runtime from the client-side bundle.
 
 > [!NOTE]
-> As it stands we'll omit the document-definitions from the AST which
-> could give problems with some GraphQL Client caches. We'll work on
-> adding support for this.
+> When you use the generic API, passing the document by type using `graphql.persisted<typeof document>("...")`, your runtime code won’t see any `definitions` on the AST.
+> This may cause problems with GraphQL clients (especially normalised caches) that rely on the AST to be available, since the full document will transpile away.
+> For such clients, you may want to preserve the document by passing it as a second argument instead.
 
 #### Example
 
