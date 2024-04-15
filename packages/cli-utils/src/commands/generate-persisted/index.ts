@@ -10,7 +10,7 @@ export class GeneratePersisted extends Command {
     description: 'Specify the `tsconfig.json` used to read, unless `--output` is passed.',
   });
 
-  failOnWarn = Option.Boolean('--fail-on-warn,-w', false, {
+  failOnWarn = Option.Boolean('--fail-on-warn', false, {
     description: 'Triggers an error and a non-zero exit code if any warnings have been reported',
   });
 
