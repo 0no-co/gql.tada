@@ -21,6 +21,11 @@ const delay = (ms = 700) => {
   }
 };
 
+const semiverComply = (version: string, compare: string) => {
+  const match = version.match(/\d+\.\d+\.\d+/);
+  return match ? semiver(match[0], compare) >= 0 : false;
+};
+
 const enum Messages {
   TITLE = 'Doctor',
   DESCRIPTION = 'Detects problems with your setup',
@@ -72,7 +77,7 @@ export async function* run(): AsyncIterable<ComposeInput> {
       `A version of ${logger.code('typescript')} was not found in your dependencies.\n` +
         logger.hint(`Is ${logger.code('typescript')} installed in this package?`)
     );
-  } else if (semiver(typeScriptVersion[1], MINIMUM_VERSIONS.typescript) === -1) {
+  } else if (!semiverComply(typeScriptVersion[1], MINIMUM_VERSIONS.typescript)) {
     // TypeScript version lower than v4.1 which is when they introduced template lits
     yield logger.failedTask(Messages.CHECK_TS_VERSION);
     throw logger.errorMessage(
@@ -94,7 +99,7 @@ export async function* run(): AsyncIterable<ComposeInput> {
       `A version of ${logger.code('@0no-co/graphqlsp')} was not found in your dependencies.\n` +
         logger.hint(`Is ${logger.code('@0no-co/graphqlsp')} installed?`)
     );
-  } else if (semiver(gqlspVersion[1], MINIMUM_VERSIONS.lsp) === -1) {
+  } else if (!semiverComply(gqlspVersion[1], MINIMUM_VERSIONS.lsp)) {
     yield logger.failedTask(Messages.CHECK_DEPENDENCIES);
     throw logger.errorMessage(
       `The version of ${logger.code('@0no-co/graphqlsp')} in your dependencies is out of date.\n` +
@@ -111,7 +116,7 @@ export async function* run(): AsyncIterable<ComposeInput> {
       `A version of ${logger.code('gql.tada')} was not found in your dependencies.\n` +
         logger.hint(`Is ${logger.code('gql.tada')} installed?`)
     );
-  } else if (semiver(gqlTadaVersion[1], '1.0.0') === -1) {
+  } else if (!semiverComply(gqlTadaVersion[1], '1.0.0')) {
     yield logger.failedTask(Messages.CHECK_DEPENDENCIES);
     throw logger.errorMessage(
       `The version of ${logger.code('gql.tada')} in your dependencies is out of date.\n` +
