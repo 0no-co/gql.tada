@@ -43,7 +43,9 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
     for (const call of calls) {
       const returnType = checker.getTypeAtLocation(call);
       const argumentType = checker.getTypeAtLocation(call.arguments[0]);
-      if (returnType.symbol.getEscapedName() !== 'TadaDocumentNode') {
+      // NOTE: `returnType.symbol` is incorrectly typed and is in fact
+      // optional and not always present
+      if (!returnType.symbol || returnType.symbol.getEscapedName() !== 'TadaDocumentNode') {
         const position = getFilePosition(sourceFile, call.getStart());
         warnings.push({
           message:
