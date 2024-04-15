@@ -31,52 +31,52 @@ If you instead would like to manually create a `graphql` function with an explic
 ```ts twoslash
 // @filename: graphq-env.d.ts
 export type introspection = {
-  "__schema": {
-    "queryType": {
-      "name": "Query"
-    },
-    "mutationType": null,
-    "subscriptionType": null,
-    "types": [
+  __schema: {
+    queryType: {
+      name: 'Query';
+    };
+    mutationType: null;
+    subscriptionType: null;
+    types: [
       {
-        "kind": "OBJECT",
-        "name": "Query",
-        "fields": [
+        kind: 'OBJECT';
+        name: 'Query';
+        fields: [
           {
-            "name": "hello",
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "args": []
+            name: 'hello';
+            type: {
+              kind: 'SCALAR';
+              name: 'String';
+              ofType: null;
+            };
+            args: [];
           },
           {
-            "name": "world",
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "args": []
-          }
-        ],
-        "interfaces": []
+            name: 'world';
+            type: {
+              kind: 'SCALAR';
+              name: 'String';
+              ofType: null;
+            };
+            args: [];
+          },
+        ];
+        interfaces: [];
       },
       {
-        "kind": "SCALAR",
-        "name": "String"
-      }
-    ],
-    "directives": []
-  }
+        kind: 'SCALAR';
+        name: 'String';
+      },
+    ];
+    directives: [];
+  };
 };
 
 import * as gqlTada from 'gql.tada';
 
 declare module 'gql.tada' {
   interface setupSchema {
-    introspection: introspection
+    introspection: introspection;
   }
 }
 
@@ -92,12 +92,15 @@ const fragment = graphql(`
   }
 `);
 
-const query = graphql(`
-  query HelloQuery {
-    hello
-    ...HelloWorld
-  }
-`, [fragment]);
+const query = graphql(
+  `
+    query HelloQuery {
+      hello
+      ...HelloWorld
+    }
+  `,
+  [fragment]
+);
 ```
 
 ### `graphql.scalar()`
@@ -126,38 +129,34 @@ a scalar or enum, but not a full fragment.
 ```ts twoslash
 // @filename: graphq-env.d.ts
 export type introspection = {
-  "__schema": {
-    "queryType": {
-      "name": "Query"
-    },
-    "mutationType": null,
-    "subscriptionType": null,
-    "types": [
+  __schema: {
+    queryType: {
+      name: 'Query';
+    };
+    mutationType: null;
+    subscriptionType: null;
+    types: [
       {
-        "kind": "OBJECT",
-        "name": "Query",
-        "fields": [],
-        "interfaces": []
+        kind: 'OBJECT';
+        name: 'Query';
+        fields: [];
+        interfaces: [];
       },
       {
-        "kind": "ENUM",
-        "name": "Media",
-        "enumValues": [
-          { "name": "Book" },
-          { "name": "Song" },
-          { "name": "Video" }
-        ]
-      }
-    ],
-    "directives": []
-  }
+        kind: 'ENUM';
+        name: 'Media';
+        enumValues: [{ name: 'Book' }, { name: 'Song' }, { name: 'Video' }];
+      },
+    ];
+    directives: [];
+  };
 };
 
 import * as gqlTada from 'gql.tada';
 
 declare module 'gql.tada' {
   interface setupSchema {
-    introspection: introspection
+    introspection: introspection;
   }
 }
 
@@ -174,15 +173,16 @@ type Media = ReturnType<typeof graphql.scalar<'Media'>>;
 
 ### `graphql.persisted()`
 
-|                  | Description                                    |
-| ---------------- | ---------------------------------------------- |
-| `hash` argument  | A hash associated with this query.             |
-| `document` optional argument  | Optionally, the document, if it's supposed to be accessible during runtime.             |
+|                              | Description                                                                 |
+| ---------------------------- | --------------------------------------------------------------------------- |
+| `hash` argument              | A hash associated with this query.                                          |
+| `document` optional argument | Optionally, the document, if it's supposed to be accessible during runtime. |
 
 Generates a faux-document containing a property called `documentId` which
 can be used to send off queries as [Persisted Operations](https://github.com/graphql/graphql-over-http/blob/main/rfcs/PersistedOperations.md).
 
 We must either pass the document as a generic type argument or as the second argument:
+
 - `graphql.persisted<typeof document>("abc...")`
 - `graphql.persisted("abc...", document)`
 
@@ -200,52 +200,52 @@ This is useful to implement and extract persisted operations using the CLI. Addi
 ```ts twoslash
 // @filename: graphq-env.d.ts
 export type introspection = {
-  "__schema": {
-    "queryType": {
-      "name": "Query"
-    },
-    "mutationType": null,
-    "subscriptionType": null,
-    "types": [
+  __schema: {
+    queryType: {
+      name: 'Query';
+    };
+    mutationType: null;
+    subscriptionType: null;
+    types: [
       {
-        "kind": "OBJECT",
-        "name": "Query",
-        "fields": [
+        kind: 'OBJECT';
+        name: 'Query';
+        fields: [
           {
-            "name": "hello",
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "args": []
+            name: 'hello';
+            type: {
+              kind: 'SCALAR';
+              name: 'String';
+              ofType: null;
+            };
+            args: [];
           },
           {
-            "name": "world",
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "args": []
-          }
-        ],
-        "interfaces": []
+            name: 'world';
+            type: {
+              kind: 'SCALAR';
+              name: 'String';
+              ofType: null;
+            };
+            args: [];
+          },
+        ];
+        interfaces: [];
       },
       {
-        "kind": "SCALAR",
-        "name": "String"
-      }
-    ],
-    "directives": []
-  }
+        kind: 'SCALAR';
+        name: 'String';
+      },
+    ];
+    directives: [];
+  };
 };
 
 import * as gqlTada from 'gql.tada';
 
 declare module 'gql.tada' {
   interface setupSchema {
-    introspection: introspection
+    introspection: introspection;
   }
 }
 
@@ -257,10 +257,10 @@ const query = graphql(`
   query Hello {
     hello
   }
-`)
+`);
 
 // You can now use this in your `useQuery` calls.
-const persistedOperation = graphql.persisted<typeof query>("sha256:x")
+const persistedOperation = graphql.persisted<typeof query>('sha256:x');
 ```
 
 ### `readFragment()`
@@ -309,22 +309,23 @@ const pokemonItemFragment = graphql(`
   }
 `);
 
-const getPokemonItem = (
-  data: FragmentOf<typeof pokemonItemFragment> | null
-) => {
-// @annotate: Unmasks the fragment and casts to the result type:
+const getPokemonItem = (data: FragmentOf<typeof pokemonItemFragment> | null) => {
+  // @annotate: Unmasks the fragment and casts to the result type:
 
   const pokemon = readFragment(pokemonItemFragment, data);
 };
 
-const pokemonQuery = graphql(`
-  query Pokemon($id: ID!) {
-    pokemon(id: $id) {
-      id
-      ...PokemonItem
+const pokemonQuery = graphql(
+  `
+    query Pokemon($id: ID!) {
+      pokemon(id: $id) {
+        id
+        ...PokemonItem
+      }
     }
-  }
-`, [pokemonItemFragment]);
+  `,
+  [pokemonItemFragment]
+);
 
 const getQuery = (data: ResultOf<typeof pokemonQuery>) => {
   getPokemonItem(data.pokemon);
@@ -376,7 +377,7 @@ const pokemonItemFragment = graphql(`
 
 const data = maskFragments([pokemonItemFragment], {
   id: '001',
-  name: 'Bulbasaur'
+  name: 'Bulbasaur',
 });
 ```
 
@@ -424,13 +425,16 @@ const pokemonItemFragment = graphql(`
   }
 `);
 
-const query = graphql(`
-  query {
-    pokemon(id: "001") {
-      ...PokemonItem
+const query = graphql(
+  `
+    query {
+      pokemon(id: "001") {
+        ...PokemonItem
+      }
     }
-  }
-`, [pokemonItemFragment]);
+  `,
+  [pokemonItemFragment]
+);
 
 // @warn: data will be cast (unsafely!) to the result type
 

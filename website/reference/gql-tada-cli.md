@@ -13,9 +13,9 @@ title: gql.tada CLI
 > The `gql.tada init` command is still a work in progress.
 > If you run into any trouble, feel free to let us know what you’d like to see added or changed.
 
-| Option               | Description                                                                                |
-| -------------------- | ------------------------------------------------------------------------------------------ |
-| `dir`              | A relative location from your current working directory where the project should be initialized.   |
+| Option | Description                                                                                      |
+| ------ | ------------------------------------------------------------------------------------------------ |
+| `dir`  | A relative location from your current working directory where the project should be initialized. |
 
 The `init` command takes care of everything required to setup a `gql.tada`
 project. The main tasks involved here are:
@@ -54,11 +54,11 @@ The `doctor` command will check for common mistakes in the `gql.tada`’s setup 
 
 ### `check`
 
-| Option               | Description                                                                                     |
-| -------------------- | ----------------------------------------------------------------------------------------------- |
-| `--tsconfig,-c`      | Optionally, an alternative relative location to the project’s `tsconfig.json`.      |
-| `--fail-on-warn,-w`  | Triggers an error and a non-zero exit code if any warnings have been reported (default: false). |
-| `--level,-l`         | The minimum severity of diagnostics to display: `info`, `warn` or `error` (default: `info`).            |
+| Option              | Description                                                                                     |
+| ------------------- | ----------------------------------------------------------------------------------------------- |
+| `--tsconfig,-c`     | Optionally, an alternative relative location to the project’s `tsconfig.json`.                  |
+| `--fail-on-warn,-w` | Triggers an error and a non-zero exit code if any warnings have been reported (default: false). |
+| `--level,-l`        | The minimum severity of diagnostics to display: `info`, `warn` or `error` (default: `info`).    |
 
 Usually, `@0no-co/graphqlsp` runs as a TypeScript language server plugin to report warnings and errors. However, these diagnostics don’t show up when `tsc` is run.
 
@@ -68,12 +68,12 @@ When this command is run inside a GitHub Action, [workflow commands](https://doc
 
 ### `generate-schema`
 
-| Option               | Description                                                                                            |
-| -------------------- | ------------------------------------------------------------------------------------------------------ |
-| `schema`             | A relative file path to a schema or URL to a GraphQL API to introspect.           |
-| `--tsconfig,-c`      | Optionally, an alternative relative location to the project’s `tsconfig.json`.      |
-| `--output,-o`        | An output location to write the `.graphql` schema file to. (Default: The `schema` configuration option) |
-| `--header,`          | A key-value header entry to use when retrieving the introspection from a GraphQL API.                         |
+| Option          | Description                                                                                             |
+| --------------- | ------------------------------------------------------------------------------------------------------- |
+| `schema`        | A relative file path to a schema or URL to a GraphQL API to introspect.                                 |
+| `--tsconfig,-c` | Optionally, an alternative relative location to the project’s `tsconfig.json`.                          |
+| `--output,-o`   | An output location to write the `.graphql` schema file to. (Default: The `schema` configuration option) |
+| `--header,`     | A key-value header entry to use when retrieving the introspection from a GraphQL API.                   |
 
 Oftentimes, an API may not be running in development, is maintained in a separate repository, or requires authorization headers, and specifying a URL in the `schema` configuration can slow down development.
 
@@ -81,21 +81,21 @@ The `gql.tada generate-schema` command can output a `.graphql` SDL file from a U
 
 ### `generate-output`
 
-| Option                    | Description                                                                                            |
-| ------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `--disable-preprocessing` | Whether to use the less efficient `.d.ts` introspection format. (Default: false)                                   |
-| `--tsconfig,-c`      | Optionally, an alternative relative location to the project’s `tsconfig.json`.      |
-| `--output,-o`        | Specify where to output the file to. (Default: The `tadaOutputLocation` configuration option) |
+| Option                    | Description                                                                                   |
+| ------------------------- | --------------------------------------------------------------------------------------------- |
+| `--disable-preprocessing` | Whether to use the less efficient `.d.ts` introspection format. (Default: false)              |
+| `--tsconfig,-c`           | Optionally, an alternative relative location to the project’s `tsconfig.json`.                |
+| `--output,-o`             | Specify where to output the file to. (Default: The `tadaOutputLocation` configuration option) |
 
 The `gql.tada generate-output` command mimics the behavior of `@0no-co/graphqlsp`, outputting the `gql.tada` output file manually. It will load the schema from the specified `schema` configuration option and write the output file.
 
 ### `turbo`
 
-| Option               | Description                                                                                     |
-| -------------------- | ----------------------------------------------------------------------------------------------- |
-| `--tsconfig,-c`      | Optionally, an alternative relative location to the project’s `tsconfig.json`.      |
-| `--fail-on-warn,-w`  | Triggers an error and a non-zero exit code if any warnings have been reported. |
-| `--output,-o`        | Specify where to output the file to. (Default: The `tadaTurboLocation` configuration option) |
+| Option              | Description                                                                                  |
+| ------------------- | -------------------------------------------------------------------------------------------- |
+| `--tsconfig,-c`     | Optionally, an alternative relative location to the project’s `tsconfig.json`.               |
+| `--fail-on-warn,-w` | Triggers an error and a non-zero exit code if any warnings have been reported.               |
+| `--output,-o`       | Specify where to output the file to. (Default: The `tadaTurboLocation` configuration option) |
 
 The `turbo` command allows you to cache all the existing GraphQL query types ahead
 of time. This step can make checking out the repository faster for other people and
@@ -107,11 +107,11 @@ When this command is run inside a GitHub Action, [workflow commands](https://doc
 
 ### `generate-persisted`
 
-| Option               | Description                                                                                     |
-| -------------------- | ----------------------------------------------------------------------------------------------- |
-| `--tsconfig,-c`      | Optionally, an alternative relative location to the project’s `tsconfig.json`.      |
-| `--fail-on-warn,-w`  | Triggers an error and a non-zero exit code if any warnings have been reported. |
-| `--output,-o`        | Specify where to output the file to. (Default: The `tadaPersistedLocation` configuration option) |
+| Option              | Description                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------------ |
+| `--tsconfig,-c`     | Optionally, an alternative relative location to the project’s `tsconfig.json`.                   |
+| `--fail-on-warn,-w` | Triggers an error and a non-zero exit code if any warnings have been reported.                   |
+| `--output,-o`       | Specify where to output the file to. (Default: The `tadaPersistedLocation` configuration option) |
 
 The `gql.tada generate-persisted` command will scan your code for `graphql.persisted()` calls and generate
 a JSON file containing a mapping of document IDs to the GraphQL document strings.
