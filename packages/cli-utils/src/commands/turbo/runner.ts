@@ -11,6 +11,7 @@ import * as logger from './logger';
 const PREAMBLE_IGNORE = ['/* eslint-disable */', '/* prettier-ignore */'].join('\n') + '\n';
 
 interface Options {
+  failOnWarn: boolean;
   tsconfig: string | undefined;
   output: string | undefined;
 }
@@ -63,7 +64,10 @@ export async function* run(tty: TTY, opts: Options) {
     pluginConfig,
   });
 
+  let warnings = 0;
   let totalFileCount = 0;
+  let fileCount = 0;
+
   try {
     for await (const signal of generator) {
       if (signal.kind === 'FILE_COUNT') {
@@ -72,6 +76,16 @@ export async function* run(tty: TTY, opts: Options) {
       }
 
       cache = Object.assign(cache, signal.cache);
+      if ((warnings += signal.warnings.length)) {
+        let buffer = logger.warningFile(signal.filePath);
+        for (const warning of signal.warnings) {
+          buffer += logger.warningMessage(warning);
+          logger.warningGithub(warning);
+        }
+        yield buffer + '\n';
+      }
+
+      yield logger.runningTurbo(++fileCount, totalFileCount);
     }
   } catch (error) {
     throw logger.externalError('Could not build cache', error);
@@ -82,6 +96,19 @@ export async function* run(tty: TTY, opts: Options) {
     await writeOutput(destination, contents);
   } catch (error) {
     throw logger.externalError('Something went wrong while writing the cache file', error);
+  }
+
+  const documentCount = Object.keys(cache).length;
+  if (warnings && opts.failOnWarn) {
+    throw logger.warningSummary(warnings, documentCount);
+  } else {
+    try {
+      const contents = JSON.stringify(cache, null, 2);
+      await writeOutput(destination, contents);
+    } catch (error) {
+      throw logger.externalError('Something went wrong while writing the cache file', error);
+    }
+    yield logger.infoSummary(warnings, documentCount);
   }
 }
 

@@ -98,7 +98,6 @@ export async function* run(tty: TTY, opts: Options) {
         );
       }
     }
-
     yield logger.infoSummary(warnings, documentCount);
   }
 }
