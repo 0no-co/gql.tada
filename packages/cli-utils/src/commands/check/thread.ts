@@ -10,13 +10,6 @@ import { expose } from '../../threads';
 
 import type { Severity, DiagnosticMessage, DiagnosticSignal } from './types';
 
-const loadSchema = async (rootPath: string, config: GraphQLSPConfig) => {
-  const loader = load({ origin: config.schema, rootPath });
-  const result = await loader.load();
-  if (!result) throw new Error('Failed to load schema');
-  return { current: result.schema, version: 1 };
-};
-
 export interface DiagnosticsParams {
   rootPath: string;
   configPath: string;
@@ -28,9 +21,12 @@ async function* _runDiagnostics(
 ): AsyncIterableIterator<DiagnosticSignal> {
   init({ typescript: ts as any });
   const projectPath = path.dirname(params.configPath);
-  const schemaRef = await loadSchema(projectPath, params.pluginConfig);
+  const loader = load({ origin: params.pluginConfig.schema, rootPath: projectPath });
   const project = new Project({ tsConfigFilePath: params.configPath });
   const pluginInfo = createPluginInfo(project, params.pluginConfig, projectPath);
+
+  const loadResult = await loader.load();
+  const schemaRef = { current: loadResult.schema, version: 1 };
 
   // Filter source files by whether they're under the relevant root path
   const sourceFiles = project.getSourceFiles().filter((sourceFile) => {

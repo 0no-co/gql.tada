@@ -20,15 +20,12 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
   const origin = opts.headers ? { url: opts.input, headers: opts.headers } : opts.input;
   const loader = load({ rootPath: process.cwd(), origin });
 
-  let schema: GraphQLSchema | null;
+  let schema: GraphQLSchema;
   try {
-    schema = await loader.loadSchema();
+    const loadResult = await loader.load();
+    schema = loadResult.schema;
   } catch (error) {
     throw logger.externalError('Failed to load schema.', error);
-  }
-
-  if (!schema) {
-    throw logger.errorMessage('Failed to load schema.');
   }
 
   let destination: WriteTarget;

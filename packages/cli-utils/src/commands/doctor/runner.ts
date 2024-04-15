@@ -169,14 +169,10 @@ export async function* run(): AsyncIterable<ComposeInput> {
     rootPath: path.dirname(configResult.configPath),
   });
 
-  let hasSchema = false;
   try {
-    hasSchema = !!(await loader.loadIntrospection());
+    await loader.loadIntrospection();
   } catch (error) {
     throw logger.externalError('Failed to load schema.', error);
-  }
-  if (!hasSchema) {
-    throw logger.errorMessage('Failed to load schema.');
   }
 
   yield logger.completedTask(Messages.CHECK_SCHEMA, true);

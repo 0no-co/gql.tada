@@ -37,15 +37,12 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
     rootPath: path.dirname(configResult.configPath),
   });
 
-  let introspection: IntrospectionQuery | null;
+  let introspection: IntrospectionQuery;
   try {
-    introspection = await loader.loadIntrospection();
+    const loadResult = await loader.load();
+    introspection = loadResult.introspection;
   } catch (error) {
     throw logger.externalError('Failed to load introspection.', error);
-  }
-
-  if (!introspection) {
-    throw logger.errorMessage('Failed to load introspection.');
   }
 
   let contents: string;
