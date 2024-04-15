@@ -1,5 +1,27 @@
 # @gql.tada/internal
 
+## 0.2.0
+
+**Read the full release announcement post at: https://gql-tada.0no.co/devlog/2024-04-15**
+
+### Minor Changes
+
+- Add `check` as a way to run the GraphQLSP diagnostics as part of our CLI
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#170](https://github.com/0no-co/gql.tada/pull/170))
+- Implement new config resolution helpers
+  Submitted by [@kitten](https://github.com/kitten) (See [#200](https://github.com/0no-co/gql.tada/pull/200))
+
+### Patch Changes
+
+- Allow GraphQL enum types to be remapped with the `scalars` configuration option
+  Submitted by [@kitten](https://github.com/kitten) (See [#184](https://github.com/0no-co/gql.tada/pull/184))
+- Add bundled licenses of internalized modules
+  Submitted by [@kitten](https://github.com/kitten) (See [#175](https://github.com/0no-co/gql.tada/pull/175))
+- Support opting out of `includeDeprecated` on `__Directive` and `__Field` in accordance with the October 2021 spec
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#192](https://github.com/0no-co/gql.tada/pull/192))
+- Replace `minifyIntrospectionQuery` utility with a version that sorts fields and types by name
+  Submitted by [@kitten](https://github.com/kitten) (See [#185](https://github.com/0no-co/gql.tada/pull/185))
+
 ## 0.1.3
 
 ### Patch Changes

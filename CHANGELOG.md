@@ -1,5 +1,24 @@
 # gql.tada
 
+## 1.5.0
+
+**Read the full release announcement post at: https://gql-tada.0no.co/devlog/2024-04-15**
+
+### Minor Changes
+
+- Allow GraphQL enum types to be remapped with the `scalars` configuration option
+  Submitted by [@kitten](https://github.com/kitten) (See [#184](https://github.com/0no-co/gql.tada/pull/184))
+- Support a second argument in `graphql.persisted` which accepts a `TadaDocumentNode` rather than passing a generic. This allows the document node to not be hidden, to still generate `documentId` via `gql.tada` without having to hide the document during runtime
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#188](https://github.com/0no-co/gql.tada/pull/188))
+
+### Patch Changes
+
+- ⚠️ Fix `turbo` command reusing previously cached turbo typings. Instead, we now set a flag to disable the cache temporarily inside the command
+  Submitted by [@kitten](https://github.com/kitten) (See [#208](https://github.com/0no-co/gql.tada/pull/208))
+- Updated dependencies (See [#203](https://github.com/0no-co/gql.tada/pull/203), [#208](https://github.com/0no-co/gql.tada/pull/208), [#184](https://github.com/0no-co/gql.tada/pull/184), [#197](https://github.com/0no-co/gql.tada/pull/197), [#183](https://github.com/0no-co/gql.tada/pull/183), [#175](https://github.com/0no-co/gql.tada/pull/175), [#176](https://github.com/0no-co/gql.tada/pull/176), [#188](https://github.com/0no-co/gql.tada/pull/188), [#207](https://github.com/0no-co/gql.tada/pull/207), [#205](https://github.com/0no-co/gql.tada/pull/205), [#200](https://github.com/0no-co/gql.tada/pull/200), [#170](https://github.com/0no-co/gql.tada/pull/170), [#169](https://github.com/0no-co/gql.tada/pull/169), [#192](https://github.com/0no-co/gql.tada/pull/192), [#185](https://github.com/0no-co/gql.tada/pull/185), [#182](https://github.com/0no-co/gql.tada/pull/182), [#193](https://github.com/0no-co/gql.tada/pull/193), [#199](https://github.com/0no-co/gql.tada/pull/199), [#200](https://github.com/0no-co/gql.tada/pull/200), and [#200](https://github.com/0no-co/gql.tada/pull/200))
+  - @gql.tada/cli-utils@1.0.0
+  - @gql.tada/internal@0.2.0
+
 ## 1.4.3
 
 ### Patch Changes
