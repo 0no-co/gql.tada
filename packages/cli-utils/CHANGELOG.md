@@ -1,5 +1,12 @@
 # @gql.tada/cli-utils
 
+## 1.0.1
+
+### Patch Changes
+
+- ⚠️ Fix hash parsing in `generate-persisted` command
+  Submitted by [@kitten](https://github.com/kitten) (See [#212](https://github.com/0no-co/gql.tada/pull/212))
+
 ## 1.0.0
 
 **Read the full release announcement post at: https://gql-tada.0no.co/devlog/2024-04-15**
