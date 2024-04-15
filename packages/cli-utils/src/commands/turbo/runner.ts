@@ -1,45 +1,78 @@
 import { Project, TypeFormatFlags, TypeFlags, ts } from 'ts-morph';
+import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
 import path from 'node:path';
-import fs from 'node:fs/promises';
 
-import type { GraphQLSPConfig } from '../../lsp';
-import { getGraphQLSPConfig } from '../../lsp';
-import { getTsConfig } from '../../tsconfig';
+import { loadConfig, parseConfig } from '@gql.tada/internal';
+
 import { createPluginInfo } from '../../ts/project';
+import type { TTY } from '../../term';
+import type { WriteTarget } from '../shared';
+import { writeOutput } from '../shared';
+import * as logger from './logger';
 
 const PREAMBLE_IGNORE = ['/* eslint-disable */', '/* prettier-ignore */'].join('\n') + '\n';
 
-const existsFile = async (file: string): Promise<boolean> => {
-  return fs
-    .stat(file)
-    .then((stat) => stat.isFile())
-    .catch(() => false);
-};
-
 interface Options {
   tsconfig: string | undefined;
+  output: string | undefined;
 }
 
-export async function run(opts: Options) {
-  const tsConfig = await getTsConfig(opts.tsconfig);
-  if (!tsConfig) {
-    return;
-  }
-
-  const config = getGraphQLSPConfig(tsConfig);
-  if (!config) {
-    return;
-  }
-
-  const cacheFileName = path.resolve(config.tadaOutputLocation, '..', 'graphql-cache.d.ts');
-  const tmpFileName = cacheFileName + '.temp';
-
-  if (await existsFile(cacheFileName)) await fs.rename(cacheFileName, tmpFileName);
+export async function* run(tty: TTY, opts: Options) {
+  let configResult: LoadConfigResult;
+  let pluginConfig: GraphQLSPConfig;
   try {
-    const cache = await getGraphqlInvocationCache(config);
-    await fs.writeFile(tmpFileName, createCache(cache));
-  } finally {
-    await fs.rename(tmpFileName, cacheFileName);
+    configResult = await loadConfig(opts.tsconfig);
+    pluginConfig = parseConfig(configResult.pluginConfig);
+  } catch (error) {
+    throw logger.externalError('Failed to load configuration.', error);
+  }
+
+  let destination: WriteTarget;
+  if (!opts.output && tty.pipeTo) {
+    destination = tty.pipeTo;
+  } else if (opts.output) {
+    destination = path.resolve(process.cwd(), opts.output);
+  } else if (pluginConfig.tadaTurboLocation) {
+    destination = path.resolve(
+      path.dirname(configResult.configPath),
+      pluginConfig.tadaTurboLocation
+    );
+  } else if (pluginConfig.tadaOutputLocation) {
+    // TODO: Add a warning that prompts the user to set `tadaTurboLocation` in their configuration
+    destination = path.resolve(
+      path.dirname(configResult.configPath),
+      pluginConfig.tadaOutputLocation,
+      '..',
+      'graphql-cache.d.ts'
+    );
+  } else {
+    throw logger.errorMessage(
+      'No output path was specified to write the output file to.\n' +
+        logger.hint(
+          `You have to either set ${logger.code('"tadaTurboLocation"')} in your configuration,\n` +
+            `pass an ${logger.code('--output')} argument to this command,\n` +
+            'or pipe this command to an output file.'
+        )
+    );
+  }
+
+  let contents: string;
+  try {
+    contents = createCache(
+      await getGraphqlInvocationCache({
+        rootPath: configResult.rootPath,
+        configPath: configResult.configPath,
+        pluginConfig,
+      })
+    );
+  } catch (error) {
+    throw logger.externalError('Could not generate turbo output', error);
+  }
+
+  try {
+    await writeOutput(destination, contents);
+  } catch (error) {
+    throw logger.externalError('Something went wrong while writing the introspection file', error);
   }
 }
 
@@ -60,16 +93,25 @@ function createCache(cache: Record<string, string>): string {
   );
 }
 
-async function getGraphqlInvocationCache(config: GraphQLSPConfig): Promise<Record<string, string>> {
-  // TODO: leverage ts-morph tsconfig resolver
-  const projectName = path.resolve(process.cwd(), 'tsconfig.json');
-  const project = new Project({
-    tsConfigFilePath: projectName,
-  });
+interface CacheParams {
+  rootPath: string;
+  configPath: string;
+  pluginConfig: GraphQLSPConfig;
+}
 
-  const pluginCreateInfo = createPluginInfo(project, config, projectName);
+async function getGraphqlInvocationCache(params: CacheParams): Promise<Record<string, string>> {
+  const projectPath = path.dirname(params.configPath);
+  const project = new Project({ tsConfigFilePath: params.configPath });
+
+  const pluginCreateInfo = createPluginInfo(project, params.pluginConfig, projectPath);
   const typeChecker = project.getTypeChecker().compilerObject;
-  const sourceFiles = project.getSourceFiles();
+
+  // Filter source files by whether they're under the relevant root path
+  const sourceFiles = project.getSourceFiles().filter((sourceFile) => {
+    const filePath = path.resolve(projectPath, sourceFile.getFilePath());
+    const relative = path.relative(params.rootPath, filePath);
+    return !relative.startsWith('..');
+  });
 
   return sourceFiles.reduce((acc, sourceFile) => {
     const tadaCallExpressions = findAllCallExpressions(sourceFile.compilerNode, pluginCreateInfo);
