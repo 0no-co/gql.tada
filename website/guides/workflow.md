@@ -1,6 +1,6 @@
 ---
-title: Check
-description: How you can leverage the checks from the LSP outside of your coding process.
+title: Workflow
+description: How does gql.tada and its LSP fit into your wofklow?
 ---
 
 # Workflow

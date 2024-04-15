@@ -142,6 +142,10 @@ export default defineConfig({
               text: 'Fragment Colocation',
               link: '/guides/fragment-colocation',
             },
+            {
+              text: 'Workflow',
+              link: '/guides/workflow',
+            },
           ],
         },
         {
