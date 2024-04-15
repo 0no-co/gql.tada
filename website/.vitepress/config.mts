@@ -5,6 +5,13 @@ import type { JsxEmit } from 'typescript';
 
 import { graphqlLanguage } from './graphql-textmate.mts';
 
+const devlogItems = [
+  {
+    text: 'v1.5.0',
+    link: '/devlog/2024-04-15',
+  },
+];
+
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   lang: 'en-US',
@@ -84,61 +91,75 @@ export default defineConfig({
     },
 
     nav: [
+      {
+        text: 'Devlog',
+        items: devlogItems,
+      },
       { text: 'Documentation', link: '/get-started/' },
     ],
 
-    sidebar: [
-      {
-        text: 'Get Started',
-        collapsed: false,
-        items: [
-          {
-            text: 'Introduction',
-            link: '/get-started/',
-          },
-          {
-            text: 'Installation',
-            link: '/get-started/installation',
-          },
-          {
-            text: 'Writing GraphQL',
-            link: '/get-started/writing-graphql',
-          },
-        ],
-      },
-      {
-        text: 'Guides',
-        collapsed: false,
-        items: [
-          {
-            text: 'Typed Documents',
-            link: '/guides/typed-documents',
-          },
-          {
-            text: 'Fragment Colocation',
-            link: '/guides/fragment-colocation',
-          },
-        ],
-      },
-      {
-        text: 'Reference',
-        collapsed: false,
-        items: [
-          {
-            text: 'gql.tada API',
-            link: '/reference/gql-tada-api',
-          },
-          {
-            text: 'gql.tada CLI',
-            link: '/reference/gql-tada-cli',
-          },
-          {
-            text: 'GraphQLSP Config',
-            link: '/reference/graphqlsp-config',
-          },
-        ],
-      },
-    ],
+    sidebar: {
+      '/devlog': [
+        {
+          text: 'Devlog',
+          collapsed: false,
+          items: devlogItems,
+        },
+      ],
+
+      '/': [
+        {
+          text: 'Get Started',
+          collapsed: false,
+          items: [
+            {
+              text: 'Introduction',
+              link: '/get-started/',
+            },
+            {
+              text: 'Installation',
+              link: '/get-started/installation',
+            },
+            {
+              text: 'Writing GraphQL',
+              link: '/get-started/writing-graphql',
+            },
+          ],
+        },
+        {
+          text: 'Guides',
+          collapsed: false,
+          items: [
+            {
+              text: 'Typed Documents',
+              link: '/guides/typed-documents',
+            },
+            {
+              text: 'Fragment Colocation',
+              link: '/guides/fragment-colocation',
+            },
+          ],
+        },
+        {
+          text: 'Reference',
+          collapsed: false,
+          items: [
+            {
+              text: 'gql.tada API',
+              link: '/reference/gql-tada-api',
+            },
+            {
+              text: 'gql.tada CLI',
+              link: '/reference/gql-tada-cli',
+            },
+            {
+              text: 'GraphQLSP Config',
+              link: '/reference/graphqlsp-config',
+            },
+          ],
+        },
+      ],
+    },
 
     socialLinks: [
       { icon: 'github', link: 'https://github.com/0no-co/gql.tada' },
