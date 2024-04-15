@@ -78,8 +78,8 @@ export function warningGithub(message: PersistedWarning): void {
   });
 }
 
-export function runningPersisted(file: number, ofFiles?: number) {
-  const progress = ofFiles ? `(${file}/${ofFiles})` : `(${file})`;
+export function runningPersisted(file?: number, ofFiles?: number) {
+  const progress = file ? (ofFiles ? `(${file}/${ofFiles})` : `(${file})`) : '';
   return pipe(
     interval(150),
     map((state) => {

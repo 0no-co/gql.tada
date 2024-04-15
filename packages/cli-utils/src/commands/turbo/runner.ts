@@ -65,6 +65,8 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
     );
   }
 
+  if (tty.isInteractive) yield logger.runningTurbo();
+
   let cache: Record<string, string> = {};
   const generator = runTurbo({
     rootPath: configResult.rootPath,

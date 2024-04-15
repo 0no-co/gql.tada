@@ -49,6 +49,8 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
     );
   }
 
+  if (tty.isInteractive) yield logger.runningPersisted();
+
   let documents: Record<string, string> = {};
   const generator = runPersisted({
     rootPath: configResult.rootPath,

@@ -73,8 +73,8 @@ export function warningGithub(message: TurboWarning): void {
   });
 }
 
-export function runningTurbo(file: number, ofFiles?: number) {
-  const progress = ofFiles ? `(${file}/${ofFiles})` : `(${file})`;
+export function runningTurbo(file?: number, ofFiles?: number) {
+  const progress = file ? (ofFiles ? `(${file}/${ofFiles})` : `(${file})`) : '';
   return pipe(
     interval(150),
     map((state) => {
