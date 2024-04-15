@@ -124,7 +124,7 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
 
       let document = operation;
       for (const fragment of fragments) document += '\n\n' + print(fragment);
-      documents[JSON.parse(hashArg.getFullText())] = document;
+      documents[hashArg.getText().slice(1, -1)] = document;
     }
 
     yield {
