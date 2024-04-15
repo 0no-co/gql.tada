@@ -51,7 +51,7 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
     for (const call of calls) {
       const position = getFilePosition(sourceFile, call.getStart());
       const hash = call.arguments[0];
-      if (!ts.isStringLiteral(hash)) {
+      if (!hash || !ts.isStringLiteral(hash)) {
         warnings.push({
           message:
             '"graphql.persisted" must be called with a string literal as the first argument.',

@@ -10,6 +10,10 @@ export class GeneratePersisted extends Command {
     description: 'Specify the `tsconfig.json` used to read, unless `--output` is passed.',
   });
 
+  failOnWarn = Option.Boolean('--fail-on-warn,-w', false, {
+    description: 'Triggers an error and a non-zero exit code if any warnings have been reported',
+  });
+
   output = Option.String('--output,-o', {
     description:
       'Specifies where to output the file to.\tDefault: The `tadaPersistedLocation` configuration option',
@@ -20,6 +24,7 @@ export class GeneratePersisted extends Command {
     const tty = initTTY();
     const result = await tty.start(
       run(tty, {
+        failOnWarn: this.failOnWarn,
         output: this.output,
         tsconfig: this.tsconfig,
       })

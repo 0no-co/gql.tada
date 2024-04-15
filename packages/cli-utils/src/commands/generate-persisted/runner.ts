@@ -11,6 +11,7 @@ import * as logger from './logger';
 interface Options {
   tsconfig: string | undefined;
   output: string | undefined;
+  failOnWarn: boolean;
 }
 
 export async function* run(tty: TTY, opts: Options) {
@@ -55,6 +56,7 @@ export async function* run(tty: TTY, opts: Options) {
     pluginConfig,
   });
 
+  let warnings = 0;
   let totalFileCount = 0;
   let fileCount = 0;
 
@@ -65,19 +67,38 @@ export async function* run(tty: TTY, opts: Options) {
         continue;
       }
 
-      console.error(signal.warnings);
-
-      fileCount++;
       documents = Object.assign(documents, signal.documents);
+      if ((warnings += signal.warnings.length)) {
+        let buffer = logger.warningFile(signal.filePath);
+        for (const warning of signal.warnings) {
+          buffer += logger.warningMessage(warning);
+          logger.warningGithub(warning);
+        }
+        yield buffer + '\n';
+      }
+
+      yield logger.runningPersisted(++fileCount, totalFileCount);
     }
   } catch (error) {
     throw logger.externalError('Could not generate persisted manifest file', error);
   }
 
-  try {
-    const contents = JSON.stringify(documents, null, 2);
-    await writeOutput(destination, contents);
-  } catch (error) {
-    throw logger.externalError('Something went wrong while writing the introspection file', error);
+  const documentCount = Object.keys(documents).length;
+  if (warnings && opts.failOnWarn) {
+    throw logger.warningSummary(warnings, documentCount);
+  } else {
+    if (documentCount) {
+      try {
+        const contents = JSON.stringify(documents, null, 2);
+        await writeOutput(destination, contents);
+      } catch (error) {
+        throw logger.externalError(
+          'Something went wrong while writing the introspection file',
+          error
+        );
+      }
+    }
+
+    yield logger.infoSummary(warnings, documentCount);
   }
 }
