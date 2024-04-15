@@ -8,7 +8,7 @@ export interface SchemaLoaderResult {
 export type OnSchemaUpdate = (result: SchemaLoaderResult) => void;
 
 export interface SchemaLoader {
-  load(reload?: boolean): Promise<SchemaLoaderResult | null>;
+  load(reload?: boolean): Promise<SchemaLoaderResult>;
   notifyOnUpdate(onUpdate: OnSchemaUpdate): () => void;
 
   /** @internal */
