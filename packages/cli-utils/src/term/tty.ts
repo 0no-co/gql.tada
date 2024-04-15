@@ -31,6 +31,8 @@ export interface KeypressEvent {
 }
 
 export interface TTY {
+  isInteractive: boolean;
+
   output: WriteStream;
   pipeTo: WriteStream | null;
   inputSource: Source<KeypressEvent>;
@@ -61,14 +63,14 @@ function fromReadStream(stream: ReadStream): Source<KeypressEvent> {
     }
 
     function cleanup() {
+      if (stream.isTTY) stream.setRawMode(false);
       observer.complete();
       stream.removeListener('keypress', onKeypress);
-      stream.setRawMode(false);
       stream.unref();
     }
 
+    if (stream.isTTY) stream.setRawMode(true);
     emitKeypressEvents(stream);
-    stream.setRawMode(true);
     stream.setEncoding('utf8');
     stream.resume();
     stream.addListener('keypress', onKeypress);
@@ -167,6 +169,7 @@ export function initTTY(): TTY {
   }
 
   return {
+    isInteractive: isTTY,
     output,
     pipeTo,
     inputSource,
