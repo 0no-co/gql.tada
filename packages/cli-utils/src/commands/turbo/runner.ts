@@ -93,7 +93,7 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
         yield buffer + '\n';
       }
 
-      yield logger.runningTurbo(++fileCount, totalFileCount);
+      if (tty.isInteractive) yield logger.runningTurbo(++fileCount, totalFileCount);
     }
   } catch (error) {
     throw logger.externalError('Could not build cache', error);

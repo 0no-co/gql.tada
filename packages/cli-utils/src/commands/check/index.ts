@@ -22,8 +22,9 @@ export class CheckCommand extends Command {
     }) || 'info';
 
   async execute() {
-    const result = await initTTY().start(
-      run({
+    const tty = initTTY();
+    const result = await tty.start(
+      run(tty, {
         failOnWarn: this.failOnWarn,
         minSeverity: this.minSeverity,
         tsconfig: this.tsconfig,
