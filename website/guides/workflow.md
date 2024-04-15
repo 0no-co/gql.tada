@@ -5,6 +5,18 @@ description: How does gql.tada and its LSP fit into your wofklow?
 
 # Workflow
 
+## Staying up to date
+
+There is a risk to go out of date when i.e. the schema is externally updated or when the LSP
+isn't running. For this we encourage folks to leverage the `generate-schema` and `generate-output`
+CLI commands, you can leverage these in CI and check whether a diff is present, an example could
+be something like the following
+
+```yaml
+- name: Verify schema and tada types are up to date
+  run: npx gql-tada generate-schema http://example.com && npx gql-tada generate-output -c ./tsconfig.json && git diff --name-only --exit-code -- .
+```
+
 ## Diagnostics
 
 With the LSP plugin we have a workflow for development where you see errors for missing fields,
