@@ -8,6 +8,7 @@ import { graphqlLanguage } from './graphql-textmate.mts';
 const devlogItems = [
   {
     text: 'v1.5.0',
+    longText: 'v1.5.0 - New CLI Workflows',
     link: '/devlog/2024-04-15',
   },
 ];
@@ -103,7 +104,10 @@ export default defineConfig({
         {
           text: 'Devlog',
           collapsed: false,
-          items: devlogItems,
+          items: devlogItems.map((item) => ({
+            text: item.longText || item.text,
+            link: item.link,
+          })),
         },
       ],
 
