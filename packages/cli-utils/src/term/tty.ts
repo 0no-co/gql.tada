@@ -21,6 +21,10 @@ import { text, compose } from './write';
 import { cmd, _setColor, CSI, Mode, PrivateMode } from './csi';
 import { isGithubCI } from './github';
 
+export interface TTYParams {
+  disableTTY?: boolean;
+}
+
 export interface KeypressEvent {
   data?: string;
   sequence: string;
@@ -41,7 +45,7 @@ export interface TTY {
   write(input: readonly string[], ...args: readonly string[]): void;
   write(...input: readonly string[]): void;
 
-  start(outputs: AsyncIterable<ComposeInput>): Promise<string | CLIError>;
+  start(outputs: AsyncIterable<ComposeInput>, disableInput?: boolean): Promise<string | CLIError>;
 
   mode(...modes: readonly (Mode | PrivateMode)[]): void;
   modeOff(...modes: readonly (Mode | PrivateMode)[]): void;
@@ -78,8 +82,8 @@ function fromReadStream(stream: ReadStream): Source<KeypressEvent> {
   });
 }
 
-export function initTTY(): TTY {
-  let isTTY = process.env.TERM !== 'dumb' && !process.env.CI;
+export function initTTY(params: TTYParams = {}): TTY {
+  let isTTY = process.env.TERM !== 'dumb' && !process.env.CI && !params.disableTTY;
   let pipeTo: WriteStream | null = null;
   let output: WriteStream = process.stdout;
   if (isGithubCI) {
@@ -133,7 +137,11 @@ export function initTTY(): TTY {
 
   function start(outputs: AsyncIterable<ComposeInput>): Promise<string | CLIError> {
     const write = (input: string | CLIError) => output.write('' + input);
-    return pipe(compose(outputs), onPush(write), takeUntil(cancelSource), toPromise);
+    if (params.disableTTY) {
+      return pipe(compose(outputs), onPush(write), toPromise);
+    } else {
+      return pipe(compose(outputs), onPush(write), takeUntil(cancelSource), toPromise);
+    }
   }
 
   function mode(...modes: readonly (Mode | PrivateMode)[]): void {
