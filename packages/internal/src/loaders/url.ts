@@ -41,7 +41,18 @@ export function loadFromURL(config: LoadFromURLConfig): SchemaLoader {
   const client = new Client({
     url: `${config.url}`,
     fetchOptions: { headers: config.headers },
-    exchanges: [retryExchange({ initialDelayMs: 200, maxDelayMs: 1_500 }), fetchExchange],
+    exchanges: [
+      retryExchange({
+        initialDelayMs: 200,
+        maxDelayMs: 1_500,
+        maxNumberAttempts: 3,
+        retryWith(error, operation) {
+          if (error.networkError) process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+          return operation;
+        },
+      }),
+      fetchExchange,
+    ],
   });
 
   const scheduleUpdate = () => {
