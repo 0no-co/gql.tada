@@ -58,7 +58,7 @@ export function loadFromURL(config: LoadFromURLConfig): SchemaLoader {
     }
   };
 
-  const introspect = async (support: SupportedFeatures): Promise<typeof result> => {
+  const introspect = async (support: SupportedFeatures): Promise<SchemaLoaderResult> => {
     const query = makeIntrospectionQuery(support);
     const introspectionResult = await client.query<IntrospectionQuery>(query, {});
     try {
@@ -71,14 +71,17 @@ export function loadFromURL(config: LoadFromURLConfig): SchemaLoader {
           schema: buildClientSchema(introspection, { assumeValid: true }),
         };
       } else {
-        return null;
+        throw new Error(
+          'Executing introspection against API failed.\n' +
+            'The API failed to return any schema data or error.'
+        );
       }
     } finally {
       scheduleUpdate();
     }
   };
 
-  const load = async (): Promise<typeof result> => {
+  const load = async (): Promise<SchemaLoaderResult> => {
     if (!supportedFeatures) {
       const query = makeIntrospectSupportQuery();
       const supportResult = await client.query<IntrospectSupportQueryData>(query, {});
