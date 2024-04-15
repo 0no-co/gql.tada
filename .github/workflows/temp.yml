@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  pull_request:
+  pull_request_review:
+    types: [submitted, edited]
+    branches: changeset-release/main
+
+jobs:
+  check:
+    name: Temp
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-store
+        run: echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
+
+      - name: Use pnpm store
+        uses: actions/cache@v4
+        id: pnpm-cache
+        with:
+          path: ${{ steps.pnpm-store.outputs.pnpm_cache_dir }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Build
+        run: pnpm multi --include-workspace-root run build
+
+      - name: Check
+        working-directory: ./examples/example-pokemon-api
+        run: pnpm gql.tada check
