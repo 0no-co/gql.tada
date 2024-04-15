@@ -75,7 +75,7 @@ export async function* run(opts: Options): AsyncIterable<ComposeInput> {
       yield logger.runningDiagnostics(++fileCount, totalFileCount);
     }
   } catch (error: any) {
-    throw logger.errorMessage(error.message || `${error}`);
+    throw logger.externalError('Could not check files', error);
   }
 
   // Reset notice count if it's outside of min severity
