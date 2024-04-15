@@ -1,6 +1,6 @@
 ---
 title: Workflow
-description: How does gql.tada and its LSP fit into your wofklow?
+description: How does gql.tada and its LSP fit into your workflow?
 ---
 
 # Workflow
