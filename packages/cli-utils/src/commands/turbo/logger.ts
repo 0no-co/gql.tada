@@ -90,3 +90,12 @@ export function runningTurbo(file: number, ofFiles?: number) {
     })
   );
 }
+
+export function hintMessage(message: string) {
+  return t.error([
+    t.cmd(t.CSI.Style, [t.Style.Yellow, t.Style.Bold]),
+    `${t.Icons.Warning} Note: `,
+    t.cmd(t.CSI.Style, t.Style.Reset),
+    `${message.trim()}\n\n`,
+  ]);
+}

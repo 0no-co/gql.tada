@@ -39,12 +39,20 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
       pluginConfig.tadaTurboLocation
     );
   } else if (pluginConfig.tadaOutputLocation) {
-    // TODO: Add a warning that prompts the user to set `tadaTurboLocation` in their configuration
     destination = path.resolve(
       path.dirname(configResult.configPath),
       pluginConfig.tadaOutputLocation,
       '..',
       'graphql-cache.d.ts'
+    );
+    yield logger.hintMessage(
+      'No output location was specified.\n' +
+        `The turbo cache will by default be saved as ${logger.code('"graphql-cache.d.ts"')}.\n` +
+        logger.hint(
+          `To change this, add a ${logger.code('"tadaTurboLocation"')} in your configuration,\n` +
+            `pass an ${logger.code('--output')} argument to this command,\n` +
+            'or pipe this command to an output file.'
+        )
     );
   } else {
     throw logger.errorMessage(
