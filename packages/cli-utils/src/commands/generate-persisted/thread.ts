@@ -67,7 +67,7 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
         warnings.push({
           message:
             '"graphql.persisted" is missing a document.\n' +
-              'This may be passed as a generic such as `graphql.persisted<typeof document>` or as the second argument.',
+            'This may be passed as a generic such as `graphql.persisted<typeof document>` or as the second argument.',
           file: filePath,
           line: position.line,
           col: position.col,
@@ -78,19 +78,11 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
       let foundNode: ts.CallExpression | null = null;
       let referencingNode: ts.Node = call;
       if (docArg && (ts.isCallExpression(docArg) || ts.isIdentifier(docArg))) {
-        const result = getDocumentReferenceFromDocumentNode(
-          docArg,
-          filePath,
-          pluginInfo
-        );
+        const result = getDocumentReferenceFromDocumentNode(docArg, filePath, pluginInfo);
         foundNode = result.node;
         referencingNode = docArg;
       } else if (typeQuery && ts.isTypeQueryNode(typeQuery)) {
-        const result = getDocumentReferenceFromTypeQuery(
-          typeQuery,
-          filePath,
-          pluginInfo
-        );
+        const result = getDocumentReferenceFromTypeQuery(typeQuery, filePath, pluginInfo);
         foundNode = result.node;
         referencingNode = typeQuery;
       }
