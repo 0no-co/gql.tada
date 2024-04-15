@@ -1,6 +1,6 @@
+import * as path from 'node:path';
 import { Project, TypeFormatFlags, TypeFlags, ts } from 'ts-morph';
 import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
-import path from 'node:path';
 
 import { loadConfig, parseConfig } from '@gql.tada/internal';
 

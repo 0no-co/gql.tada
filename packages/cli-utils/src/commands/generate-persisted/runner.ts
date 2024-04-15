@@ -1,5 +1,7 @@
+import * as path from 'node:path';
 import { Project, ts } from 'ts-morph';
 import { print } from '@0no-co/graphql.web';
+import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
 
 import {
   init,
@@ -8,79 +10,92 @@ import {
   unrollTadaFragments,
 } from '@0no-co/graphqlsp/api';
 
-import { load, resolveTypeScriptRootDir } from '@gql.tada/internal';
-import path from 'node:path';
-import fs from 'node:fs/promises';
+import { loadConfig, parseConfig } from '@gql.tada/internal';
 
 import type { TTY } from '../../term';
-import type { GraphQLSPConfig } from '../../lsp';
-import { getGraphQLSPConfig } from '../../lsp';
-import { getTsConfig } from '../../tsconfig';
+import type { WriteTarget } from '../shared';
 import { createPluginInfo } from '../../ts/project';
+import { writeOutput } from '../shared';
+import * as logger from './logger';
 
 interface Options {
   tsconfig: string | undefined;
   output: string | undefined;
 }
 
-export async function run(tty: TTY, opts: Options) {
-  const tsconfig = await getTsConfig(opts.tsconfig);
-  if (!tsconfig) {
-    return;
+export async function* run(tty: TTY, opts: Options) {
+  let configResult: LoadConfigResult;
+  let pluginConfig: GraphQLSPConfig;
+  try {
+    configResult = await loadConfig(opts.tsconfig);
+    pluginConfig = parseConfig(configResult.pluginConfig);
+  } catch (error) {
+    throw logger.externalError('Failed to load configuration.', error);
   }
 
-  const config = getGraphQLSPConfig(tsconfig);
-  if (!config) {
-    return;
-  }
-
-  const persistedOperations = await getPersistedOperationsFromFiles(opts, config);
-  const json = JSON.stringify(persistedOperations, null, 2);
-  if (opts.output) {
-    const resolved = path.resolve(process.cwd(), opts.output);
-    await fs.writeFile(resolved, json);
+  let destination: WriteTarget;
+  if (!opts.output && tty.pipeTo) {
+    destination = tty.pipeTo;
+  } else if (opts.output) {
+    destination = path.resolve(process.cwd(), opts.output);
+  } else if (pluginConfig.tadaPersistedLocation) {
+    destination = path.resolve(
+      path.dirname(configResult.configPath),
+      pluginConfig.tadaPersistedLocation
+    );
   } else {
-    const stream = tty.pipeTo || process.stdout;
-    stream.write(json);
+    throw logger.errorMessage(
+      'No output path was specified to write the persisted manifest file to.\n' +
+        logger.hint(
+          `You have to either set ${logger.code(
+            '"tadaPersistedLocation"'
+          )} in your configuration,\n` +
+            `pass an ${logger.code('--output')} argument to this command,\n` +
+            'or pipe this command to an output file.'
+        )
+    );
+  }
+
+  let contents: string;
+  try {
+    const persistedOperations = await getPersistedOperationsFromFiles({
+      rootPath: configResult.rootPath,
+      configPath: configResult.configPath,
+      pluginConfig,
+    });
+    contents = JSON.stringify(persistedOperations, null, 2);
+  } catch (error) {
+    throw logger.externalError('Could not generate persisted manifest file', error);
+  }
+
+  try {
+    await writeOutput(destination, contents);
+  } catch (error) {
+    throw logger.externalError('Something went wrong while writing the introspection file', error);
   }
 }
 
-const CWD = process.cwd();
+export interface PersistedParams {
+  rootPath: string;
+  configPath: string;
+  pluginConfig: GraphQLSPConfig;
+}
 
 async function getPersistedOperationsFromFiles(
-  opts: Options,
-  config: GraphQLSPConfig
+  params: PersistedParams
 ): Promise<Record<string, string>> {
-  let tsconfigPath = opts.tsconfig || CWD;
-  tsconfigPath =
-    path.extname(tsconfigPath) !== '.json'
-      ? path.resolve(CWD, tsconfigPath, 'tsconfig.json')
-      : path.resolve(CWD, tsconfigPath);
+  init({ typescript: ts as any });
 
-  const projectPath = path.dirname(tsconfigPath);
-  const rootPath = (await resolveTypeScriptRootDir(tsconfigPath)) || tsconfigPath;
-  const project = new Project({
-    tsConfigFilePath: tsconfigPath,
+  const projectPath = path.dirname(params.configPath);
+  const project = new Project({ tsConfigFilePath: params.configPath });
+  const pluginInfo = createPluginInfo(project, params.pluginConfig, projectPath);
+
+  // Filter source files by whether they're under the relevant root path
+  const sourceFiles = project.getSourceFiles().filter((sourceFile) => {
+    const filePath = path.resolve(projectPath, sourceFile.getFilePath());
+    const relative = path.relative(params.rootPath, filePath);
+    return !relative.startsWith('..');
   });
-
-  init({
-    typescript: ts as any,
-  });
-
-  const pluginCreateInfo = createPluginInfo(project, config, projectPath);
-
-  const sourceFiles = project.getSourceFiles();
-  const loader = load({ origin: config.schema, rootPath });
-  let schema;
-  try {
-    const loaderResult = await loader.load();
-    schema = loaderResult && loaderResult.schema;
-    if (!schema) {
-      throw new Error(`Failed to load schema`);
-    }
-  } catch (error) {
-    throw new Error(`Failed to load schema: ${error}`);
-  }
 
   return sourceFiles.reduce((acc, sourceFile) => {
     const persistedCallExpressions = findAllPersistedCallExpressions(sourceFile.compilerNode);
@@ -106,7 +121,7 @@ async function getPersistedOperationsFromFiles(
         const { node: foundNode } = getDocumentReferenceFromTypeQuery(
           typeQuery,
           currentFilename,
-          pluginCreateInfo
+          pluginInfo
         );
 
         if (!foundNode) {
@@ -132,7 +147,7 @@ async function getPersistedOperationsFromFiles(
         const fragments = [];
         const operation = initializer.arguments[0].getText().slice(1, -1);
         if (initializer.arguments[1] && ts.isArrayLiteralExpression(initializer.arguments[1])) {
-          unrollTadaFragments(initializer.arguments[1], fragments, pluginCreateInfo);
+          unrollTadaFragments(initializer.arguments[1], fragments, pluginInfo);
         }
 
         const document = `${operation}\n\n${fragments.map((frag) => print(frag)).join('\n\n')}`;

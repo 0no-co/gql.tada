@@ -5,6 +5,7 @@ export interface GraphQLSPConfig {
   schema: SchemaOrigin;
   tadaOutputLocation?: string;
   tadaTurboLocation?: string;
+  tadaPersistedLocation?: string;
 }
 
 export const parseConfig = (input: Record<string, unknown>) => {
@@ -44,6 +45,14 @@ export const parseConfig = (input: Record<string, unknown>) => {
   ) {
     throw new TadaError(
       "Configuration contains a `tadaTurboLocation` property, but it's not a file path"
+    );
+  } else if (
+    'tadaPersistedLocation' in input &&
+    input.tadaPersistedLocation &&
+    typeof input.tadaPersistedLocation !== 'string'
+  ) {
+    throw new TadaError(
+      "Configuration contains a `tadaPersistedLocation` property, but it's not a file path"
     );
   }
 
