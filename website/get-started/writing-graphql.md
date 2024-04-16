@@ -115,6 +115,10 @@ The above example uses the `ResultOf` and `VariablesOf` types for illustrative p
 These type utilities may be used to manually unwrap the types of a GraphQL `DocumentNode`
 returned by `graphql()`.
 
+<a href="/guides/typed-documents" class="button">
+    Learn more about Typed Documents
+</a>
+
 ## Fragments
 
 The `graphql()` function allows for fragment composition, which means we’re able to create
@@ -368,3 +372,7 @@ export const PokemonsListComponent = () => {
 Meaning, while we can unmask and use the `PokemonFragment`’s data in the `PokemonComponent`,
 the `PokemonsListComponent` cannot access any of the data requirements defined by and meant for the
 `PokemonComponent`.
+
+<a href="/guides/fragment-colocation" class="button">
+    Learn more about Fragment Colocation
+</a>
