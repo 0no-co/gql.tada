@@ -16,7 +16,7 @@ export const parseConfig = (input: Record<string, unknown>) => {
       throw new TadaError('Configuration contains a `schema` object, but no `url` property');
     }
 
-    if ('headers' in schema && schema.headers && typeof schema.headers !== 'object') {
+    if ('headers' in schema && schema.headers && typeof schema.headers === 'object') {
       for (const key in schema.headers) {
         if (schema.headers[key] && typeof schema.headers[key] !== 'string') {
           throw new TadaError(
