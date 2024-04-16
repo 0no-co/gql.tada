@@ -361,6 +361,12 @@
   grid-column-gap: 16px;
 }
 
+@media (max-width: 768px) {
+  :root .VPContent .column {
+    grid-template-columns: 1fr;
+  }
+}
+
 :root .VPContent :is(h1, h2, h3):has(+ .column) {
   font-size: 24px;
   color: var(--vp-c-text-1);
