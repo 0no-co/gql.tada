@@ -408,6 +408,18 @@ describe('readFragment', () => {
     expectTypeOf<typeof result>().toEqualTypeOf<ResultOf<document>>();
   });
 
+  it('falls back to unmasking to `never` with a missing generic', () => {
+    type fragment = parseDocument<`
+      fragment Fields on Todo {
+        id
+      }
+    `>;
+
+    type document = getDocumentNode<fragment, schema>;
+    // @ts-expect-error
+    const _result = readFragment({} as FragmentOf<document>);
+  });
+
   it('should be callable on already unmasked fragments', () => {
     type fragment = parseDocument<`
       fragment Fields on Todo {
