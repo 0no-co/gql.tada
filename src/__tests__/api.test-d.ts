@@ -368,8 +368,7 @@ describe('readFragment', () => {
     type document = getDocumentNode<query, schema>;
     // @ts-expect-error
     const result = readFragment({} as document, {} as FragmentOf<document>);
-    // TODO: Ensure this is never
-    expectTypeOf<typeof result>().toBeAny();
+    expectTypeOf<typeof result>().toBeUnknown();
   });
 
   it('should not accept empty objects', () => {
