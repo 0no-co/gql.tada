@@ -13,7 +13,7 @@ On this page, we’ll go through the steps to get everything set up properly.
 A quick demo of what this looks like can be found [in an example project in the `gql.tada`
 repository.](https://github.com/0no-co/gql.tada/blob/main/examples/example-pokemon-api/)
 
-## Step 1 — Installing packages
+## <span data-step="1">Step 1 —</span> Installing packages
 
 We’ll start by installing `gql.tada` as a dependency, and `@0no-co/graphqlsp` as
 a dev-dependency using out project’s package manager.
@@ -89,7 +89,7 @@ in providing you feedback and help when writing GraphQL documents.
 > To enable syntax highlighting for GraphQL, you can install the official
 > [“GraphQL: Syntax Highlighting” VSCode extension.](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql-syntax)
 
-## Step 2 — Configuring a schema
+## <span data-step="2">Step 2 —</span> Configuring a schema
 
 `@0no-co/graphqlsp` needs to have a GraphQL API’s schema to function correctly.
 The schema provides it with the types, fields, and description information of a GraphQL API.
@@ -179,7 +179,7 @@ The `schema` option currently allows for three different formats to load a schem
 ```
 :::
 
-## Step 3 — Configuring typings
+## <span data-step="3">Step 3 —</span> Configuring typings
 
 Afterwards, `@0no-co/graphqlsp` is ready to also output a typings file for `gql.tada`.
 The latter needs a **type** of an introspected GraphQL schema to infer types of

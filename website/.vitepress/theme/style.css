@@ -206,6 +206,54 @@
   border: none;
 }
 
+:root .VPContent .vp-doc :where(h1, h2, h3, h4, h5) [data-step] {
+  --size: 1em;
+  position: relative;
+  width: var(--size);
+  height: var(--size);
+  line-height: var(--size);
+  display: inline-block;
+  visibility: hidden;
+  white-space: nowrap;
+  margin-right: 0.4ch;
+}
+
+:root .VPContent .vp-doc :where(h1, h2, h3, h4, h5) [data-step]::first-line {
+  font-size: 0;
+}
+
+:root .VPContent .vp-doc [data-step]:after {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: var(--vp-c-default-soft);
+  visibility: visible;
+  font-variant-numeric: tabular-nums;
+  content: attr(data-step);
+  line-height: inherit;
+  border-radius: 50%;
+  text-align: center;
+  font-size: 0.65em;
+  font-weight: 500;
+}
+
+:root:not(.dark) .VPContent .vp-doc [data-step]:after {
+  background: var(--vp-c-indigo-soft);
+  color: var(--vp-c-black);
+}
+
+@media (min-width: 800px) {
+  :root .VPContent .vp-doc :where(h1, h2, h3, h4, h5) [data-step] {
+    margin-left: calc(-1em - 0.7ch);
+  }
+
+  :root .VPContent .vp-doc :where(h1, h2, h3, h4, h5):has([data-step]) .header-anchor {
+    display: none;
+  }
+}
+
 :root .VPContent .vp-doc :where(h1, h2, h3, h4, h5) .header-anchor {
   display: none;
   font-weight: 400;
