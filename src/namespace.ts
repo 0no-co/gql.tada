@@ -113,7 +113,7 @@ interface DefinitionDecoration<Definition = FragmentDefDecorationLike> {
 
 interface FragmentShape<
   Definition extends FragmentDefDecorationLike = FragmentDefDecorationLike,
-  Result = any,
+  Result = unknown,
 > extends DocumentDecoration<Result>,
     DefinitionDecoration<Definition> {}
 
