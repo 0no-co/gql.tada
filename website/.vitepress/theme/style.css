@@ -306,6 +306,10 @@
   opacity: 0.78;
 }
 
+:root .VPContent :is(.VPButton, .button).alt {
+  background: none;
+}
+
 :root:not(.dark) .VPDocFooter .pager .VPLink,
 :root:not(.dark) .VPContent :is(.VPButton, .button) {
   text-decoration: none;
@@ -319,6 +323,15 @@
   text-decoration: none;
   border-color: var(--vp-button-brand-hover-border);
   color: var(--vp-button-brand-hover-text);
+}
+
+:root:not(.dark) .VPContent :is(.VPButton, .button).alt {
+  box-shadow: none !important;
+}
+
+:root .VPContent :is(.VPButton, .button).alt:hover {
+  background: none;
+  border-color: var(--vp-c-gray-2);
 }
 
 :root .VPContent :is(.VPButton, .button) :last-child {
@@ -345,7 +358,7 @@
 :root .VPContent .column {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-gap: 16px;
+  grid-column-gap: 16px;
 }
 
 :root .VPContent :is(h1, h2, h3):has(+ .column) {
@@ -354,6 +367,10 @@
   padding: 14px 0;
   margin: 22px 0 12px 0;
   border-bottom: 1px solid var(--vp-c-divider);
+}
+
+:root .VPContent :is(h1, h2, h3):has(+ .column) .header-anchor {
+  display: none;
 }
 
 :root .VPContent :is(h1, h2, h3) + .column {
