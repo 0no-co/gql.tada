@@ -41,7 +41,18 @@ export function loadFromURL(config: LoadFromURLConfig): SchemaLoader {
   const client = new Client({
     url: `${config.url}`,
     fetchOptions: { headers: config.headers },
-    exchanges: [retryExchange({ initialDelayMs: 200, maxDelayMs: 1_500 }), fetchExchange],
+    exchanges: [
+      retryExchange({
+        initialDelayMs: 200,
+        maxDelayMs: 1_500,
+        maxNumberAttempts: 3,
+        retryWith(error, operation) {
+          if (error.networkError) process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+          return operation;
+        },
+      }),
+      fetchExchange,
+    ],
   });
 
   const scheduleUpdate = () => {
@@ -58,7 +69,7 @@ export function loadFromURL(config: LoadFromURLConfig): SchemaLoader {
     }
   };
 
-  const introspect = async (support: SupportedFeatures): Promise<typeof result> => {
+  const introspect = async (support: SupportedFeatures): Promise<SchemaLoaderResult> => {
     const query = makeIntrospectionQuery(support);
     const introspectionResult = await client.query<IntrospectionQuery>(query, {});
     try {
@@ -71,14 +82,17 @@ export function loadFromURL(config: LoadFromURLConfig): SchemaLoader {
           schema: buildClientSchema(introspection, { assumeValid: true }),
         };
       } else {
-        return null;
+        throw new Error(
+          'Executing introspection against API failed.\n' +
+            'The API failed to return any schema data or error.'
+        );
       }
     } finally {
       scheduleUpdate();
     }
   };
 
-  const load = async (): Promise<typeof result> => {
+  const load = async (): Promise<SchemaLoaderResult> => {
     if (!supportedFeatures) {
       const query = makeIntrospectSupportQuery();
       const supportResult = await client.query<IntrospectSupportQueryData>(query, {});
