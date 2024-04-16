@@ -1,5 +1,14 @@
 # @gql.tada/cli-utils
 
+## 1.0.2
+
+### Patch Changes
+
+- Remove `null` cases from schema loaders, simplifying error handling in the CLI
+  Submitted by [@kitten](https://github.com/kitten) (See [#214](https://github.com/0no-co/gql.tada/pull/214))
+- Updated dependencies (See [#222](https://github.com/0no-co/gql.tada/pull/222) and [#214](https://github.com/0no-co/gql.tada/pull/214))
+  - @gql.tada/internal@0.2.1
+
 ## 1.0.1
 
 ### Patch Changes

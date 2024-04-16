@@ -1,5 +1,15 @@
 # gql.tada
 
+## 1.5.2
+
+### Patch Changes
+
+- ⚠️ Fix `readFragment` falling back to `any` type when called with invalid data or invalid type
+  Submitted by [@kitten](https://github.com/kitten) (See [#216](https://github.com/0no-co/gql.tada/pull/216))
+- Updated dependencies (See [#222](https://github.com/0no-co/gql.tada/pull/222) and [#214](https://github.com/0no-co/gql.tada/pull/214))
+  - @gql.tada/internal@0.2.1
+  - @gql.tada/cli-utils@1.0.2
+
 ## 1.5.1
 
 ### Patch Changes
