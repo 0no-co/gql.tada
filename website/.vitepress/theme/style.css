@@ -266,20 +266,24 @@
 }
 
 :root .VPContent :is(.VPButton, .button) {
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 1.7;
+  position: relative;
   margin: 10px 0;
-  display: inline-block;
-  padding: 0 20px;
-  line-height: 38px;
+  padding: 10px calc(28px + 1em) 10px 20px;
   font-size: 14px;
   text-decoration: none;
   border-radius: 8px;
   color: var(--vp-button-brand-text);
-  text-align: center;
   font-weight: 600;
-  white-space: nowrap;
 }
 
-:root .VPContent :is(.VPButton, .button):after {
+:root .VPContent :is(.VPButton, .button):before {
+  position: absolute;
+  right: 17px;
+  top: 50%;
+  transform: translateY(-50%);
   --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E");
   display: inline-block;
   content: '';
@@ -294,6 +298,7 @@
 
 :root .VPDocFooter .pager .VPLink,
 :root .VPContent :is(.VPButton, .button) {
+  cursor: pointer;
   transition: color 0.25s, border-color 0.25s, background-color 0.25s;
   box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 1px 0px, rgba(0, 0, 0, 0.24) 0px 2px 1px 0px;
   background: linear-gradient(180deg, #171821 0%, #0c0c11 100%);
@@ -314,6 +319,45 @@
   text-decoration: none;
   border-color: var(--vp-button-brand-hover-border);
   color: var(--vp-button-brand-hover-text);
+}
+
+:root .VPContent :is(.VPButton, .button) :last-child {
+  margin-bottom: 4px;
+}
+
+:root .VPContent :is(.VPButton, .button) :is(p, span) {
+  margin: 0;
+  display: block;
+  line-height: 1.4;
+  color: var(--vp-c-text-2);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+:root .VPContent :is(.VPButton, .button) :is(h1, h2, h3, h4, h5) {
+  margin: 0;
+  display: block;
+  line-height: 2.0;
+  font-size: 19px;
+  font-weight: 600;
+}
+
+:root .VPContent .column {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-gap: 16px;
+}
+
+:root .VPContent :is(h1, h2, h3):has(+ .column) {
+  font-size: 24px;
+  color: var(--vp-c-text-1);
+  padding: 14px 0;
+  margin: 22px 0 12px 0;
+  border-bottom: 1px solid var(--vp-c-divider);
+}
+
+:root .VPContent :is(h1, h2, h3) + .column {
+  margin-top: 12px;
 }
 
 :root .VPContent .vp-doc p:empty {
