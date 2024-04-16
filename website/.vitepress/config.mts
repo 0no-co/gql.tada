@@ -139,6 +139,10 @@ export default defineConfig({
               link: '/guides/typed-documents',
             },
             {
+              text: 'Enums and Scalars',
+              link: '/guides/enums-and-scalars',
+            },
+            {
               text: 'Fragment Colocation',
               link: '/guides/fragment-colocation',
             },
