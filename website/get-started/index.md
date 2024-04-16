@@ -1,5 +1,7 @@
 ---
 title: Introduction
+prev: false
+next: false
 ---
 
 # Introduction
@@ -159,6 +161,13 @@ Currently, the list of supported features is:
 
 ## Next steps
 
-[The next page, “Installation”](./installation), will show you how to install and set up `gql.tada` and `@0no-co/graphqlsp`.
-
-[The following page, “Writing GraphQL”](./writing-graphql), will show you how to use `gql.tada` and write GraphQL documents with it.
+<div class="column">
+    <a class="button" href="./installation">
+        <h2>Installation</h2>
+        <p>How to install and set up <code>gql.tada</code></p>
+    </a>
+    <a class="button" href="./writing-graphql">
+        <h2>Writing GraphQL</h2>
+        <p>How to use <code>gql.tada</code> and write GraphQL documents with it.</p>
+    </a>
+</div>
