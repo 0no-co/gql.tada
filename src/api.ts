@@ -485,31 +485,31 @@ type fragmentRefsOfFragmentsRec<
  *
  * @see {@link readFragment} for how to read from fragment masks.
  */
-function readFragment<const Document extends FragmentShape>(
+function readFragment<const Document extends FragmentShape = never>(
   fragment: resultOrFragmentOf<Document>
 ): ResultOf<Document>;
-function readFragment<const Document extends FragmentShape>(
+function readFragment<const Document extends FragmentShape = never>(
   fragment: resultOrFragmentOf<Document> | null
 ): ResultOf<Document> | null;
-function readFragment<const Document extends FragmentShape>(
+function readFragment<const Document extends FragmentShape = never>(
   fragment: resultOrFragmentOf<Document> | undefined
 ): ResultOf<Document> | undefined;
-function readFragment<const Document extends FragmentShape>(
+function readFragment<const Document extends FragmentShape = never>(
   fragment: resultOrFragmentOf<Document> | null | undefined
 ): ResultOf<Document> | null | undefined;
-function readFragment<const Document extends FragmentShape>(
+function readFragment<const Document extends FragmentShape = never>(
   fragment: readonly resultOrFragmentOf<Document>[]
 ): readonly ResultOf<Document>[];
-function readFragment<const Document extends FragmentShape>(
+function readFragment<const Document extends FragmentShape = never>(
   fragment: readonly (resultOrFragmentOf<Document> | null)[]
 ): readonly (ResultOf<Document> | null)[];
-function readFragment<const Document extends FragmentShape>(
+function readFragment<const Document extends FragmentShape = never>(
   fragment: readonly (resultOrFragmentOf<Document> | undefined)[]
 ): readonly (ResultOf<Document> | undefined)[];
-function readFragment<const Document extends FragmentShape>(
+function readFragment<const Document extends FragmentShape = never>(
   fragment: readonly (resultOrFragmentOf<Document> | null | undefined)[]
 ): readonly (ResultOf<Document> | null | undefined)[];
-function readFragment<const Document extends FragmentShape>(
+function readFragment<const Document extends FragmentShape = never>(
   _document: Document,
   fragment: resultOrFragmentOf<Document>
 ): ResultOf<Document>;
