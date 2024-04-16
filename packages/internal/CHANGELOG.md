@@ -1,5 +1,14 @@
 # @gql.tada/internal
 
+## 0.2.1
+
+### Patch Changes
+
+- ⚠️ Fix config parser not being able to handle `schema.headers` object
+  Submitted by [@kitten](https://github.com/kitten) (See [#222](https://github.com/0no-co/gql.tada/pull/222))
+- Remove `null` cases from schema loaders, simplifying error handling in the CLI
+  Submitted by [@kitten](https://github.com/kitten) (See [#214](https://github.com/0no-co/gql.tada/pull/214))
+
 ## 0.2.0
 
 **Read the full release announcement post at: https://gql-tada.0no.co/devlog/2024-04-15**
