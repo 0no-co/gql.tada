@@ -2,7 +2,11 @@ import * as t from '../../term';
 
 export function indent(text: string, indent: string) {
   if (text.includes('\n')) {
-    return text.split('\n').join(t.text([t.Chars.Newline, indent]));
+    const out = text
+      .trim()
+      .split('\n')
+      .join(t.text([t.Chars.Newline, indent]));
+    return text.endsWith('\n') ? out + '\n' : out;
   } else {
     return text;
   }

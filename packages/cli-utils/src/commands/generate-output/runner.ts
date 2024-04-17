@@ -16,6 +16,7 @@ import { writeOutput } from '../shared';
 import * as logger from './logger';
 
 export interface Options {
+  forceTSFormat?: boolean;
   disablePreprocessing: boolean;
   output: string | undefined;
   tsconfig: string | undefined;
@@ -45,16 +46,6 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
     throw logger.externalError('Failed to load introspection.', error);
   }
 
-  let contents: string;
-  try {
-    contents = outputIntrospectionFile(minifyIntrospection(introspection), {
-      fileType: opts.output || pluginConfig.tadaOutputLocation || '.d.ts',
-      shouldPreprocess: !opts.disablePreprocessing,
-    });
-  } catch (error) {
-    throw logger.externalError('Could not generate introspection output', error);
-  }
-
   let destination: WriteTarget;
   if (!opts.output && tty.pipeTo) {
     destination = tty.pipeTo;
@@ -76,11 +67,26 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
     );
   }
 
+  let contents: string;
+  try {
+    contents = outputIntrospectionFile(minifyIntrospection(introspection), {
+      fileType:
+        destination && typeof destination === 'string'
+          ? destination
+          : opts.forceTSFormat
+            ? '.ts'
+            : '.d.ts',
+      shouldPreprocess: !opts.disablePreprocessing,
+    });
+  } catch (error) {
+    throw logger.externalError('Could not generate introspection output', error);
+  }
+
   try {
     await writeOutput(destination, contents);
   } catch (error) {
     throw logger.externalError('Something went wrong while writing the introspection file', error);
   }
 
-  yield logger.summary();
+  yield logger.summary(!opts.forceTSFormat && typeof destination !== 'string');
 }
