@@ -1,5 +1,5 @@
 ---
-"@gql.tada/internal": patch
+"@gql.tada/cli-utils": patch
 ---
 
-Fix CLI outputting .d.ts when .ts input file specified
+Fix `generate-output` command outputting the `.d.ts` format when `.ts` extension was specified instead
