@@ -1,5 +1,14 @@
 # @gql.tada/cli-utils
 
+## 1.0.3
+
+### Patch Changes
+
+- Add missing argument to `generate-output` command to force output the `.ts` format instead
+  Submitted by [@kitten](https://github.com/kitten) (See [#227](https://github.com/0no-co/gql.tada/pull/227))
+- ⚠️ Fix `generate-output` command outputting the `.d.ts` format when `.ts` extension was specified instead
+  Submitted by [@llllvvuu](https://github.com/llllvvuu) (See [#225](https://github.com/0no-co/gql.tada/pull/225))
+
 ## 1.0.2
 
 ### Patch Changes
