@@ -7,6 +7,11 @@ import { run } from './runner';
 export class GenerateOutputCommand extends Command {
   static paths = [['generate-output'], ['generate', 'output']];
 
+  forceTSFormat = Option.Boolean('--force-ts-format', false, {
+    description: 'Forces the `.ts` output format when the output is piped',
+    hidden: true,
+  });
+
   disablePreprocessing = Option.Boolean('--disable-preprocessing', false, {
     description:
       'Disables pre-processing, which is an internal introspection format generated ahead of time',
@@ -25,6 +30,7 @@ export class GenerateOutputCommand extends Command {
     const tty = initTTY();
     const result = await tty.start(
       run(tty, {
+        forceTSFormat: this.forceTSFormat,
         disablePreprocessing: this.disablePreprocessing,
         output: this.output,
         tsconfig: this.tsconfig,
