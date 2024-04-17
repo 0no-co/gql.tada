@@ -48,7 +48,7 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
   let contents: string;
   try {
     contents = outputIntrospectionFile(minifyIntrospection(introspection), {
-      fileType: pluginConfig.tadaOutputLocation || '.d.ts',
+      fileType: opts.output || pluginConfig.tadaOutputLocation || '.d.ts',
       shouldPreprocess: !opts.disablePreprocessing,
     });
   } catch (error) {
