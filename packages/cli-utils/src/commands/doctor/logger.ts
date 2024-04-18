@@ -93,7 +93,7 @@ export function hintMessage(text: string) {
       text,
       t.text([
         t.cmd(t.CSI.Style, t.Style.BrightBlack),
-        `${t.HeavyBox.Vertical} `,
+        `${t.HeavyBox.Vertical}   `,
         t.cmd(t.CSI.Style, t.Style.Blue),
       ])
     ),
