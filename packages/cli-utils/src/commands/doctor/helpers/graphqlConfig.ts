@@ -1,6 +1,8 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+
 import { stat, FileType } from './fs';
+import { findWorkspaceRoot } from './workspaceRoot';
 
 const configFileRe = /^(?:graphql\.config|\.graphqlrc)\.(?:cjs|[jt]s|json|toml|ya?ml)$/i;
 
@@ -22,5 +24,25 @@ export const findGraphQLConfig = async (targetPath?: string): Promise<string | n
     }
     target = path.resolve(target, '..');
   }
+
+  const workspaceRoot = await findWorkspaceRoot(targetPath);
+  if (workspaceRoot) {
+    const packageJsonPath = path.resolve(workspaceRoot, 'package.json');
+    if (await stat(packageJsonPath)) {
+      try {
+        const meta = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
+        if (
+          meta &&
+          typeof meta === 'object' &&
+          'graphql' in meta &&
+          meta.graphql &&
+          typeof meta.graphql === 'object'
+        ) {
+          return packageJsonPath;
+        }
+      } catch (_error) {}
+    }
+  }
+
   return null;
 };
