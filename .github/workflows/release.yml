@@ -59,6 +59,17 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Notify discord
+        id: discord-msg
+        if: steps.changesets.outputs.published == 'true'
+        uses: ./.github/actions/discord-message
+        with:
+          publishedPackages: ${{ steps.changesets.outputs.publishedPackages }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
       - name: Publish Prerelease
         if: steps.changesets.outputs.published != 'true'
         continue-on-error: true

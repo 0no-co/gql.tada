@@ -3,7 +3,7 @@ import * as github from '@actions/github';
 import fetch from 'node-fetch';
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const WEBHOOK_URL = process.env.DISCORD_URQL_WEBHOOK_URL;
+const WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
 
 const octokit = github.getOctokit(GITHUB_TOKEN);
 
