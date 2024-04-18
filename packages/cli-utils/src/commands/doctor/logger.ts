@@ -1,6 +1,7 @@
 import { pipe, interval, map } from 'wonka';
 
 import * as t from '../../term';
+import { indent } from '../shared/logger';
 
 export * from '../shared/logger';
 
@@ -63,6 +64,39 @@ export function failedTask(description: string) {
     t.cmd(t.CSI.Style, t.Style.Foreground),
     description,
     '\n',
+  ]);
+}
+
+export function warningTask(description: string) {
+  return t.text([
+    emptyLine(),
+    t.cmd(t.CSI.Style, t.Style.BrightBlack),
+    t.HeavyBox.VerticalRight,
+    ' ',
+    t.cmd(t.CSI.Style, t.Style.BrightYellow),
+    t.Icons.Warning,
+    ' ',
+    t.cmd(t.CSI.Style, t.Style.Foreground),
+    description,
+    '\n',
+  ]);
+}
+
+export function hintMessage(text: string) {
+  return t.text([
+    t.cmd(t.CSI.Style, t.Style.BrightBlack),
+    `${t.HeavyBox.VerticalRight} `,
+    t.cmd(t.CSI.Style, t.Style.BrightBlue),
+    `${t.Icons.Info} `,
+    t.cmd(t.CSI.Style, t.Style.Blue),
+    indent(
+      text,
+      t.text([
+        t.cmd(t.CSI.Style, t.Style.BrightBlack),
+        `${t.HeavyBox.Vertical} `,
+        t.cmd(t.CSI.Style, t.Style.Blue),
+      ])
+    ),
   ]);
 }
 
