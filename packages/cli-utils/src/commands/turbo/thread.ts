@@ -16,7 +16,7 @@ export interface TurboParams {
 }
 
 async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSignal> {
-  init({ typescript: ts as any });
+  init({ typescript: ts });
 
   const projectPath = path.dirname(params.configPath);
   const project = new Project({
@@ -32,7 +32,7 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
     scriptKind: ScriptKind.TS,
   });
   project.addSourceFilesFromTsConfig(params.configPath);
-  const vueFiles = await polyfillVueSupport(project, ts as any);
+  const vueFiles = await polyfillVueSupport(project, ts);
 
   // Filter source files by whether they're under the relevant root path
   const sourceFiles = project

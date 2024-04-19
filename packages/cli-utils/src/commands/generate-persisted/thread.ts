@@ -25,12 +25,12 @@ export interface PersistedParams {
 }
 
 async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<PersistedSignal> {
-  init({ typescript: ts as any });
+  init({ typescript: ts });
 
   const projectPath = path.dirname(params.configPath);
   const project = new Project({ tsConfigFilePath: params.configPath });
   const pluginInfo = createPluginInfo(project, params.pluginConfig, projectPath);
-  const vueFiles = await polyfillVueSupport(project, ts as any);
+  const vueFiles = await polyfillVueSupport(project, ts);
 
   // Filter source files by whether they're under the relevant root path
   const sourceFiles = project

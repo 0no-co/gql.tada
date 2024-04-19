@@ -19,12 +19,12 @@ export interface DiagnosticsParams {
 async function* _runDiagnostics(
   params: DiagnosticsParams
 ): AsyncIterableIterator<DiagnosticSignal> {
-  init({ typescript: ts as any });
+  init({ typescript: ts });
   const projectPath = path.dirname(params.configPath);
   const loader = load({ origin: params.pluginConfig.schema, rootPath: projectPath });
   const project = new Project({ tsConfigFilePath: params.configPath });
   const pluginInfo = createPluginInfo(project, params.pluginConfig, projectPath);
-  const vueFiles = await polyfillVueSupport(project, ts as any);
+  const vueFiles = await polyfillVueSupport(project, ts);
 
   const loadResult = await loader.load();
   const schemaRef = { current: loadResult.schema, version: 1 };
