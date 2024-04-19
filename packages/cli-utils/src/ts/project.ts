@@ -1,15 +1,6 @@
 import type { GraphQLSPConfig } from '@gql.tada/internal';
 import type { Project, SourceFile } from 'ts-morph';
 import * as vue from '@vue/language-core';
-import { rm } from 'node:fs/promises';
-
-export const cleanupVueFiles = async (vueFiles: Array<SourceFile>) => {
-  await Promise.allSettled(
-    vueFiles.map((sourceFile) => {
-      return rm(sourceFile.compilerNode.fileName);
-    })
-  );
-};
 
 export const polyfillVueSupport = async (
   project: Project,
@@ -42,7 +33,7 @@ export const polyfillVueSupport = async (
       const serviceScript = vueLanguagePlugin.typescript?.getServiceScript(virtualCode!);
       if (!serviceScript) return undefined;
       const parsedSourceFile = project.createSourceFile(
-        filename + '.tada.ts',
+        filename + '.ts',
         serviceScript.code.snapshot.getText(0, serviceScript.code.snapshot.getLength()),
         { overwrite: true, scriptKind: serviceScript.scriptKind }
       );
@@ -50,7 +41,7 @@ export const polyfillVueSupport = async (
       parsedSourceFile.version = sourceFile.version;
     });
 
-    await project.save();
+    //await project.save();
   }
   return vueProjectFiles;
 };
@@ -65,15 +56,9 @@ export const createPluginInfo = (
     config,
     languageService: {
       getReferencesAtPosition: (filename, position) => {
-        if (filename.endsWith('.vue')) {
-          filename += '.tada.ts';
-        }
         return languageService.compilerObject.getReferencesAtPosition(filename, position);
       },
       getDefinitionAtPosition: (filename, position) => {
-        if (filename.endsWith('.vue')) {
-          filename += '.tada.ts';
-        }
         return languageService.compilerObject.getDefinitionAtPosition(filename, position);
       },
       getProgram: () => {

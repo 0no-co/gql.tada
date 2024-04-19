@@ -1,3 +1,3 @@
 {
-  "sha256:fc073da8e9719deb51cdb258d7c35865708852c5ce9031a257588370d3cd42f3": "\n      query Pokemons($limit: Int = 10) {\n        pokemons(limit: $limit) {\n          id\n          ...PokemonItem\n        }\n      }\n    "
+  "sha256:fc073da8e9719deb51cdb258d7c35865708852c5ce9031a257588370d3cd42f3": "\n      query Pokemons($limit: Int = 10) {\n        pokemons(limit: $limit) {\n          id\n          ...PokemonItem\n        }\n      }\n    \n\nfragment PokemonItem on Pokemon {\n  id\n  name\n}"
 }

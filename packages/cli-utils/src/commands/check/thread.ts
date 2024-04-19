@@ -5,7 +5,7 @@ import type { GraphQLSPConfig } from '@gql.tada/internal';
 import { load } from '@gql.tada/internal';
 import { init, getGraphQLDiagnostics } from '@0no-co/graphqlsp/api';
 
-import { cleanupVueFiles, createPluginInfo, getFilePosition, polyfillVueSupport } from '../../ts';
+import { createPluginInfo, getFilePosition, polyfillVueSupport } from '../../ts';
 import { expose } from '../../threads';
 
 import type { Severity, DiagnosticMessage, DiagnosticSignal } from './types';
@@ -83,11 +83,6 @@ async function* _runDiagnostics(
       messages,
     };
   }
-
-  const filesToCleanup = project
-    .getSourceFiles()
-    .filter((sourceFile) => sourceFile.compilerNode.fileName.endsWith('vue.tada.ts'));
-  await cleanupVueFiles(filesToCleanup);
 }
 
 export const runDiagnostics = expose(_runDiagnostics);

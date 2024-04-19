@@ -13,7 +13,7 @@ import {
   unrollTadaFragments,
 } from '@0no-co/graphqlsp/api';
 
-import { cleanupVueFiles, createPluginInfo, getFilePosition, polyfillVueSupport } from '../../ts';
+import { createPluginInfo, getFilePosition, polyfillVueSupport } from '../../ts';
 import { expose } from '../../threads';
 
 import type { PersistedSignal, PersistedWarning } from './types';
@@ -138,11 +138,6 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
       warnings,
     };
   }
-
-  const filesToCleanup = project
-    .getSourceFiles()
-    .filter((sourceFile) => sourceFile.compilerNode.fileName.endsWith('vue.tada.ts'));
-  await cleanupVueFiles(filesToCleanup);
 }
 
 export const runPersisted = expose(_runPersisted);
