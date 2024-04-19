@@ -7,7 +7,7 @@ export const polyfillVueSupport = async (
   ts: typeof import('typescript/lib/tsserverlibrary')
 ): Promise<Array<SourceFile>> => {
   // TODO: scope this to the include array
-  const vueProjectFiles = project.addSourceFilesAtPaths('./src/**/*.vue');
+  const vueProjectFiles = project.addSourceFilesAtPaths('./**/*.vue');
   if (vueProjectFiles.length) {
     // TODO: log experimental warning here
     const vueOptions = vue.resolveVueCompilerOptions({});
