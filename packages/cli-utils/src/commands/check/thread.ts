@@ -5,7 +5,7 @@ import type { GraphQLSPConfig } from '@gql.tada/internal';
 import { load } from '@gql.tada/internal';
 import { init, getGraphQLDiagnostics } from '@0no-co/graphqlsp/api';
 
-import { createPluginInfo, getFilePosition } from '../../ts';
+import { cleanupVueFiles, createPluginInfo, getFilePosition, polyfillVueSupport } from '../../ts';
 import { expose } from '../../threads';
 
 import type { Severity, DiagnosticMessage, DiagnosticSignal } from './types';
@@ -24,19 +24,20 @@ async function* _runDiagnostics(
   const loader = load({ origin: params.pluginConfig.schema, rootPath: projectPath });
   const project = new Project({ tsConfigFilePath: params.configPath });
   const pluginInfo = createPluginInfo(project, params.pluginConfig, projectPath);
-  const isVueProject = project.addSourceFilesAtPaths('./src/**/*.vue').length > 0;
-
-  await project.save();
+  const vueFiles = await polyfillVueSupport(project, ts as any);
 
   const loadResult = await loader.load();
   const schemaRef = { current: loadResult.schema, version: 1 };
 
   // Filter source files by whether they're under the relevant root path
-  const sourceFiles = project.getSourceFiles().filter((sourceFile) => {
-    const filePath = path.resolve(projectPath, sourceFile.getFilePath());
-    const relative = path.relative(params.rootPath, filePath);
-    return !relative.startsWith('..');
-  });
+  const sourceFiles = project
+    .getSourceFiles()
+    .filter((sourceFile) => {
+      const filePath = path.resolve(projectPath, sourceFile.getFilePath());
+      const relative = path.relative(params.rootPath, filePath);
+      return !relative.startsWith('..');
+    })
+    .filter((sourceFile) => vueFiles.includes(sourceFile));
 
   yield {
     kind: 'FILE_COUNT',
@@ -82,6 +83,11 @@ async function* _runDiagnostics(
       messages,
     };
   }
+
+  const filesToCleanup = project
+    .getSourceFiles()
+    .filter((sourceFile) => sourceFile.compilerNode.fileName.endsWith('vue.tada.ts'));
+  await cleanupVueFiles(filesToCleanup);
 }
 
 export const runDiagnostics = expose(_runDiagnostics);
