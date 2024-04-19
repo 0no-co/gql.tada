@@ -14,31 +14,31 @@ export const polyfillVueSupport = async (
     const vueLanguagePlugin = vue.createVueLanguagePlugin(
       ts as any,
       (id) => id,
-      // use case sensitive filenames
-      true,
-      () => 'project-version-tsc', // we don't need a version, no incremental going on
+      true /* use case-sensitive filenames */,
+      () => 'project-version-tsc' /* we don't need a version, no incremental going on */,
       () => vueProjectFiles.map((x) => x.compilerNode.fileName),
       compilerOptions,
       vueOptions,
       false
     );
-    vueProjectFiles.forEach((sourceFile) => {
+
+    for (const sourceFile of vueProjectFiles) {
       const filename = sourceFile.compilerNode.fileName;
       const virtualCode = vueLanguagePlugin.createVirtualCode(
         filename,
         'vue',
-        ts!.ScriptSnapshot.fromString(sourceFile!.getFullText())
+        ts.ScriptSnapshot.fromString(sourceFile.getFullText())
       );
+      if (!virtualCode) continue;
       const serviceScript = vueLanguagePlugin.typescript?.getServiceScript(virtualCode!);
-      if (!serviceScript) return undefined;
-      const parsedSourceFile = project.createSourceFile(
-        filename + '.ts',
-        serviceScript.code.snapshot.getText(0, serviceScript.code.snapshot.getLength()),
-        { overwrite: true, scriptKind: serviceScript.scriptKind }
-      );
-      // @ts-expect-error
-      parsedSourceFile.version = sourceFile.version;
-    });
+      if (serviceScript) {
+        project.createSourceFile(
+          filename + '.ts',
+          serviceScript.code.snapshot.getText(0, serviceScript.code.snapshot.getLength()),
+          { overwrite: true, scriptKind: serviceScript.scriptKind }
+        ).version = sourceFile.version;
+      }
+    }
   }
   return vueProjectFiles;
 };
