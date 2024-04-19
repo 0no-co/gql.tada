@@ -4,7 +4,7 @@ import { Project, TypeFormatFlags, TypeFlags, ScriptKind, ts } from 'ts-morph';
 import type { GraphQLSPConfig } from '@gql.tada/internal';
 import { init } from '@0no-co/graphqlsp/api';
 
-import { getFilePosition } from '../../ts';
+import { getFilePosition, polyfillVueSupport } from '../../ts';
 import { expose } from '../../threads';
 
 import type { TurboSignal, TurboWarning } from './types';
@@ -16,7 +16,7 @@ export interface TurboParams {
 }
 
 async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSignal> {
-  init({ typescript: ts as any });
+  init({ typescript: ts });
 
   const projectPath = path.dirname(params.configPath);
   const project = new Project({
@@ -33,6 +33,14 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
   });
   project.addSourceFilesFromTsConfig(params.configPath);
 
+  const vueSourceFiles = polyfillVueSupport(project, ts);
+  if (vueSourceFiles.length) {
+    yield {
+      kind: 'WARNING',
+      message: 'Vue single-file component support is experimental.',
+    };
+  }
+
   // Filter source files by whether they're under the relevant root path
   const sourceFiles = project.getSourceFiles().filter((sourceFile) => {
     const filePath = path.resolve(projectPath, sourceFile.getFilePath());
@@ -46,8 +54,13 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
   };
 
   const checker = project.getTypeChecker().compilerObject;
-  for (const { compilerNode: sourceFile } of sourceFiles) {
+  for (let { compilerNode: sourceFile } of sourceFiles) {
     const filePath = sourceFile.fileName;
+    if (filePath.endsWith('.vue')) {
+      const compiledSourceFile = project.getSourceFile(filePath + '.ts');
+      if (compiledSourceFile) sourceFile = compiledSourceFile.compilerNode;
+    }
+
     const cache: Record<string, string> = {};
     const warnings: TurboWarning[] = [];
 
@@ -69,6 +82,7 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
         });
         continue;
       }
+
       const key: string =
         'value' in argumentType &&
         typeof argumentType.value === 'string' &&

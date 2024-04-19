@@ -5,7 +5,7 @@ import type { GraphQLSPConfig } from '@gql.tada/internal';
 import { load } from '@gql.tada/internal';
 import { init, getGraphQLDiagnostics } from '@0no-co/graphqlsp/api';
 
-import { createPluginInfo, getFilePosition } from '../../ts';
+import { createPluginInfo, getFilePosition, polyfillVueSupport } from '../../ts';
 import { expose } from '../../threads';
 
 import type { Severity, DiagnosticMessage, DiagnosticSignal } from './types';
@@ -19,11 +19,19 @@ export interface DiagnosticsParams {
 async function* _runDiagnostics(
   params: DiagnosticsParams
 ): AsyncIterableIterator<DiagnosticSignal> {
-  init({ typescript: ts as any });
+  init({ typescript: ts });
   const projectPath = path.dirname(params.configPath);
   const loader = load({ origin: params.pluginConfig.schema, rootPath: projectPath });
   const project = new Project({ tsConfigFilePath: params.configPath });
   const pluginInfo = createPluginInfo(project, params.pluginConfig, projectPath);
+
+  const vueSourceFiles = polyfillVueSupport(project, ts);
+  if (vueSourceFiles.length) {
+    yield {
+      kind: 'WARNING',
+      message: 'Vue single-file component support is experimental.',
+    };
+  }
 
   const loadResult = await loader.load();
   const schemaRef = { current: loadResult.schema, version: 1 };

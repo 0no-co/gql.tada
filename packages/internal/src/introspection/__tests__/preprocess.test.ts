@@ -48,7 +48,7 @@ describe('preprocessIntrospection', () => {
       tabWidth: 2,
       printWidth: 0,
       trailingComma: 'es5',
-    };
+    } as const;
 
     const [expectedSchema, actualSchema] = await Promise.all([
       format(ts.readFileFromRoot('src/__tests__/fixtures/simpleSchema.ts').toString(), OPTS),
