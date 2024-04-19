@@ -9,5 +9,6 @@ declare module 'ts-morph' {
 
   interface SourceFile {
     version: unknown;
+    _inProject?: boolean;
   }
 }

@@ -8,11 +8,10 @@ export const polyfillVueSupport = async (
 ): Promise<Array<SourceFile>> => {
   const vueProjectFiles = project.addSourceFilesAtPaths(['!node_modules', './**/*.vue']);
   if (vueProjectFiles.length) {
-    // TODO: log experimental warning here
     const vueOptions = vue.resolveVueCompilerOptions({});
     const compilerOptions = project.getCompilerOptions();
     const vueLanguagePlugin = vue.createVueLanguagePlugin(
-      ts as any,
+      ts,
       (id) => id,
       true /* use case-sensitive filenames */,
       () => 'project-version-tsc' /* we don't need a version, no incremental going on */,
@@ -30,7 +29,7 @@ export const polyfillVueSupport = async (
         ts.ScriptSnapshot.fromString(sourceFile.getFullText())
       );
       if (!virtualCode) continue;
-      const serviceScript = vueLanguagePlugin.typescript?.getServiceScript(virtualCode!);
+      const serviceScript = vueLanguagePlugin.typescript?.getServiceScript(virtualCode);
       if (serviceScript) {
         const parsedSourceFile = project.createSourceFile(
           filename + '.ts',
@@ -38,7 +37,6 @@ export const polyfillVueSupport = async (
           { overwrite: true, scriptKind: serviceScript.scriptKind }
         );
         parsedSourceFile.version = sourceFile.version;
-        // @ts-ignore
         parsedSourceFile._inProject = false;
       }
     }
