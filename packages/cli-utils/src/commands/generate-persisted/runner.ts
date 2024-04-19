@@ -8,13 +8,18 @@ import type { WriteTarget } from '../shared';
 import { writeOutput } from '../shared';
 import * as logger from './logger';
 
-export interface Options {
+export interface PersistedOptions {
+  /** The `tsconfig.json` to use for configurations and the TypeScript program.
+   * @defaultValue A `tsconfig.json` in the current or any parent directory. */
   tsconfig: string | undefined;
+  /** The filename to write the persisted JSON manifest to.
+   * @defaultValue The `schema` configuration option */
   output: string | undefined;
+  /** Whether to fail instead of just logging a warning. */
   failOnWarn: boolean;
 }
 
-export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput> {
+export async function* run(tty: TTY, opts: PersistedOptions): AsyncIterable<ComposeInput> {
   const { runPersisted } = await import('./thread');
 
   let configResult: LoadConfigResult;

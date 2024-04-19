@@ -9,14 +9,20 @@ import type { WriteTarget } from '../shared';
 import { writeOutput } from '../shared';
 import * as logger from './logger';
 
-export interface Options {
+export interface SchemaOptions {
+  /** The filename to a `.graphql` SDL file, introspection JSON, or URL to a GraphQL API to introspect. */
   input: string;
+  /** Object of headers to send when introspection a GraphQL API. */
   headers: Record<string, string> | undefined;
+  /** The filename to write the GraphQL SDL file to.
+   * @defaultValue The `schema` configuration option */
   output: string | undefined;
+  /** The `tsconfig.json` to use for configurations and the TypeScript program.
+   * @defaultValue A `tsconfig.json` in the current or any parent directory. */
   tsconfig: string | undefined;
 }
 
-export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput> {
+export async function* run(tty: TTY, opts: SchemaOptions): AsyncIterable<ComposeInput> {
   const origin = opts.headers ? { url: opts.input, headers: opts.headers } : opts.input;
   const loader = load({ rootPath: process.cwd(), origin });
 

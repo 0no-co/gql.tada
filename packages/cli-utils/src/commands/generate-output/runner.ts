@@ -15,14 +15,22 @@ import type { WriteTarget } from '../shared';
 import { writeOutput } from '../shared';
 import * as logger from './logger';
 
-export interface Options {
+export interface OutputOptions {
+  /** Whether to output the `.ts` format when the CLI's standard output is piped to an output file.
+   * @defaultValue `false` */
   forceTSFormat?: boolean;
+  /** Whether to disable the optimized output format for `.d.ts` files.
+   * @defaultValue `false` */
   disablePreprocessing: boolean;
+  /** The filename to write the cache file to.
+   * @defaultValue The `tadaTurboLocation` configuration option */
   output: string | undefined;
+  /** The `tsconfig.json` to use for configurations and the TypeScript program.
+   * @defaultValue A `tsconfig.json` in the current or any parent directory. */
   tsconfig: string | undefined;
 }
 
-export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput> {
+export async function* run(tty: TTY, opts: OutputOptions): AsyncIterable<ComposeInput> {
   let configResult: LoadConfigResult;
   let pluginConfig: GraphQLSPConfig;
   try {

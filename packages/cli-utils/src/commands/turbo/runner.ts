@@ -10,13 +10,18 @@ import * as logger from './logger';
 
 const PREAMBLE_IGNORE = ['/* eslint-disable */', '/* prettier-ignore */'].join('\n') + '\n';
 
-export interface Options {
+export interface TurboOptions {
+  /** Whether to fail instead of just logging a warning. */
   failOnWarn: boolean;
+  /** The `tsconfig.json` to use for configurations and the TypeScript program.
+   * @defaultValue A `tsconfig.json` in the current or any parent directory. */
   tsconfig: string | undefined;
+  /** The filename to write the cache file to.
+   * @defaultValue The `tadaTurboLocation` configuration option */
   output: string | undefined;
 }
 
-export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput> {
+export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeInput> {
   const { runTurbo } = await import('./thread');
 
   let configResult: LoadConfigResult;
