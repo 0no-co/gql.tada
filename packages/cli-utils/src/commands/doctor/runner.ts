@@ -6,6 +6,8 @@ import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
 import { load, loadConfig, parseConfig } from '@gql.tada/internal';
 
 import type { ComposeInput } from '../../term';
+import { findGraphQLConfig } from './helpers/graphqlConfig';
+import * as vscode from './helpers/vscode';
 import * as logger from './logger';
 
 // NOTE: Currently, most tasks in this command complete too quickly
@@ -31,6 +33,7 @@ const enum Messages {
   CHECK_TS_VERSION = 'Checking TypeScript version',
   CHECK_DEPENDENCIES = 'Checking installed dependencies',
   CHECK_TSCONFIG = 'Checking tsconfig.json',
+  CHECK_VSCODE = 'Checking VSCode setup',
   CHECK_SCHEMA = 'Checking schema',
 }
 
@@ -161,6 +164,9 @@ export async function* run(): AsyncIterable<ComposeInput> {
   }
 
   yield logger.completedTask(Messages.CHECK_TSCONFIG);
+
+  yield* runVSCodeChecks();
+
   yield logger.runningTask(Messages.CHECK_SCHEMA);
   await delay();
 
@@ -179,4 +185,58 @@ export async function* run(): AsyncIterable<ComposeInput> {
   await delay();
 
   yield logger.success();
+}
+
+async function* runVSCodeChecks(): AsyncIterable<ComposeInput> {
+  const suggestedExtensions = await vscode.loadSuggestedExtensionsList();
+  const isVSCodeInstalled = await vscode.isVSCodeInstalled();
+  if (suggestedExtensions.length || isVSCodeInstalled) {
+    yield logger.runningTask(Messages.CHECK_VSCODE);
+    await delay();
+
+    let hasEndedTask = false;
+    let userExtensions: readonly string[] = [];
+    if (isVSCodeInstalled) {
+      userExtensions = await vscode.loadExtensionsList();
+      if (true || !userExtensions.includes('graphql.vscode-graphql-syntax')) {
+        if (!hasEndedTask) {
+          hasEndedTask = true;
+          yield logger.warningTask(Messages.CHECK_VSCODE);
+        }
+        yield logger.hintMessage(
+          `We recommend you to install the ${logger.code(
+            '"GraphQL: Syntax Highlighting"'
+          )} extension for VSCode.\n` +
+            'See: https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql-syntax\n'
+        );
+      }
+    }
+
+    const hasProblemExtension =
+      userExtensions.includes('graphql.vscode-graphql') ||
+      suggestedExtensions.includes('graphql.vscode-graphql');
+    const graphqlConfig = await findGraphQLConfig();
+    if (hasProblemExtension && !!graphqlConfig) {
+      if (!hasEndedTask) {
+        hasEndedTask = true;
+        yield logger.warningTask(Messages.CHECK_VSCODE);
+      }
+      const fileName = path.basename(graphqlConfig);
+      yield logger.hintMessage(
+        `The ${logger.code(
+          '"GraphQL: Language Feature Support"'
+        )} VSCode extension can cause problems!\n` +
+          `When enabled it may display invalid diagnostic errors for ${logger.code(
+            'gql.tada'
+          )} code.\n` +
+          `Check whether your ${logger.code(fileName)} config only targets ${logger.code(
+            '.graphql'
+          )} documents.\n`
+      );
+    }
+
+    if (!hasEndedTask) {
+      yield logger.completedTask(Messages.CHECK_VSCODE);
+    }
+  }
 }
