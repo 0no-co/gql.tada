@@ -107,7 +107,14 @@ The `schema` option currently allows for three different formats to load a schem
 ```
 :::
 
-[Read more on how to configure the `schema` option, on the “Installation” page.](../get-started/installation#step-2-configuring-a-schema)
+<a href="../get-started/installation#step-2-configuring-a-schema" class="button">
+  <h4>Installation</h4>
+  <p>
+    Learn how to configure the <code>schema</code> option
+  </p>
+</a>
+
+---
 
 ### `tadaOutputLocation`
 
@@ -167,8 +174,6 @@ export const graphql = initGraphQLTada<{
 ```
 :::
 
-[Read more on how to configure the `tadaOutputLocation` option, on the “Installation” page.](../get-started/installation#step-3-configuring-typings)
-
 #### Format 2 — `.ts` file
 
 > [!WARNING]
@@ -197,7 +202,12 @@ Hence, with this format it’s required to import the introspection and to creat
 the [`initGraphQLTada<>()` function](./gql-tada-api#initgraphqltada). The introspection type won’t be set up project-wide, since the
 `.ts` output from `@0no-co/graphqlsp` doesn’t contain a `declare module` declaration.
 
-[Read more on how to configure the `tadaOutputLocation` option, on the “Installation” page.](../get-started/installation#initializing-gqltada-manually)
+<a href="../get-started/installation#initializing-gqltada-manually" class="button">
+  <h4>Installation</h4>
+  <p>
+    Learn how to configure the <code>tadaOutputLocation</code> option
+  </p>
+</a>
 
 ### `template`
 
@@ -233,6 +243,8 @@ if we wanted to name a function `parseGraphQL` instead, we may set the option to
 > custom tag functions with an inline `/* GraphQL */` comment.
 > However, this won’t work in every editor either!
 
+---
+
 ### `templateIsCallExpression`
 
 By default, this option is `true`.
@@ -244,6 +256,8 @@ template literals.
 >
 > TypeScript doesn’t currently support constant string literal types to be inferred
 > from tagged template literals. (See [`microsoft/typescript#49552`](https://github.com/microsoft/TypeScript/pull/49552))
+
+---
 
 ### `trackFieldUsage`
 

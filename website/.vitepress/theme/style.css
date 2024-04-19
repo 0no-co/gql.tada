@@ -190,7 +190,7 @@
   border: none;
 }
 
-:root .VPContent .vp-doc :where(:not(li, a, strong, em, del, span, input, code)) + :not(li, a, strong, em, del, span, input, code) {
+:root .VPContent .vp-doc :where(:not(li, a:not(.button), strong, em, del, span, input, code)) + :not(li, a, strong, em, del, span, input, code) {
   margin-top: 1.3rem;
 }
 
@@ -203,6 +203,10 @@
   color: var(--vp-c-white);
   line-height: 1.2;
   padding-top: 0;
+  border: none;
+}
+
+:root.dark .VPContent .vp-doc :is(h1, h2, h3, h4, h5) code {
   border: none;
 }
 
@@ -254,7 +258,11 @@
   }
 }
 
-:root .VPContent .vp-doc :where(h1, h2, h3, h4, h5) .header-anchor {
+:root .VPContent .vp-doc h1 .header-anchor {
+  display: none;
+}
+
+:root .VPContent .vp-doc :where(h2, h3, h4, h5) .header-anchor {
   display: none;
   font-weight: 400;
   color: var(--vp-c-gray-soft);
@@ -268,25 +276,30 @@
   }
 }
 
+:root .VPContent .vp-doc hr {
+  margin-top: 2.4rem;
+  margin-bottom: 2rem;
+}
+
 :root .VPContent .vp-doc h1 {
-  font-size: 2.625rem;
-  margin-bottom: 1.6rem;
+  font-size: 3rem;
+  margin-bottom: 3.4rem;
 }
 
 :root .VPContent .vp-doc h2 {
-  font-size: 2.1875rem;
+  font-size: 2.4rem;
 }
 
 :root .VPContent .vp-doc h3 {
-  font-size: 1.8125rem;
+  font-size: 1.62rem;
 }
 
 :root .VPContent .vp-doc h4 {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
 }
 
 :root .VPContent .vp-doc h5 {
-  font-size: 1.125rem;
+  font-size: 1.12rem;
 }
 
 :root .VPContent .vp-doc ul {
@@ -354,6 +367,10 @@
   opacity: 0.78;
 }
 
+:root .VPContent :is(.VPButton, .button):not(.column > *) {
+  margin-top: 1.3rem;
+}
+
 :root .VPContent :is(.VPButton, .button).alt {
   background: none;
 }
@@ -398,7 +415,7 @@
 :root .VPContent :is(.VPButton, .button) :is(h1, h2, h3, h4, h5) {
   margin: 0;
   display: block;
-  line-height: 2.0;
+  line-height: 1.9;
   font-size: 19px;
   font-weight: 600;
 }
@@ -594,4 +611,8 @@
 :root .VPContent .sponsor-item > a {
   font-size: 1.4em;
   color: var(--vp-c-text-1);
+}
+
+:root .outline-marker {
+  margin-top: -0.45ch;
 }

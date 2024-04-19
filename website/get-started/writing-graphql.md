@@ -119,6 +119,8 @@ returned by `graphql()`.
     Learn more about Typed Documents
 </a>
 
+---
+
 ## Fragments
 
 The `graphql()` function allows for fragment composition, which means we’re able to create
