@@ -73,6 +73,7 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
         });
         continue;
       }
+
       const key: string =
         'value' in argumentType &&
         typeof argumentType.value === 'string' &&
