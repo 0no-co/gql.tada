@@ -24,20 +24,17 @@ async function* _runDiagnostics(
   const loader = load({ origin: params.pluginConfig.schema, rootPath: projectPath });
   const project = new Project({ tsConfigFilePath: params.configPath });
   const pluginInfo = createPluginInfo(project, params.pluginConfig, projectPath);
-  const vueFiles = await polyfillVueSupport(project, ts);
+  await polyfillVueSupport(project, ts);
 
   const loadResult = await loader.load();
   const schemaRef = { current: loadResult.schema, version: 1 };
 
   // Filter source files by whether they're under the relevant root path
-  const sourceFiles = project
-    .getSourceFiles()
-    .filter((sourceFile) => {
-      const filePath = path.resolve(projectPath, sourceFile.getFilePath());
-      const relative = path.relative(params.rootPath, filePath);
-      return !relative.startsWith('..');
-    })
-    .filter((sourceFile) => vueFiles.includes(sourceFile));
+  const sourceFiles = project.getSourceFiles().filter((sourceFile) => {
+    const filePath = path.resolve(projectPath, sourceFile.getFilePath());
+    const relative = path.relative(params.rootPath, filePath);
+    return !relative.startsWith('..');
+  });
 
   yield {
     kind: 'FILE_COUNT',

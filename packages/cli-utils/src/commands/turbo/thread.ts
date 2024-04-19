@@ -32,17 +32,14 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
     scriptKind: ScriptKind.TS,
   });
   project.addSourceFilesFromTsConfig(params.configPath);
-  const vueFiles = await polyfillVueSupport(project, ts);
+  await polyfillVueSupport(project, ts);
 
   // Filter source files by whether they're under the relevant root path
-  const sourceFiles = project
-    .getSourceFiles()
-    .filter((sourceFile) => {
-      const filePath = path.resolve(projectPath, sourceFile.getFilePath());
-      const relative = path.relative(params.rootPath, filePath);
-      return !relative.startsWith('..');
-    })
-    .filter((x) => !vueFiles.includes(x));
+  const sourceFiles = project.getSourceFiles().filter((sourceFile) => {
+    const filePath = path.resolve(projectPath, sourceFile.getFilePath());
+    const relative = path.relative(params.rootPath, filePath);
+    return !relative.startsWith('..');
+  });
 
   yield {
     kind: 'FILE_COUNT',

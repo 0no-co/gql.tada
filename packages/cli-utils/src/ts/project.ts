@@ -6,7 +6,7 @@ export const polyfillVueSupport = async (
   project: Project,
   ts: typeof import('typescript/lib/tsserverlibrary')
 ): Promise<Array<SourceFile>> => {
-  const vueProjectFiles = project.addSourceFilesAtPaths('./**/*.vue');
+  const vueProjectFiles = project.addSourceFilesAtPaths(['!node_modules', './**/*.vue']);
   if (vueProjectFiles.length) {
     // TODO: log experimental warning here
     const vueOptions = vue.resolveVueCompilerOptions({});
@@ -32,11 +32,14 @@ export const polyfillVueSupport = async (
       if (!virtualCode) continue;
       const serviceScript = vueLanguagePlugin.typescript?.getServiceScript(virtualCode!);
       if (serviceScript) {
-        project.createSourceFile(
+        const parsedSourceFile = project.createSourceFile(
           filename + '.ts',
           serviceScript.code.snapshot.getText(0, serviceScript.code.snapshot.getLength()),
           { overwrite: true, scriptKind: serviceScript.scriptKind }
-        ).version = sourceFile.version;
+        );
+        parsedSourceFile.version = sourceFile.version;
+        // @ts-ignore
+        parsedSourceFile._inProject = false;
       }
     }
   }
@@ -53,9 +56,15 @@ export const createPluginInfo = (
     config,
     languageService: {
       getReferencesAtPosition: (filename, position) => {
+        if (filename.endsWith('.vue')) {
+          filename += '.ts';
+        }
         return languageService.compilerObject.getReferencesAtPosition(filename, position);
       },
       getDefinitionAtPosition: (filename, position) => {
+        if (filename.endsWith('.vue')) {
+          filename += '.ts';
+        }
         return languageService.compilerObject.getDefinitionAtPosition(filename, position);
       },
       getProgram: () => {
