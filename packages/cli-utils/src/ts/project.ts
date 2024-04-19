@@ -65,13 +65,13 @@ export const createPluginInfo = (
     languageService: {
       getReferencesAtPosition: (filename, position) => {
         if (filename.endsWith('.vue')) {
-          return undefined;
+          filename += '.tada.ts';
         }
         return languageService.compilerObject.getReferencesAtPosition(filename, position);
       },
       getDefinitionAtPosition: (filename, position) => {
         if (filename.endsWith('.vue')) {
-          return undefined;
+          filename += '.tada.ts';
         }
         return languageService.compilerObject.getDefinitionAtPosition(filename, position);
       },
