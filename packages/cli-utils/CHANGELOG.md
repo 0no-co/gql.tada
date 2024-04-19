@@ -1,5 +1,17 @@
 # @gql.tada/cli-utils
 
+## 1.1.0
+
+### Minor Changes
+
+- Add experimental support for `.vue` SFC files for the `turbo`, `generate-persisted`, and `check` commands. (**Note:** `@0no-co/graphqlsp` does not yet have support for Vue & Volar)
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#232](https://github.com/0no-co/gql.tada/pull/232))
+
+### Patch Changes
+
+- Add checks for VSCode extensions to `doctor` command. The command now outputs a warning if the GraphQL syntax plugin is missing or if the GraphQL Language service is installed and misconfigured
+  Submitted by [@kitten](https://github.com/kitten) (See [#230](https://github.com/0no-co/gql.tada/pull/230))
+
 ## 1.0.3
 
 ### Patch Changes
