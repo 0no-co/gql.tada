@@ -44,8 +44,13 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
     fileCount: sourceFiles.length,
   };
 
-  for (const { compilerNode: sourceFile } of sourceFiles) {
+  for (let { compilerNode: sourceFile } of sourceFiles) {
     const filePath = sourceFile.fileName;
+    if (filePath.endsWith('.vue')) {
+      const compiledSourceFile = project.getSourceFile(filePath + '.ts');
+      if (compiledSourceFile) sourceFile = compiledSourceFile.compilerNode;
+    }
+
     const documents: Record<string, string> = {};
     const warnings: PersistedWarning[] = [];
 

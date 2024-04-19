@@ -47,8 +47,13 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
   };
 
   const checker = project.getTypeChecker().compilerObject;
-  for (const { compilerNode: sourceFile } of sourceFiles) {
+  for (let { compilerNode: sourceFile } of sourceFiles) {
     const filePath = sourceFile.fileName;
+    if (filePath.endsWith('.vue')) {
+      const compiledSourceFile = project.getSourceFile(filePath + '.ts');
+      if (compiledSourceFile) sourceFile = compiledSourceFile.compilerNode;
+    }
+
     const cache: Record<string, string> = {};
     const warnings: TurboWarning[] = [];
 
