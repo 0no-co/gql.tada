@@ -92,13 +92,7 @@ export const createPluginInfo = (
       // This prevents us from exposing normal diagnostics
       getSemanticDiagnostics: () => [],
     } as any,
-    languageServiceHost: {
-      getScriptSnapshot: (fileName) => {
-        // TODO: this can do much more fancy stuff normally
-        const sourceFile = project.getSourceFile(fileName);
-        return sourceFile ? ts!.ScriptSnapshot.fromString(sourceFile.getFullText()) : undefined;
-      },
-    } as any,
+    languageServiceHost: {} as any,
     project: {
       getProjectName: () => projectName,
       projectService: {
