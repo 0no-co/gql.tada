@@ -17,4 +17,9 @@ export interface FileCountSignal {
   fileCount: number;
 }
 
-export type TurboSignal = FileTurboSignal | FileCountSignal;
+export interface WarningSignal {
+  kind: 'WARNING';
+  message: string;
+}
+
+export type TurboSignal = FileTurboSignal | FileCountSignal | WarningSignal;

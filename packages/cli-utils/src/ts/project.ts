@@ -2,10 +2,10 @@ import type { GraphQLSPConfig } from '@gql.tada/internal';
 import type { Project, SourceFile } from 'ts-morph';
 import * as vue from '@vue/language-core';
 
-export const polyfillVueSupport = async (
+export const polyfillVueSupport = (
   project: Project,
   ts: typeof import('typescript/lib/tsserverlibrary')
-): Promise<Array<SourceFile>> => {
+): readonly SourceFile[] => {
   const vueProjectFiles = project.addSourceFilesAtPaths(['!node_modules', './**/*.vue']);
   if (vueProjectFiles.length) {
     const vueOptions = vue.resolveVueCompilerOptions({});

@@ -23,4 +23,9 @@ export interface FileCountSignal {
   fileCount: number;
 }
 
-export type DiagnosticSignal = FileDiagnosticsSignal | FileCountSignal;
+export interface WarningSignal {
+  kind: 'WARNING';
+  message: string;
+}
+
+export type DiagnosticSignal = FileDiagnosticsSignal | FileCountSignal | WarningSignal;

@@ -30,7 +30,14 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
   const projectPath = path.dirname(params.configPath);
   const project = new Project({ tsConfigFilePath: params.configPath });
   const pluginInfo = createPluginInfo(project, params.pluginConfig, projectPath);
-  await polyfillVueSupport(project, ts);
+
+  const vueSourceFiles = polyfillVueSupport(project, ts);
+  if (vueSourceFiles.length) {
+    yield {
+      kind: 'WARNING',
+      message: 'Vue single-file component support is experimental.',
+    };
+  }
 
   // Filter source files by whether they're under the relevant root path
   const sourceFiles = project.getSourceFiles().filter((sourceFile) => {

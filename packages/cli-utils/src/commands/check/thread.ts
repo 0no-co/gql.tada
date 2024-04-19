@@ -24,7 +24,14 @@ async function* _runDiagnostics(
   const loader = load({ origin: params.pluginConfig.schema, rootPath: projectPath });
   const project = new Project({ tsConfigFilePath: params.configPath });
   const pluginInfo = createPluginInfo(project, params.pluginConfig, projectPath);
-  await polyfillVueSupport(project, ts);
+
+  const vueSourceFiles = polyfillVueSupport(project, ts);
+  if (vueSourceFiles.length) {
+    yield {
+      kind: 'WARNING',
+      message: 'Vue single-file component support is experimental.',
+    };
+  }
 
   const loadResult = await loader.load();
   const schemaRef = { current: loadResult.schema, version: 1 };

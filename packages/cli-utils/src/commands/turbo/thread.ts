@@ -32,7 +32,14 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
     scriptKind: ScriptKind.TS,
   });
   project.addSourceFilesFromTsConfig(params.configPath);
-  await polyfillVueSupport(project, ts);
+
+  const vueSourceFiles = polyfillVueSupport(project, ts);
+  if (vueSourceFiles.length) {
+    yield {
+      kind: 'WARNING',
+      message: 'Vue single-file component support is experimental.',
+    };
+  }
 
   // Filter source files by whether they're under the relevant root path
   const sourceFiles = project.getSourceFiles().filter((sourceFile) => {
