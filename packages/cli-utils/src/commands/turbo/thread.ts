@@ -1,10 +1,11 @@
 import * as path from 'node:path';
 import { Project, TypeFormatFlags, TypeFlags, ScriptKind, ts } from 'ts-morph';
+import { rm } from 'node:fs/promises';
 
 import type { GraphQLSPConfig } from '@gql.tada/internal';
 import { init } from '@0no-co/graphqlsp/api';
 
-import { getFilePosition } from '../../ts';
+import { cleanupVueFiles, getFilePosition, polyfillVueSupport } from '../../ts';
 import { expose } from '../../threads';
 
 import type { TurboSignal, TurboWarning } from './types';
@@ -27,18 +28,26 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
   // NOTE: We add our override declaration here before loading all files
   // This sets `__cacheDisabled` on the turbo cache, which disables the cache temporarily
   // If we don't disable the cache then we couldn't regenerate it from inferred types
-  project.createSourceFile('__gql-tada-override__.d.ts', DECLARATION_OVERRIDE, {
-    overwrite: true,
-    scriptKind: ScriptKind.TS,
-  });
+  const overrideFile = project.createSourceFile(
+    '__gql-tada-override__.d.ts',
+    DECLARATION_OVERRIDE,
+    {
+      overwrite: true,
+      scriptKind: ScriptKind.TS,
+    }
+  );
   project.addSourceFilesFromTsConfig(params.configPath);
+  const vueFiles = await polyfillVueSupport(project, ts as any);
 
   // Filter source files by whether they're under the relevant root path
-  const sourceFiles = project.getSourceFiles().filter((sourceFile) => {
-    const filePath = path.resolve(projectPath, sourceFile.getFilePath());
-    const relative = path.relative(params.rootPath, filePath);
-    return !relative.startsWith('..');
-  });
+  const sourceFiles = project
+    .getSourceFiles()
+    .filter((sourceFile) => {
+      const filePath = path.resolve(projectPath, sourceFile.getFilePath());
+      const relative = path.relative(params.rootPath, filePath);
+      return !relative.startsWith('..');
+    })
+    .filter((x) => !vueFiles.includes(x));
 
   yield {
     kind: 'FILE_COUNT',
@@ -85,6 +94,12 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
       warnings,
     };
   }
+
+  await rm(overrideFile.compilerNode.fileName);
+  const filesToCleanup = project
+    .getSourceFiles()
+    .filter((sourceFile) => sourceFile.compilerNode.fileName.endsWith('vue.tada.ts'));
+  await cleanupVueFiles(filesToCleanup);
 }
 
 export const runTurbo = expose(_runTurbo);

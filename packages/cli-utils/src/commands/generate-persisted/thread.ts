@@ -13,7 +13,7 @@ import {
   unrollTadaFragments,
 } from '@0no-co/graphqlsp/api';
 
-import { createPluginInfo, getFilePosition } from '../../ts';
+import { cleanupVueFiles, createPluginInfo, getFilePosition, polyfillVueSupport } from '../../ts';
 import { expose } from '../../threads';
 
 import type { PersistedSignal, PersistedWarning } from './types';
@@ -30,13 +30,17 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
   const projectPath = path.dirname(params.configPath);
   const project = new Project({ tsConfigFilePath: params.configPath });
   const pluginInfo = createPluginInfo(project, params.pluginConfig, projectPath);
+  const vueFiles = await polyfillVueSupport(project, ts as any);
 
   // Filter source files by whether they're under the relevant root path
-  const sourceFiles = project.getSourceFiles().filter((sourceFile) => {
-    const filePath = path.resolve(projectPath, sourceFile.getFilePath());
-    const relative = path.relative(params.rootPath, filePath);
-    return !relative.startsWith('..');
-  });
+  const sourceFiles = project
+    .getSourceFiles()
+    .filter((sourceFile) => {
+      const filePath = path.resolve(projectPath, sourceFile.getFilePath());
+      const relative = path.relative(params.rootPath, filePath);
+      return !relative.startsWith('..');
+    })
+    .filter((x) => !vueFiles.includes(x));
 
   yield {
     kind: 'FILE_COUNT',
@@ -134,6 +138,11 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
       warnings,
     };
   }
+
+  const filesToCleanup = project
+    .getSourceFiles()
+    .filter((sourceFile) => sourceFile.compilerNode.fileName.endsWith('vue.tada.ts'));
+  await cleanupVueFiles(filesToCleanup);
 }
 
 export const runPersisted = expose(_runPersisted);
