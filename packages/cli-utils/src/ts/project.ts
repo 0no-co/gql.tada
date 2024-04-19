@@ -40,8 +40,6 @@ export const polyfillVueSupport = async (
       // @ts-expect-error
       parsedSourceFile.version = sourceFile.version;
     });
-
-    //await project.save();
   }
   return vueProjectFiles;
 };
