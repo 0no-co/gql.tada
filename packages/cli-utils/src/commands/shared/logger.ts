@@ -54,9 +54,9 @@ export function externalError(message: string, error: unknown) {
     ) {
       title = 'code' in error ? 'System Error' : 'Error';
       text = (error as Error).message.trim();
-    } else if ('message' in error && typeof error.message === 'string') {
+    } else if ('stack' in error && typeof error.stack === 'string') {
       title = 'Unexpected Error';
-      text = `${error.message}`;
+      text = `${error.stack}`;
     } else {
       title = 'Unexpected Error';
       text = `${error}`;

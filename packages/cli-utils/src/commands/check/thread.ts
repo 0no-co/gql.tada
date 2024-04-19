@@ -24,6 +24,9 @@ async function* _runDiagnostics(
   const loader = load({ origin: params.pluginConfig.schema, rootPath: projectPath });
   const project = new Project({ tsConfigFilePath: params.configPath });
   const pluginInfo = createPluginInfo(project, params.pluginConfig, projectPath);
+  const isVueProject = project.addSourceFilesAtPaths('./src/**/*.vue').length > 0;
+
+  await project.save();
 
   const loadResult = await loader.load();
   const schemaRef = { current: loadResult.schema, version: 1 };

@@ -53,10 +53,11 @@
     "wonka": "^6.3.4"
   },
   "dependencies": {
-    "@gql.tada/internal": "workspace:*",
     "@0no-co/graphqlsp": "^1.10.0",
-    "ts-morph": "~22.0.0",
-    "graphql": "^16.8.1"
+    "@gql.tada/internal": "workspace:*",
+    "@vue/language-core": "^2.0.13",
+    "graphql": "^16.8.1",
+    "ts-morph": "~22.0.0"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
