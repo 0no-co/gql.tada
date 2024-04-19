@@ -6,7 +6,7 @@ import { ts } from 'ts-morph';
 export function scanVueFiles(project: Project, projectPath: string) {
   const fileHost = project.getFileSystem();
   const seenPaths = new Set();
-  const vueFiles: string[] = [];
+  const vueFiles: SourceFile[] = [];
   function _scanVueFiles(dirpath: string) {
     if (!seenPaths.has(dirpath)) {
       seenPaths.add(dirpath);
@@ -14,7 +14,9 @@ export function scanVueFiles(project: Project, projectPath: string) {
         if (dir.isSymlink) {
           continue;
         } else if (dir.isFile && /\.vue$/.test(dir.name)) {
-          vueFiles.push(dir.name);
+          const sourceFile = project.addSourceFileAtPath(dir.name);
+          sourceFile._inProject = false;
+          vueFiles.push(sourceFile);
         } else if (dir.isDirectory && !/\bnode_modules\b/.test(dir.name)) {
           _scanVueFiles(dir.name);
         }
@@ -31,9 +33,8 @@ export const addVueFilesToProject = (
   projectPath: string
 ): readonly SourceFile[] => {
   const vueProjectFiles = scanVueFiles(project, projectPath);
-  const vueSourceFiles: SourceFile[] = [];
+  const vueSourceFiles: SourceFile[] = [...vueProjectFiles];
   if (vueProjectFiles.length) {
-    const fileHost = project.getFileSystem();
     const vueOptions = vue.resolveVueCompilerOptions({});
     const compilerOptions = project.getCompilerOptions();
     const vueLanguagePlugin = vue.createVueLanguagePlugin(
@@ -41,32 +42,33 @@ export const addVueFilesToProject = (
       (id) => id,
       true /* use case-sensitive filenames */,
       () => 'project-version-tsc' /* we don't need a version, no incremental going on */,
-      () => vueProjectFiles,
+      () => vueProjectFiles.map((sourceFile) => sourceFile.compilerNode.fileName),
       compilerOptions,
       vueOptions,
       false
     );
 
-    for (const filename of vueProjectFiles) {
+    for (const sourceFile of vueProjectFiles) {
+      const filename = sourceFile.compilerNode.fileName;
       const virtualCode = vueLanguagePlugin.createVirtualCode(
         filename,
         'vue',
-        ts.ScriptSnapshot.fromString(fileHost.readFileSync(filename))
+        ts.ScriptSnapshot.fromString(sourceFile.getFullText())
       );
       if (!virtualCode) continue;
       const serviceScript = vueLanguagePlugin.typescript?.getServiceScript(virtualCode!);
       if (serviceScript) {
-        vueSourceFiles.push(
-          project.createSourceFile(
-            filename + '.ts',
-            serviceScript.code.snapshot.getText(0, serviceScript.code.snapshot.getLength()),
-            { overwrite: true, scriptKind: serviceScript.scriptKind }
-          )
+        const vueSourceFile = project.createSourceFile(
+          filename + '.ts',
+          serviceScript.code.snapshot.getText(0, serviceScript.code.snapshot.getLength()),
+          { overwrite: true, scriptKind: serviceScript.scriptKind }
         );
+        vueSourceFile.version = sourceFile.version;
+        vueSourceFiles.push(vueSourceFile);
       }
     }
   }
-  return vueSourceFiles;
+  return vueProjectFiles;
 };
 
 export const createPluginInfo = (

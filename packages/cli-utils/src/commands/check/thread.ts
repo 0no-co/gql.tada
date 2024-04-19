@@ -22,7 +22,10 @@ async function* _runDiagnostics(
   init({ typescript: ts });
   const projectPath = path.dirname(params.configPath);
   const loader = load({ origin: params.pluginConfig.schema, rootPath: projectPath });
-  const project = new Project({ tsConfigFilePath: params.configPath });
+  const project = new Project({
+    tsConfigFilePath: params.configPath,
+    skipAddingFilesFromTsConfig: true,
+  });
 
   const vueFiles = addVueFilesToProject(project, projectPath);
   if (vueFiles.length) {
@@ -32,15 +35,24 @@ async function* _runDiagnostics(
     };
   }
 
+  project.addSourceFilesFromTsConfig(params.configPath);
+
   const loadResult = await loader.load();
   const schemaRef = { current: loadResult.schema, version: 1 };
 
   // Filter source files by whether they're under the relevant root path
   const sourceFiles = project.getSourceFiles().filter((sourceFile) => {
+    if (vueFiles.includes(sourceFile)) return false;
     const filePath = path.resolve(projectPath, sourceFile.getFilePath());
     const relative = path.relative(params.rootPath, filePath);
     return !relative.startsWith('..');
   });
+
+  sourceFiles.push(
+    ...vueFiles.filter((sourceFile) => {
+      return sourceFile._inProject === false;
+    })
+  );
 
   yield {
     kind: 'FILE_COUNT',
