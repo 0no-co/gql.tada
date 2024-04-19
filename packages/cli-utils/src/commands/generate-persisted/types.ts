@@ -17,4 +17,9 @@ export interface FileCountSignal {
   fileCount: number;
 }
 
-export type PersistedSignal = FilePersistedSignal | FileCountSignal;
+export interface WarningSignal {
+  kind: 'WARNING';
+  message: string;
+}
+
+export type PersistedSignal = FilePersistedSignal | FileCountSignal | WarningSignal;

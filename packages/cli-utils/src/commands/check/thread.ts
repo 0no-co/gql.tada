@@ -5,7 +5,7 @@ import type { GraphQLSPConfig } from '@gql.tada/internal';
 import { load } from '@gql.tada/internal';
 import { init, getGraphQLDiagnostics } from '@0no-co/graphqlsp/api';
 
-import { createPluginInfo, getFilePosition, polyfillVueSupport } from '../../ts';
+import { createPluginInfo, getFilePosition, addVueFilesToProject } from '../../ts';
 import { expose } from '../../threads';
 
 import type { Severity, DiagnosticMessage, DiagnosticSignal } from './types';
@@ -23,27 +23,31 @@ async function* _runDiagnostics(
   const projectPath = path.dirname(params.configPath);
   const loader = load({ origin: params.pluginConfig.schema, rootPath: projectPath });
   const project = new Project({ tsConfigFilePath: params.configPath });
-  const pluginInfo = createPluginInfo(project, params.pluginConfig, projectPath);
-  const vueFiles = await polyfillVueSupport(project, ts);
+
+  const vueFiles = addVueFilesToProject(project, projectPath);
+  if (vueFiles.length) {
+    yield {
+      kind: 'WARNING',
+      message: 'Experimental Vue support is enabled.',
+    };
+  }
 
   const loadResult = await loader.load();
   const schemaRef = { current: loadResult.schema, version: 1 };
 
   // Filter source files by whether they're under the relevant root path
-  const sourceFiles = project
-    .getSourceFiles()
-    .filter((sourceFile) => {
-      const filePath = path.resolve(projectPath, sourceFile.getFilePath());
-      const relative = path.relative(params.rootPath, filePath);
-      return !relative.startsWith('..');
-    })
-    .filter((sourceFile) => vueFiles.includes(sourceFile));
+  const sourceFiles = project.getSourceFiles().filter((sourceFile) => {
+    const filePath = path.resolve(projectPath, sourceFile.getFilePath());
+    const relative = path.relative(params.rootPath, filePath);
+    return !relative.startsWith('..');
+  });
 
   yield {
     kind: 'FILE_COUNT',
     fileCount: sourceFiles.length,
   };
 
+  const pluginInfo = createPluginInfo(project, params.pluginConfig, projectPath);
   for (const { compilerNode: sourceFile } of sourceFiles) {
     const filePath = sourceFile.fileName;
     const diagnostics = getGraphQLDiagnostics(filePath, schemaRef, pluginInfo);

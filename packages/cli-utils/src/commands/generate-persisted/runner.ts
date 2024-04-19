@@ -64,7 +64,10 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
 
   try {
     for await (const signal of generator) {
-      if (signal.kind === 'FILE_COUNT') {
+      if (signal.kind === 'WARNING') {
+        yield logger.experimentMessage(signal.message);
+        continue;
+      } else if (signal.kind === 'FILE_COUNT') {
         totalFileCount = signal.fileCount;
         continue;
       }

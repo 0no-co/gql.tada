@@ -4,7 +4,7 @@ import { Project, TypeFormatFlags, TypeFlags, ScriptKind, ts } from 'ts-morph';
 import type { GraphQLSPConfig } from '@gql.tada/internal';
 import { init } from '@0no-co/graphqlsp/api';
 
-import { getFilePosition, polyfillVueSupport } from '../../ts';
+import { getFilePosition, addVueFilesToProject } from '../../ts';
 import { expose } from '../../threads';
 
 import type { TurboSignal, TurboWarning } from './types';
@@ -31,18 +31,23 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
     overwrite: true,
     scriptKind: ScriptKind.TS,
   });
+
+  const vueFiles = addVueFilesToProject(project, projectPath);
+  if (vueFiles.length) {
+    yield {
+      kind: 'WARNING',
+      message: 'Experimental Vue support is enabled.',
+    };
+  }
+
   project.addSourceFilesFromTsConfig(params.configPath);
-  const vueFiles = await polyfillVueSupport(project, ts);
 
   // Filter source files by whether they're under the relevant root path
-  const sourceFiles = project
-    .getSourceFiles()
-    .filter((sourceFile) => {
-      const filePath = path.resolve(projectPath, sourceFile.getFilePath());
-      const relative = path.relative(params.rootPath, filePath);
-      return !relative.startsWith('..');
-    })
-    .filter((x) => !vueFiles.includes(x));
+  const sourceFiles = project.getSourceFiles().filter((sourceFile) => {
+    const filePath = path.resolve(projectPath, sourceFile.getFilePath());
+    const relative = path.relative(params.rootPath, filePath);
+    return !relative.startsWith('..');
+  });
 
   yield {
     kind: 'FILE_COUNT',

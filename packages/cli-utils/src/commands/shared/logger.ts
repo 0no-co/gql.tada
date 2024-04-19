@@ -34,6 +34,15 @@ export function hint(text: string) {
   ]);
 }
 
+export function experimentMessage(message: string) {
+  return t.text([
+    t.cmd(t.CSI.Style, [t.Style.Magenta, t.Style.Invert]),
+    ` ${t.Icons.Warning} Warning `,
+    t.cmd(t.CSI.Style, [t.Style.Magenta, t.Style.NoInvert]),
+    `\n${message.trim()}\n\n`,
+  ]);
+}
+
 export function errorMessage(message: string) {
   return t.error([
     '\n',
@@ -54,6 +63,9 @@ export function externalError(message: string, error: unknown) {
     ) {
       title = 'code' in error ? 'System Error' : 'Error';
       text = (error as Error).message.trim();
+    } else if ('stack' in error && typeof error.stack === 'string') {
+      title = 'Unexpected Error';
+      text = `${error.stack}`;
     } else if ('message' in error && typeof error.message === 'string') {
       title = 'Unexpected Error';
       text = `${error.message}`;

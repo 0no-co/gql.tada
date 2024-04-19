@@ -6,8 +6,4 @@ declare module '@ts-morph/common' {
 
 declare module 'ts-morph' {
   export const ts: typeof import('typescript/lib/tsserverlibrary');
-
-  interface SourceFile {
-    version: unknown;
-  }
 }
