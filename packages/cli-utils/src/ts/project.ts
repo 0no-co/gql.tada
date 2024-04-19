@@ -22,11 +22,10 @@ export const polyfillVueSupport = async (
     const vueLanguagePlugin = vue.createVueLanguagePlugin(
       ts as any,
       (id) => id,
-      // TODO: use case sensitive filenames
-      false,
-      () => '',
-      // TODO: rootnames
-      () => [],
+      // use case sensitive filenames
+      true,
+      () => 'project-version-tsc', // we don't need a version, no incremental going on
+      () => vueProjectFiles.map((x) => x.compilerNode.fileName),
       compilerOptions,
       vueOptions,
       false
