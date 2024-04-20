@@ -54,11 +54,11 @@ The `doctor` command will check for common mistakes in the `gql.tada`’s setup 
 
 ### `check`
 
-| Option              | Description                                                                                     |
-| ------------------- | ----------------------------------------------------------------------------------------------- |
-| `--tsconfig,-c`     | Optionally, an alternative relative location to the project’s `tsconfig.json`.                  |
-| `--fail-on-warn,-w` | Triggers an error and a non-zero exit code if any warnings have been reported (default: false). |
-| `--level,-l`        | The minimum severity of diagnostics to display: `info`, `warn` or `error` (default: `info`).    |
+| Option              | Description                                                                                       |
+| ------------------- | ------------------------------------------------------------------------------------------------- |
+| `--tsconfig,-c`     | Optionally, a `tsconfig.json` file to use instead of an automatically discovered one.             |
+| `--fail-on-warn,-w` | Triggers an error and a non-zero exit code if any warnings have been reported (default: `false`). |
+| `--level,-l`        | The minimum severity of diagnostics to display: `info`, `warn` or `error` (default: `info`).      |
 
 Usually, `@0no-co/graphqlsp` runs as a TypeScript language server plugin to report warnings and errors. However, these diagnostics don’t show up when `tsc` is run.
 
@@ -68,40 +68,54 @@ When this command is run inside a GitHub Action, [workflow commands](https://doc
 
 ### `generate-schema`
 
-| Option          | Description                                                                                             |
-| --------------- | ------------------------------------------------------------------------------------------------------- |
-| `schema`        | A relative file path to a schema or URL to a GraphQL API to introspect.                                 |
-| `--tsconfig,-c` | Optionally, an alternative relative location to the project’s `tsconfig.json`.                          |
-| `--output,-o`   | An output location to write the `.graphql` schema file to. (Default: The `schema` configuration option) |
-| `--header,`     | A key-value header entry to use when retrieving the introspection from a GraphQL API.                   |
+| Option          | Description                                                                                          |
+| --------------- | ---------------------------------------------------------------------------------------------------- |
+| `schema`        | URL to a GraphQL API or a path to a `.graphql` SDL file or introspection JSON.                       |
+| `--tsconfig,-c` | Optionally, a `tsconfig.json` file to use instead of an automatically discovered one.                |
+| `--output,-o`   | An output location to write the `.graphql` SDL file to. (Default: The `schema` configuration option) |
+| `--header,`     | A `key:value` header entry to use when retrieving the introspection from a GraphQL API.              |
 
 Oftentimes, an API may not be running in development, is maintained in a separate repository, or requires authorization headers, and specifying a URL in the `schema` configuration can slow down development.
 
-The `gql.tada generate-schema` command can output a `.graphql` SDL file from a URL and use environment variables. Using this command we can avoid having to add a URL in the `tsconfig.json` configuration.
+The `gql.tada generate-schema` command introspects a targeted GraphQL API by URL, a `.graphql` SDL
+or introspection JSON file, and outputs a `.graphql` SDL file. Generating a `.graphql` SDL file is
+useful if we're trying to avoid adding a URL as the `schema` configuration option.
+
+The SDL file will be written to the location specified by the `schema` configuration option,
+which can be overridden using the `--output` argument.
 
 ### `generate-output`
 
 | Option                    | Description                                                                                   |
 | ------------------------- | --------------------------------------------------------------------------------------------- |
 | `--disable-preprocessing` | Whether to use the less efficient `.d.ts` introspection format. (Default: false)              |
-| `--tsconfig,-c`           | Optionally, an alternative relative location to the project’s `tsconfig.json`.                |
+| `--tsconfig,-c`           | Optionally, a `tsconfig.json` file to use instead of an automatically discovered one.         |
 | `--output,-o`             | Specify where to output the file to. (Default: The `tadaOutputLocation` configuration option) |
 
 The `gql.tada generate-output` command mimics the behavior of `@0no-co/graphqlsp`, outputting the `gql.tada` output file manually. It will load the schema from the specified `schema` configuration option and write the output file.
+
+The output file will be written to the location specified by the `tadaOutputLocation` configuration
+option, which can be overridden using the `--output` argument.
 
 ### `turbo`
 
 | Option              | Description                                                                                  |
 | ------------------- | -------------------------------------------------------------------------------------------- |
-| `--tsconfig,-c`     | Optionally, an alternative relative location to the project’s `tsconfig.json`.               |
+| `--tsconfig,-c`     | Optionally, a `tsconfig.json` file to use instead of an automatically discovered one.        |
 | `--fail-on-warn,-w` | Triggers an error and a non-zero exit code if any warnings have been reported.               |
 | `--output,-o`       | Specify where to output the file to. (Default: The `tadaTurboLocation` configuration option) |
 
-The `turbo` command allows you to cache all the existing GraphQL query types ahead
-of time. This step can make checking out the repository faster for other people and
-reduce the time spent calculating the types. See it as taking a snapshot of your
-current types, when you start editing your queries it will not find it in the cache
-anymore and revert to the runtime behavior.
+The `turbo` command generates a cache for all GraphQL document types ahead of time.
+
+This cache speeds up type evaluation and is especially useful when it's checked into the
+repository after making changes to GraphQL documents, which speeds up all further type
+checks and evaluation.
+
+The cache is a snapshot of all current `gql.tada` types. As you edit GraphQL documents,
+`gql.tada` will still infer types dynamically until a new cache file is generated.
+
+The cache file will be written to the location specified by the `tadaTurboLocation` configuration
+option, which can be overridden using the `--output` argument.
 
 When this command is run inside a GitHub Action, [workflow commands](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions) are used to annotate errors within the GitHub UI.
 
@@ -109,12 +123,136 @@ When this command is run inside a GitHub Action, [workflow commands](https://doc
 
 | Option              | Description                                                                                      |
 | ------------------- | ------------------------------------------------------------------------------------------------ |
-| `--tsconfig,-c`     | Optionally, an alternative relative location to the project’s `tsconfig.json`.                   |
+| `--tsconfig,-c`     | Optionally, a `tsconfig.json` file to use instead of an automatically discovered one.            |
 | `--fail-on-warn,-w` | Triggers an error and a non-zero exit code if any warnings have been reported.                   |
 | `--output,-o`       | Specify where to output the file to. (Default: The `tadaPersistedLocation` configuration option) |
 
 The `gql.tada generate-persisted` command will scan your code for `graphql.persisted()` calls and generate
-a JSON file containing a mapping of document IDs to the GraphQL document strings.
+a JSON manifest file containing a mapping of document IDs to the GraphQL document strings.
 These can then be used to register known and accepted documents (known as “persisted operations”) with your GraphQL API to lock down accepted documents that are allowed to be sent.
 
+The manifest file will be written to the location specified by the `tadaPersistedLocation` configuration
+option, which can be overridden using the `--output` argument.
+
 When this command is run inside a GitHub Action, [workflow commands](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions) are used to annotate errors within the GitHub UI.
+
+## Functions
+
+The CLI is packaged as a module that `gql.tada` depends on published as `@gql.tada/cli-utils`.
+If you're looking to generate the file that the CLI generates in your own scripts, you can
+use the functions it exports directly.
+
+### `generateOutput()`
+
+|                               | Description                                                                                       |
+| ----------------------------- | ------------------------------------------------------------------------------------------------- |
+| `output` option               | The filename to write the output file to (Default: the `tadaOutputLocation` configuration option) |
+| `tsconfig` option             | The `tsconfig.json` to use instead of an automatically discovered one.                            |
+| `disablePreprocessing` option | Whether to disable the optimized output format for `.d.ts` files.                                 |
+| returns                       | A `Promise` that resolves when the task completes.                                                |
+
+The `generateOutput()` function outputs the `gql.tada` output file manually. It will load the schema from the specified `schema` configuration option and write the output file.
+
+The output file will be written to the location specified by the `tadaOutputLocation` configuration
+option, which can be overridden using the `output` option.
+
+```ts twoslash
+import { generateOutput } from '@gql.tada/cli-utils';
+
+await generateOutput({
+  output: './src/graphql-env.d.ts',
+  disablePreprocessing: false,
+  tsconfig: undefined,
+});
+```
+
+---
+
+### `generatePersisted()`
+
+|                     | Description                                                                                                           |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `output` option     | The filename to write the persisted JSON manifest file to (Default: the `tadaPersistedLocation` configuration option) |
+| `tsconfig` option   | The `tsconfig.json` to use instead of an automatically discovered one.                                                |
+| `failOnWarn` option | Whether to throw an error instead of logging warnings.                                                                |
+| returns             | A `Promise` that resolves when the task completes.                                                                    |
+
+The `generatePersisted()` function will scan your code for `graphql.persisted()` calls and generate
+a JSON manifest file containing a mapping of document IDs to the GraphQL document strings.
+These can then be used to register known and accepted documents (known as “persisted operations”) with your GraphQL API to lock down accepted documents that are allowed to be sent.
+
+The manifest file will be written to the location specified by the `tadaPersistedLocation` configuration
+option, which can be overridden using the `output` option.
+
+```ts twoslash
+import { generatePersisted } from '@gql.tada/cli-utils';
+
+await generatePersisted({
+  output: './persisted.json',
+  failOnWarn: false,
+  tsconfig: undefined,
+});
+```
+
+---
+
+### `generateSchema()`
+
+|                   | Description                                                                                            |
+| ----------------- | ------------------------------------------------------------------------------------------------------ |
+| `input` option    | The filename to a `.graphql` SDL file, introspection JSON, or URL to a GraphQL API to introspect.      |
+| `headers` option  | Optionally, an object of headers to send when introspecting a GraphQL API.                             |
+| `output` option   | The filename to write the persisted JSON manifest file to (Default: the `schema` configuration option) |
+| `tsconfig` option | The `tsconfig.json` to use instead of an automatically discovered one.                                 |
+| returns           | A `Promise` that resolves when the task completes.                                                     |
+
+The `generateSchema()` function introspects a targeted GraphQL API by URL, a `.graphql` SDL
+or introspection JSON file, and outputs a `.graphql` SDL file. Generating a `.graphql` SDL file is
+useful if we're trying to avoid adding a URL as the `schema` configuration option.
+
+The SDL file will be written to the location specified by the `schema` configuration option,
+which can be overridden using the `output` option.
+
+```ts twoslash
+import { generateSchema } from '@gql.tada/cli-utils';
+
+await generateSchema({
+  input: 'https://trygql.formidable.dev/graphql/basic-pokedex',
+  output: './schema.graphql',
+  headers: undefined,
+  tsconfig: undefined,
+});
+```
+
+---
+
+### `generateTurbo()`
+
+|                     | Description                                                                                     |
+| ------------------- | ----------------------------------------------------------------------------------------------- |
+| `output` option     | The filename to write the cache file to (Default: the `tadaTurboLocation` configuration option) |
+| `tsconfig` option   | The `tsconfig.json` to use instead of an automatically discovered one.                          |
+| `failOnWarn` option | Whether to throw an error instead of logging warnings.                                          |
+| returns             | A `Promise` that resolves when the task completes.                                              |
+
+The `generateTurbo()` function generates a cache for all GraphQL document types ahead of time.
+
+This cache speeds up type evaluation and is especially useful when it's checked into the
+repository after making changes to GraphQL documents, which speeds up all further type
+checks and evaluation.
+
+The cache is a snapshot of all current `gql.tada` types. As you edit GraphQL documents,
+`gql.tada` will still infer types dynamically until a new cache file is generated.
+
+The cache file will be written to the location specified by the `tadaTurboLocation` configuration
+option, which can be overridden using the `output` option.
+
+```ts twoslash
+import { generateTurbo } from '@gql.tada/cli-utils';
+
+await generateTurbo({
+  output: './src/graphql-cache.d.ts',
+  failOnWarn: false,
+  tsconfig: undefined,
+});
+```

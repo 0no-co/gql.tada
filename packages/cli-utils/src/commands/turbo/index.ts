@@ -1,6 +1,6 @@
 import { Command, Option } from 'clipanion';
 
-import type { Options } from './runner';
+import type { TurboOptions } from './runner';
 import { initTTY } from '../../term';
 import { run } from './runner';
 
@@ -34,7 +34,17 @@ export class TurboCommand extends Command {
   }
 }
 
-export async function generateTurbo(opts: Options) {
+/** Generates a cache typings file for all GraphQL document types ahead of time.
+ *
+ * @remarks
+ * The `generateTurbo()` function generates a cache for all GraphQL document types ahead of time.
+ * This cache speeds up type evaluation and is especially useful when it's checked into the
+ * repository after making changes to GraphQL documents, which speeds up all further type
+ * checks and evaluation.
+ *
+ * @see {@link https://gql-tada.0no.co/reference/gql-tada-cli#generateturbo}
+ */
+export async function generateTurbo(opts: TurboOptions) {
   const tty = initTTY({ disableTTY: true });
   const result = await tty.start(run(tty, opts));
   if (result instanceof Error) {

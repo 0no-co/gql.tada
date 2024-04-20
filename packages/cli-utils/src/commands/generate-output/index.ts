@@ -1,6 +1,6 @@
 import { Command, Option } from 'clipanion';
 
-import type { Options } from './runner';
+import type { OutputOptions } from './runner';
 import { initTTY } from '../../term';
 import { run } from './runner';
 
@@ -40,7 +40,15 @@ export class GenerateOutputCommand extends Command {
   }
 }
 
-export async function generateOutput(opts: Options): Promise<void> {
+/** Outputs the `gql.tada` output file manually.
+ *
+ * @remarks
+ * Loads the schema from the specified `schema` configuration option and writes the output file
+ * to the specified output location.
+ *
+ * @see {@link https://gql-tada.0no.co/reference/gql-tada-cli#generateoutput}
+ */
+export async function generateOutput(opts: OutputOptions): Promise<void> {
   const tty = initTTY({ disableTTY: true });
   const result = await tty.start(run(tty, opts));
   if (result instanceof Error) {

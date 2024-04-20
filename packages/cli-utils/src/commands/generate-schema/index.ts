@@ -1,7 +1,7 @@
 import * as t from 'typanion';
 import { Command, Option } from 'clipanion';
 
-import type { Options } from './runner';
+import type { SchemaOptions } from './runner';
 import { initTTY } from '../../term';
 import { run } from './runner';
 
@@ -57,7 +57,15 @@ export class GenerateSchema extends Command {
   }
 }
 
-export async function generateSchema(opts: Options) {
+/** Generates a GraphQL SDL file from a given GraphQL API URL or schema file.
+ *
+ * @remarks
+ * Introspects a targeted GraphQL API by URL, a `.graphql` SDL or introspection
+ * JSON file, and outputs a `.graphql` SDL file.
+ *
+ * @see {@link https://gql-tada.0no.co/reference/gql-tada-cli#generateschema}
+ */
+export async function generateSchema(opts: SchemaOptions) {
   const tty = initTTY({ disableTTY: true });
   const result = await tty.start(run(tty, opts));
   if (result instanceof Error) {

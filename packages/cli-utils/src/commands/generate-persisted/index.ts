@@ -1,6 +1,6 @@
 import { Command, Option } from 'clipanion';
 
-import type { Options } from './runner';
+import type { PersistedOptions } from './runner';
 import { initTTY } from '../../term';
 import { run } from './runner';
 
@@ -34,7 +34,15 @@ export class GeneratePersisted extends Command {
   }
 }
 
-export async function generatePersisted(opts: Options) {
+/** Generates a JSON manifest file of all `graphql.persisted()` documents.
+ *
+ * @remarks
+ * Scans your code for `graphql.persisted()` calls and generates a JSON
+ * manifest file containing a mapping of document IDs to the GraphQL document strings.
+ *
+ * @see {@link https://gql-tada.0no.co/reference/gql-tada-cli#generatepersisted}
+ */
+export async function generatePersisted(opts: PersistedOptions) {
   const tty = initTTY({ disableTTY: true });
   const result = await tty.start(run(tty, opts));
   if (result instanceof Error) {

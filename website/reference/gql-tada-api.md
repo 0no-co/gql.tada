@@ -103,6 +103,8 @@ const query = graphql(
 );
 ```
 
+---
+
 ### `graphql.scalar()`
 
 |                  | Description                                    |
@@ -170,6 +172,8 @@ function validateMediaEnum(value: 'Book' | 'Song' | 'Video') {
 
 type Media = ReturnType<typeof graphql.scalar<'Media'>>;
 ```
+
+---
 
 ### `graphql.persisted()`
 
@@ -263,6 +267,8 @@ const query = graphql(`
 const persistedOperation = graphql.persisted<typeof query>('sha256:x');
 ```
 
+---
+
 ### `readFragment()`
 
 |                               | Description                                                              |
@@ -293,7 +299,9 @@ since it's not used as a runtime value anyway:
 const unmaskedData = readFragment<typeof Fragment>(maskedData);
 ```
 
-[Read more about fragment masking on the “Writing GraphQL” page.](../get-started/writing-graphql#fragment-masking)
+<a href="../get-started/writing-graphql#fragment-masking" class="button">
+  Learn more about fragment masking
+</a>
 
 #### Example
 
@@ -331,6 +339,8 @@ const getQuery = (data: ResultOf<typeof pokemonQuery>) => {
   getPokemonItem(data.pokemon);
 };
 ```
+
+---
 
 ### `maskFragments()`
 
@@ -380,6 +390,8 @@ const data = maskFragments([pokemonItemFragment], {
   name: 'Bulbasaur',
 });
 ```
+
+---
 
 ### `unsafe_readResult()`
 
@@ -443,6 +455,8 @@ const data = unsafe_readResult(query, {
 });
 ```
 
+---
+
 ### `initGraphQLTada()`
 
 |                 | Description                                                           |
@@ -457,7 +471,10 @@ GraphQL schema.
 You should use and re-export the resulting function named as `graphql` or `gql` for your
 editor and the TypeScript language server to recognize your GraphQL documents correctly.
 
-[Read more about how to use `initGraphQLTada()` on the “Installation” page.](../get-started/installation#initializing-gqltada-manually)
+<a href="../get-started/installation#initializing-gqltada-manually" class="button">
+  <h4>Installation</h4>
+  <p>Learn how to use <code>initGraphQLTada()</code></p>
+</a>
 
 #### Example
 
@@ -491,6 +508,8 @@ const query = graphql(`
 This accepts a [`TadaDocumentNode`](#tadadocumentnode) and returns the attached `Result` type
 of GraphQL documents.
 
+---
+
 ### `VariablesOf`
 
 |                    | Description                                                        |
@@ -499,6 +518,8 @@ of GraphQL documents.
 
 This accepts a [`TadaDocumentNode`](#tadadocumentnode) and returns the attached `Variables` type
 of GraphQL documents.
+
+---
 
 ### `FragmentOf`
 
@@ -516,7 +537,9 @@ While [`readFragment()`](#readfragment) is used to unmask these fragment masks, 
 creates a fragment mask, so you can accept the masked data in the part of your
 codebase that defines a fragment.
 
-[Read more about fragment masking on the “Writing GraphQL” page.](../get-started/writing-graphql#fragment-masking)
+<a href="../get-started/writing-graphql#fragment-masking" class="button">
+  Learn more about fragment masking
+</a>
 
 #### Example
 
@@ -539,6 +562,8 @@ const getPokemonItem = (data: FragmentOf<typeof pokemonItemFragment>) => {
 };
 ```
 
+---
+
 ### `TadaDocumentNode`
 
 |                     | Description                                                                 |
@@ -553,6 +578,8 @@ This is used by GraphQL clients to infer the types of results and variables and 
 type-safety in GraphQL documents.
 
 You can create typed GraphQL documents using the [`graphql()` function.](#graphql)
+
+---
 
 ### `setupSchema`
 
@@ -584,6 +611,8 @@ declare module 'gql.tada' {
   }
 }
 ```
+
+---
 
 ### `AbstractSetupSchema`
 
