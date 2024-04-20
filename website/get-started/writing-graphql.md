@@ -6,14 +6,20 @@ description: How to get set up and ready
 # Writing GraphQL
 
 In `gql.tada`, we write our GraphQL documents using the `graphql()`
-function.
+function and receive the result and variables types inferred from
+the document itself.
 
-> [!NOTE]
-> In the following examples, we’ll import `graphql()` from `gql.tada`.
-> However, if you’ve previously followed the steps on the “Installation” page
-> [to initialize `gql.tada` manually](./installation#initializing-gqltada-manually),
-> you’ll instead have to import your custom `graphql()` function, as
-> returned by `initGraphQLTada()`.
+In this section, we'll see what operation types look like, how
+we write fragments, and how to use scalar, enum, and input object
+types.
+
+::: info Imports
+Some code examples may import `graphql()` from `gql.tada`.
+However, if you’ve previously followed the steps on the “Installation” page
+[to initialize `gql.tada` manually](./installation#initializing-gqltada-manually),
+you’ll instead have to import your custom `graphql()` function, as
+returned by `initGraphQLTada()`.
+:::
 
 ## Queries
 
