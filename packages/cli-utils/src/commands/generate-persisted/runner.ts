@@ -26,7 +26,7 @@ export async function* run(tty: TTY, opts: PersistedOptions): AsyncIterable<Comp
   let pluginConfig: GraphQLSPConfig;
   try {
     configResult = await loadConfig(opts.tsconfig);
-    pluginConfig = parseConfig(configResult.pluginConfig);
+    pluginConfig = parseConfig(configResult.pluginConfig, configResult.rootPath);
   } catch (error) {
     throw logger.externalError('Failed to load configuration.', error);
   }
