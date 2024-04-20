@@ -2,4 +2,4 @@
 "@gql.tada/cli-utils": patch
 ---
 
-Leverage the Sourcemap the Vue compiler delivers us when looking up positions in the TS document
+Use the Vue SFC compiler's source-maps when looking up positions in its TypeScript file output
