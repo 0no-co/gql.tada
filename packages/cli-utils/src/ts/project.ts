@@ -93,7 +93,7 @@ export const createPluginInfo = (
           isSourceFileFromExternalLibrary: (source) =>
             source.fileName.endsWith('.vue') ||
             program.isSourceFileFromExternalLibrary(source as any),
-          getTypeChecker: () => project.getTypeChecker(),
+          getTypeChecker: () => project.getTypeChecker().compilerObject,
           getSourceFile: (s) => {
             const source = project.getSourceFile(s);
             return source && source.compilerNode;
