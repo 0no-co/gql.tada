@@ -1,5 +1,12 @@
 # @gql.tada/cli-utils
 
+## 1.1.1
+
+### Patch Changes
+
+- Use the Vue SFC compiler's source-maps when looking up positions in its TypeScript file output
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#236](https://github.com/0no-co/gql.tada/pull/236))
+
 ## 1.1.0
 
 ### Minor Changes
