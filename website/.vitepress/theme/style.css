@@ -423,7 +423,11 @@
 :root .VPContent .column {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-column-gap: 16px;
+  gap: 16px;
+}
+
+:root .VPContent .column > * {
+  margin: 0 !important;
 }
 
 @media (max-width: 768px) {

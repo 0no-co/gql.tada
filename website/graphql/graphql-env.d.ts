@@ -17,6 +17,28 @@ export type introspection = {
     subscriptionType: null;
     types: [
       {
+        kind: 'INPUT_OBJECT';
+        name: 'SearchPokemon';
+        inputFields: [
+          {
+            name: 'name';
+            type: {
+              kind: 'SCALAR';
+              name: 'String';
+              ofType: null;
+            };
+          },
+          {
+            name: 'type';
+            type: {
+              kind: 'SCALAR';
+              name: 'PokemonType';
+              ofType: null;
+            };
+          },
+        ];
+      },
+      {
         kind: 'OBJECT';
         name: 'Attack';
         fields: [
