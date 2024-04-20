@@ -28,11 +28,8 @@ const formatBody = (input) => {
 
 async function getReleaseBody(name, version) {
   const tag = `${name}@${version}`;
-  const result = await octokit.rest.repos.getReleaseByTag({
-    owner: 'urql-graphql',
-    repo: 'urql',
-    tag,
-  });
+  const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+  const result = await octokit.rest.repos.getReleaseByTag({ owner, repo, tag });
 
   const release = result.status === 200 ? result.data : undefined;
   if (!release || !release.body) return;
@@ -75,7 +72,8 @@ async function main() {
   });
 
   if (!response.ok) {
-    console.log('Something went wrong while sending the discord webhook.');
+    console.error('Something went wrong while sending the discord webhook.', response.status);
+    console.error(await response.text());
     return;
   }
 
