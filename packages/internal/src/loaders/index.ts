@@ -7,7 +7,7 @@ import { loadFromURL } from './url';
 
 export { loadFromSDL, loadFromURL };
 
-const getURLConfig = (origin: SchemaOrigin | null) => {
+export const getURLConfig = (origin: SchemaOrigin | null) => {
   try {
     return origin
       ? {

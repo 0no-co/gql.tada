@@ -1,6 +1,7 @@
 import * as path from 'node:path';
 import { TadaError } from './errors';
-import type { SchemaOrigin } from './loaders/types';
+import { getURLConfig } from './loaders';
+import type { SchemaOrigin } from './loaders';
 
 export interface GraphQLSPConfig {
   schema: SchemaOrigin;
@@ -22,7 +23,7 @@ export const parseConfig = (
 ) => {
   const resolveConfigDir = (input: string | undefined) => {
     if (!input) return input;
-    return path.resolve(
+    return path.normalize(
       input.replace(/\${([^}]+)}/, (_match, name) => {
         if (name === 'configDir') {
           return rootPath;
@@ -85,6 +86,13 @@ export const parseConfig = (
   }
 
   const output = input as any as GraphQLSPConfig;
+
+  let schema: SchemaOrigin = output.schema;
+  if (typeof schema === 'string') {
+    const url = getURLConfig(schema);
+    if (!url) schema = resolveConfigDir(schema) || schema;
+  }
+
   return {
     ...output,
     tadaOutputLocation: resolveConfigDir(output.tadaOutputLocation),
