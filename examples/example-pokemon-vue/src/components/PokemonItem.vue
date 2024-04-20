@@ -1,12 +1,17 @@
 <script lang="ts">
 import { graphql } from "../graphql";
+import PokemonTypes, { pokemonTypesFragment } from "./PokemonTypes.vue";
 
-export const PokemonItemFragment = graphql(`
-  fragment PokemonItem on Pokemon {
-    id
-    name
-  }
-`);
+export const PokemonItemFragment = graphql(
+  `
+    fragment PokemonItem on Pokemon {
+      id
+      name
+      ...PokemonTypes
+    }
+  `,
+  [pokemonTypesFragment]
+);
 </script>
 <script setup lang="ts">
 import { FragmentOf, readFragment } from "../graphql";
@@ -19,5 +24,8 @@ const props = defineProps<{
 const pokemon = computed(() => readFragment(PokemonItemFragment, props.data));
 </script>
 <template>
-  <li v-if="pokemon">{{ pokemon.name }}</li>
+  <li v-if="pokemon">
+    <p>{{ pokemon.name }}</p>
+    <PokemonTypes :data="pokemon" />
+  </li>
 </template>
