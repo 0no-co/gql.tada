@@ -51,13 +51,8 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
   };
 
   const checker = project.getTypeChecker().compilerObject;
-  for (let { compilerNode: sourceFile } of sourceFiles) {
-    const filePath = sourceFile.fileName;
-    if (filePath.endsWith('.vue')) {
-      const compiledSourceFile = project.getSourceFile(filePath + '.ts');
-      if (compiledSourceFile) sourceFile = compiledSourceFile.compilerNode;
-    }
-
+  for (const { compilerNode: sourceFile } of sourceFiles) {
+    let filePath = sourceFile.fileName;
     const cache: Record<string, string> = {};
     const warnings: TurboWarning[] = [];
 
@@ -68,12 +63,18 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
       // NOTE: `returnType.symbol` is incorrectly typed and is in fact
       // optional and not always present
       if (!returnType.symbol || returnType.symbol.getEscapedName() !== 'TadaDocumentNode') {
-        const position = getFilePosition(sourceFile, call.getStart());
+        const position = getFilePosition(
+          sourceFile,
+          call.getStart(),
+          undefined,
+          getVirtualPosition
+        );
+        filePath = position.file;
         warnings.push({
           message:
             `The discovered document is not of type "TadaDocumentNode".\n` +
             'If this is unexpected, please file an issue describing your case.',
-          file: filePath,
+          file: position.file,
           line: position.line,
           col: position.col,
         });

@@ -54,19 +54,16 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
     fileCount: sourceFiles.length,
   };
 
-  for (let { compilerNode: sourceFile } of sourceFiles) {
-    const filePath = sourceFile.fileName;
-    if (filePath.endsWith('.vue')) {
-      const compiledSourceFile = project.getSourceFile(filePath + '.ts');
-      if (compiledSourceFile) sourceFile = compiledSourceFile.compilerNode;
-    }
-
+  for (const { compilerNode: sourceFile } of sourceFiles) {
+    let filePath = sourceFile.fileName;
     const documents: Record<string, string> = {};
     const warnings: PersistedWarning[] = [];
 
     const calls = findAllPersistedCallExpressions(sourceFile);
     for (const call of calls) {
-      const position = getFilePosition(sourceFile, call.getStart());
+      const position = getFilePosition(sourceFile, call.getStart(), undefined, getVirtualPosition);
+      filePath = position.file;
+
       const hashArg = call.arguments[0];
       const docArg = call.arguments[1];
       const typeQuery = call.typeArguments && call.typeArguments[0];
@@ -74,7 +71,7 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
         warnings.push({
           message:
             '"graphql.persisted" must be called with a string literal as the first argument.',
-          file: filePath,
+          file: position.file,
           line: position.line,
           col: position.col,
         });
@@ -84,7 +81,7 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
           message:
             '"graphql.persisted" is missing a document.\n' +
             'This may be passed as a generic such as `graphql.persisted<typeof document>` or as the second argument.',
-          file: filePath,
+          file: position.file,
           line: position.line,
           col: position.col,
         });
@@ -108,7 +105,7 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
           message:
             `Could not find reference for "${referencingNode.getText()}".\n` +
             'If this is unexpected, please file an issue describing your case.',
-          file: filePath,
+          file: position.file,
           line: position.line,
           col: position.col,
         });
@@ -125,7 +122,7 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
           message:
             `The referenced document of "${referencingNode.getText()}" contains no document string literal.\n` +
             'If this is unexpected, please file an issue describing your case.',
-          file: filePath,
+          file: position.file,
           line: position.line,
           col: position.col,
         });
