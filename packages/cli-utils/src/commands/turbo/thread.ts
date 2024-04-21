@@ -27,10 +27,16 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
   // NOTE: We add our override declaration here before loading all files
   // This sets `__cacheDisabled` on the turbo cache, which disables the cache temporarily
   // If we don't disable the cache then we couldn't regenerate it from inferred types
-  project.createSourceFile('__gql-tada-override__.d.ts', DECLARATION_OVERRIDE, {
-    overwrite: true,
-    scriptKind: ScriptKind.TS,
-  });
+  const overrideFile = project.createSourceFile(
+    '__gql-tada-override__.d.ts',
+    DECLARATION_OVERRIDE,
+    {
+      overwrite: true,
+      scriptKind: ScriptKind.TS,
+    }
+  );
+  if (overrideFile._markAsInProject) overrideFile._markAsInProject();
+
   project.addSourceFilesFromTsConfig(params.configPath);
 
   const getVirtualPosition = await loadVirtualCode(projectPath, project, ts);
