@@ -35,10 +35,7 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
 
   const getVirtualPosition = await loadVirtualCode(projectPath, project, ts);
   if (!!getVirtualPosition) {
-    yield {
-      kind: 'WARNING',
-      message: 'Vue single-file component support is experimental.',
-    };
+    yield { kind: 'EXTERNAL_WARNING' };
   }
 
   // Filter source files by whether they're under the relevant root path

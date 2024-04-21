@@ -26,10 +26,7 @@ async function* _runDiagnostics(
 
   const getVirtualPosition = await loadVirtualCode(projectPath, project, ts);
   if (!!getVirtualPosition) {
-    yield {
-      kind: 'WARNING',
-      message: 'Vue single-file component support is experimental.',
-    };
+    yield { kind: 'EXTERNAL_WARNING' };
   }
 
   const pluginInfo = createPluginInfo(

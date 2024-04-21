@@ -18,8 +18,7 @@ export interface FileCountSignal {
 }
 
 export interface WarningSignal {
-  kind: 'WARNING';
-  message: string;
+  kind: 'EXTERNAL_WARNING';
 }
 
 export type PersistedSignal = FilePersistedSignal | FileCountSignal | WarningSignal;
