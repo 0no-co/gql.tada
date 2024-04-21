@@ -50,10 +50,12 @@ export const loadVirtualCode = async (
   const sourceMaps = new Map<string, SourceMap>();
 
   for (const file of projectFiles) {
-    const projectSourceFile = project.createSourceFile(
+    const projectSourceFile = ts.createSourceFile(
       file.fileId,
       file.snapshot.getText(0, file.snapshot.getLength()),
-      { overwrite: true, scriptKind: ts.ScriptKind.External }
+      ts.ScriptTarget.ESNext,
+      false,
+      ts.ScriptKind.External
     );
 
     const virtualCode = await createVirtualCode(file.fileId, file.snapshot, ts);
@@ -69,10 +71,9 @@ export const loadVirtualCode = async (
     );
 
     if (virtualSourceFile._markAsInProject) virtualSourceFile._markAsInProject();
-    projectSourceFile._inProject = false;
 
     projectToVirtual.set(file.fileId, virtualSourceFile.compilerNode);
-    virtualToProject.set(virtualFileId, projectSourceFile.compilerNode);
+    virtualToProject.set(virtualFileId, projectSourceFile);
     sourceMaps.set(file.fileId, sourceMap);
     sourceMaps.set(virtualFileId, sourceMap);
   }
