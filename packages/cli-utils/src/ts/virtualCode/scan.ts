@@ -44,8 +44,8 @@ export async function scanProjectFiles(
       return;
     }
 
-    for (const dir of await fs.readdir(dirpath)) {
-      const filepath = path.join(dirpath, dir);
+    for (const entry of dir) {
+      const filepath = path.join(dirpath, entry);
       try {
         await _scanVueFile(filepath);
       } catch (_error) {
