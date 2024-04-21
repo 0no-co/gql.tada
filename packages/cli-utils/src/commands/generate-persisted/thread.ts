@@ -91,11 +91,19 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
       let foundNode: ts.CallExpression | null = null;
       let referencingNode: ts.Node = call;
       if (docArg && (ts.isCallExpression(docArg) || ts.isIdentifier(docArg))) {
-        const result = getDocumentReferenceFromDocumentNode(docArg, filePath, pluginInfo);
+        const result = getDocumentReferenceFromDocumentNode(
+          docArg,
+          sourceFile.fileName,
+          pluginInfo
+        );
         foundNode = result.node;
         referencingNode = docArg;
       } else if (typeQuery && ts.isTypeQueryNode(typeQuery)) {
-        const result = getDocumentReferenceFromTypeQuery(typeQuery, filePath, pluginInfo);
+        const result = getDocumentReferenceFromTypeQuery(
+          typeQuery,
+          sourceFile.fileName,
+          pluginInfo
+        );
         foundNode = result.node;
         referencingNode = typeQuery;
       }
