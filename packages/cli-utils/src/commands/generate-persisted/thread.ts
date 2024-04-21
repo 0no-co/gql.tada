@@ -13,7 +13,7 @@ import {
   unrollTadaFragments,
 } from '@0no-co/graphqlsp/api';
 
-import { createPluginInfo, getFilePosition, polyfillVueSupport } from '../../ts';
+import { createPluginInfo, getFilePosition, loadVirtualCode } from '../../ts';
 import { expose } from '../../threads';
 
 import type { PersistedSignal, PersistedWarning } from './types';
@@ -29,15 +29,21 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
 
   const projectPath = path.dirname(params.configPath);
   const project = new Project({ tsConfigFilePath: params.configPath });
-  const pluginInfo = createPluginInfo(project, params.pluginConfig, projectPath);
 
-  const vueSourceFiles = polyfillVueSupport(project, ts);
-  if (vueSourceFiles.length) {
+  const getVirtualPosition = await loadVirtualCode(projectPath, project, ts);
+  if (!!getVirtualPosition) {
     yield {
       kind: 'WARNING',
       message: 'Vue single-file component support is experimental.',
     };
   }
+
+  const pluginInfo = createPluginInfo(
+    project,
+    params.pluginConfig,
+    projectPath,
+    getVirtualPosition
+  );
 
   // Filter source files by whether they're under the relevant root path
   const sourceFiles = project.getSourceFiles().filter((sourceFile) => {

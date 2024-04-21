@@ -4,7 +4,7 @@ import { Project, TypeFormatFlags, TypeFlags, ScriptKind, ts } from 'ts-morph';
 import type { GraphQLSPConfig } from '@gql.tada/internal';
 import { init } from '@0no-co/graphqlsp/api';
 
-import { getFilePosition, polyfillVueSupport } from '../../ts';
+import { getFilePosition, loadVirtualCode } from '../../ts';
 import { expose } from '../../threads';
 
 import type { TurboSignal, TurboWarning } from './types';
@@ -33,8 +33,8 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
   });
   project.addSourceFilesFromTsConfig(params.configPath);
 
-  const vueSourceFiles = polyfillVueSupport(project, ts);
-  if (vueSourceFiles.length) {
+  const getVirtualPosition = await loadVirtualCode(projectPath, project, ts);
+  if (!!getVirtualPosition) {
     yield {
       kind: 'WARNING',
       message: 'Vue single-file component support is experimental.',
