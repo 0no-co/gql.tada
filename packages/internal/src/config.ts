@@ -1,5 +1,7 @@
+import * as path from 'node:path';
 import { TadaError } from './errors';
-import type { SchemaOrigin } from './loaders/types';
+import { getURLConfig } from './loaders';
+import type { SchemaOrigin } from './loaders';
 
 export interface GraphQLSPConfig {
   schema: SchemaOrigin;
@@ -9,7 +11,31 @@ export interface GraphQLSPConfig {
   template?: string;
 }
 
-export const parseConfig = (input: Record<string, unknown>) => {
+export const parseConfig = (
+  input: Record<string, unknown>,
+  /** Defines the path of the "main" `tsconfig.json` file.
+   * @remarks
+   * This should be the `rootPath` output from `loadConfig`,
+   * which is the path of the user's `tsconfig.json` before
+   * resolving `extends` options.
+   */
+  rootPath: string = process.cwd()
+) => {
+  const resolveConfigDir = (input: string | undefined) => {
+    if (!input) return input;
+    return path.normalize(
+      input.replace(/\${([^}]+)}/, (_match, name) => {
+        if (name === 'configDir') {
+          return rootPath;
+        } else {
+          throw new TadaError(
+            `Substitution "\${${name}}" is not recognized (did you mean 'configDir'?)`
+          );
+        }
+      })
+    );
+  };
+
   if (input.schema && typeof input.schema === 'object') {
     const { schema } = input;
     if (!('url' in schema)) {
@@ -59,5 +85,18 @@ export const parseConfig = (input: Record<string, unknown>) => {
     throw new TadaError("Configuration contains a `template` property, but it's not a string");
   }
 
-  return input as any as GraphQLSPConfig;
+  const output = input as any as GraphQLSPConfig;
+
+  let schema: SchemaOrigin = output.schema;
+  if (typeof schema === 'string') {
+    const url = getURLConfig(schema);
+    if (!url) schema = resolveConfigDir(schema) || schema;
+  }
+
+  return {
+    ...output,
+    tadaOutputLocation: resolveConfigDir(output.tadaOutputLocation),
+    tadaTurboLocation: resolveConfigDir(output.tadaTurboLocation),
+    tadaPersistedLocation: resolveConfigDir(output.tadaPersistedLocation),
+  } satisfies GraphQLSPConfig;
 };

@@ -147,7 +147,7 @@ export async function* run(): AsyncIterable<ComposeInput> {
 
   let pluginConfig: GraphQLSPConfig;
   try {
-    pluginConfig = parseConfig(configResult.pluginConfig);
+    pluginConfig = parseConfig(configResult.pluginConfig, configResult.rootPath);
   } catch (error) {
     throw logger.externalError(
       `The plugin configuration for ${logger.code('"@0no-co/graphqlsp"')} seems to be invalid.`,
