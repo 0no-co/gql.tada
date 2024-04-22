@@ -1,5 +1,12 @@
 # @gql.tada/internal
 
+## 0.2.2
+
+### Patch Changes
+
+- Add support for `${configDir}` to directory path configs
+  Submitted by [@kitten](https://github.com/kitten) (See [#239](https://github.com/0no-co/gql.tada/pull/239))
+
 ## 0.2.1
 
 ### Patch Changes

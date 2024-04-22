@@ -1,5 +1,19 @@
 # @gql.tada/cli-utils
 
+## 1.2.0
+
+### Minor Changes
+
+- Add experimental support for `.svelte` files for the `turbo`, `generate-persisted`, and `check` commands. (Note: `@0no-co/graphqlsp` does not yet have support for Svelte, Vue & Volar)
+  Submitted by [@kitten](https://github.com/kitten) (See [#241](https://github.com/0no-co/gql.tada/pull/241))
+- Add support for `${configDir}` to directory path configs. When used in paths in our configuration, `${configDir}` will be substituted with the location of the main `tsconfig.json`
+  Submitted by [@kitten](https://github.com/kitten) (See [#239](https://github.com/0no-co/gql.tada/pull/239))
+
+### Patch Changes
+
+- Updated dependencies (See [#239](https://github.com/0no-co/gql.tada/pull/239))
+  - @gql.tada/internal@0.2.2
+
 ## 1.1.1
 
 ### Patch Changes
