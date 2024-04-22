@@ -335,6 +335,25 @@ describe('graphql.scalar()', () => {
     // @ts-expect-error
     const actual = graphql.scalar('what', null);
   });
+
+  it('should accept exact input objects', () => {
+    const actual = graphql.scalar('TodoPayload', {
+      title: 'title',
+      description: 'description',
+    });
+
+    expectTypeOf<typeof actual>().toEqualTypeOf<{
+      title: string;
+      description: string;
+    }>();
+
+    graphql.scalar('TodoPayload', {
+      title: 'title',
+      description: 'description',
+      // @ts-expect-error
+      excess: true,
+    });
+  });
 });
 
 describe('graphql.scalar() with custom scalars', () => {
