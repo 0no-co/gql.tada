@@ -21,8 +21,12 @@ export function sampleCode(code: string) {
   ]);
 }
 
-export function emptyLine() {
-  return t.text([t.cmd(t.CSI.Style, t.Style.BrightBlack), t.HeavyBox.Vertical, '\n']);
+export function emptyLine(length = 1) {
+  return t.text([
+    t.cmd(t.CSI.Style, t.Style.BrightBlack),
+    `${t.HeavyBox.Vertical} ` + `${t.Box.Vertical}`.repeat(length - 1),
+    '\n',
+  ]);
 }
 
 export function title(title: string, description?: string) {
@@ -92,8 +96,9 @@ export function warningTask(description: string) {
 
 export function hintMessage(text: string) {
   return t.text([
+    emptyLine(2),
     t.cmd(t.CSI.Style, t.Style.BrightBlack),
-    `${t.HeavyBox.VerticalRight} `,
+    `${t.HeavyBox.Vertical} ${t.Box.BottomLeft} `,
     t.cmd(t.CSI.Style, t.Style.BrightBlue),
     `${t.Icons.Info} `,
     t.cmd(t.CSI.Style, t.Style.Blue),
@@ -101,7 +106,7 @@ export function hintMessage(text: string) {
       text,
       t.text([
         t.cmd(t.CSI.Style, t.Style.BrightBlack),
-        `${t.HeavyBox.Vertical}   `,
+        `${t.HeavyBox.Vertical}     `,
         t.cmd(t.CSI.Style, t.Style.Blue),
       ])
     ),

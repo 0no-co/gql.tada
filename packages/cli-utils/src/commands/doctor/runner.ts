@@ -244,7 +244,7 @@ async function* runVSCodeChecks(): AsyncIterable<ComposeInput> {
 
       yield logger.hintMessage(
         `Consider adding these settings to the ${logger.code('.vscode/settings.json')} file.\n` +
-          `This will let VSCode prompt you to start the workspace TypeScript version to run GraphQLSP plugin:\n` +
+          `Without them VSCode may not prompt you to start the workspace TypeScript version.\n` +
           logger.sampleCode(
             '{\n' +
               '  "typescript.tsdk": "node_modules/typescript/lib",\n' +
