@@ -13,7 +13,7 @@ import {
   unrollTadaFragments,
 } from '@0no-co/graphqlsp/api';
 
-import { createPluginInfo, getFilePosition, polyfillVueSupport } from '../../ts';
+import { createPluginInfo, getFilePosition, loadVirtualCode } from '../../ts';
 import { expose } from '../../threads';
 
 import type { PersistedSignal, PersistedWarning } from './types';
@@ -29,15 +29,18 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
 
   const projectPath = path.dirname(params.configPath);
   const project = new Project({ tsConfigFilePath: params.configPath });
-  const pluginInfo = createPluginInfo(project, params.pluginConfig, projectPath);
 
-  const vueSourceFiles = polyfillVueSupport(project, ts);
-  if (vueSourceFiles.length) {
-    yield {
-      kind: 'WARNING',
-      message: 'Vue single-file component support is experimental.',
-    };
+  const getVirtualPosition = await loadVirtualCode(projectPath, project, ts);
+  if (!!getVirtualPosition) {
+    yield { kind: 'EXTERNAL_WARNING' };
   }
+
+  const pluginInfo = createPluginInfo(
+    project,
+    params.pluginConfig,
+    projectPath,
+    getVirtualPosition
+  );
 
   // Filter source files by whether they're under the relevant root path
   const sourceFiles = project.getSourceFiles().filter((sourceFile) => {
@@ -51,19 +54,16 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
     fileCount: sourceFiles.length,
   };
 
-  for (let { compilerNode: sourceFile } of sourceFiles) {
-    const filePath = sourceFile.fileName;
-    if (filePath.endsWith('.vue')) {
-      const compiledSourceFile = project.getSourceFile(filePath + '.ts');
-      if (compiledSourceFile) sourceFile = compiledSourceFile.compilerNode;
-    }
-
+  for (const { compilerNode: sourceFile } of sourceFiles) {
+    let filePath = sourceFile.fileName;
     const documents: Record<string, string> = {};
     const warnings: PersistedWarning[] = [];
 
     const calls = findAllPersistedCallExpressions(sourceFile);
     for (const call of calls) {
-      const position = getFilePosition(sourceFile, call.getStart());
+      const position = getFilePosition(sourceFile, call.getStart(), undefined, getVirtualPosition);
+      filePath = position.file;
+
       const hashArg = call.arguments[0];
       const docArg = call.arguments[1];
       const typeQuery = call.typeArguments && call.typeArguments[0];
@@ -71,7 +71,7 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
         warnings.push({
           message:
             '"graphql.persisted" must be called with a string literal as the first argument.',
-          file: filePath,
+          file: position.file,
           line: position.line,
           col: position.col,
         });
@@ -81,7 +81,7 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
           message:
             '"graphql.persisted" is missing a document.\n' +
             'This may be passed as a generic such as `graphql.persisted<typeof document>` or as the second argument.',
-          file: filePath,
+          file: position.file,
           line: position.line,
           col: position.col,
         });
@@ -91,11 +91,19 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
       let foundNode: ts.CallExpression | null = null;
       let referencingNode: ts.Node = call;
       if (docArg && (ts.isCallExpression(docArg) || ts.isIdentifier(docArg))) {
-        const result = getDocumentReferenceFromDocumentNode(docArg, filePath, pluginInfo);
+        const result = getDocumentReferenceFromDocumentNode(
+          docArg,
+          sourceFile.fileName,
+          pluginInfo
+        );
         foundNode = result.node;
         referencingNode = docArg;
       } else if (typeQuery && ts.isTypeQueryNode(typeQuery)) {
-        const result = getDocumentReferenceFromTypeQuery(typeQuery, filePath, pluginInfo);
+        const result = getDocumentReferenceFromTypeQuery(
+          typeQuery,
+          sourceFile.fileName,
+          pluginInfo
+        );
         foundNode = result.node;
         referencingNode = typeQuery;
       }
@@ -105,7 +113,7 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
           message:
             `Could not find reference for "${referencingNode.getText()}".\n` +
             'If this is unexpected, please file an issue describing your case.',
-          file: filePath,
+          file: position.file,
           line: position.line,
           col: position.col,
         });
@@ -122,7 +130,7 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
           message:
             `The referenced document of "${referencingNode.getText()}" contains no document string literal.\n` +
             'If this is unexpected, please file an issue describing your case.',
-          file: filePath,
+          file: position.file,
           line: position.line,
           col: position.col,
         });

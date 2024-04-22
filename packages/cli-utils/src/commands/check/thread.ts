@@ -5,7 +5,7 @@ import type { GraphQLSPConfig } from '@gql.tada/internal';
 import { load } from '@gql.tada/internal';
 import { init, getGraphQLDiagnostics } from '@0no-co/graphqlsp/api';
 
-import { createPluginInfo, getFilePosition, polyfillVueSupport } from '../../ts';
+import { createPluginInfo, getFilePosition, loadVirtualCode } from '../../ts';
 import { expose } from '../../threads';
 
 import type { Severity, DiagnosticMessage, DiagnosticSignal } from './types';
@@ -23,16 +23,18 @@ async function* _runDiagnostics(
   const projectPath = path.dirname(params.configPath);
   const loader = load({ origin: params.pluginConfig.schema, rootPath: projectPath });
   const project = new Project({ tsConfigFilePath: params.configPath });
-  const pluginInfo = createPluginInfo(project, params.pluginConfig, projectPath);
 
-  const vueSourceFiles = polyfillVueSupport(project, ts);
-  if (vueSourceFiles.length) {
-    yield {
-      kind: 'WARNING',
-      message: 'Vue single-file component support is experimental.',
-    };
+  const getVirtualPosition = await loadVirtualCode(projectPath, project, ts);
+  if (!!getVirtualPosition) {
+    yield { kind: 'EXTERNAL_WARNING' };
   }
 
+  const pluginInfo = createPluginInfo(
+    project,
+    params.pluginConfig,
+    projectPath,
+    getVirtualPosition
+  );
   const loadResult = await loader.load();
   const schemaRef = { current: loadResult.schema, version: 1 };
 
@@ -49,7 +51,7 @@ async function* _runDiagnostics(
   };
 
   for (const { compilerNode: sourceFile } of sourceFiles) {
-    const filePath = sourceFile.fileName;
+    let filePath = sourceFile.fileName;
     const diagnostics = getGraphQLDiagnostics(filePath, schemaRef, pluginInfo);
     const messages: DiagnosticMessage[] = [];
 
@@ -68,11 +70,17 @@ async function* _runDiagnostics(
         } else if (diagnostic.category === ts.DiagnosticCategory.Warning) {
           severity = 'warn';
         }
-        const position = getFilePosition(sourceFile, diagnostic.start, diagnostic.length);
+        const position = getFilePosition(
+          sourceFile,
+          diagnostic.start,
+          diagnostic.length,
+          getVirtualPosition
+        );
+        filePath = position.file;
         messages.push({
           severity,
           message: diagnostic.messageText,
-          file: diagnostic.file.fileName,
+          file: position.file,
           line: position.line,
           col: position.col,
           endLine: position.endLine,

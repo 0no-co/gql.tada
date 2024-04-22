@@ -24,8 +24,7 @@ export interface FileCountSignal {
 }
 
 export interface WarningSignal {
-  kind: 'WARNING';
-  message: string;
+  kind: 'EXTERNAL_WARNING';
 }
 
 export type DiagnosticSignal = FileDiagnosticsSignal | FileCountSignal | WarningSignal;

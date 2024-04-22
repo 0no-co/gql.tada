@@ -4,7 +4,7 @@ import { Project, TypeFormatFlags, TypeFlags, ScriptKind, ts } from 'ts-morph';
 import type { GraphQLSPConfig } from '@gql.tada/internal';
 import { init } from '@0no-co/graphqlsp/api';
 
-import { getFilePosition, polyfillVueSupport } from '../../ts';
+import { getFilePosition, loadVirtualCode } from '../../ts';
 import { expose } from '../../threads';
 
 import type { TurboSignal, TurboWarning } from './types';
@@ -27,18 +27,21 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
   // NOTE: We add our override declaration here before loading all files
   // This sets `__cacheDisabled` on the turbo cache, which disables the cache temporarily
   // If we don't disable the cache then we couldn't regenerate it from inferred types
-  project.createSourceFile('__gql-tada-override__.d.ts', DECLARATION_OVERRIDE, {
-    overwrite: true,
-    scriptKind: ScriptKind.TS,
-  });
+  const overrideFile = project.createSourceFile(
+    '__gql-tada-override__.d.ts',
+    DECLARATION_OVERRIDE,
+    {
+      overwrite: true,
+      scriptKind: ScriptKind.TS,
+    }
+  );
+  if (overrideFile._markAsInProject) overrideFile._markAsInProject();
+
   project.addSourceFilesFromTsConfig(params.configPath);
 
-  const vueSourceFiles = polyfillVueSupport(project, ts);
-  if (vueSourceFiles.length) {
-    yield {
-      kind: 'WARNING',
-      message: 'Vue single-file component support is experimental.',
-    };
+  const getVirtualPosition = await loadVirtualCode(projectPath, project, ts);
+  if (!!getVirtualPosition) {
+    yield { kind: 'EXTERNAL_WARNING' };
   }
 
   // Filter source files by whether they're under the relevant root path
@@ -54,13 +57,8 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
   };
 
   const checker = project.getTypeChecker().compilerObject;
-  for (let { compilerNode: sourceFile } of sourceFiles) {
-    const filePath = sourceFile.fileName;
-    if (filePath.endsWith('.vue')) {
-      const compiledSourceFile = project.getSourceFile(filePath + '.ts');
-      if (compiledSourceFile) sourceFile = compiledSourceFile.compilerNode;
-    }
-
+  for (const { compilerNode: sourceFile } of sourceFiles) {
+    let filePath = sourceFile.fileName;
     const cache: Record<string, string> = {};
     const warnings: TurboWarning[] = [];
 
@@ -71,12 +69,18 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
       // NOTE: `returnType.symbol` is incorrectly typed and is in fact
       // optional and not always present
       if (!returnType.symbol || returnType.symbol.getEscapedName() !== 'TadaDocumentNode') {
-        const position = getFilePosition(sourceFile, call.getStart());
+        const position = getFilePosition(
+          sourceFile,
+          call.getStart(),
+          undefined,
+          getVirtualPosition
+        );
+        filePath = position.file;
         warnings.push({
           message:
             `The discovered document is not of type "TadaDocumentNode".\n` +
             'If this is unexpected, please file an issue describing your case.',
-          file: filePath,
+          file: position.file,
           line: position.line,
           col: position.col,
         });

@@ -69,8 +69,10 @@ export async function* run(tty: TTY, opts: PersistedOptions): AsyncIterable<Comp
 
   try {
     for await (const signal of generator) {
-      if (signal.kind === 'WARNING') {
-        yield logger.experimentMessage(signal.message);
+      if (signal.kind === 'EXTERNAL_WARNING') {
+        yield logger.experimentMessage(
+          `${logger.code('.vue')} and ${logger.code('.svelte')} file support is experimental.`
+        );
         continue;
       } else if (signal.kind === 'FILE_COUNT') {
         totalFileCount = signal.fileCount;

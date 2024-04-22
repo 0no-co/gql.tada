@@ -1,101 +1,56 @@
 import type { GraphQLSPConfig } from '@gql.tada/internal';
-import type { Project, SourceFile } from 'ts-morph';
-import * as vue from '@vue/language-core';
+import type { Project } from 'ts-morph';
 
-const VUE_MAPPING = new Map<string, vue.SourceMap>();
-
-export const polyfillVueSupport = (
-  project: Project,
-  ts: typeof import('typescript/lib/tsserverlibrary')
-): readonly SourceFile[] => {
-  const vueProjectFiles = project.addSourceFilesAtPaths(['!node_modules', './**/*.vue']);
-  if (vueProjectFiles.length) {
-    const vueOptions = vue.resolveVueCompilerOptions({});
-    const compilerOptions = project.getCompilerOptions();
-    const vueLanguagePlugin = vue.createVueLanguagePlugin(
-      ts,
-      (id) => id,
-      true /* use case-sensitive filenames */,
-      () => 'project-version-tsc' /* we don't need a version, no incremental going on */,
-      () => vueProjectFiles.map((x) => x.compilerNode.fileName),
-      compilerOptions,
-      vueOptions,
-      false
-    );
-
-    for (const sourceFile of vueProjectFiles) {
-      const filename = sourceFile.compilerNode.fileName;
-      const virtualCode = vueLanguagePlugin.createVirtualCode(
-        filename,
-        'vue',
-        ts.ScriptSnapshot.fromString(sourceFile.getFullText())
-      );
-
-      if (!virtualCode) continue;
-
-      const serviceScript = vueLanguagePlugin.typescript?.getServiceScript(virtualCode);
-      if (serviceScript) {
-        const parsedSourceFile = project.createSourceFile(
-          filename + '.ts',
-          serviceScript.code.snapshot.getText(0, serviceScript.code.snapshot.getLength()),
-          { overwrite: true, scriptKind: serviceScript.scriptKind }
-        );
-        const sourcemap = new vue.SourceMap(serviceScript.code.mappings);
-        VUE_MAPPING.set(parsedSourceFile.compilerNode.fileName, sourcemap);
-        parsedSourceFile.version = sourceFile.version;
-        parsedSourceFile._inProject = false;
-      }
-    }
-  }
-  return vueProjectFiles;
-};
+import type { TranslatePosition } from './virtualCode';
 
 export const createPluginInfo = (
   project: Project,
   config: GraphQLSPConfig,
-  projectName: string
+  projectPath: string,
+  getPosition?: TranslatePosition
 ): any => {
   const languageService = project.getLanguageService();
   return {
     config,
     languageService: {
       getReferencesAtPosition: (filename, position) => {
-        if (filename.endsWith('.vue')) {
-          filename += '.ts';
-          if (VUE_MAPPING.has(filename)) {
-            const sourcemap = VUE_MAPPING.get(filename);
-            if (sourcemap) {
-              const newPosition = sourcemap.getGeneratedOffset(position);
-              if (newPosition) position = newPosition[0];
-            }
+        if (getPosition) {
+          const output = getPosition(filename, position);
+          if (output && output.isVirtual) {
+            filename = output.fileId;
+            position = output.position;
           }
         }
         return languageService.compilerObject.getReferencesAtPosition(filename, position);
       },
       getDefinitionAtPosition: (filename, position) => {
-        if (filename.endsWith('.vue')) {
-          filename += '.ts';
-          if (VUE_MAPPING.has(filename)) {
-            const sourcemap = VUE_MAPPING.get(filename);
-            if (sourcemap) {
-              const newPosition = sourcemap.getGeneratedOffset(position);
-              if (newPosition) position = newPosition[0];
-            }
+        if (getPosition) {
+          const output = getPosition(filename, position);
+          if (output && output.isVirtual) {
+            filename = output.fileId;
+            position = output.position;
           }
         }
-        const result = languageService.compilerObject.getDefinitionAtPosition(filename, position);
-        return result;
+        return languageService.compilerObject.getDefinitionAtPosition(filename, position);
       },
       getProgram: () => {
         const program = project.getProgram();
         return {
           ...program,
-          isSourceFileFromExternalLibrary: (source) =>
-            source.fileName.endsWith('.vue') ||
-            program.isSourceFileFromExternalLibrary(source as any),
+          isSourceFileFromExternalLibrary(source) {
+            if (getPosition) {
+              const output = getPosition(source.fileName);
+              if (output) return true;
+            }
+            return program.isSourceFileFromExternalLibrary(source);
+          },
           getTypeChecker: () => project.getTypeChecker().compilerObject,
-          getSourceFile: (s) => {
-            const source = project.getSourceFile(s);
+          getSourceFile: (filepath) => {
+            if (getPosition) {
+              const output = getPosition(filepath);
+              if (output && output.isVirtual) filepath = output.fileId;
+            }
+            const source = project.getSourceFile(filepath);
             return source && source.compilerNode;
           },
         };
@@ -105,7 +60,7 @@ export const createPluginInfo = (
     } as any,
     languageServiceHost: {} as any,
     project: {
-      getProjectName: () => projectName,
+      getProjectName: () => projectPath,
       projectService: {
         logger: console,
       },
