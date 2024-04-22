@@ -11,7 +11,7 @@ const formatBody = (input) => {
   const updatedDepsRe = /\n-\s*Updated dependencies[\s\S]+\n(\n\s+-[\s\S]+)*/gi;
   const markdownLinkRe = /\[([^\]]+)\]\(([^\)]+)\)/g;
   const creditRe = new RegExp(`Submitted by (?:undefined|${markdownLinkRe.source})`, 'ig');
-  const repeatedNewlineRe = /(\n[ ]*)+/g;
+  const repeatedNewlineRe = /(?:\n[ ]*)*(\n[ ]*)/g;
   return input
     .replace(titleRe, '')
     .replace(updatedDepsRe, '')
@@ -19,10 +19,8 @@ const formatBody = (input) => {
       if (!text || /@kitten|@JoviDeCroock/i.test(text)) return '';
       return `Submitted by [${text}](${url})`;
     })
-    .replace(markdownLinkRe, (_match, text, url) => {
-      return `[${text}](<${url}>)`;
-    })
-    .replace(repeatedNewlineRe, '\n')
+    .replace(markdownLinkRe, (_match, text, url) => `[${text}](<${url}>)`)
+    .replace(repeatedNewlineRe, (_match, text) => text || '\n')
     .trim();
 };
 
