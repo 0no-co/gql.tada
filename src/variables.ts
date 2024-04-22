@@ -37,8 +37,8 @@ type unwrapTypeRec<TypeRef, Introspection extends SchemaLike, IsOptional> = Type
       : null | Array<unwrapTypeRec<TypeRef['ofType'], Introspection, true>>
     : TypeRef extends { name: any }
       ? IsOptional extends false
-        ? _getScalarType<TypeRef['name'], Introspection>
-        : null | _getScalarType<TypeRef['name'], Introspection>
+        ? getScalarType<TypeRef['name'], Introspection>
+        : null | getScalarType<TypeRef['name'], Introspection>
       : unknown;
 
 type unwrapTypeRefRec<Type, Introspection extends SchemaLike, IsOptional> = Type extends {
@@ -52,8 +52,8 @@ type unwrapTypeRefRec<Type, Introspection extends SchemaLike, IsOptional> = Type
       : null | Array<unwrapTypeRefRec<Type['type'], Introspection, true>>
     : Type extends { kind: Kind.NAMED_TYPE; name: any }
       ? IsOptional extends false
-        ? _getScalarType<Type['name']['value'], Introspection>
-        : null | _getScalarType<Type['name']['value'], Introspection>
+        ? getScalarType<Type['name']['value'], Introspection>
+        : null | getScalarType<Type['name']['value'], Introspection>
       : unknown;
 
 type _getVariablesRec<
@@ -90,7 +90,7 @@ type getVariablesType<
   Introspection extends SchemaLike,
 > = _getVariablesRec<Document['definitions'][0]['variableDefinitions'], Introspection>;
 
-type _getScalarType<
+type getScalarType<
   TypeName,
   Introspection extends SchemaLike,
 > = TypeName extends keyof Introspection['types']
@@ -99,20 +99,6 @@ type _getScalarType<
     : Introspection['types'][TypeName] extends { type: any }
       ? Introspection['types'][TypeName]['type']
       : Introspection['types'][TypeName]['enumValues']
-  : unknown;
-
-type getScalarType<
-  TypeName,
-  Introspection extends SchemaLike,
-  OrType = never,
-> = TypeName extends keyof Introspection['types']
-  ? Introspection['types'][TypeName] extends { kind: 'INPUT_OBJECT'; inputFields: any }
-    ? getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection> | OrType
-    : Introspection['types'][TypeName] extends { type: any }
-      ? Introspection['types'][TypeName]['type'] | OrType
-      : Introspection['types'][TypeName] extends { enumValues: any }
-        ? Introspection['types'][TypeName]['enumValues'] | OrType
-        : never
   : never;
 
 export type { getVariablesType, getScalarType };
