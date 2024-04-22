@@ -48,6 +48,30 @@ export const loadSuggestedExtensionsList = async (
   }
 };
 
+/** Loads suggested settings of in-repo VSCode */
+export const loadSuggestedSettings = async (
+  targetPath?: string
+): Promise<Record<string, unknown> | null> => {
+  let target = targetPath || process.cwd();
+  const rootPath = path.resolve(target, '/');
+  while (target !== rootPath) {
+    if (await stat(path.resolve(target, '.git'), FileType.Directory)) {
+      break;
+    } else if (await stat(path.resolve(target, '.vscode'), FileType.Directory)) {
+      break;
+    }
+    target = path.resolve(target, '..');
+  }
+  const configFile = path.resolve(target, '.vscode', 'settings.json');
+  if (!(await stat(configFile))) return null;
+  try {
+    const json = await jsonParse(configFile);
+    return json && typeof json === 'object' ? (json as Record<string, unknown>) : null;
+  } catch (_error) {
+    return null;
+  }
+};
+
 /** Loads list of installed VSCode extensions */
 export const loadExtensionsList = async (): Promise<readonly string[]> => {
   if (!process.env.HOME) return [];

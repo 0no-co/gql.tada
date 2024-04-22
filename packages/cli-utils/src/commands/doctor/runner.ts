@@ -235,6 +235,25 @@ async function* runVSCodeChecks(): AsyncIterable<ComposeInput> {
       );
     }
 
+    const settings = await vscode.loadSuggestedSettings();
+    if (!settings || !settings['typescript.enablePromptUseWorkspaceTsdk']) {
+      if (!hasEndedTask) {
+        hasEndedTask = true;
+        yield logger.warningTask(Messages.CHECK_VSCODE);
+      }
+
+      yield logger.hintMessage(
+        `Consider adding these settings to the ${logger.code('.vscode/settings.json')} file.\n` +
+          `This will let VSCode prompt you to start the workspace TypeScript version to run GraphQLSP plugin:\n` +
+          logger.sampleCode(
+            '{\n' +
+              '  "typescript.tsdk": "node_modules/typescript/lib",\n' +
+              '  "typescript.enablePromptUseWorkspaceTsdk": true\n' +
+              '}\n'
+          )
+      );
+    }
+
     if (!hasEndedTask) {
       yield logger.completedTask(Messages.CHECK_VSCODE);
     }

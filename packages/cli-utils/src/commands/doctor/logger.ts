@@ -13,6 +13,14 @@ export function console(error: any) {
   ]);
 }
 
+export function sampleCode(code: string) {
+  return t.text([
+    ' ',
+    t.cmd(t.CSI.Style, t.Style.BrightWhite),
+    indent(code, ' ' + t.cmd(t.CSI.Style, t.Style.BrightWhite)),
+  ]);
+}
+
 export function emptyLine() {
   return t.text([t.cmd(t.CSI.Style, t.Style.BrightBlack), t.HeavyBox.Vertical, '\n']);
 }
