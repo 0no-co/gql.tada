@@ -176,17 +176,39 @@ interface GraphQLTadaAPI<Schema extends SchemaLike, Config extends AbstractConfi
    * const myEnumValue = graphql.scalar('myEnum', 'value');
    * ```
    */
-  scalar<
-    const Name extends string,
-    const Value extends getScalarType<Name, Schema, null | undefined>,
-  >(
+  scalar<const Name extends string, Value>(
     name: Name,
-    value: Value
+    value: getScalarType<Name, Schema> extends Value
+      ? Value & getScalarType<Name, Schema>
+      : getScalarType<Name, Schema>
   ): Value;
-
+  scalar<const Name extends string, Value>(
+    name: Name,
+    value: getScalarType<Name, Schema> extends Value
+      ? never extends Value
+        ? never
+        : (Value & getScalarType<Name, Schema>) | null
+      : getScalarType<Name, Schema> | null
+  ): Value | null;
+  scalar<const Name extends string, Value>(
+    name: Name,
+    value: getScalarType<Name, Schema> extends Value
+      ? never extends Value
+        ? never
+        : (Value & getScalarType<Name, Schema>) | undefined
+      : getScalarType<Name, Schema> | undefined
+  ): Value | undefined;
+  scalar<const Name extends string, Value>(
+    name: Name,
+    value: getScalarType<Name, Schema> extends Value
+      ? never extends Value
+        ? never
+        : (Value & getScalarType<Name, Schema>) | null | undefined
+      : getScalarType<Name, Schema> | null | undefined
+  ): Value | null | undefined;
   scalar<const Name extends string>(
     name: Name,
-    value?: getScalarType<Name, Schema>
+    value: getScalarType<Name, Schema> | undefined
   ): getScalarType<Name, Schema>;
 
   /** Function to replace a GraphQL document with a persisted document.

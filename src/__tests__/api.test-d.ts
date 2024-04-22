@@ -146,6 +146,29 @@ describe('graphql()', () => {
           };
     }>();
   });
+
+  it('should preserve object literal types for variables', () => {
+    const mutation = graphql(`
+      mutation ($input: TodoPayload!) {
+        updateTodo(input: $input) {
+          id
+        }
+      }
+    `);
+
+    expectTypeOf<VariablesOf<typeof mutation>>().toEqualTypeOf<{
+      input: {
+        title: string;
+        description: string;
+        complete?: boolean | null | undefined;
+      };
+    }>();
+
+    const vars = (input: VariablesOf<typeof mutation>) => input;
+
+    // @ts-expect-error
+    vars({ excess: true, input: { title: 'title', description: 'description' } });
+  });
 });
 
 describe('graphql() with custom scalars', () => {
@@ -310,6 +333,16 @@ describe('graphql.scalar()', () => {
     expectTypeOf<actual>().toEqualTypeOf<expected>();
   });
 
+  it('should return the type of a given input object', () => {
+    type actual = ReturnType<typeof graphql.scalar<'TodoPayload'>>;
+
+    expectTypeOf<actual>().toEqualTypeOf<{
+      complete?: boolean | undefined | null;
+      title: string;
+      description: string;
+    }>();
+  });
+
   it('should return the type of a given enum', () => {
     type actual = ReturnType<typeof graphql.scalar<'String'>>;
     expectTypeOf<actual>().toEqualTypeOf<string>();
@@ -334,6 +367,25 @@ describe('graphql.scalar()', () => {
   it('should reject invalid names of types', () => {
     // @ts-expect-error
     const actual = graphql.scalar('what', null);
+  });
+
+  it('should accept exact input objects', () => {
+    const actual = graphql.scalar('TodoPayload', {
+      title: 'title',
+      description: 'description',
+    });
+
+    expectTypeOf<typeof actual>().toEqualTypeOf<{
+      title: string;
+      description: string;
+    }>();
+
+    graphql.scalar('TodoPayload', {
+      title: 'title',
+      description: 'description',
+      // @ts-expect-error
+      excess: true,
+    });
   });
 });
 
