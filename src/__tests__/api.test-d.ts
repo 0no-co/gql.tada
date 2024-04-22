@@ -146,6 +146,29 @@ describe('graphql()', () => {
           };
     }>();
   });
+
+  it('should preserve object literal types for variables', () => {
+    const mutation = graphql(`
+      mutation ($input: TodoPayload!) {
+        updateTodo(input: $input) {
+          id
+        }
+      }
+    `);
+
+    expectTypeOf<VariablesOf<typeof mutation>>().toEqualTypeOf<{
+      input: {
+        title: string;
+        description: string;
+        complete?: boolean | null | undefined;
+      };
+    }>();
+
+    const vars = (input: VariablesOf<typeof mutation>) => input;
+
+    // @ts-expect-error
+    vars({ excess: true, input: { title: 'title', description: 'description' } });
+  });
 });
 
 describe('graphql() with custom scalars', () => {
