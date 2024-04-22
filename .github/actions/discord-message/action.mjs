@@ -20,7 +20,7 @@ const formatBody = (input) => {
       return `Submitted by [${text}](${url})`;
     })
     .replace(markdownLinkRe, (_match, text, url) => `[${text}](<${url}>)`)
-    .replace(repeatedNewlineRe, (_match, text) => text || '\n')
+    .replace(repeatedNewlineRe, (_match, text) => text ? ` ${text}` : '\n')
     .trim();
 };
 
@@ -61,7 +61,7 @@ async function main() {
     .join('\n\n');
 
   // Send message through a discord webhook or bot
-  const response = fetch(WEBHOOK_URL, {
+  const response = await fetch(WEBHOOK_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -72,10 +72,7 @@ async function main() {
   if (!response.ok) {
     console.error('Something went wrong while sending the discord webhook.', response.status);
     console.error(await response.text());
-    return;
   }
-
-  return response;
 }
 
 main().then().catch(console.error);
