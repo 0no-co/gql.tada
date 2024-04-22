@@ -1,5 +1,15 @@
 # gql.tada
 
+## 1.5.6
+
+### Patch Changes
+
+- Ensure that `graphql.scalar()` accepts value arguments as-is, so excess properties trigger an error
+  Submitted by [@kitten](https://github.com/kitten) (See [#243](https://github.com/0no-co/gql.tada/pull/243))
+- Updated dependencies (See [#241](https://github.com/0no-co/gql.tada/pull/241), [#239](https://github.com/0no-co/gql.tada/pull/239), and [#239](https://github.com/0no-co/gql.tada/pull/239))
+  - @gql.tada/cli-utils@1.2.0
+  - @gql.tada/internal@0.2.2
+
 ## 1.5.5
 
 ### Patch Changes
