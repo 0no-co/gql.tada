@@ -310,6 +310,16 @@ describe('graphql.scalar()', () => {
     expectTypeOf<actual>().toEqualTypeOf<expected>();
   });
 
+  it('should return the type of a given input object', () => {
+    type actual = ReturnType<typeof graphql.scalar<'TodoPayload'>>;
+
+    expectTypeOf<actual>().toEqualTypeOf<{
+      complete?: boolean | undefined | null;
+      title: string;
+      description: string;
+    }>();
+  });
+
   it('should return the type of a given enum', () => {
     type actual = ReturnType<typeof graphql.scalar<'String'>>;
     expectTypeOf<actual>().toEqualTypeOf<string>();

@@ -206,7 +206,10 @@ interface GraphQLTadaAPI<Schema extends SchemaLike, Config extends AbstractConfi
         : (Value & getScalarType<Name, Schema>) | null | undefined
       : getScalarType<Name, Schema> | null | undefined
   ): Value | null | undefined;
-  scalar<const Name extends string>(name: Name): getScalarType<Name, Schema>;
+  scalar<const Name extends string>(
+    name: Name,
+    value: getScalarType<Name, Schema> | undefined
+  ): getScalarType<Name, Schema>;
 
   /** Function to replace a GraphQL document with a persisted document.
    *
