@@ -62,14 +62,13 @@ export const buildContainer = (params: ContainerParams): ProgramContainer => {
 
   const getProgram = () => {
     if (!program) {
-      program = getLanguageService().getProgram();
-      if (!program) {
-        program = ts.createProgram({
+      program =
+        getLanguageService().getProgram() ||
+        ts.createProgram({
           rootNames: params.rootNames,
           options: params.options,
           host: params.compilerHost,
         });
-      }
     }
     return program;
   };
@@ -295,14 +294,18 @@ const buildLanguageService = (params: {
 
   return Object.assign(languageService, {
     getProgram() {
-      return (
-        program ||
-        (program = buildProgram({
-          program: getProgram(),
-          virtualMap: params.virtualMap,
-          projectRoot: params.projectRoot,
-        }))
-      );
+      if (program) {
+        return program;
+      } else {
+        const serviceProgram = getProgram();
+        return serviceProgram
+          ? (program = buildProgram({
+              program: serviceProgram,
+              virtualMap: params.virtualMap,
+              projectRoot: params.projectRoot,
+            }))
+          : undefined;
+      }
     },
 
     getReferencesAtPosition: mapFilePositionFn(languageService.getReferencesAtPosition),
