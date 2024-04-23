@@ -70,8 +70,6 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
     );
   }
 
-  if (tty.isInteractive) yield logger.runningTurbo();
-
   let cache: Record<string, string> = {};
   const generator = runTurbo({
     rootPath: configResult.rootPath,
@@ -84,29 +82,30 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
   let fileCount = 0;
 
   try {
+    if (tty.isInteractive) yield logger.runningTurbo();
+
     for await (const signal of generator) {
       if (signal.kind === 'EXTERNAL_WARNING') {
         yield logger.experimentMessage(
           `${logger.code('.vue')} and ${logger.code('.svelte')} file support is experimental.`
         );
-        continue;
       } else if (signal.kind === 'FILE_COUNT') {
         totalFileCount = signal.fileCount;
-        continue;
-      }
-
-      cache = Object.assign(cache, signal.cache);
-      warnings += signal.warnings.length;
-      if (signal.warnings.length) {
-        let buffer = logger.warningFile(signal.filePath);
-        for (const warning of signal.warnings) {
-          buffer += logger.warningMessage(warning);
-          logger.warningGithub(warning);
+      } else {
+        fileCount++;
+        cache = Object.assign(cache, signal.cache);
+        warnings += signal.warnings.length;
+        if (signal.warnings.length) {
+          let buffer = logger.warningFile(signal.filePath);
+          for (const warning of signal.warnings) {
+            buffer += logger.warningMessage(warning);
+            logger.warningGithub(warning);
+          }
+          yield buffer + '\n';
         }
-        yield buffer + '\n';
       }
 
-      if (tty.isInteractive) yield logger.runningTurbo(++fileCount, totalFileCount);
+      if (tty.isInteractive) yield logger.runningTurbo(fileCount, totalFileCount);
     }
   } catch (error) {
     throw logger.externalError('Could not build cache', error);
