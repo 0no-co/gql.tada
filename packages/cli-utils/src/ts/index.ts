@@ -5,6 +5,3 @@ export type * from './utils';
 
 export * from './utils';
 export { programFactory } from './factory';
-
-// temp
-export * from './virtualCode';

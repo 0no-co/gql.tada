@@ -9,6 +9,9 @@ import type { VirtualMap, Mapping } from './mapping';
 import type { ProgramContainer } from './container';
 import { SourceMappedFile } from './mapping';
 import { buildContainer } from './container';
+import { transform, transformExtensions } from './transformers';
+
+export type VirtualExtension = (typeof transformExtensions)[number];
 
 export interface ProgramFactoryParams {
   rootPath: string;
@@ -31,8 +34,12 @@ export interface ProgramFactory {
   readonly projectDirectories: readonly string[];
 
   createSourceFile(params: SourceFileParams, scriptKind?: ts.ScriptKind): ts.SourceFile;
+  createExternalFiles(exts?: readonly VirtualExtension[]): readonly ts.SourceFile[];
+
   addSourceFile(file: SourceFileParams | ts.SourceFile, addRootName?: boolean): this;
   addMappedFile(file: SourceFileParams | ts.SourceFile, params: MappedFileParams): this;
+
+  addVirtualFiles(files: readonly ts.SourceFile[]): Promise<this>;
 
   build(): ProgramContainer;
 }
@@ -76,11 +83,38 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
       );
     },
 
+    createExternalFiles(exts: readonly VirtualExtension[] = transformExtensions) {
+      const files: ts.SourceFile[] = [];
+      const seen = new Set(rootNames);
+      const directories = new Set([projectRoot]);
+      for (const rootName of rootNames) directories.add(path.dirname(rootName));
+      for (const directory of directories) {
+        for (const fileId of system.readDirectory(directory, exts, ['**/node_modules'])) {
+          if (!seen.has(fileId)) {
+            seen.add(fileId);
+            const contents = system.readFile(fileId, 'utf8');
+            if (contents) {
+              files.push(
+                factory.createSourceFile(
+                  {
+                    fileId,
+                    sourceText: contents,
+                  },
+                  ts.ScriptKind.External
+                )
+              );
+            }
+          }
+        }
+      }
+      return files;
+    },
+
     addSourceFile(input, addRootName) {
       const sourceFile =
         'fileName' in input ? input : factory.createSourceFile(input, ts.ScriptKind.TSX);
-      const result = host.updateFile(sourceFile);
-      if (result && addRootName) rootNames.add(sourceFile.fileName);
+      host.updateFile(sourceFile);
+      if (addRootName) rootNames.add(sourceFile.fileName);
       return factory;
     },
 
@@ -95,6 +129,28 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
       });
       virtualMap.set(sourceMappedFile.sourceFileId, sourceMappedFile);
       virtualMap.set(sourceMappedFile.generatedFileId, sourceMappedFile);
+      return factory;
+    },
+
+    async addVirtualFiles(sourceFiles) {
+      for (const sourceFile of sourceFiles) {
+        const virtualFileId = `${sourceFile.fileName}.ts`;
+        const virtualCode = await transform(sourceFile);
+        if (virtualCode) {
+          factory
+            .addSourceFile(
+              {
+                fileId: virtualFileId,
+                sourceText: virtualCode.snapshot,
+              },
+              /*addRootName*/ true
+            )
+            .addMappedFile(sourceFile, {
+              mappings: virtualCode.mappings,
+              fileId: virtualFileId,
+            });
+        }
+      }
       return factory;
     },
 

@@ -176,7 +176,12 @@ const buildProgram = (params: {
       const sourceFiles: ts.SourceFile[] = [];
       for (const sourceFile of getSourceFiles()) {
         const relativePath = path.relative(projectRoot, sourceFile.fileName);
-        if (!relativePath.startsWith('..')) sourceFiles.push(sourceFile);
+        if (
+          !relativePath.startsWith('..') &&
+          !program.isSourceFileFromExternalLibrary(sourceFile)
+        ) {
+          sourceFiles.push(sourceFile);
+        }
       }
       return sourceFiles;
     },

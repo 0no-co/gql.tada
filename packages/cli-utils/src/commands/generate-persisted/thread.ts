@@ -11,7 +11,7 @@ import {
   unrollTadaFragments,
 } from '@0no-co/graphqlsp/api';
 
-import { programFactory, loadVirtualCode } from '../../ts';
+import { programFactory } from '../../ts';
 import { expose } from '../../threads';
 
 import type { PersistedSignal, PersistedWarning } from './types';
@@ -25,9 +25,10 @@ export interface PersistedParams {
 async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<PersistedSignal> {
   const factory = programFactory(params);
 
-  const getVirtualPosition = await loadVirtualCode(factory);
-  if (!!getVirtualPosition) {
+  const externalFiles = factory.createExternalFiles();
+  if (externalFiles.length) {
     yield { kind: 'EXTERNAL_WARNING' };
+    await factory.addVirtualFiles(externalFiles);
   }
 
   const container = factory.build();

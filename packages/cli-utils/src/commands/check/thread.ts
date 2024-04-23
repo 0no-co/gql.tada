@@ -5,7 +5,7 @@ import type { GraphQLSPConfig } from '@gql.tada/internal';
 import { load } from '@gql.tada/internal';
 import { getGraphQLDiagnostics } from '@0no-co/graphqlsp/api';
 
-import { programFactory, loadVirtualCode } from '../../ts';
+import { programFactory } from '../../ts';
 import { expose } from '../../threads';
 
 import type { Severity, DiagnosticMessage, DiagnosticSignal } from './types';
@@ -23,9 +23,10 @@ async function* _runDiagnostics(
   const loader = load({ origin: params.pluginConfig.schema, rootPath: projectPath });
   const factory = programFactory(params);
 
-  const virtualFiles = await loadVirtualCode(factory);
-  if (virtualFiles.length) {
+  const externalFiles = factory.createExternalFiles();
+  if (externalFiles.length) {
     yield { kind: 'EXTERNAL_WARNING' };
+    await factory.addVirtualFiles(externalFiles);
   }
 
   const container = factory.build();

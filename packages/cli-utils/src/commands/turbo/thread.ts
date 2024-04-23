@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import type { GraphQLSPConfig } from '@gql.tada/internal';
 
-import { programFactory, loadVirtualCode } from '../../ts';
+import { programFactory } from '../../ts';
 import { expose } from '../../threads';
 
 import type { TurboSignal, TurboWarning } from './types';
@@ -24,9 +24,10 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
     scriptKind: ts.ScriptKind.TS,
   });
 
-  const virtualFiles = await loadVirtualCode(factory);
-  if (virtualFiles.length) {
+  const externalFiles = factory.createExternalFiles();
+  if (externalFiles.length) {
     yield { kind: 'EXTERNAL_WARNING' };
+    await factory.addVirtualFiles(externalFiles);
   }
 
   const container = factory.build();
