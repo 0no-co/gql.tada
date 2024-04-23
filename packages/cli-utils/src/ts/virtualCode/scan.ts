@@ -1,16 +1,15 @@
-import type { IScriptSnapshot } from 'typescript';
+import ts from 'typescript';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 
 export interface ScannedFile {
   fileId: string;
-  snapshot: IScriptSnapshot;
+  snapshot: ts.IScriptSnapshot;
 }
 
 export async function scanProjectFiles(
   paths: readonly string[],
-  predicate: (filepath: string) => boolean,
-  ts: typeof import('typescript/lib/tsserverlibrary')
+  predicate: (filepath: string) => boolean
 ): Promise<readonly ScannedFile[]> {
   const seenPaths = new Set();
   const searchPaths = [...paths];

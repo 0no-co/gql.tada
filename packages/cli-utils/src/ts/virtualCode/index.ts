@@ -1,7 +1,7 @@
-import type * as ts from 'typescript';
+import ts from 'typescript';
 import { SourceMap } from '@volar/source-map';
-import type { Project } from 'ts-morph';
 
+import type { ProgramFactory } from '../factory';
 import type { AsyncCreateVirtualCode, TranslatePosition } from './types';
 import { scanProjectFiles } from './scan';
 
@@ -33,14 +33,11 @@ const createVirtualCode: AsyncCreateVirtualCode = async (fileId, snapshot, ts) =
 export * from './types';
 
 export const loadVirtualCode = async (
-  projectPath: string,
-  project: Project,
-  ts: typeof import('typescript/lib/tsserverlibrary')
+  factory: ProgramFactory
 ): Promise<TranslatePosition | undefined> => {
   const projectFiles = await scanProjectFiles(
-    [projectPath, ...project.getRootDirectories().map((path) => path.getPath())],
-    (filepath) => !!getVirtualType(filepath),
-    ts
+    factory.projectDirectories,
+    (filepath) => !!getVirtualType(filepath)
   );
 
   if (!projectFiles.length) return undefined;
@@ -50,13 +47,11 @@ export const loadVirtualCode = async (
   const sourceMaps = new Map<string, SourceMap>();
 
   for (const file of projectFiles) {
-    const projectSourceFile = ts.createSourceFile(
-      file.fileId,
-      file.snapshot.getText(0, file.snapshot.getLength()),
-      ts.ScriptTarget.ESNext,
-      false,
-      ts.ScriptKind.External
-    );
+    const projectSourceFile = factory.createSourceFile({
+      fileId: file.fileId,
+      sourceText: file.snapshot,
+      scriptKind: ts.ScriptKind.External,
+    });
 
     const virtualCode = await createVirtualCode(file.fileId, file.snapshot, ts);
     const virtualSnapshot = virtualCode && virtualCode.snapshot;
@@ -64,15 +59,13 @@ export const loadVirtualCode = async (
 
     const sourceMap = new SourceMap(virtualCode.mappings);
     const virtualFileId = file.fileId + VIRTUAL_EXT;
-    const virtualSourceFile = project.createSourceFile(
-      virtualFileId,
-      virtualSnapshot.getText(0, virtualSnapshot.getLength()),
-      { overwrite: true, scriptKind: ts.ScriptKind.TSX }
-    );
+    const virtualSourceFile = factory.createSourceFile({
+      fileId: virtualFileId,
+      sourceText: virtualSnapshot,
+    });
 
-    if (virtualSourceFile._markAsInProject) virtualSourceFile._markAsInProject();
-
-    projectToVirtual.set(file.fileId, virtualSourceFile.compilerNode);
+    factory.addSourceFile(virtualSourceFile, true);
+    projectToVirtual.set(file.fileId, virtualSourceFile);
     virtualToProject.set(virtualFileId, projectSourceFile);
     sourceMaps.set(file.fileId, sourceMap);
     sourceMaps.set(virtualFileId, sourceMap);

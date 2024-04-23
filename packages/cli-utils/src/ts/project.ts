@@ -1,15 +1,14 @@
 import type { GraphQLSPConfig } from '@gql.tada/internal';
-import type { Project } from 'ts-morph';
 
+import type { ProgramContainer } from './factory';
 import type { TranslatePosition } from './virtualCode';
 
 export const createPluginInfo = (
-  project: Project,
+  container: ProgramContainer,
   config: GraphQLSPConfig,
   projectPath: string,
   getPosition?: TranslatePosition
 ): any => {
-  const languageService = project.getLanguageService();
   return {
     config,
     languageService: {
@@ -21,7 +20,7 @@ export const createPluginInfo = (
             position = output.position;
           }
         }
-        return languageService.compilerObject.getReferencesAtPosition(filename, position);
+        return container.languageService.getReferencesAtPosition(filename, position);
       },
       getDefinitionAtPosition: (filename, position) => {
         if (getPosition) {
@@ -31,10 +30,10 @@ export const createPluginInfo = (
             position = output.position;
           }
         }
-        return languageService.compilerObject.getDefinitionAtPosition(filename, position);
+        return container.languageService.getDefinitionAtPosition(filename, position);
       },
       getProgram: () => {
-        const program = project.getProgram();
+        const program = container.program;
         return {
           ...program,
           isSourceFileFromExternalLibrary(source) {
@@ -44,14 +43,12 @@ export const createPluginInfo = (
             }
             return program.isSourceFileFromExternalLibrary(source);
           },
-          getTypeChecker: () => project.getTypeChecker().compilerObject,
           getSourceFile: (filepath) => {
             if (getPosition) {
               const output = getPosition(filepath);
               if (output && output.isVirtual) filepath = output.fileId;
             }
-            const source = project.getSourceFile(filepath);
-            return source && source.compilerNode;
+            return program.getSourceFile(filepath);
           },
         };
       },
