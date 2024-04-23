@@ -1,6 +1,9 @@
 import ts from 'typescript';
 import * as path from 'node:path';
 import { createRequire } from 'node:module';
+import { SourceMap } from '@volar/source-map';
+
+import type { Mapping } from '@volar/source-map';
 
 import {
   createFSBackedSystem,
@@ -19,6 +22,11 @@ export interface SourceFileParams {
   scriptKind?: ts.ScriptKind;
 }
 
+export interface MappedFileParams {
+  fileId: string;
+  mappings: readonly Mapping[];
+}
+
 export interface ProgramContainer {
   readonly program: ts.Program;
   readonly languageService: ts.LanguageService;
@@ -27,18 +35,27 @@ export interface ProgramContainer {
   getSourceFile(fileId: string): ts.SourceFile | undefined;
 }
 
+export interface SourceFileMapping {
+  sourceFileId: string;
+  generatedFileId: string;
+  sourceMap: SourceMap;
+}
+
 export interface ProgramFactory {
   readonly projectPath: string;
   readonly projectDirectories: readonly string[];
 
-  createSourceFile(params: SourceFileParams): ts.SourceFile;
+  createSourceFile(params: SourceFileParams, scriptKind?: ts.ScriptKind): ts.SourceFile;
   addSourceFile(file: SourceFileParams | ts.SourceFile, addRootName?: boolean): this;
+  addMappedFile(file: SourceFileParams | ts.SourceFile, params: MappedFileParams): this;
 
   build(): ProgramContainer;
 }
 
 export const programFactory = (params: Params): ProgramFactory => {
   const vfsMap = new Map<string, string>();
+  const virtualMap = new Map<string, SourceFileMapping>();
+
   const projectRoot = path.dirname(params.configPath);
   const tslibPath = path.join(projectRoot, 'node_modules/typescript/lib/');
   const system = createFSBackedSystem(vfsMap, projectRoot, ts, tslibPath);
@@ -62,7 +79,7 @@ export const programFactory = (params: Params): ProgramFactory => {
       return [...directories];
     },
 
-    createSourceFile(params) {
+    createSourceFile(params, scriptKind) {
       return ts.createSourceFile(
         params.fileId,
         typeof params.sourceText === 'object'
@@ -70,14 +87,29 @@ export const programFactory = (params: Params): ProgramFactory => {
           : params.sourceText,
         options.target,
         /*setParentNodes*/ true,
-        params.scriptKind != null ? params.scriptKind : ts.ScriptKind.TSX
+        scriptKind || (params.scriptKind != null ? params.scriptKind : ts.ScriptKind.TSX)
       );
     },
 
-    addSourceFile(input, addRootName?: boolean) {
-      const sourceFile = 'fileName' in input ? input : this.createSourceFile(input);
+    addSourceFile(input, addRootName) {
+      const sourceFile =
+        'fileName' in input ? input : this.createSourceFile(input, ts.ScriptKind.TSX);
       const result = host.updateFile(sourceFile);
       if (result && addRootName) rootNames.add(sourceFile.fileName);
+      return this;
+    },
+
+    addMappedFile(input, params) {
+      const sourceFile =
+        'fileName' in input ? input : this.createSourceFile(input, ts.ScriptKind.External);
+      if (params.mappings.length) rootNames.delete(sourceFile.fileName);
+      const sourceFileMapping: SourceFileMapping = {
+        sourceFileId: sourceFile.fileName,
+        generatedFileId: params.fileId,
+        sourceMap: new SourceMap(params.mappings as Mapping[]),
+      };
+      virtualMap.set(sourceFileMapping.sourceFileId, sourceFileMapping);
+      virtualMap.set(sourceFileMapping.generatedFileId, sourceFileMapping);
       return this;
     },
 
