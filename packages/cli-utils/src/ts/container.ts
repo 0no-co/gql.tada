@@ -8,6 +8,10 @@ import type { VirtualMap, SourceMappedFile, FileSpan } from './mapping';
 import type { SourcePosition } from './utils';
 import { spanToFilePosition } from './utils';
 
+function maybeBind<T extends Function>(that: object, fn: T | undefined): T {
+  return fn ? fn.bind(that, fn) : fn;
+}
+
 export interface PluginCreateInfo<Config extends {} = GraphQLSPConfig>
   extends ts.server.PluginCreateInfo {
   config: Config;
@@ -139,10 +143,13 @@ const buildProgram = (params: {
 }): ts.Program => {
   const { program, virtualMap, projectRoot } = params;
 
-  const isSourceFileFromExternalLibrary = program.isSourceFileFromExternalLibrary.bind(program);
-  const getModeForResolutionAtIndex = program.getModeForResolutionAtIndex.bind(program);
-  const getSourceFile = program.getSourceFile.bind(program);
-  const getSourceFiles = program.getSourceFiles.bind(program);
+  const isSourceFileFromExternalLibrary = maybeBind(
+    program,
+    program.isSourceFileFromExternalLibrary
+  );
+  const getModeForResolutionAtIndex = maybeBind(program, program.getModeForResolutionAtIndex);
+  const getSourceFile = maybeBind(program, program.getSourceFile);
+  const getSourceFiles = maybeBind(program, program.getSourceFiles);
 
   /** Remap source file to generated source file if it's a mapped file */
   const mapSourceFileFn =
@@ -212,7 +219,7 @@ const buildLanguageService = (params: {
 }): ts.LanguageService => {
   const { virtualMap } = params;
   const languageService = ts.createLanguageService(params.languageServiceHost);
-  const getProgram = languageService.getProgram.bind(languageService);
+  const getProgram = maybeBind(languageService, languageService.getProgram);
 
   /** Remap filename to generated file if it's a mapped file */
   const mapFileFn =
