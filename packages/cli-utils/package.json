@@ -43,6 +43,7 @@
     "@clack/prompts": "^0.7.0",
     "@jridgewell/sourcemap-codec": "^1.4.15",
     "@types/node": "^20.11.0",
+    "@typescript/vfs": "^1.5.0",
     "@volar/source-map": "^2.1.6",
     "clipanion": "4.0.0-rc.3",
     "execa": "^8.0.1",
