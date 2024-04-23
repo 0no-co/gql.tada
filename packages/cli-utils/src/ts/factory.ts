@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import { createRequire } from 'node:module';
 import { init } from '@0no-co/graphqlsp/api';
 
-import { createFSBackedSystem, createVirtualCompilerHost } from '@typescript/vfs';
+import { createFSBackedSystem, createVirtualCompilerHost } from './vendor/typescript-vfs';
 
 import type { VirtualMap, Mapping } from './mapping';
 import type { ProgramContainer } from './container';

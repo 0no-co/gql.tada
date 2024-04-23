@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import * as path from 'node:path';
 import type { GraphQLSPConfig } from '@gql.tada/internal';
-import { createVirtualLanguageServiceHost } from '@typescript/vfs';
+import { createVirtualLanguageServiceHost } from './vendor/typescript-vfs';
 
 import type { VirtualMap, SourceMappedFile, FileSpan } from './mapping';
 
