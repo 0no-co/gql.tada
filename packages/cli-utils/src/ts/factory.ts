@@ -53,11 +53,16 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
   const system = createFSBackedSystem(vfsMap, projectRoot, ts, tslibPath);
   const config = resolveConfig(params, system);
 
-  for (const { filename, contents } of resolveLibs(params))
+  for (const { filename, contents } of resolveLibs(params)) {
     if (contents) system.writeFile(path.join(tslibPath, filename), contents);
+  }
 
   const rootNames = new Set(config.fileNames);
-  const options = { ...defaultCompilerOptions, ...config.options };
+  const options = {
+    ...defaultCompilerOptions,
+    ...config.options,
+    getDefaultLibFilePath: tslibPath,
+  };
   const host = createVirtualCompilerHost(system, options, ts);
 
   const factory: ProgramFactory = {
@@ -175,7 +180,7 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
 
 interface LibFile {
   filename: string;
-  contents: string | undefined;
+  contents: string;
 }
 
 const defaultCompilerOptions = {
@@ -185,29 +190,33 @@ const defaultCompilerOptions = {
 const resolveLibs = (params: ProgramFactoryParams): readonly LibFile[] => {
   const require = createRequire(params.configPath);
   const request = 'typescript/package.json';
-  const tsPath = path.dirname(
-    require.resolve(request, {
-      paths: [
-        path.join(path.dirname(params.configPath), 'node_modules'),
-        path.join(params.rootPath, 'node_modules'),
-        ...(require.resolve.paths(request) || []),
-      ],
-    })
-  );
+  let tsPath: string;
+  try {
+    tsPath = path.dirname(
+      require.resolve(request, {
+        paths: [
+          path.join(path.dirname(params.configPath), 'node_modules'),
+          path.join(params.rootPath, 'node_modules'),
+          ...(require.resolve.paths(request) || []),
+        ],
+      })
+    );
+  } catch (_error) {
+    return [];
+  }
   const libs = ts.sys.readDirectory(
     path.resolve(tsPath, 'lib'),
     /*extensions*/ ['.d.ts'],
-    /*include*/ undefined,
-    /*exclude*/ ['typescript.d.ts']
+    /*exclude*/ ['typescript.d.ts'],
+    /*include*/ ['lib.*'],
+    /*depth*/ 1
   );
-  return libs
-    .filter((name) => /^lib/.test(name))
-    .map(
-      (name): LibFile => ({
-        filename: name,
-        contents: ts.sys.readFile(path.join(tsPath, 'lib', name), 'utf8'),
-      })
-    );
+  const output: LibFile[] = [];
+  for (const fileName of libs) {
+    const contents = ts.sys.readFile(fileName, 'utf8');
+    if (contents) output.push({ filename: path.basename(fileName), contents });
+  }
+  return output;
 };
 
 const resolveConfig = (params: ProgramFactoryParams, system: ts.System): ts.ParsedCommandLine => {
