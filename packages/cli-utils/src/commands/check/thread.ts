@@ -1,11 +1,11 @@
+import ts from 'typescript';
 import * as path from 'node:path';
-import { Project, ts } from 'ts-morph';
 
 import type { GraphQLSPConfig } from '@gql.tada/internal';
 import { load } from '@gql.tada/internal';
-import { init, getGraphQLDiagnostics } from '@0no-co/graphqlsp/api';
+import { getGraphQLDiagnostics } from '@0no-co/graphqlsp/api';
 
-import { createPluginInfo, getFilePosition, loadVirtualCode } from '../../ts';
+import { programFactory, loadVirtualCode } from '../../ts';
 import { expose } from '../../threads';
 
 import type { Severity, DiagnosticMessage, DiagnosticSignal } from './types';
@@ -19,38 +19,27 @@ export interface DiagnosticsParams {
 async function* _runDiagnostics(
   params: DiagnosticsParams
 ): AsyncIterableIterator<DiagnosticSignal> {
-  init({ typescript: ts });
   const projectPath = path.dirname(params.configPath);
   const loader = load({ origin: params.pluginConfig.schema, rootPath: projectPath });
-  const project = new Project({ tsConfigFilePath: params.configPath });
+  const factory = programFactory(params);
 
-  const getVirtualPosition = await loadVirtualCode(projectPath, project, ts);
-  if (!!getVirtualPosition) {
+  const virtualFiles = await loadVirtualCode(factory);
+  if (virtualFiles.length) {
     yield { kind: 'EXTERNAL_WARNING' };
   }
 
-  const pluginInfo = createPluginInfo(
-    project,
-    params.pluginConfig,
-    projectPath,
-    getVirtualPosition
-  );
+  const container = factory.build();
+  const pluginInfo = container.buildPluginInfo(params.pluginConfig);
   const loadResult = await loader.load();
   const schemaRef = { current: loadResult.schema, version: 1 };
-
-  // Filter source files by whether they're under the relevant root path
-  const sourceFiles = project.getSourceFiles().filter((sourceFile) => {
-    const filePath = path.resolve(projectPath, sourceFile.getFilePath());
-    const relative = path.relative(params.rootPath, filePath);
-    return !relative.startsWith('..');
-  });
+  const sourceFiles = container.getSourceFiles();
 
   yield {
     kind: 'FILE_COUNT',
     fileCount: sourceFiles.length,
   };
 
-  for (const { compilerNode: sourceFile } of sourceFiles) {
+  for (const sourceFile of sourceFiles) {
     let filePath = sourceFile.fileName;
     const diagnostics = getGraphQLDiagnostics(filePath, schemaRef, pluginInfo);
     const messages: DiagnosticMessage[] = [];
@@ -70,17 +59,13 @@ async function* _runDiagnostics(
         } else if (diagnostic.category === ts.DiagnosticCategory.Warning) {
           severity = 'warn';
         }
-        const position = getFilePosition(
-          sourceFile,
-          diagnostic.start,
-          diagnostic.length,
-          getVirtualPosition
-        );
-        filePath = position.file;
+        const span = { start: diagnostic.start || 1, length: diagnostic.length || 1 };
+        const position = container.getSourcePosition(sourceFile, span);
+        filePath = position.fileName;
         messages.push({
           severity,
           message: diagnostic.messageText,
-          file: position.file,
+          file: position.fileName,
           line: position.line,
           col: position.col,
           endLine: position.endLine,

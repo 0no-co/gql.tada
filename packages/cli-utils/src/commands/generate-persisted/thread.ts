@@ -1,19 +1,17 @@
-import * as path from 'node:path';
+import ts from 'typescript';
 import { print } from '@0no-co/graphql.web';
-import { Project, ts } from 'ts-morph';
 
 import type { FragmentDefinitionNode } from '@0no-co/graphql.web';
 import type { GraphQLSPConfig } from '@gql.tada/internal';
 
 import {
-  init,
   findAllPersistedCallExpressions,
   getDocumentReferenceFromTypeQuery,
   getDocumentReferenceFromDocumentNode,
   unrollTadaFragments,
 } from '@0no-co/graphqlsp/api';
 
-import { createPluginInfo, getFilePosition, loadVirtualCode } from '../../ts';
+import { programFactory, loadVirtualCode } from '../../ts';
 import { expose } from '../../threads';
 
 import type { PersistedSignal, PersistedWarning } from './types';
@@ -25,44 +23,30 @@ export interface PersistedParams {
 }
 
 async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<PersistedSignal> {
-  init({ typescript: ts });
+  const factory = programFactory(params);
 
-  const projectPath = path.dirname(params.configPath);
-  const project = new Project({ tsConfigFilePath: params.configPath });
-
-  const getVirtualPosition = await loadVirtualCode(projectPath, project, ts);
+  const getVirtualPosition = await loadVirtualCode(factory);
   if (!!getVirtualPosition) {
     yield { kind: 'EXTERNAL_WARNING' };
   }
 
-  const pluginInfo = createPluginInfo(
-    project,
-    params.pluginConfig,
-    projectPath,
-    getVirtualPosition
-  );
-
-  // Filter source files by whether they're under the relevant root path
-  const sourceFiles = project.getSourceFiles().filter((sourceFile) => {
-    const filePath = path.resolve(projectPath, sourceFile.getFilePath());
-    const relative = path.relative(params.rootPath, filePath);
-    return !relative.startsWith('..');
-  });
+  const container = factory.build();
+  const sourceFiles = container.getSourceFiles();
 
   yield {
     kind: 'FILE_COUNT',
     fileCount: sourceFiles.length,
   };
 
-  for (const { compilerNode: sourceFile } of sourceFiles) {
+  for (const sourceFile of sourceFiles) {
     let filePath = sourceFile.fileName;
     const documents: Record<string, string> = {};
     const warnings: PersistedWarning[] = [];
 
     const calls = findAllPersistedCallExpressions(sourceFile);
     for (const call of calls) {
-      const position = getFilePosition(sourceFile, call.getStart(), undefined, getVirtualPosition);
-      filePath = position.file;
+      const position = container.getSourcePosition(sourceFile, call.getStart());
+      filePath = position.fileName;
 
       const hashArg = call.arguments[0];
       const docArg = call.arguments[1];
@@ -71,7 +55,7 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
         warnings.push({
           message:
             '"graphql.persisted" must be called with a string literal as the first argument.',
-          file: position.file,
+          file: position.fileName,
           line: position.line,
           col: position.col,
         });
@@ -81,7 +65,7 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
           message:
             '"graphql.persisted" is missing a document.\n' +
             'This may be passed as a generic such as `graphql.persisted<typeof document>` or as the second argument.',
-          file: position.file,
+          file: position.fileName,
           line: position.line,
           col: position.col,
         });
@@ -94,7 +78,7 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
         const result = getDocumentReferenceFromDocumentNode(
           docArg,
           sourceFile.fileName,
-          pluginInfo
+          container.buildPluginInfo(params.pluginConfig)
         );
         foundNode = result.node;
         referencingNode = docArg;
@@ -102,7 +86,7 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
         const result = getDocumentReferenceFromTypeQuery(
           typeQuery,
           sourceFile.fileName,
-          pluginInfo
+          container.buildPluginInfo(params.pluginConfig)
         );
         foundNode = result.node;
         referencingNode = typeQuery;
@@ -113,7 +97,7 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
           message:
             `Could not find reference for "${referencingNode.getText()}".\n` +
             'If this is unexpected, please file an issue describing your case.',
-          file: position.file,
+          file: position.fileName,
           line: position.line,
           col: position.col,
         });
@@ -130,7 +114,7 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
           message:
             `The referenced document of "${referencingNode.getText()}" contains no document string literal.\n` +
             'If this is unexpected, please file an issue describing your case.',
-          file: position.file,
+          file: position.fileName,
           line: position.line,
           col: position.col,
         });
@@ -140,7 +124,11 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
       const fragments: FragmentDefinitionNode[] = [];
       const operation = foundNode.arguments[0].getText().slice(1, -1);
       if (foundNode.arguments[1] && ts.isArrayLiteralExpression(foundNode.arguments[1])) {
-        unrollTadaFragments(foundNode.arguments[1], fragments, pluginInfo);
+        unrollTadaFragments(
+          foundNode.arguments[1],
+          fragments,
+          container.buildPluginInfo(params.pluginConfig)
+        );
       }
 
       let document = operation;
