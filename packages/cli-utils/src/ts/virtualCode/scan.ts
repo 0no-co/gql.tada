@@ -4,7 +4,7 @@ import * as path from 'node:path';
 
 export interface ScannedFile {
   fileId: string;
-  snapshot: ts.IScriptSnapshot;
+  sourceText: ts.IScriptSnapshot;
 }
 
 export async function scanProjectFiles(
@@ -24,7 +24,7 @@ export async function scanProjectFiles(
         const contents = await fs.readFile(filepath, 'utf8');
         files.push({
           fileId: filepath,
-          snapshot: ts.ScriptSnapshot.fromString(contents),
+          sourceText: ts.ScriptSnapshot.fromString(contents),
         });
       }
     } else if (stat.isDirectory() && !/\bnode_modules\b/.test(filepath)) {

@@ -1,17 +1,16 @@
 import ts from 'typescript';
 import * as path from 'node:path';
 import { createRequire } from 'node:module';
-import { SourceMap } from '@volar/source-map';
+import { init } from '@0no-co/graphqlsp/api';
 
-import type { Mapping } from '@volar/source-map';
+import { createFSBackedSystem, createVirtualCompilerHost } from '@typescript/vfs';
 
-import {
-  createFSBackedSystem,
-  createVirtualCompilerHost,
-  createVirtualTypeScriptEnvironment,
-} from '@typescript/vfs';
+import type { VirtualMap, Mapping } from './mapping';
+import type { ProgramContainer } from './container';
+import { SourceMappedFile } from './mapping';
+import { buildContainer } from './container';
 
-export interface Params {
+export interface ProgramFactoryParams {
   rootPath: string;
   configPath: string;
 }
@@ -27,20 +26,6 @@ export interface MappedFileParams {
   mappings: readonly Mapping[];
 }
 
-export interface ProgramContainer {
-  readonly program: ts.Program;
-  readonly languageService: ts.LanguageService;
-
-  getSourceFiles(): ts.SourceFile[];
-  getSourceFile(fileId: string): ts.SourceFile | undefined;
-}
-
-export interface SourceFileMapping {
-  sourceFileId: string;
-  generatedFileId: string;
-  sourceMap: SourceMap;
-}
-
 export interface ProgramFactory {
   readonly projectPath: string;
   readonly projectDirectories: readonly string[];
@@ -52,9 +37,9 @@ export interface ProgramFactory {
   build(): ProgramContainer;
 }
 
-export const programFactory = (params: Params): ProgramFactory => {
+export const programFactory = (params: ProgramFactoryParams): ProgramFactory => {
   const vfsMap = new Map<string, string>();
-  const virtualMap = new Map<string, SourceFileMapping>();
+  const virtualMap: VirtualMap = new Map();
 
   const projectRoot = path.dirname(params.configPath);
   const tslibPath = path.join(projectRoot, 'node_modules/typescript/lib/');
@@ -68,7 +53,7 @@ export const programFactory = (params: Params): ProgramFactory => {
   const options = { ...defaultCompilerOptions, ...config.options };
   const host = createVirtualCompilerHost(system, options, ts);
 
-  return {
+  const factory: ProgramFactory = {
     get projectPath() {
       return projectRoot;
     },
@@ -93,67 +78,43 @@ export const programFactory = (params: Params): ProgramFactory => {
 
     addSourceFile(input, addRootName) {
       const sourceFile =
-        'fileName' in input ? input : this.createSourceFile(input, ts.ScriptKind.TSX);
+        'fileName' in input ? input : factory.createSourceFile(input, ts.ScriptKind.TSX);
       const result = host.updateFile(sourceFile);
       if (result && addRootName) rootNames.add(sourceFile.fileName);
-      return this;
+      return factory;
     },
 
     addMappedFile(input, params) {
       const sourceFile =
-        'fileName' in input ? input : this.createSourceFile(input, ts.ScriptKind.External);
+        'fileName' in input ? input : factory.createSourceFile(input, ts.ScriptKind.External);
       if (params.mappings.length) rootNames.delete(sourceFile.fileName);
-      const sourceFileMapping: SourceFileMapping = {
+      const sourceMappedFile = new SourceMappedFile(params.mappings, {
+        sourceFile,
         sourceFileId: sourceFile.fileName,
         generatedFileId: params.fileId,
-        sourceMap: new SourceMap(params.mappings as Mapping[]),
-      };
-      virtualMap.set(sourceFileMapping.sourceFileId, sourceFileMapping);
-      virtualMap.set(sourceFileMapping.generatedFileId, sourceFileMapping);
-      return this;
+      });
+      virtualMap.set(sourceMappedFile.sourceFileId, sourceMappedFile);
+      virtualMap.set(sourceMappedFile.generatedFileId, sourceMappedFile);
+      return factory;
     },
 
     build() {
-      let program: ts.Program | undefined;
-      let service: ts.LanguageService | undefined;
+      // NOTE: This is necessary for `@0no-co/graphqlsp/api` to use the right instance
+      // of the typescript library
+      init({ typescript: ts });
 
-      return {
-        getSourceFiles() {
-          const sourceFiles: ts.SourceFile[] = [];
-          for (const sourceFile of this.program.getSourceFiles()) {
-            const relativePath = path.relative(projectRoot, sourceFile.fileName);
-            if (!relativePath.startsWith('..')) sourceFiles.push(sourceFile);
-          }
-          return sourceFiles;
-        },
-        getSourceFile(fileId: string) {
-          return this.program.getSourceFile(fileId);
-        },
-
-        get program() {
-          return (
-            program ||
-            (program = ts.createProgram({
-              rootNames: [...rootNames],
-              options: options,
-              host: host.compilerHost,
-            }))
-          );
-        },
-        get languageService() {
-          return (
-            service ||
-            (service = createVirtualTypeScriptEnvironment(
-              system,
-              [...rootNames],
-              ts,
-              options
-            ).languageService)
-          );
-        },
-      };
+      return buildContainer({
+        virtualMap,
+        projectRoot,
+        compilerHost: host.compilerHost,
+        rootNames: [...rootNames],
+        options,
+        system,
+      });
     },
   };
+
+  return factory;
 };
 
 interface LibFile {
@@ -165,7 +126,7 @@ const defaultCompilerOptions = {
   target: ts.ScriptTarget.Latest,
 } satisfies ts.CompilerOptions;
 
-const resolveLibs = (params: Params): readonly LibFile[] => {
+const resolveLibs = (params: ProgramFactoryParams): readonly LibFile[] => {
   const require = createRequire(params.configPath);
   const request = 'typescript/package.json';
   const tsPath = path.dirname(
@@ -193,7 +154,7 @@ const resolveLibs = (params: Params): readonly LibFile[] => {
     );
 };
 
-const resolveConfig = (params: Params, system: ts.System): ts.ParsedCommandLine => {
+const resolveConfig = (params: ProgramFactoryParams, system: ts.System): ts.ParsedCommandLine => {
   const text = system.readFile(params.configPath, 'utf8') || '{}';
   const parseResult = ts.parseConfigFileTextToJson(params.configPath, text);
   if (parseResult.error != null) throw new Error(parseResult.error.messageText.toString());
