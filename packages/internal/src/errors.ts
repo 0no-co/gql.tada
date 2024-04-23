@@ -1,10 +1,10 @@
-import type { Diagnostic } from 'typescript';
+import type ts from 'typescript';
 import { maybeRelative } from './helpers';
 
 export class TSError extends Error {
   readonly name: 'TSError';
-  readonly diagnostic: Diagnostic;
-  constructor(diagnostic: Diagnostic) {
+  readonly diagnostic: ts.Diagnostic;
+  constructor(diagnostic: ts.Diagnostic) {
     let message =
       typeof diagnostic.messageText !== 'string'
         ? diagnostic.messageText.messageText

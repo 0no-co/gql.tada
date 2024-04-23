@@ -1,10 +1,9 @@
+import ts from 'typescript';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import type { Stats } from 'node:fs';
-
 import type { TsConfigJson } from 'type-fest';
-import { parseConfigFileTextToJson } from 'typescript';
 
 import { cwd, maybeRelative } from './helpers';
 import { TSError, TadaError } from './errors';
@@ -39,7 +38,7 @@ const toTSConfigPath = (tsconfigPath: string): string =>
 export const readTSConfigFile = async (filePath: string): Promise<TsConfigJson> => {
   const tsconfigPath = toTSConfigPath(filePath);
   const contents = await fs.readFile(tsconfigPath, 'utf8');
-  const result = parseConfigFileTextToJson(tsconfigPath, contents);
+  const result = ts.parseConfigFileTextToJson(tsconfigPath, contents);
   if (result.error) throw new TSError(result.error);
   return result.config || {};
 };
