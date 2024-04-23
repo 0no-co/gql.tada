@@ -149,11 +149,11 @@ const buildProgram = (params: {
     <TReturn, TArgs extends readonly any[]>(
       fileFn: (file: ts.SourceFile, ...args: TArgs) => TReturn
     ) =>
-    (file: ts.SourceFile, ...args: TArgs): TReturn => {
-      const mappedFile = virtualMap.get(file.fileName);
-      if (mappedFile && mappedFile.sourceFileId === file.fileName)
+    (file: ts.SourceFile | undefined, ...args: TArgs): TReturn => {
+      const mappedFile = file && virtualMap.get(file.fileName);
+      if (mappedFile && mappedFile.sourceFileId === file?.fileName)
         file = getSourceFile(mappedFile.generatedFileId) || file;
-      return fileFn.call(program, file, ...args);
+      return fileFn.call(program, file!, ...args);
     };
 
   return Object.assign(program, {
