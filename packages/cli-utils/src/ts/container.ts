@@ -9,7 +9,7 @@ import type { SourcePosition } from './utils';
 import { spanToFilePosition } from './utils';
 
 function maybeBind<T extends Function>(that: object, fn: T | undefined): T {
-  return fn ? fn.bind(that, fn) : fn;
+  return fn ? fn.bind(that) : fn;
 }
 
 export interface PluginCreateInfo<Config extends {} = GraphQLSPConfig>
