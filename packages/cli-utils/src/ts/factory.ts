@@ -52,10 +52,6 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
   const system = createFSBackedSystem(vfsMap, projectRoot, ts, resolveDefaultLibsPath(params));
   const config = resolveConfig(params, system);
 
-  for (const { filename, contents } of resolveLibs(params)) {
-    if (contents) system.writeFile('/' + filename, contents);
-  }
-
   const rootNames = new Set(config.fileNames);
   const options = {
     getDefaultLibFilePath: ts.getDefaultLibFilePath(config.options),
@@ -177,11 +173,6 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
   return factory;
 };
 
-interface LibFile {
-  filename: string;
-  contents: string;
-}
-
 const defaultCompilerOptions = {
   target: ts.ScriptTarget.Latest,
 } satisfies ts.CompilerOptions;
@@ -207,23 +198,6 @@ const resolveDefaultLibsPath = (params: ProgramFactoryParams): string => {
   } else {
     return path.dirname(target);
   }
-};
-
-const resolveLibs = (params: ProgramFactoryParams): readonly LibFile[] => {
-  const tsPath = resolveDefaultLibsPath(params);
-  const libs = ts.sys.readDirectory(
-    path.resolve(tsPath, 'lib'),
-    /*extensions*/ ['.d.ts'],
-    /*exclude*/ ['typescript.d.ts'],
-    /*include*/ ['lib.*'],
-    /*depth*/ 1
-  );
-  const output: LibFile[] = [];
-  for (const fileName of libs) {
-    const contents = ts.sys.readFile(fileName, 'utf8');
-    if (contents) output.push({ filename: path.basename(fileName), contents });
-  }
-  return output;
 };
 
 const resolveConfig = (params: ProgramFactoryParams, system: ts.System): ts.ParsedCommandLine => {
