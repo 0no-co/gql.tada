@@ -1,2 +1,9 @@
 #!/usr/bin/env node
-require('../dist/gql-tada-cli.js');
+
+(async function main() {
+  try {
+    await import('../dist/gql-tada-cli.mjs');
+  } catch (_error) {
+    require('../dist/gql-tada-cli.js');
+  }
+})();
