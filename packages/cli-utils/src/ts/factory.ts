@@ -49,19 +49,17 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
   const virtualMap: VirtualMap = new Map();
 
   const projectRoot = path.dirname(params.configPath);
-  const tslibPath = path.join(projectRoot, 'node_modules/typescript/lib/');
-  const system = createFSBackedSystem(vfsMap, projectRoot, ts, tslibPath);
+  const system = createFSBackedSystem(vfsMap, projectRoot, ts);
   const config = resolveConfig(params, system);
-
   for (const { filename, contents } of resolveLibs(params)) {
-    if (contents) system.writeFile(path.join(tslibPath, filename), contents);
+    if (contents) system.writeFile('/' + filename, contents);
   }
 
   const rootNames = new Set(config.fileNames);
   const options = {
+    getDefaultLibFilePath: ts.getDefaultLibFilePath(config.options),
     ...defaultCompilerOptions,
     ...config.options,
-    getDefaultLibFilePath: tslibPath,
   };
   const host = createVirtualCompilerHost(system, options, ts);
 
