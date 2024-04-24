@@ -54,30 +54,31 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
   let fileCount = 0;
 
   try {
+    if (tty.isInteractive) yield logger.runningDiagnostics();
+
     for await (const signal of generator) {
       if (signal.kind === 'EXTERNAL_WARNING') {
         yield logger.experimentMessage(
           `${logger.code('.vue')} and ${logger.code('.svelte')} file support is experimental.`
         );
-        continue;
       } else if (signal.kind === 'FILE_COUNT') {
         totalFileCount = signal.fileCount;
-        continue;
-      }
-
-      let buffer = '';
-      for (const message of signal.messages) {
-        summary[message.severity]++;
-        if (isMinSeverity(message.severity, minSeverity)) {
-          buffer += logger.diagnosticMessage(message);
-          logger.diagnosticMessageGithub(message);
+      } else {
+        fileCount++;
+        let buffer = '';
+        for (const message of signal.messages) {
+          summary[message.severity]++;
+          if (isMinSeverity(message.severity, minSeverity)) {
+            buffer += logger.diagnosticMessage(message);
+            logger.diagnosticMessageGithub(message);
+          }
+        }
+        if (buffer) {
+          yield logger.diagnosticFile(signal.filePath) + buffer + '\n';
         }
       }
-      if (buffer) {
-        yield logger.diagnosticFile(signal.filePath) + buffer + '\n';
-      }
 
-      if (tty.isInteractive) yield logger.runningDiagnostics(++fileCount, totalFileCount);
+      if (tty.isInteractive) yield logger.runningDiagnostics(fileCount, totalFileCount);
     }
   } catch (error: any) {
     throw logger.externalError('Could not check files', error);

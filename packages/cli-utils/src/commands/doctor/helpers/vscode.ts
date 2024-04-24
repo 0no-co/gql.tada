@@ -1,12 +1,12 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { parseJsonText, convertToObject } from 'typescript';
+import ts from 'typescript';
 import { stat, FileType } from './fs';
 
 const jsonParse = async (fileName: string): Promise<unknown> => {
   const contents = await fs.readFile(fileName, 'utf8');
-  const sourceFile = parseJsonText(fileName, contents);
-  return convertToObject(sourceFile, []);
+  const sourceFile = ts.parseJsonText(fileName, contents);
+  return ts.convertToObject(sourceFile, []);
 };
 
 export const isVSCodeInstalled = async (): Promise<boolean> => {

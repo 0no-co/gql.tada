@@ -1,10 +1,7 @@
-import * as path from 'node:path';
-import { Project, TypeFormatFlags, TypeFlags, ScriptKind, ts } from 'ts-morph';
-
+import ts from 'typescript';
 import type { GraphQLSPConfig } from '@gql.tada/internal';
-import { init } from '@0no-co/graphqlsp/api';
 
-import { getFilePosition, loadVirtualCode } from '../../ts';
+import { programFactory } from '../../ts';
 import { expose } from '../../threads';
 
 import type { TurboSignal, TurboWarning } from './types';
@@ -16,48 +13,33 @@ export interface TurboParams {
 }
 
 async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSignal> {
-  init({ typescript: ts });
-
-  const projectPath = path.dirname(params.configPath);
-  const project = new Project({
-    tsConfigFilePath: params.configPath,
-    skipAddingFilesFromTsConfig: true,
-  });
+  const factory = programFactory(params);
 
   // NOTE: We add our override declaration here before loading all files
   // This sets `__cacheDisabled` on the turbo cache, which disables the cache temporarily
   // If we don't disable the cache then we couldn't regenerate it from inferred types
-  const overrideFile = project.createSourceFile(
-    '__gql-tada-override__.d.ts',
-    DECLARATION_OVERRIDE,
-    {
-      overwrite: true,
-      scriptKind: ScriptKind.TS,
-    }
-  );
-  if (overrideFile._markAsInProject) overrideFile._markAsInProject();
+  factory.addSourceFile({
+    fileId: '__gql-tada-override__.d.ts',
+    sourceText: DECLARATION_OVERRIDE,
+    scriptKind: ts.ScriptKind.TS,
+  });
 
-  project.addSourceFilesFromTsConfig(params.configPath);
-
-  const getVirtualPosition = await loadVirtualCode(projectPath, project, ts);
-  if (!!getVirtualPosition) {
+  const externalFiles = factory.createExternalFiles();
+  if (externalFiles.length) {
     yield { kind: 'EXTERNAL_WARNING' };
+    await factory.addVirtualFiles(externalFiles);
   }
 
-  // Filter source files by whether they're under the relevant root path
-  const sourceFiles = project.getSourceFiles().filter((sourceFile) => {
-    const filePath = path.resolve(projectPath, sourceFile.getFilePath());
-    const relative = path.relative(params.rootPath, filePath);
-    return !relative.startsWith('..');
-  });
+  const container = factory.build();
+  const sourceFiles = container.getSourceFiles();
 
   yield {
     kind: 'FILE_COUNT',
     fileCount: sourceFiles.length,
   };
 
-  const checker = project.getTypeChecker().compilerObject;
-  for (const { compilerNode: sourceFile } of sourceFiles) {
+  const checker = container.program.getTypeChecker();
+  for (const sourceFile of sourceFiles) {
     let filePath = sourceFile.fileName;
     const cache: Record<string, string> = {};
     const warnings: TurboWarning[] = [];
@@ -69,18 +51,13 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
       // NOTE: `returnType.symbol` is incorrectly typed and is in fact
       // optional and not always present
       if (!returnType.symbol || returnType.symbol.getEscapedName() !== 'TadaDocumentNode') {
-        const position = getFilePosition(
-          sourceFile,
-          call.getStart(),
-          undefined,
-          getVirtualPosition
-        );
-        filePath = position.file;
+        const position = container.getSourcePosition(sourceFile, call.getStart());
+        filePath = position.fileName;
         warnings.push({
           message:
             `The discovered document is not of type "TadaDocumentNode".\n` +
             'If this is unexpected, please file an issue describing your case.',
-          file: position.file,
+          file: position.fileName,
           line: position.line,
           col: position.col,
         });
@@ -90,7 +67,7 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
       const key: string =
         'value' in argumentType &&
         typeof argumentType.value === 'string' &&
-        (argumentType.flags & TypeFlags.StringLiteral) === 0
+        (argumentType.flags & ts.TypeFlags.StringLiteral) === 0
           ? JSON.stringify(argumentType.value)
           : checker.typeToString(argumentType, call, BUILDER_FLAGS);
       cache[key] = checker.typeToString(returnType, call, BUILDER_FLAGS);
@@ -107,15 +84,15 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
 
 export const runTurbo = expose(_runTurbo);
 
-const BUILDER_FLAGS: TypeFormatFlags =
-  TypeFormatFlags.NoTruncation |
-  TypeFormatFlags.NoTypeReduction |
-  TypeFormatFlags.InTypeAlias |
-  TypeFormatFlags.UseFullyQualifiedType |
-  TypeFormatFlags.GenerateNamesForShadowedTypeParams |
-  TypeFormatFlags.UseAliasDefinedOutsideCurrentScope |
-  TypeFormatFlags.AllowUniqueESSymbolType |
-  TypeFormatFlags.WriteTypeArgumentsOfSignature;
+const BUILDER_FLAGS: ts.TypeFormatFlags =
+  ts.TypeFormatFlags.NoTruncation |
+  ts.TypeFormatFlags.NoTypeReduction |
+  ts.TypeFormatFlags.InTypeAlias |
+  ts.TypeFormatFlags.UseFullyQualifiedType |
+  ts.TypeFormatFlags.GenerateNamesForShadowedTypeParams |
+  ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope |
+  ts.TypeFormatFlags.AllowUniqueESSymbolType |
+  ts.TypeFormatFlags.WriteTypeArgumentsOfSignature;
 
 const DECLARATION_OVERRIDE = `
 import * as _gqlTada from 'gql.tada';

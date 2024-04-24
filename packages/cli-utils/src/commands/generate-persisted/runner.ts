@@ -68,28 +68,29 @@ export async function* run(tty: TTY, opts: PersistedOptions): AsyncIterable<Comp
   let fileCount = 0;
 
   try {
+    if (tty.isInteractive) yield logger.runningPersisted();
+
     for await (const signal of generator) {
       if (signal.kind === 'EXTERNAL_WARNING') {
         yield logger.experimentMessage(
           `${logger.code('.vue')} and ${logger.code('.svelte')} file support is experimental.`
         );
-        continue;
       } else if (signal.kind === 'FILE_COUNT') {
         totalFileCount = signal.fileCount;
-        continue;
-      }
-
-      documents = Object.assign(documents, signal.documents);
-      if ((warnings += signal.warnings.length)) {
-        let buffer = logger.warningFile(signal.filePath);
-        for (const warning of signal.warnings) {
-          buffer += logger.warningMessage(warning);
-          logger.warningGithub(warning);
+      } else {
+        fileCount++;
+        documents = Object.assign(documents, signal.documents);
+        if ((warnings += signal.warnings.length)) {
+          let buffer = logger.warningFile(signal.filePath);
+          for (const warning of signal.warnings) {
+            buffer += logger.warningMessage(warning);
+            logger.warningGithub(warning);
+          }
+          yield buffer + '\n';
         }
-        yield buffer + '\n';
       }
 
-      if (tty.isInteractive) yield logger.runningPersisted(++fileCount, totalFileCount);
+      if (tty.isInteractive) yield logger.runningPersisted(fileCount, totalFileCount);
     }
   } catch (error) {
     throw logger.externalError('Could not generate persisted manifest file', error);

@@ -61,8 +61,7 @@
     "@vue/compiler-dom": "^3.4.23",
     "@vue/language-core": "^2.0.13",
     "graphql": "^16.8.1",
-    "svelte2tsx": "^0.7.6",
-    "ts-morph": "~22.0.0"
+    "svelte2tsx": "^0.7.6"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
