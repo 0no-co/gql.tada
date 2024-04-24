@@ -6,18 +6,18 @@
     "check": "tsc"
   },
   "dependencies": {
-    "@urql/core": "^4.3.0",
-    "gql.tada": "^1.5.0",
+    "@urql/core": "^5.0.2",
+    "gql.tada": "^1.5.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "urql": "^4.0.6"
+    "urql": "^4.0.7"
   },
   "devDependencies": {
-    "@0no-co/graphqlsp": "^1.10.0",
-    "@types/react": "^18.2.64",
-    "@types/react-dom": "^18.2.21",
+    "@0no-co/graphqlsp": "^1.11.0",
+    "@types/react": "^18.2.79",
+    "@types/react-dom": "^18.2.25",
     "@vitejs/plugin-react": "^4.2.1",
     "typescript": "^5.4.2",
-    "vite": "^5.1.6"
+    "vite": "^5.2.10"
   }
 }
