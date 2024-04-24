@@ -290,8 +290,8 @@ importers:
         specifier: ^20.11.0
         version: 20.11.0
       '@urql/core':
-        specifier: ^4.3.0
-        version: 4.3.0(graphql@16.8.1)
+        specifier: ^5.0.2
+        version: 5.0.2(graphql@16.8.1)
       '@urql/exchange-retry':
         specifier: ^1.2.1
         version: 1.2.1(graphql@16.8.1)
@@ -2242,6 +2242,7 @@ packages:
       wonka: 6.3.4
     transitivePeerDependencies:
       - graphql
+    dev: false
 
   /@urql/core@5.0.2(graphql@16.8.1):
     resolution: {integrity: sha512-gxMYkhbZg43cPftRv9K/A8lLjbZm2aam+K5AfPyQyADQVKkQ0V5hC/XtH++Zdi3swhBvgjbvVG/YjdkZTh8PVg==}

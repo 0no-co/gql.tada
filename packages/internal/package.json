@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
-    "@urql/core": "^4.3.0",
+    "@urql/core": "^5.0.2",
     "@urql/exchange-retry": "^1.2.1",
     "graphql": "^16.8.1",
     "rollup": "^4.9.4",
