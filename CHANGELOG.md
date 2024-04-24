@@ -1,5 +1,15 @@
 # gql.tada
 
+## 1.5.7
+
+### Patch Changes
+
+- Switch between ESM and CJS when running CLI
+  Submitted by [@kitten](https://github.com/kitten) (See [#252](https://github.com/0no-co/gql.tada/pull/252))
+- Updated dependencies (See [#247](https://github.com/0no-co/gql.tada/pull/247), [#251](https://github.com/0no-co/gql.tada/pull/251), [#247](https://github.com/0no-co/gql.tada/pull/247), [#249](https://github.com/0no-co/gql.tada/pull/249), and [#251](https://github.com/0no-co/gql.tada/pull/251))
+  - @gql.tada/cli-utils@1.2.1
+  - @gql.tada/internal@0.2.3
+
 ## 1.5.6
 
 ### Patch Changes

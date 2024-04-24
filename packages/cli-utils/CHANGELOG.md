@@ -1,5 +1,20 @@
 # @gql.tada/cli-utils
 
+## 1.2.1
+
+### Patch Changes
+
+- Refactor internal TypeScript instantiation (affects `turbo`, `check`, and `generate-persisted` commands)
+  Submitted by [@kitten](https://github.com/kitten) (See [#247](https://github.com/0no-co/gql.tada/pull/247))
+- ⚠️ Fix resolution of default lib path when libs aren't in standard location
+  Submitted by [@kitten](https://github.com/kitten) (See [#251](https://github.com/0no-co/gql.tada/pull/251))
+- ⚠️ Fix ESM build output file to be properly loadable
+  Submitted by [@kitten](https://github.com/kitten) (See [#247](https://github.com/0no-co/gql.tada/pull/247))
+- ⚠️ Fix log message of `generate schema` to correctly display schema rather than output
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#249](https://github.com/0no-co/gql.tada/pull/249))
+- Updated dependencies (See [#247](https://github.com/0no-co/gql.tada/pull/247) and [#251](https://github.com/0no-co/gql.tada/pull/251))
+  - @gql.tada/internal@0.2.3
+
 ## 1.2.0
 
 ### Minor Changes

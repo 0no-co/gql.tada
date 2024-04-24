@@ -1,5 +1,14 @@
 # @gql.tada/internal
 
+## 0.2.3
+
+### Patch Changes
+
+- ⚠️ Fix ESM build output file to be properly loadable
+  Submitted by [@kitten](https://github.com/kitten) (See [#247](https://github.com/0no-co/gql.tada/pull/247))
+- ⚠️ Fix resolving `tsconfig.json`' `extends` option
+  Submitted by [@kitten](https://github.com/kitten) (See [#251](https://github.com/0no-co/gql.tada/pull/251))
+
 ## 0.2.2
 
 ### Patch Changes
