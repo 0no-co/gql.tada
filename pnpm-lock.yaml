@@ -228,7 +228,7 @@ importers:
         specifier: ^3.4.23
         version: 3.4.25
       '@vue/language-core':
-        specifier: ^2.0.13
+        specifier: ^2.0.0
         version: 2.0.14(typescript@5.4.5)
       graphql:
         specifier: ^16.8.1
