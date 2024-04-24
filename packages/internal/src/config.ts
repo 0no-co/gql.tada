@@ -12,7 +12,7 @@ export interface GraphQLSPConfig {
 }
 
 export const parseConfig = (
-  input: Record<string, unknown>,
+  input: unknown,
   /** Defines the path of the "main" `tsconfig.json` file.
    * @remarks
    * This should be the `rootPath` output from `loadConfig`,
@@ -20,7 +20,7 @@ export const parseConfig = (
    * resolving `extends` options.
    */
   rootPath: string = process.cwd()
-) => {
+): GraphQLSPConfig => {
   const resolveConfigDir = (input: string | undefined) => {
     if (!input) return input;
     return path.normalize(
@@ -36,7 +36,11 @@ export const parseConfig = (
     );
   };
 
-  if (input.schema && typeof input.schema === 'object') {
+  if (input == null || typeof input !== 'object') {
+    throw new TadaError(`Configuration was not loaded properly (Received: ${input})`);
+  }
+
+  if ('schema' in input && input.schema && typeof input.schema === 'object') {
     const { schema } = input;
     if (!('url' in schema)) {
       throw new TadaError('Configuration contains a `schema` object, but no `url` property');
@@ -55,7 +59,7 @@ export const parseConfig = (
         "Configuration contains a `schema.headers` property, but it's not an object"
       );
     }
-  } else if (typeof input.schema !== 'string') {
+  } else if (!('schema' in input) || typeof input.schema !== 'string') {
     throw new TadaError('Configuration is missing a `schema` property');
   } else if (
     'tadaOutputLocation' in input &&
@@ -98,5 +102,5 @@ export const parseConfig = (
     tadaOutputLocation: resolveConfigDir(output.tadaOutputLocation),
     tadaTurboLocation: resolveConfigDir(output.tadaTurboLocation),
     tadaPersistedLocation: resolveConfigDir(output.tadaPersistedLocation),
-  } satisfies GraphQLSPConfig;
+  };
 };
