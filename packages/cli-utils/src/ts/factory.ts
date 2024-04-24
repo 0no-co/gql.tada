@@ -49,8 +49,9 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
   const virtualMap: VirtualMap = new Map();
 
   const projectRoot = path.dirname(params.configPath);
-  const system = createFSBackedSystem(vfsMap, projectRoot, ts);
+  const system = createFSBackedSystem(vfsMap, projectRoot, ts, resolveDefaultLibsPath(params));
   const config = resolveConfig(params, system);
+
   for (const { filename, contents } of resolveLibs(params)) {
     if (contents) system.writeFile('/' + filename, contents);
   }
@@ -185,23 +186,31 @@ const defaultCompilerOptions = {
   target: ts.ScriptTarget.Latest,
 } satisfies ts.CompilerOptions;
 
-const resolveLibs = (params: ProgramFactoryParams): readonly LibFile[] => {
-  const require = createRequire(params.configPath);
-  const request = 'typescript/package.json';
-  let tsPath: string;
-  try {
-    tsPath = path.dirname(
-      require.resolve(request, {
-        paths: [
-          path.join(path.dirname(params.configPath), 'node_modules'),
-          path.join(params.rootPath, 'node_modules'),
-          ...(require.resolve.paths(request) || []),
-        ],
-      })
-    );
-  } catch (_error) {
-    return [];
+const resolveDefaultLibsPath = (params: ProgramFactoryParams): string => {
+  const target = ts.getDefaultLibFilePath({});
+  if (!ts.sys.fileExists(target)) {
+    const require = createRequire(params.configPath);
+    const request = 'typescript/package.json';
+    try {
+      return path.dirname(
+        require.resolve(request, {
+          paths: [
+            path.join(path.dirname(params.configPath), 'node_modules'),
+            path.join(params.rootPath, 'node_modules'),
+            ...(require.resolve.paths(request) || []),
+          ],
+        })
+      );
+    } catch (_error) {
+      return path.resolve(params.rootPath, 'node_modules', 'typescript', 'lib');
+    }
+  } else {
+    return path.dirname(target);
   }
+};
+
+const resolveLibs = (params: ProgramFactoryParams): readonly LibFile[] => {
+  const tsPath = resolveDefaultLibsPath(params);
   const libs = ts.sys.readDirectory(
     path.resolve(tsPath, 'lib'),
     /*extensions*/ ['.d.ts'],
