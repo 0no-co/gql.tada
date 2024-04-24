@@ -49,19 +49,14 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
   const virtualMap: VirtualMap = new Map();
 
   const projectRoot = path.dirname(params.configPath);
-  const tslibPath = path.join(projectRoot, 'node_modules/typescript/lib/');
-  const system = createFSBackedSystem(vfsMap, projectRoot, ts, tslibPath);
+  const system = createFSBackedSystem(vfsMap, projectRoot, ts, resolveDefaultLibsPath(params));
   const config = resolveConfig(params, system);
-
-  for (const { filename, contents } of resolveLibs(params)) {
-    if (contents) system.writeFile(path.join(tslibPath, filename), contents);
-  }
 
   const rootNames = new Set(config.fileNames);
   const options = {
+    getDefaultLibFilePath: ts.getDefaultLibFilePath(config.options),
     ...defaultCompilerOptions,
     ...config.options,
-    getDefaultLibFilePath: tslibPath,
   };
   const host = createVirtualCompilerHost(system, options, ts);
 
@@ -178,45 +173,31 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
   return factory;
 };
 
-interface LibFile {
-  filename: string;
-  contents: string;
-}
-
 const defaultCompilerOptions = {
   target: ts.ScriptTarget.Latest,
 } satisfies ts.CompilerOptions;
 
-const resolveLibs = (params: ProgramFactoryParams): readonly LibFile[] => {
-  const require = createRequire(params.configPath);
-  const request = 'typescript/package.json';
-  let tsPath: string;
-  try {
-    tsPath = path.dirname(
-      require.resolve(request, {
-        paths: [
-          path.join(path.dirname(params.configPath), 'node_modules'),
-          path.join(params.rootPath, 'node_modules'),
-          ...(require.resolve.paths(request) || []),
-        ],
-      })
-    );
-  } catch (_error) {
-    return [];
+const resolveDefaultLibsPath = (params: ProgramFactoryParams): string => {
+  const target = ts.getDefaultLibFilePath({});
+  if (!ts.sys.fileExists(target)) {
+    const require = createRequire(params.configPath);
+    const request = 'typescript/package.json';
+    try {
+      return path.dirname(
+        require.resolve(request, {
+          paths: [
+            path.join(path.dirname(params.configPath), 'node_modules'),
+            path.join(params.rootPath, 'node_modules'),
+            ...(require.resolve.paths(request) || []),
+          ],
+        })
+      );
+    } catch (_error) {
+      return path.resolve(params.rootPath, 'node_modules', 'typescript', 'lib');
+    }
+  } else {
+    return path.dirname(target);
   }
-  const libs = ts.sys.readDirectory(
-    path.resolve(tsPath, 'lib'),
-    /*extensions*/ ['.d.ts'],
-    /*exclude*/ ['typescript.d.ts'],
-    /*include*/ ['lib.*'],
-    /*depth*/ 1
-  );
-  const output: LibFile[] = [];
-  for (const fileName of libs) {
-    const contents = ts.sys.readFile(fileName, 'utf8');
-    if (contents) output.push({ filename: path.basename(fileName), contents });
-  }
-  return output;
 };
 
 const resolveConfig = (params: ProgramFactoryParams, system: ts.System): ts.ParsedCommandLine => {

@@ -81,46 +81,40 @@ export const loadConfig = async (targetPath?: string): Promise<LoadConfigResult>
         : 'No tsconfig.json found at or above current working directory'
     );
   }
-  const tsconfig = await readTSConfigFile(rootTsconfigPath);
-  const pluginConfig = getPluginConfig(tsconfig);
-  if (pluginConfig) {
-    return {
-      pluginConfig,
-      configPath: rootTsconfigPath,
-      rootPath: path.dirname(rootTsconfigPath),
-    };
-  }
 
-  if (Array.isArray(tsconfig.extends)) {
-    for (let extend of tsconfig.extends) {
-      if (path.extname(extend) !== '.json') extend += '.json';
+  const load = async (targetPath: string): Promise<LoadConfigResult> => {
+    const tsconfig = await readTSConfigFile(targetPath);
+    const pluginConfig = getPluginConfig(tsconfig);
+
+    if (pluginConfig) {
+      return {
+        pluginConfig,
+        configPath: targetPath,
+        rootPath: path.dirname(rootTsconfigPath),
+      };
+    }
+
+    if (Array.isArray(tsconfig.extends)) {
+      for (let extend of tsconfig.extends) {
+        if (path.extname(extend) !== '.json') extend += '.json';
+        try {
+          const tsconfigPath = await resolveExtend(extend, path.dirname(rootTsconfigPath));
+          if (tsconfigPath) return load(tsconfigPath);
+        } catch (_error) {}
+      }
+    } else if (tsconfig.extends) {
       try {
-        const tsconfigPath = await resolveExtend(extend, path.dirname(rootTsconfigPath));
-        if (tsconfigPath) {
-          const config = loadConfig(targetPath);
-          return {
-            ...config,
-            rootPath: path.dirname(rootTsconfigPath),
-          };
-        }
+        const tsconfigPath = await resolveExtend(tsconfig.extends, path.dirname(rootTsconfigPath));
+        if (tsconfigPath) return load(tsconfigPath);
       } catch (_error) {}
     }
-  } else if (tsconfig.extends) {
-    try {
-      const tsconfigPath = await resolveExtend(tsconfig.extends, path.dirname(rootTsconfigPath));
-      if (tsconfigPath) {
-        const config = loadConfig(targetPath);
-        return {
-          ...config,
-          rootPath: path.dirname(rootTsconfigPath),
-        };
-      }
-    } catch (_error) {}
-  }
 
-  throw new TadaError(
-    `Could not find a valid GraphQLSP plugin entry in: ${maybeRelative(rootTsconfigPath)}`
-  );
+    throw new TadaError(
+      `Could not find a valid GraphQLSP plugin entry in: ${maybeRelative(rootTsconfigPath)}`
+    );
+  };
+
+  return await load(rootTsconfigPath);
 };
 
 /** @deprecated Use {@link loadConfig} instead */
