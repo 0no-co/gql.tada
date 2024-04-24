@@ -48,8 +48,7 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
   const vfsMap = new Map<string, string>();
   const virtualMap: VirtualMap = new Map();
 
-  const projectRoot = path.dirname(params.configPath);
-  const system = createFSBackedSystem(vfsMap, projectRoot, ts, resolveDefaultLibsPath(params));
+  const system = createFSBackedSystem(vfsMap, params.rootPath, ts, resolveDefaultLibsPath(params));
   const config = resolveConfig(params, system);
 
   const rootNames = new Set(config.fileNames);
@@ -62,11 +61,11 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
 
   const factory: ProgramFactory = {
     get projectPath() {
-      return projectRoot;
+      return params.rootPath;
     },
 
     get projectDirectories() {
-      const directories = new Set([projectRoot]);
+      const directories = new Set([params.rootPath]);
       for (const rootName of rootNames) directories.add(path.dirname(rootName));
       return [...directories];
     },
@@ -86,7 +85,7 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
     createExternalFiles(exts: readonly VirtualExtension[] = transformExtensions) {
       const files: ts.SourceFile[] = [];
       const seen = new Set(rootNames);
-      const directories = new Set([projectRoot]);
+      const directories = new Set([params.rootPath]);
       for (const rootName of rootNames) directories.add(path.dirname(rootName));
       for (const directory of directories) {
         for (const fileId of system.readDirectory(directory, exts, ['**/node_modules'])) {
@@ -161,7 +160,7 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
 
       return buildContainer({
         virtualMap,
-        projectRoot,
+        projectRoot: params.rootPath,
         compilerHost: host.compilerHost,
         rootNames: [...rootNames],
         options,
