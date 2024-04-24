@@ -1,5 +1,16 @@
 # @gql.tada/cli-utils
 
+## 1.2.2
+
+### Patch Changes
+
+- Upgrade `@vue/language-core` and maintain backwards-compatibility
+  Submitted by [@kitten](https://github.com/kitten) (See [#253](https://github.com/0no-co/gql.tada/pull/253))
+- Instantiate TypeScript from project root rather than config path
+  Submitted by [@kitten](https://github.com/kitten) (See [#254](https://github.com/0no-co/gql.tada/pull/254))
+- Updated dependencies (See [#255](https://github.com/0no-co/gql.tada/pull/255))
+  - @gql.tada/internal@0.2.4
+
 ## 1.2.1
 
 ### Patch Changes

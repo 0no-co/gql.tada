@@ -1,5 +1,12 @@
 # @gql.tada/internal
 
+## 0.2.4
+
+### Patch Changes
+
+- Upgrade `@urql/core` in `@gql.tada/internal`
+  Submitted by [@kitten](https://github.com/kitten) (See [#255](https://github.com/0no-co/gql.tada/pull/255))
+
 ## 0.2.3
 
 ### Patch Changes
