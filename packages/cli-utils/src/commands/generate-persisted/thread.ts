@@ -56,7 +56,9 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
         warnings.push({
           message: call.schema
             ? `The '${call.schema}' schema is not in the configuration but was referenced by "graphql.persisted".`
-            : 'Multiple schemas are configured, but the document is not for a specific schema.',
+            : schemaNames.size > 1
+              ? 'The document is not for a known schema. Have you re-generated the output file?'
+              : 'Multiple schemas are configured, but the document is not for a specific schema.',
           file: position.fileName,
           line: position.line,
           col: position.col,
