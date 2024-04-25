@@ -110,10 +110,7 @@ export function initTTY(params: TTYParams = {}): TTY {
   function _end() {
     if (isTTY) {
       output.write(
-        cmd(CSI.Reset) +
-          cmd(CSI.ResetPrivateMode) +
-          cmd(CSI.SetPrivateMode, PrivateMode.ShowCursor) +
-          '\n'
+        cmd(CSI.Reset) + cmd(CSI.ResetPrivateMode) + cmd(CSI.SetPrivateMode, PrivateMode.ShowCursor)
       );
     }
   }
