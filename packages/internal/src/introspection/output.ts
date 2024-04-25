@@ -1,4 +1,5 @@
 import type { IntrospectionQuery } from 'graphql';
+import type { IntrospectionResult } from '../loaders';
 
 import { TadaError } from '../errors';
 import { PREAMBLE_IGNORE, ANNOTATION_DTS, ANNOTATION_TS } from './constants';
@@ -13,7 +14,7 @@ interface OutputIntrospectionFileOptions {
 }
 
 export function outputIntrospectionFile(
-  introspection: IntrospectionQuery | string,
+  introspection: IntrospectionQuery | IntrospectionResult,
   opts: OutputIntrospectionFileOptions
 ): string {
   if (/\.d\.ts$/.test(opts.fileType)) {
@@ -21,17 +22,25 @@ export function outputIntrospectionFile(
       typeof introspection !== 'string' && opts.shouldPreprocess
         ? preprocessIntrospection(introspection)
         : stringifyJson(introspection);
-    return [
+    const out = [
       PREAMBLE_IGNORE,
       ANNOTATION_DTS,
       `export type introspection = ${json};\n`,
       "import * as gqlTada from 'gql.tada';\n",
-      "declare module 'gql.tada' {",
-      '  interface setupSchema {',
-      '    introspection: introspection',
-      '  }',
-      '}',
-    ].join('\n');
+    ];
+    // NOTE: When the `name` option is used and multiple schemas are present,
+    // we omit the automatic schema declaration and rely on the user calling
+    // `initGraphQLTada()` themselves
+    if (!('name' in introspection)) {
+      out.push(
+        "declare module 'gql.tada' {",
+        '  interface setupSchema {',
+        '    introspection: introspection',
+        '  }',
+        '}'
+      );
+    }
+    return out.join('\n');
   } else if (/\.ts$/.test(opts.fileType)) {
     const json = stringifyJson(introspection);
     return [

@@ -10,6 +10,8 @@ import type {
   IntrospectionField,
 } from 'graphql';
 
+import type { IntrospectionResult } from '../loaders';
+
 function nameCompare(objA: { name: string }, objB: { name: string }) {
   return objA.name < objB.name ? -1 : objA.name > objB.name ? 1 : 0;
 }
@@ -149,7 +151,9 @@ function minifyIntrospectionType(type: IntrospectionType): IntrospectionType {
  * If `schema` receives an object that isn’t an {@link IntrospectionQuery}, a
  * {@link TypeError} will be thrown.
  */
-export const minifyIntrospectionQuery = (schema: IntrospectionQuery): IntrospectionQuery => {
+export const minifyIntrospectionQuery = (
+  schema: IntrospectionQuery | IntrospectionResult
+): IntrospectionResult => {
   if (!schema || !('__schema' in schema)) {
     throw new TypeError('Expected to receive an IntrospectionQuery.');
   }
@@ -185,6 +189,7 @@ export const minifyIntrospectionQuery = (schema: IntrospectionQuery): Introspect
     .sort(nameCompare);
 
   return {
+    name: 'name' in schema ? schema.name : undefined,
     __schema: {
       queryType: {
         kind: queryType.kind,

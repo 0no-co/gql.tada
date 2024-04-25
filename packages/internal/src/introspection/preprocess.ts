@@ -8,6 +8,8 @@ import type {
   IntrospectionField,
 } from 'graphql';
 
+import type { IntrospectionResult } from '../loaders';
+
 const printName = (input: string | undefined | null): string => (input ? `'${input}'` : 'never');
 
 const printTypeRef = (typeRef: IntrospectionTypeRef) => {
@@ -78,7 +80,11 @@ export const printIntrospectionType = (type: IntrospectionType) => {
   }
 };
 
-export function preprocessIntrospection({ __schema: schema }: IntrospectionQuery): string {
+export function preprocessIntrospection(
+  introspection: IntrospectionResult | IntrospectionQuery
+): string {
+  const { __schema: schema } = introspection;
+  const name = 'name' in introspection ? introspection.name : undefined;
   const queryName = printName(schema.queryType.name);
   const mutationName = printName(schema.mutationType && schema.mutationType.name);
   const subscriptionName = printName(schema.subscriptionType && schema.subscriptionType.name);
@@ -92,6 +98,7 @@ export function preprocessIntrospection({ __schema: schema }: IntrospectionQuery
 
   return (
     '{\n' +
+    `  name: ${printName(name)};\n` +
     `  query: ${queryName};\n` +
     `  mutation: ${mutationName};\n` +
     `  subscription: ${subscriptionName};\n` +
