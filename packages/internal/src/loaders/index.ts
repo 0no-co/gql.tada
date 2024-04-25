@@ -4,7 +4,14 @@ import path from 'node:path';
 import { loadFromSDL } from './sdl';
 import { loadFromURL } from './url';
 
-import type { SchemaLoaderResult, SchemaLoader, SchemaOrigin, SchemaRef } from './types';
+import type {
+  SchemaLoaderResult,
+  SchemaLoader,
+  SchemaOrigin,
+  SchemaRef,
+  SingleSchemaInput,
+  MultiSchemaInput,
+} from './types';
 
 export { loadFromSDL, loadFromURL };
 
@@ -44,16 +51,6 @@ export function load(config: LoadConfig): SchemaLoader {
   }
 }
 
-export type SingleSchemaInput = {
-  name?: string;
-  schema: SchemaOrigin;
-  tadaOutputLocation?: string;
-  tadaTurboLocation?: string;
-  tadaPersistedLocation?: string;
-};
-
-export type MultiSchemaInput = { schemas?: SingleSchemaInput[] };
-
 export function loadRef(
   input: SingleSchemaInput | MultiSchemaInput | (SingleSchemaInput & MultiSchemaInput),
   config?: BaseLoadConfig
@@ -79,17 +76,22 @@ export function loadRef(
       return acc;
     }, {}),
 
-    autoupdate() {
+    autoupdate(onUpdate) {
       teardowns.push(
         ...loaders.map(({ input, loader }) => {
-          loader.load().then((result) => {
-            ref.version++;
-            if (input.name) {
-              ref.multi[input.name] = { ...input, ...result };
-            } else {
-              ref.current = { ...input, ...result };
-            }
-          });
+          loader
+            .load()
+            .then((result) => {
+              ref.version++;
+              if (input.name) {
+                ref.multi[input.name] = { ...input, ...result };
+              } else {
+                ref.current = { ...input, ...result };
+              }
+            })
+            .catch((_error) => {
+              /*noop*/
+            });
           return loader.notifyOnUpdate((result) => {
             ref.version++;
             if (input.name) {
@@ -97,6 +99,7 @@ export function loadRef(
             } else {
               ref.current = { ...input, ...result };
             }
+            onUpdate(ref, input);
           });
         })
       );

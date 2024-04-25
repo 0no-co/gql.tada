@@ -25,9 +25,19 @@ export interface SchemaLoader {
   loadSchema(): Promise<GraphQLSchema | null>;
 }
 
+export type SingleSchemaInput = {
+  name?: string;
+  schema: SchemaOrigin;
+  tadaOutputLocation?: string;
+  tadaTurboLocation?: string;
+  tadaPersistedLocation?: string;
+};
+
+export type MultiSchemaInput = { schemas?: SingleSchemaInput[] };
+
 export interface SchemaRef<Result = SchemaLoaderResult | null> {
   /** Starts automatically updating the ref */
-  autoupdate(): () => void;
+  autoupdate(onUpdate: (ref: SchemaRef<Result>, input: SingleSchemaInput) => void): () => void;
   /** Loads the initial result for the schema */
   load(): Promise<SchemaRef<SchemaLoaderResult>>;
   current: Result;
