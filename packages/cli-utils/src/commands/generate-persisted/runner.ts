@@ -6,6 +6,7 @@ import { loadConfig, parseConfig } from '@gql.tada/internal';
 import type { TTY, ComposeInput } from '../../term';
 import type { WriteTarget } from '../shared';
 import { writeOutput } from '../shared';
+import type { PersistedDocument } from './types';
 import * as logger from './logger';
 
 export interface PersistedOptions {
@@ -31,43 +32,15 @@ export async function* run(tty: TTY, opts: PersistedOptions): AsyncIterable<Comp
     throw logger.externalError('Failed to load configuration.', error);
   }
 
-  if (!('schema' in pluginConfig)) {
-    // TODO: Implement multi-schema support
-    throw logger.errorMessage('Multi-schema support is not implemented yet');
-  }
-
-  let destination: WriteTarget;
-  if (!opts.output && tty.pipeTo) {
-    destination = tty.pipeTo;
-  } else if (opts.output) {
-    destination = path.resolve(process.cwd(), opts.output);
-  } else if (pluginConfig.tadaPersistedLocation) {
-    destination = path.resolve(
-      path.dirname(configResult.configPath),
-      pluginConfig.tadaPersistedLocation
-    );
-  } else {
-    throw logger.errorMessage(
-      'No output path was specified to write the persisted manifest file to.\n' +
-        logger.hint(
-          `You have to either set ${logger.code(
-            '"tadaPersistedLocation"'
-          )} in your configuration,\n` +
-            `pass an ${logger.code('--output')} argument to this command,\n` +
-            'or pipe this command to an output file.'
-        )
-    );
-  }
-
   if (tty.isInteractive) yield logger.runningPersisted();
 
-  let documents: Record<string, string> = {};
   const generator = runPersisted({
     rootPath: configResult.rootPath,
     configPath: configResult.configPath,
     pluginConfig,
   });
 
+  const documents: PersistedDocument[] = [];
   let warnings = 0;
   let totalFileCount = 0;
   let fileCount = 0;
@@ -84,8 +57,9 @@ export async function* run(tty: TTY, opts: PersistedOptions): AsyncIterable<Comp
         totalFileCount = signal.fileCount;
       } else {
         fileCount++;
-        documents = Object.assign(documents, signal.documents);
-        if ((warnings += signal.warnings.length)) {
+        documents.push(...signal.documents);
+        warnings += signal.warnings.length;
+        if (signal.warnings.length) {
           let buffer = logger.warningFile(signal.filePath);
           for (const warning of signal.warnings) {
             buffer += logger.warningMessage(warning);
@@ -101,22 +75,97 @@ export async function* run(tty: TTY, opts: PersistedOptions): AsyncIterable<Comp
     throw logger.externalError('Could not generate persisted manifest file', error);
   }
 
-  const documentCount = Object.keys(documents).length;
-  if (warnings && opts.failOnWarn) {
-    throw logger.warningSummary(warnings, documentCount);
-  } else {
-    if (documentCount) {
+  const projectPath = path.dirname(configResult.configPath);
+  if ('schema' in pluginConfig) {
+    let destination: WriteTarget;
+    if (!opts.output && tty.pipeTo) {
+      destination = tty.pipeTo;
+    } else if (opts.output) {
+      destination = path.resolve(process.cwd(), opts.output);
+    } else if (pluginConfig.tadaPersistedLocation) {
+      destination = path.resolve(
+        path.dirname(configResult.configPath),
+        pluginConfig.tadaPersistedLocation
+      );
+    } else {
+      throw logger.errorMessage(
+        'No output path was specified to write the persisted manifest file to.\n' +
+          logger.hint(
+            `You have to either set ${logger.code(
+              '"tadaPersistedLocation"'
+            )} in your configuration,\n` +
+              `pass an ${logger.code('--output')} argument to this command,\n` +
+              'or pipe this command to an output file.'
+          )
+      );
+    }
+
+    if (warnings && opts.failOnWarn) {
+      throw logger.warningSummary(warnings, documents.length);
+    } else if (documents.length) {
       try {
-        const contents = JSON.stringify(documents, null, 2);
+        const json: Record<string, string> = {};
+        for (const item of documents) json[item.hashKey] = item.document;
+        const contents = JSON.stringify(json, null, 2);
         await writeOutput(destination, contents);
       } catch (error) {
         throw logger.externalError(
-          'Something went wrong while writing the introspection file',
+          'Something went wrong while writing the persisted manifest file.',
           error
         );
       }
     }
 
-    yield logger.infoSummary(warnings, documentCount);
+    yield logger.infoSummary(warnings, documents.length);
+  } else {
+    if (opts.output) {
+      throw logger.errorMessage(
+        'Output path was specified, while multiple schemas are configured.\n' +
+          logger.hint(
+            `You can only output all schemas to their ${logger.code(
+              '"tadaPersistedLocation"'
+            )} options\n` + `when multiple ${logger.code('schemas')} are set up.`
+          )
+      );
+    }
+
+    const documentCount: Record<string, number> = {};
+    for (const schemaConfig of pluginConfig.schemas) {
+      const { name, tadaPersistedLocation } = schemaConfig;
+      if (!tadaPersistedLocation) {
+        throw logger.errorMessage(
+          `No output path was specified to write the '${name}' schema to.\n` +
+            logger.hint(
+              `You have to set ${logger.code(
+                '"tadaPersistedLocation"'
+              )} in each schema configuration.`
+            )
+        );
+      }
+
+      try {
+        documentCount[name] = 0;
+        const json: Record<string, string> = {};
+        for (const item of documents) {
+          json[item.hashKey] = item.document;
+          documentCount[name]++;
+        }
+        if (documentCount[name]) {
+          const contents = JSON.stringify(json, null, 2);
+          await writeOutput(path.resolve(projectPath, tadaPersistedLocation), contents);
+        }
+      } catch (error) {
+        throw logger.externalError(
+          `Something went wrong while writing the '${name}' schema's persisted manifest file.`,
+          error
+        );
+      }
+    }
+
+    if (warnings && opts.failOnWarn) {
+      throw logger.warningSummary(warnings, documentCount);
+    } else {
+      yield logger.infoSummary(warnings, documentCount);
+    }
   }
 }
