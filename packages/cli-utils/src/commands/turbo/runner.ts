@@ -6,6 +6,7 @@ import { loadConfig, parseConfig } from '@gql.tada/internal';
 import type { TTY, ComposeInput } from '../../term';
 import type { WriteTarget } from '../shared';
 import { writeOutput } from '../shared';
+import type { TurboDocument } from './types';
 import * as logger from './logger';
 
 const PREAMBLE_IGNORE = ['/* eslint-disable */', '/* prettier-ignore */'].join('\n') + '\n';
@@ -33,55 +34,13 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
     throw logger.externalError('Failed to load configuration.', error);
   }
 
-  if (!('schema' in pluginConfig)) {
-    // TODO: Implement multi-schema support
-    throw logger.errorMessage('Multi-schema support is not implemented yet');
-  }
-
-  let destination: WriteTarget;
-  if (!opts.output && tty.pipeTo) {
-    destination = tty.pipeTo;
-  } else if (opts.output) {
-    destination = path.resolve(process.cwd(), opts.output);
-  } else if (pluginConfig.tadaTurboLocation) {
-    destination = path.resolve(
-      path.dirname(configResult.configPath),
-      pluginConfig.tadaTurboLocation
-    );
-  } else if (pluginConfig.tadaOutputLocation) {
-    destination = path.resolve(
-      path.dirname(configResult.configPath),
-      pluginConfig.tadaOutputLocation,
-      '..',
-      'graphql-cache.d.ts'
-    );
-    yield logger.hintMessage(
-      'No output location was specified.\n' +
-        `The turbo cache will by default be saved as ${logger.code('"graphql-cache.d.ts"')}.\n` +
-        logger.hint(
-          `To change this, add a ${logger.code('"tadaTurboLocation"')} in your configuration,\n` +
-            `pass an ${logger.code('--output')} argument to this command,\n` +
-            'or pipe this command to an output file.'
-        )
-    );
-  } else {
-    throw logger.errorMessage(
-      'No output path was specified to write the output file to.\n' +
-        logger.hint(
-          `You have to either set ${logger.code('"tadaTurboLocation"')} in your configuration,\n` +
-            `pass an ${logger.code('--output')} argument to this command,\n` +
-            'or pipe this command to an output file.'
-        )
-    );
-  }
-
-  let cache: Record<string, string> = {};
   const generator = runTurbo({
     rootPath: configResult.rootPath,
     configPath: configResult.configPath,
     pluginConfig,
   });
 
+  const documents: TurboDocument[] = [];
   let warnings = 0;
   let totalFileCount = 0;
   let fileCount = 0;
@@ -98,7 +57,7 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
         totalFileCount = signal.fileCount;
       } else {
         fileCount++;
-        cache = Object.assign(cache, signal.cache);
+        documents.push(...signal.documents);
         warnings += signal.warnings.length;
         if (signal.warnings.length) {
           let buffer = logger.warningFile(signal.filePath);
@@ -116,16 +75,99 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
     throw logger.externalError('Could not build cache', error);
   }
 
-  const documentCount = Object.keys(cache).length;
-  if (warnings && opts.failOnWarn) {
-    throw logger.warningSummary(warnings, documentCount);
-  } else {
+  const projectPath = path.dirname(configResult.configPath);
+  if ('schema' in pluginConfig) {
+    let destination: WriteTarget;
+    if (!opts.output && tty.pipeTo) {
+      destination = tty.pipeTo;
+    } else if (opts.output) {
+      destination = path.resolve(process.cwd(), opts.output);
+    } else if (pluginConfig.tadaTurboLocation) {
+      destination = path.resolve(projectPath, pluginConfig.tadaTurboLocation);
+    } else if (pluginConfig.tadaOutputLocation) {
+      destination = path.resolve(
+        projectPath,
+        pluginConfig.tadaOutputLocation,
+        '..',
+        'graphql-cache.d.ts'
+      );
+      yield logger.hintMessage(
+        'No output location was specified.\n' +
+          `The turbo cache will by default be saved as ${logger.code('"graphql-cache.d.ts"')}.\n` +
+          logger.hint(
+            `To change this, add a ${logger.code('"tadaTurboLocation"')} in your configuration,\n` +
+              `pass an ${logger.code('--output')} argument to this command,\n` +
+              'or pipe this command to an output file.'
+          )
+      );
+    } else {
+      throw logger.errorMessage(
+        'No output path was specified to write the output file to.\n' +
+          logger.hint(
+            `You have to either set ${logger.code(
+              '"tadaTurboLocation"'
+            )} in your configuration,\n` +
+              `pass an ${logger.code('--output')} argument to this command,\n` +
+              'or pipe this command to an output file.'
+          )
+      );
+    }
+
+    if (warnings && opts.failOnWarn) {
+      throw logger.warningSummary(warnings, documents.length);
+    }
+
     try {
+      const cache: Record<string, string> = {};
+      for (const item of documents) cache[item.argumentKey] = item.documentType;
       const contents = createCacheContents(cache);
       await writeOutput(destination, contents);
     } catch (error) {
-      throw logger.externalError('Something went wrong while writing the cache file', error);
+      throw logger.externalError('Something went wrong while writing the type cache file', error);
     }
+
+    yield logger.infoSummary(warnings, documents.length);
+  } else {
+    if (opts.output) {
+      throw logger.errorMessage(
+        'Output path was specified, while multiple schemas are configured.\n' +
+          logger.hint(
+            `You can only output all schemas to their ${logger.code(
+              '"tadaTurboLocation"'
+            )} options\n` + `when multiple ${logger.code('schemas')} are set up.`
+          )
+      );
+    }
+
+    const documentCount: Record<string, number> = {};
+    for (const schemaConfig of pluginConfig.schemas) {
+      const { name, tadaTurboLocation } = schemaConfig;
+      if (!tadaTurboLocation) {
+        throw logger.errorMessage(
+          `No output path was specified to write the '${name}' type cache to.\n` +
+            logger.hint(
+              `You have to set ${logger.code('"tadaTurboLocation"')} in each schema configuration.`
+            )
+        );
+      }
+
+      try {
+        documentCount[name] = 0;
+        const cache: Record<string, string> = {};
+        for (const item of documents) {
+          cache[item.argumentKey] = item.documentType;
+          documentCount[name]++;
+        }
+        const contents = createCacheContents(cache);
+        await writeOutput(path.resolve(projectPath, tadaTurboLocation), contents);
+      } catch (error) {
+        throw logger.externalError(
+          `Something went wrong while writing the '${name}' schema's type cache file.`,
+          error
+        );
+      }
+    }
+
     yield logger.infoSummary(warnings, documentCount);
   }
 }

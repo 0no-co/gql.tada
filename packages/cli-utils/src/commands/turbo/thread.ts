@@ -1,10 +1,13 @@
 import ts from 'typescript';
 import type { GraphQLSPConfig } from '@gql.tada/internal';
 
+import { getSchemaNamesFromConfig } from '@gql.tada/internal';
+import { findAllCallExpressions } from '@0no-co/graphqlsp/api';
+
 import { programFactory } from '../../ts';
 import { expose } from '../../threads';
 
-import type { TurboSignal, TurboWarning } from './types';
+import type { TurboSignal, TurboWarning, TurboDocument } from './types';
 
 export interface TurboParams {
   rootPath: string;
@@ -13,6 +16,7 @@ export interface TurboParams {
 }
 
 async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSignal> {
+  const schemaNames = getSchemaNamesFromConfig(params.pluginConfig);
   const factory = programFactory(params);
 
   // NOTE: We add our override declaration here before loading all files
@@ -31,6 +35,7 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
   }
 
   const container = factory.build();
+  const pluginInfo = container.buildPluginInfo(params.pluginConfig);
   const sourceFiles = container.getSourceFiles();
 
   yield {
@@ -41,18 +46,37 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
   const checker = container.program.getTypeChecker();
   for (const sourceFile of sourceFiles) {
     let filePath = sourceFile.fileName;
-    const cache: Record<string, string> = {};
+    const documents: TurboDocument[] = [];
     const warnings: TurboWarning[] = [];
 
-    const calls = findAllCallExpressions(sourceFile, params.pluginConfig);
+    const calls = findAllCallExpressions(sourceFile, pluginInfo, false).nodes;
     for (const call of calls) {
-      const returnType = checker.getTypeAtLocation(call);
-      const argumentType = checker.getTypeAtLocation(call.arguments[0]);
+      const callExpression = call.node.parent;
+      if (!ts.isCallExpression(callExpression)) {
+        continue;
+      }
+
+      const position = container.getSourcePosition(sourceFile, callExpression.getStart());
+      filePath = position.fileName;
+      if (!schemaNames.has(call.schema)) {
+        warnings.push({
+          message: call.schema
+            ? `The '${call.schema}' schema is not in the configuration but was referenced by document.`
+            : schemaNames.size > 1
+              ? 'The document is not for a known schema. Have you re-generated the output file?'
+              : 'Multiple schemas are configured, but the document is not for a specific schema.',
+          file: position.fileName,
+          line: position.line,
+          col: position.col,
+        });
+        continue;
+      }
+
+      const returnType = checker.getTypeAtLocation(callExpression);
+      const argumentType = checker.getTypeAtLocation(call.node);
       // NOTE: `returnType.symbol` is incorrectly typed and is in fact
       // optional and not always present
       if (!returnType.symbol || returnType.symbol.getEscapedName() !== 'TadaDocumentNode') {
-        const position = container.getSourcePosition(sourceFile, call.getStart());
-        filePath = position.fileName;
         warnings.push({
           message:
             `The discovered document is not of type "TadaDocumentNode".\n` +
@@ -64,19 +88,25 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
         continue;
       }
 
-      const key: string =
+      const argumentKey: string =
         'value' in argumentType &&
         typeof argumentType.value === 'string' &&
         (argumentType.flags & ts.TypeFlags.StringLiteral) === 0
           ? JSON.stringify(argumentType.value)
-          : checker.typeToString(argumentType, call, BUILDER_FLAGS);
-      cache[key] = checker.typeToString(returnType, call, BUILDER_FLAGS);
+          : checker.typeToString(argumentType, callExpression, BUILDER_FLAGS);
+      const documentType = checker.typeToString(returnType, callExpression, BUILDER_FLAGS);
+
+      documents.push({
+        schemaName: call.schema,
+        argumentKey,
+        documentType,
+      });
     }
 
     yield {
       kind: 'FILE_TURBO',
       filePath,
-      cache,
+      documents,
       warnings,
     };
   }
@@ -102,21 +132,3 @@ declare module 'gql.tada' {
   }
 }
 `.trim();
-
-function findAllCallExpressions(
-  sourceFile: ts.SourceFile,
-  config: GraphQLSPConfig
-): Array<ts.CallExpression> {
-  const result: ts.CallExpression[] = [];
-  const templates = new Set([config.template, 'graphql', 'gql'].filter(Boolean));
-  function find(node: ts.Node) {
-    if (ts.isCallExpression(node) && templates.has(node.expression.getText())) {
-      result.push(node);
-      return;
-    } else {
-      ts.forEachChild(node, find);
-    }
-  }
-  find(sourceFile);
-  return result;
-}
