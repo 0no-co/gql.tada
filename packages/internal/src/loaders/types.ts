@@ -22,6 +22,16 @@ export interface SchemaLoader {
   loadSchema(): Promise<GraphQLSchema | null>;
 }
 
+export interface SchemaRef<Result = SchemaLoaderResult | null> {
+  /** Starts automatically updating the ref */
+  autoupdate(): () => void;
+  /** Loads the initial values for the schema */
+  load(): Promise<SchemaRef<SchemaLoaderResult>>;
+  current: Result;
+  multi: { [name: string]: Result };
+  version: number;
+}
+
 export type SchemaOrigin =
   | string
   | {
