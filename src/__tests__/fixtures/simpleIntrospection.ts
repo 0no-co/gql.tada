@@ -1,4 +1,5 @@
 export type simpleIntrospection = {
+  name: 'simpleSchema',
   __schema: {
     queryType: {
       name: 'Query',

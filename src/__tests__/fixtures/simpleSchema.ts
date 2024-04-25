@@ -1,5 +1,6 @@
 export type simpleSchema =
   {
+    name: 'simpleSchema';
     query: 'Query';
     mutation: 'Mutation';
     subscription: 'Subscription';
