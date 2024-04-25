@@ -20,6 +20,10 @@ const devlogItems = [
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
+  rewrites: {
+    'reference/graphqlsp-config.md': 'reference/config-format.md',
+  },
+
   lang: 'en-US',
   title: 'gql.tada 🪄',
   description: 'Magical GraphQL query engine for TypeScript',
@@ -162,8 +166,8 @@ export default defineConfig({
               link: '/reference/gql-tada-cli',
             },
             {
-              text: 'GraphQLSP Config',
-              link: '/reference/graphqlsp-config',
+              text: 'Config Format',
+              link: '/reference/config-format',
             },
           ],
         },
