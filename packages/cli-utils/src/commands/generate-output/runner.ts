@@ -40,6 +40,11 @@ export async function* run(tty: TTY, opts: OutputOptions): AsyncIterable<Compose
     throw logger.externalError('Failed to load configuration.', error);
   }
 
+  if (!('schema' in pluginConfig)) {
+    // TODO: Implement multi-schema support
+    throw logger.errorMessage('Multi-schema support is not implemented yet');
+  }
+
   // TODO: allow this to be overwritten using arguments (like in `generate schema`)
   const loader = load({
     origin: pluginConfig.schema,
