@@ -4,7 +4,14 @@ import path from 'node:path';
 import { loadFromSDL } from './sdl';
 import { loadFromURL } from './url';
 
-import type { SchemaLoaderResult, SchemaLoader, SchemaOrigin, SchemaRef } from './types';
+import type {
+  SchemaLoaderResult,
+  SchemaLoader,
+  SchemaOrigin,
+  SchemaRef,
+  SingleSchemaInput,
+  MultiSchemaInput,
+} from './types';
 
 export { loadFromSDL, loadFromURL };
 
@@ -44,16 +51,6 @@ export function load(config: LoadConfig): SchemaLoader {
   }
 }
 
-export type SingleSchemaInput = {
-  name?: string;
-  schema: SchemaOrigin;
-  tadaOutputLocation?: string;
-  tadaTurboLocation?: string;
-  tadaPersistedLocation?: string;
-};
-
-export type MultiSchemaInput = { schemas?: SingleSchemaInput[] };
-
 export function loadRef(
   input: SingleSchemaInput | MultiSchemaInput | (SingleSchemaInput & MultiSchemaInput),
   config?: BaseLoadConfig
@@ -79,7 +76,7 @@ export function loadRef(
       return acc;
     }, {}),
 
-    autoupdate(onUpdate: (ref: SchemaRef) => void) {
+    autoupdate(onUpdate) {
       teardowns.push(
         ...loaders.map(({ input, loader }) => {
           loader
@@ -102,7 +99,7 @@ export function loadRef(
             } else {
               ref.current = { ...input, ...result };
             }
-            onUpdate(ref);
+            onUpdate(ref, input);
           });
         })
       );
