@@ -49,25 +49,30 @@ export async function* run(tty: TTY, opts: SchemaOptions): AsyncIterable<Compose
       throw logger.externalError('Failed to load configuration.', error);
     }
 
-    if (!('schema' in pluginConfig)) {
-      // TODO: Implement multi-schema support
-      throw logger.errorMessage('Multi-schema support is not implemented yet');
-    }
-
     if (
+      'schema' in pluginConfig &&
       typeof pluginConfig.schema === 'string' &&
       path.extname(pluginConfig.schema) === '.graphql'
     ) {
       destination = path.resolve(path.dirname(configResult.configPath), pluginConfig.schema);
+    } else if (!('schema' in pluginConfig)) {
+      throw logger.errorMessage(
+        `Output path cannot be automatically determined when multiple schemas are configured,\n` +
+          `because multiple ${logger.code('schemas')} are set up.` +
+          logger.hint(
+            `You have to explicitly pass an ${logger.code(
+              '--output'
+            )} argument to this command,\n` + 'or pipe this command to an output file.'
+          )
+      );
     } else {
       throw logger.errorMessage(
-        `No output path was specified but writing to ${logger.code(
-          'schema'
-        )} is not a file path.\n` +
+        `Output path cannot be automatically determined,\n` +
+          `because ${logger.code('schema')} is not a file path.\n` +
           logger.hint(
-            `You have to either set ${logger.code('"schema"')} to a ${logger.code(
-              '.graphql'
-            )} file in your configuration,\n` +
+            `You have to either set ${logger.code(
+              '"schema"'
+            )} in your configuration to a ${logger.code('.graphql')} file,\n` +
               `pass an ${logger.code('--output')} argument to this command,\n` +
               'or pipe this command to an output file.'
           )

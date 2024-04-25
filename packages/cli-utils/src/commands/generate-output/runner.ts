@@ -98,7 +98,7 @@ export async function* run(tty: TTY, opts: OutputOptions): AsyncIterable<Compose
   } else {
     if (opts.output) {
       throw logger.errorMessage(
-        'Output path was specified with multiple schemas being configured..\n' +
+        'Output path was specified, while multiple schemas are configured.\n' +
           logger.hint(
             `You can only output all schemas to their ${logger.code(
               '"tadaOutputLocation"'
