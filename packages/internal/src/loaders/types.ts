@@ -7,6 +7,9 @@ export interface IntrospectionResult extends IntrospectionQuery {
 export interface SchemaLoaderResult {
   introspection: IntrospectionResult;
   schema: GraphQLSchema;
+  tadaOutputLocation?: string;
+  tadaTurboLocation?: string;
+  tadaPersistedLocation?: string;
 }
 
 export type OnSchemaUpdate = (result: SchemaLoaderResult) => void;
