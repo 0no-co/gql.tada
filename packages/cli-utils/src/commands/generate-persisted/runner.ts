@@ -31,6 +31,11 @@ export async function* run(tty: TTY, opts: PersistedOptions): AsyncIterable<Comp
     throw logger.externalError('Failed to load configuration.', error);
   }
 
+  if (!('schema' in pluginConfig)) {
+    // TODO: Implement multi-schema support
+    throw logger.errorMessage('Multi-schema support is not implemented yet');
+  }
+
   let destination: WriteTarget;
   if (!opts.output && tty.pipeTo) {
     destination = tty.pipeTo;

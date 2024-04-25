@@ -49,6 +49,11 @@ export async function* run(tty: TTY, opts: SchemaOptions): AsyncIterable<Compose
       throw logger.externalError('Failed to load configuration.', error);
     }
 
+    if (!('schema' in pluginConfig)) {
+      // TODO: Implement multi-schema support
+      throw logger.errorMessage('Multi-schema support is not implemented yet');
+    }
+
     if (
       typeof pluginConfig.schema === 'string' &&
       path.extname(pluginConfig.schema) === '.graphql'

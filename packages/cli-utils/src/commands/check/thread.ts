@@ -19,6 +19,11 @@ export interface DiagnosticsParams {
 async function* _runDiagnostics(
   params: DiagnosticsParams
 ): AsyncIterableIterator<DiagnosticSignal> {
+  if (!('schema' in params.pluginConfig)) {
+    // TODO: Implement multi-schema support
+    throw new Error('Multi-schema support is not implemented yet');
+  }
+
   const projectPath = path.dirname(params.configPath);
   const loader = load({ origin: params.pluginConfig.schema, rootPath: projectPath });
   const factory = programFactory(params);

@@ -3,24 +3,32 @@ import { TadaError } from './errors';
 import { getURLConfig } from './loaders';
 import type { SchemaOrigin } from './loaders';
 
-export interface GraphQLSPConfig {
+export interface BaseConfig {
+  template?: string;
+}
+
+export interface SchemaConfig {
+  name?: string;
   schema: SchemaOrigin;
   tadaOutputLocation?: string;
   tadaTurboLocation?: string;
   tadaPersistedLocation?: string;
-  template?: string;
 }
 
-export const parseConfig = (
-  input: unknown,
-  /** Defines the path of the "main" `tsconfig.json` file.
-   * @remarks
-   * This should be the `rootPath` output from `loadConfig`,
-   * which is the path of the user's `tsconfig.json` before
-   * resolving `extends` options.
-   */
-  rootPath: string = process.cwd()
-): GraphQLSPConfig => {
+const SCHEMA_PROPS = [
+  'name',
+  'tadaOutputLocation',
+  'tadaTurboLocation',
+  'tadaPersistedLocation',
+] as const;
+
+interface MultiSchemaConfig extends SchemaConfig {
+  name: string;
+}
+
+export type GraphQLSPConfig = BaseConfig & (SchemaConfig | { schemas: MultiSchemaConfig[] });
+
+const parseSchemaConfig = (input: unknown, rootPath: string): SchemaConfig => {
   const resolveConfigDir = (input: string | undefined) => {
     if (!input) return input;
     return path.normalize(
@@ -37,13 +45,13 @@ export const parseConfig = (
   };
 
   if (input == null || typeof input !== 'object') {
-    throw new TadaError(`Configuration was not loaded properly (Received: ${input})`);
+    throw new TadaError(`Schema is not configured properly (Received: ${input})`);
   }
 
   if ('schema' in input && input.schema && typeof input.schema === 'object') {
     const { schema } = input;
     if (!('url' in schema)) {
-      throw new TadaError('Configuration contains a `schema` object, but no `url` property');
+      throw new TadaError('Schema contains a `schema` object, but no `url` property');
     }
 
     if ('headers' in schema && schema.headers && typeof schema.headers === 'object') {
@@ -55,41 +63,37 @@ export const parseConfig = (
         }
       }
     } else if ('headers' in schema) {
-      throw new TadaError(
-        "Configuration contains a `schema.headers` property, but it's not an object"
-      );
+      throw new TadaError("Schema contains a `schema.headers` property, but it's not an object");
     }
-  } else if (!('schema' in input) || typeof input.schema !== 'string') {
-    throw new TadaError('Configuration is missing a `schema` property');
+  }
+
+  if (!('schema' in input) || typeof input.schema !== 'string') {
+    throw new TadaError('Schema is missing a `schema` property');
   } else if (
     'tadaOutputLocation' in input &&
     input.tadaOutputLocation &&
     typeof input.tadaOutputLocation !== 'string'
   ) {
     throw new TadaError(
-      "Configuration contains a `tadaOutputLocation` property, but it's not a file path"
+      "Schema contains a `tadaOutputLocation` property, but it's not a file path"
     );
   } else if (
     'tadaTurboLocation' in input &&
     input.tadaTurboLocation &&
     typeof input.tadaTurboLocation !== 'string'
   ) {
-    throw new TadaError(
-      "Configuration contains a `tadaTurboLocation` property, but it's not a file path"
-    );
+    throw new TadaError("Schema contains a `tadaTurboLocation` property, but it's not a file path");
   } else if (
     'tadaPersistedLocation' in input &&
     input.tadaPersistedLocation &&
     typeof input.tadaPersistedLocation !== 'string'
   ) {
     throw new TadaError(
-      "Configuration contains a `tadaPersistedLocation` property, but it's not a file path"
+      "Schema contains a `tadaPersistedLocation` property, but it's not a file path"
     );
-  } else if ('template' in input && input.template && typeof input.template !== 'string') {
-    throw new TadaError("Configuration contains a `template` property, but it's not a string");
   }
 
-  const output = input as any as GraphQLSPConfig;
+  const output = input as any as SchemaConfig;
 
   let schema: SchemaOrigin = output.schema;
   if (typeof schema === 'string') {
@@ -99,8 +103,88 @@ export const parseConfig = (
 
   return {
     ...output,
+    schema,
     tadaOutputLocation: resolveConfigDir(output.tadaOutputLocation),
     tadaTurboLocation: resolveConfigDir(output.tadaTurboLocation),
     tadaPersistedLocation: resolveConfigDir(output.tadaPersistedLocation),
   };
+};
+
+export const parseConfig = (
+  input: unknown,
+  /** Defines the path of the "main" `tsconfig.json` file.
+   * @remarks
+   * This should be the `rootPath` output from `loadConfig`,
+   * which is the path of the user's `tsconfig.json` before
+   * resolving `extends` options.
+   */
+  rootPath: string = process.cwd()
+): GraphQLSPConfig => {
+  if (input == null || typeof input !== 'object') {
+    throw new TadaError(`Configuration is of an invalid type (Received: ${input})`);
+  } else if ('template' in input && input.template && typeof input.template !== 'string') {
+    throw new TadaError("Configuration contains a `template` property, but it's not a string");
+  } else if ('name' in input && input.name && typeof input.name !== 'string') {
+    throw new TadaError("Configuration contains a `name` property, but it's not a string");
+  }
+
+  if ('schemas' in input) {
+    if (!Array.isArray(input.schemas)) {
+      throw new TadaError("Configuration contains a `schema` property, but it's not an array");
+    }
+
+    if ('schema' in input) {
+      throw new TadaError(
+        'If configuration contains a `schemas` property, it cannot contain a `schema` configuration.'
+      );
+    } else if ('tadaOutputLocation' in input) {
+      throw new TadaError(
+        "If configuration contains a `schemas` property, it cannot contain a 'tadaOutputLocation` configuration."
+      );
+    } else if ('tadaTurboLocation' in input) {
+      throw new TadaError(
+        "If configuration contains a `schemas` property, it cannot contain a 'tadaTurboLocation` configuration."
+      );
+    } else if ('tadaPersistedLocation' in input) {
+      throw new TadaError(
+        "If configuration contains a `schemas` property, it cannot contain a 'tadaPersistedLocation` configuration."
+      );
+    }
+
+    const schemas = input.schemas.map((schema): MultiSchemaConfig => {
+      if (!('name' in schema) || !schema.name || typeof schema.name !== 'string')
+        throw new TadaError('All `schemas` configurations must contain a `name` label.');
+      return {
+        ...parseSchemaConfig(schema, rootPath),
+        name: schema.name,
+      };
+    });
+
+    for (const prop of SCHEMA_PROPS) {
+      const values = new Set(schemas.map((schema) => schema[prop])).size;
+      if (values !== schemas.length)
+        throw new TadaError(`All '${prop}' values in 'schemas' must be unique.`);
+    }
+
+    return { ...input, schemas };
+  } else {
+    return { ...input, ...parseSchemaConfig(input, rootPath) };
+  }
+};
+
+export const getSchemaConfigForName = (
+  config: GraphQLSPConfig,
+  name: string | undefined
+): SchemaConfig | null => {
+  if (name && 'name' in config && config.name === name) {
+    return config;
+  } else if (!name && !('schemas' in config)) {
+    return config;
+  } else if (name && 'schemas' in config) {
+    for (let index = 0; index < config.schemas.length; index++)
+      if (config.schemas[index].name === name) return config.schemas[index];
+    return null;
+  } else {
+    return null;
+  }
 };

@@ -155,6 +155,11 @@ export async function* run(): AsyncIterable<ComposeInput> {
     );
   }
 
+  if (!('schema' in pluginConfig)) {
+    // TODO: Implement multi-schema support
+    throw logger.errorMessage('Multi-schema support is not implemented yet');
+  }
+
   if (!pluginConfig.schema) {
     yield logger.failedTask(Messages.CHECK_TSCONFIG);
     throw logger.errorMessage(

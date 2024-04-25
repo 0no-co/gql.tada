@@ -92,6 +92,10 @@ interface AbstractSetupCache {
 interface setupCache extends AbstractSetupCache {}
 
 interface GraphQLTadaAPI<Schema extends SchemaLike, Config extends AbstractConfig> {
+  /** In "multi-schema" mode this identifies the schema.
+   * @internal */
+  readonly __name: Schema['name'];
+
   /** Function to create and compose GraphQL documents with result and variable types.
    *
    * @param input - A string of a GraphQL document.

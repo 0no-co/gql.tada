@@ -10,6 +10,8 @@ import type { obj } from './utils';
  * @see {@link setupSchema} for where to use this data.
  */
 export interface IntrospectionQuery {
+  /** This identifies the schema in a "multi-schema" configuration */
+  readonly name?: string;
   readonly __schema: IntrospectionSchema;
 }
 
@@ -186,6 +188,7 @@ type mapIntrospectionScalarTypes<Scalars extends ScalarsLike = DefaultScalars> =
 /** @internal */
 type mapIntrospection<Query extends IntrospectionLikeInput> = Query extends IntrospectionQuery
   ? {
+      name: Query['name'];
       query: Query['__schema']['queryType']['name'];
       mutation: Query['__schema']['mutationType'] extends { name: string }
         ? Query['__schema']['mutationType']['name']
@@ -201,6 +204,7 @@ type addIntrospectionScalars<
   Schema extends SchemaLike,
   Scalars extends ScalarsLike = DefaultScalars,
 > = {
+  name: Schema['name'];
   query: Schema['query'];
   mutation: Schema['mutation'];
   subscription: Schema['subscription'];
@@ -216,6 +220,7 @@ export type ScalarsLike = {
 };
 
 export type SchemaLike = {
+  name?: string;
   query: string;
   mutation?: any;
   subscription?: any;
