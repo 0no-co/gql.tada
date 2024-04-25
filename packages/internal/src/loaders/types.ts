@@ -27,7 +27,7 @@ export interface SchemaLoader {
 
 export interface SchemaRef<Result = SchemaLoaderResult | null> {
   /** Starts automatically updating the ref */
-  autoupdate(): () => void;
+  autoupdate(onUpdate: (ref: SchemaRef<Result>) => void): () => void;
   /** Loads the initial result for the schema */
   load(): Promise<SchemaRef<SchemaLoaderResult>>;
   current: Result;

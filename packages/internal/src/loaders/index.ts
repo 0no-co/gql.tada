@@ -79,17 +79,22 @@ export function loadRef(
       return acc;
     }, {}),
 
-    autoupdate() {
+    autoupdate(onUpdate: (ref: SchemaRef) => void) {
       teardowns.push(
         ...loaders.map(({ input, loader }) => {
-          loader.load().then((result) => {
-            ref.version++;
-            if (input.name) {
-              ref.multi[input.name] = { ...input, ...result };
-            } else {
-              ref.current = { ...input, ...result };
-            }
-          });
+          loader
+            .load()
+            .then((result) => {
+              ref.version++;
+              if (input.name) {
+                ref.multi[input.name] = { ...input, ...result };
+              } else {
+                ref.current = { ...input, ...result };
+              }
+            })
+            .catch((_error) => {
+              /*noop*/
+            });
           return loader.notifyOnUpdate((result) => {
             ref.version++;
             if (input.name) {
@@ -97,6 +102,7 @@ export function loadRef(
             } else {
               ref.current = { ...input, ...result };
             }
+            onUpdate(ref);
           });
         })
       );
