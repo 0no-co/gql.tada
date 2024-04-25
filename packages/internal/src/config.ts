@@ -15,6 +15,13 @@ export interface SchemaConfig {
   tadaPersistedLocation?: string;
 }
 
+const SCHEMA_PROPS = [
+  'name',
+  'tadaOutputLocation',
+  'tadaTurboLocation',
+  'tadaPersistedLocation',
+] as const;
+
 interface MultiSchemaConfig extends SchemaConfig {
   name: string;
 }
@@ -153,9 +160,10 @@ export const parseConfig = (
       };
     });
 
-    const names = new Set(schemas.map((schema) => schema.name));
-    if (names.size !== schemas.length) {
-      throw new TadaError('All `name` labels in `schemas` must be unique.');
+    for (const prop of SCHEMA_PROPS) {
+      const values = new Set(schemas.map((schema) => schema[prop])).size;
+      if (values !== schemas.length)
+        throw new TadaError(`All '${prop}' values in 'schemas' must be unique.`);
     }
 
     return { ...input, schemas };
