@@ -114,7 +114,7 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
     }
 
     if (warnings && opts.failOnWarn) {
-      throw logger.warningSummary(warnings, documents.length);
+      throw logger.warningSummary(warnings);
     }
 
     try {
@@ -170,7 +170,11 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
       }
     }
 
-    yield logger.infoSummary(warnings, documentCount);
+    if (warnings && opts.failOnWarn) {
+      throw logger.warningSummary(warnings);
+    } else {
+      yield logger.infoSummary(warnings, documentCount);
+    }
   }
 }
 

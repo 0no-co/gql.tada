@@ -101,7 +101,7 @@ export async function* run(tty: TTY, opts: PersistedOptions): AsyncIterable<Comp
     }
 
     if (warnings && opts.failOnWarn) {
-      throw logger.warningSummary(warnings, documents.length);
+      throw logger.warningSummary(warnings);
     } else if (documents.length) {
       try {
         const json: Record<string, string> = {};
@@ -165,7 +165,7 @@ export async function* run(tty: TTY, opts: PersistedOptions): AsyncIterable<Comp
     }
 
     if (warnings && opts.failOnWarn) {
-      throw logger.warningSummary(warnings, documentCount);
+      throw logger.warningSummary(warnings);
     } else {
       yield logger.infoSummary(warnings, documentCount);
     }

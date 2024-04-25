@@ -71,15 +71,8 @@ const documentSummary = (documentCount: number | Record<string, number>) => {
   return out;
 };
 
-export function warningSummary(
-  warningCount: number,
-  documentCount: number | Record<string, number>
-) {
-  return t.error([
-    t.cmd(t.CSI.Style, t.Style.Red),
-    `${t.Icons.Cross} ${warningCount} warnings\n`,
-    documentSummary(documentCount),
-  ]);
+export function warningSummary(warningCount: number) {
+  return t.error([t.cmd(t.CSI.Style, t.Style.Red), `${t.Icons.Cross} ${warningCount} warnings\n`]);
 }
 
 export function infoSummary(warningCount: number, documentCount: number | Record<string, number>) {
