@@ -220,7 +220,7 @@ export type ScalarsLike = {
 };
 
 export type SchemaLike = {
-  name?: string;
+  name?: any;
   query: string;
   mutation?: any;
   subscription?: any;
