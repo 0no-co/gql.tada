@@ -25,6 +25,12 @@ export interface SchemaLoader {
   loadSchema(): Promise<GraphQLSchema | null>;
 }
 
+export interface BaseLoadConfig {
+  rootPath?: string;
+  fetchInterval?: number;
+  assumeValid?: boolean;
+}
+
 export type SingleSchemaInput = {
   name?: string;
   schema: SchemaOrigin;
@@ -37,9 +43,12 @@ export type MultiSchemaInput = { schemas?: SingleSchemaInput[] };
 
 export interface SchemaRef<Result = SchemaLoaderResult | null> {
   /** Starts automatically updating the ref */
-  autoupdate(onUpdate: (ref: SchemaRef<Result>, input: SingleSchemaInput) => void): () => void;
+  autoupdate(
+    config: BaseLoadConfig,
+    onUpdate: (ref: SchemaRef<Result>, input: SingleSchemaInput) => void
+  ): () => void;
   /** Loads the initial result for the schema */
-  load(): Promise<SchemaRef<SchemaLoaderResult>>;
+  load(config: BaseLoadConfig): Promise<SchemaRef<SchemaLoaderResult>>;
   current: Result;
   multi: { [name: string]: Result };
   version: number;
