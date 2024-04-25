@@ -7,6 +7,11 @@ import { graphqlLanguage } from './graphql-textmate.mts';
 
 const devlogItems = [
   {
+    text: 'v1.6.0',
+    longText: 'v1.6.0 - Multi-Schema Mode',
+    link: '/devlog/2024-04-26',
+  },
+  {
     text: 'v1.5.0',
     longText: 'v1.5.0 - New CLI Workflows',
     link: '/devlog/2024-04-15',
