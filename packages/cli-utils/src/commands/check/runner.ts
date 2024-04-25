@@ -42,11 +42,6 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
     throw logger.externalError('Failed to load configuration.', error);
   }
 
-  if (!('schema' in pluginConfig)) {
-    // TODO: Implement multi-schema support
-    throw logger.errorMessage('Multi-schema support is not implemented yet');
-  }
-
   const summary: SeveritySummary = { warn: 0, error: 0, info: 0 };
   const minSeverity = opts.minSeverity;
   const generator = runDiagnostics({
