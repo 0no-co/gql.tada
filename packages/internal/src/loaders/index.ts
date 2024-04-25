@@ -45,16 +45,19 @@ export function load(config: LoadConfig): SchemaLoader {
 }
 
 type SingleSchema = { name?: string; schema: SchemaOrigin };
-type MultiSchema = { schemas: SingleSchema[] };
+type MultiSchema = { schemas?: SingleSchema[] };
 
-export function loadRef(input: SingleSchema & MultiSchema, config?: BaseLoadConfig): SchemaRef {
+export function loadRef(
+  input: SingleSchema | MultiSchema | (SingleSchema & MultiSchema),
+  config?: BaseLoadConfig
+): SchemaRef {
   const teardowns: (() => void)[] = [];
 
-  const loaders = input.schemas.map((item) => ({
+  const loaders = (('schemas' in input && input.schemas) || []).map((item) => ({
     name: item.name,
     loader: load({ ...config, origin: item.schema }),
   }));
-  if (input.schema) {
+  if ('schema' in input && input.schema) {
     loaders.push({
       name: input.name,
       loader: load({ ...config, origin: input.schema }),
