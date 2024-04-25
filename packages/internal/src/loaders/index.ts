@@ -21,6 +21,7 @@ export const getURLConfig = (origin: SchemaOrigin | null) => {
 };
 
 export interface LoadConfig {
+  name?: string;
   origin: SchemaOrigin;
   rootPath?: string;
   fetchInterval?: number;
@@ -30,11 +31,11 @@ export interface LoadConfig {
 export function load(config: LoadConfig): SchemaLoader {
   const urlOrigin = getURLConfig(config.origin);
   if (urlOrigin) {
-    return loadFromURL({ ...urlOrigin, interval: config.fetchInterval });
+    return loadFromURL({ ...urlOrigin, interval: config.fetchInterval, name: config.name });
   } else if (typeof config.origin === 'string') {
     const file = config.rootPath ? path.resolve(config.rootPath, config.origin) : config.origin;
     const assumeValid = config.assumeValid != null ? config.assumeValid : true;
-    return loadFromSDL({ file, assumeValid });
+    return loadFromSDL({ file, assumeValid, name: config.name });
   } else {
     throw new Error(`Configuration contains an invalid "schema" option`);
   }

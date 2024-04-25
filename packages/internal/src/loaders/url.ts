@@ -9,6 +9,7 @@ import type { SupportedFeatures, IntrospectSupportQueryData } from './query';
 import type { SchemaLoader, SchemaLoaderResult, OnSchemaUpdate } from './types';
 
 interface LoadFromURLConfig {
+  name?: string;
   url: URL | string;
   headers?: HeadersInit;
   interval?: number;
@@ -78,7 +79,10 @@ export function loadFromURL(config: LoadFromURLConfig): SchemaLoader {
       } else if (introspectionResult.data) {
         const introspection = introspectionResult.data;
         return {
-          introspection,
+          introspection: {
+            ...introspection,
+            name: config.name,
+          },
           schema: buildClientSchema(introspection, { assumeValid: true }),
         };
       } else {
@@ -124,6 +128,9 @@ export function loadFromURL(config: LoadFromURLConfig): SchemaLoader {
   };
 
   return {
+    get name() {
+      return config.name;
+    },
     async load(reload?: boolean) {
       return reload || !result ? (result = await load()) : result;
     },

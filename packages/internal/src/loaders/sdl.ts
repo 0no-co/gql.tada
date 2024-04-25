@@ -10,6 +10,7 @@ import type { SupportedFeatures } from './query';
 import type { SchemaLoader, SchemaLoaderResult, OnSchemaUpdate } from './types';
 
 interface LoadFromSDLConfig {
+  name?: string;
   assumeValid?: boolean;
   file: string;
 }
@@ -40,7 +41,10 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
         );
       }
       return {
-        introspection,
+        introspection: {
+          ...introspection,
+          name: config.name,
+        },
         schema: buildClientSchema(introspection, { assumeValid: !!config.assumeValid }),
       };
     } else {
@@ -50,7 +54,10 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
       if (queryResult.errors) {
         throw new CombinedError({ graphQLErrors: queryResult.errors as any[] });
       } else if (queryResult.data) {
-        const introspection = queryResult.data as unknown as IntrospectionQuery;
+        const introspection = {
+          ...(queryResult.data as unknown as IntrospectionQuery),
+          name: config.name,
+        };
         return { introspection, schema };
       } else {
         throw new Error(
@@ -81,6 +88,9 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
   };
 
   return {
+    get name() {
+      return config.name;
+    },
     async load(reload?: boolean) {
       return reload || !result ? (result = await load()) : result;
     },
