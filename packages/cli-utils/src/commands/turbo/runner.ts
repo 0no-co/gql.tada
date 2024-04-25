@@ -155,8 +155,10 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
         documentCount[name] = 0;
         const cache: Record<string, string> = {};
         for (const item of documents) {
-          cache[item.argumentKey] = item.documentType;
-          documentCount[name]++;
+          if (item.schemaName === name) {
+            cache[item.argumentKey] = item.documentType;
+            documentCount[name]++;
+          }
         }
         const contents = createCacheContents(cache);
         await writeOutput(path.resolve(projectPath, tadaTurboLocation), contents);

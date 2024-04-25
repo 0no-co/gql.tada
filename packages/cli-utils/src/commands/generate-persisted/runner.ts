@@ -147,8 +147,10 @@ export async function* run(tty: TTY, opts: PersistedOptions): AsyncIterable<Comp
         documentCount[name] = 0;
         const json: Record<string, string> = {};
         for (const item of documents) {
-          json[item.hashKey] = item.document;
-          documentCount[name]++;
+          if (item.schemaName === name) {
+            json[item.hashKey] = item.document;
+            documentCount[name]++;
+          }
         }
         if (documentCount[name]) {
           const contents = JSON.stringify(json, null, 2);
