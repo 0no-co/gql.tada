@@ -1,9 +1,8 @@
 import * as path from 'node:path';
 import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
-import type { IntrospectionQuery } from 'graphql';
 
 import {
-  load,
+  loadRef,
   loadConfig,
   parseConfig,
   minifyIntrospection,
@@ -40,66 +39,110 @@ export async function* run(tty: TTY, opts: OutputOptions): AsyncIterable<Compose
     throw logger.externalError('Failed to load configuration.', error);
   }
 
-  if (!('schema' in pluginConfig)) {
-    // TODO: Implement multi-schema support
-    throw logger.errorMessage('Multi-schema support is not implemented yet');
-  }
-
-  // TODO: allow this to be overwritten using arguments (like in `generate schema`)
-  const loader = load({
-    origin: pluginConfig.schema,
-    rootPath: path.dirname(configResult.configPath),
-  });
-
-  let introspection: IntrospectionQuery;
+  let schemaRef = loadRef(pluginConfig);
   try {
-    const loadResult = await loader.load();
-    introspection = loadResult.introspection;
+    schemaRef = await schemaRef.load({ rootPath: path.dirname(configResult.configPath) });
   } catch (error) {
-    throw logger.externalError('Failed to load introspection.', error);
+    throw logger.externalError('Failed to load schema(s).', error);
   }
 
-  let destination: WriteTarget;
-  if (!opts.output && tty.pipeTo) {
-    destination = tty.pipeTo;
-  } else if (opts.output) {
-    destination = path.resolve(process.cwd(), opts.output);
-  } else if (pluginConfig.tadaOutputLocation) {
-    destination = path.resolve(
-      path.dirname(configResult.configPath),
-      pluginConfig.tadaOutputLocation
-    );
+  const projectPath = path.dirname(configResult.configPath);
+  if ('schema' in pluginConfig) {
+    const schema = schemaRef.current!;
+
+    let destination: WriteTarget;
+    if (!opts.output && tty.pipeTo) {
+      destination = tty.pipeTo;
+    } else if (opts.output) {
+      destination = path.resolve(process.cwd(), opts.output);
+    } else if (pluginConfig.tadaOutputLocation) {
+      destination = pluginConfig.tadaOutputLocation;
+    } else {
+      throw logger.errorMessage(
+        'No output path was specified to write the output file to.\n' +
+          logger.hint(
+            `You have to either set ${logger.code(
+              '"tadaOutputLocation"'
+            )} in your configuration,\n` +
+              `pass an ${logger.code('--output')} argument to this command,\n` +
+              'or pipe this command to an output file.'
+          )
+      );
+    }
+
+    let contents: string;
+    try {
+      contents = outputIntrospectionFile(minifyIntrospection(schema.introspection), {
+        fileType:
+          destination && typeof destination === 'string'
+            ? destination
+            : opts.forceTSFormat
+              ? '.ts'
+              : '.d.ts',
+        shouldPreprocess: !opts.disablePreprocessing,
+      });
+    } catch (error) {
+      throw logger.externalError('Could not generate introspection output', error);
+    }
+
+    try {
+      await writeOutput(destination, contents);
+    } catch (error) {
+      throw logger.externalError(
+        'Something went wrong while writing the introspection file',
+        error
+      );
+    }
+
+    yield logger.summary(!opts.forceTSFormat && typeof destination !== 'string');
   } else {
-    throw logger.errorMessage(
-      'No output path was specified to write the output file to.\n' +
-        logger.hint(
-          `You have to either set ${logger.code('"tadaOutputLocation"')} in your configuration,\n` +
-            `pass an ${logger.code('--output')} argument to this command,\n` +
-            'or pipe this command to an output file.'
-        )
-    );
-  }
+    if (opts.output) {
+      throw logger.errorMessage(
+        'Output path was specified with multiple schemas being configured..\n' +
+          logger.hint(
+            `You can only output all schemas to their ${logger.code(
+              '"tadaOutputLocation"'
+            )} options\n` + `when multiple ${logger.code('schemas')} are set up.`
+          )
+      );
+    }
 
-  let contents: string;
-  try {
-    contents = outputIntrospectionFile(minifyIntrospection(introspection), {
-      fileType:
-        destination && typeof destination === 'string'
-          ? destination
-          : opts.forceTSFormat
-            ? '.ts'
-            : '.d.ts',
-      shouldPreprocess: !opts.disablePreprocessing,
-    });
-  } catch (error) {
-    throw logger.externalError('Could not generate introspection output', error);
-  }
+    for (const schemaName in schemaRef.multi) {
+      const schema = schemaRef.multi[schemaName];
+      if (!schema) {
+        continue;
+      } else if (!schema.tadaOutputLocation) {
+        throw logger.errorMessage(
+          `No output path was specified to write the '${schemaName}' schema to.\n` +
+            logger.hint(
+              `You have to set ${logger.code('"tadaOutputLocation"')} in each schema configuration.`
+            )
+        );
+      }
 
-  try {
-    await writeOutput(destination, contents);
-  } catch (error) {
-    throw logger.externalError('Something went wrong while writing the introspection file', error);
-  }
+      let contents: string;
+      try {
+        contents = outputIntrospectionFile(minifyIntrospection(schema.introspection), {
+          fileType: schema.tadaOutputLocation,
+          shouldPreprocess: !opts.disablePreprocessing,
+        });
+      } catch (error) {
+        throw logger.externalError(
+          `Could not generate any output for the '${schemaName}' schema`,
+          error
+        );
+      }
 
-  yield logger.summary(!opts.forceTSFormat && typeof destination !== 'string');
+      try {
+        await writeOutput(path.resolve(projectPath, schema.tadaOutputLocation), contents);
+      } catch (error) {
+        throw logger.externalError(
+          `Something went wrong while writing the '${schemaName}' schema's output`,
+          error
+        );
+      }
+    }
+
+    yield logger.summary();
+  }
 }
