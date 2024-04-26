@@ -1,5 +1,14 @@
 # @gql.tada/cli-utils
 
+## 1.3.1
+
+### Patch Changes
+
+- Add missing default compiler options when instantiating TypeScript in `check`, `generate persisted`, and `turbo` commands
+  Submitted by [@kitten](https://github.com/kitten) (See [#266](https://github.com/0no-co/gql.tada/pull/266))
+- Updated dependencies (See [#268](https://github.com/0no-co/gql.tada/pull/268))
+  - @gql.tada/internal@0.3.2
+
 ## 1.3.0
 
 ### Minor Changes
