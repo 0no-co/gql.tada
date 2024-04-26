@@ -49,7 +49,7 @@
   },
   "dependencies": {
     "@0no-co/graphql.web": "^1.0.5",
-    "@0no-co/graphqlsp": "^1.10.3",
+    "@0no-co/graphqlsp": "^1.12.0",
     "@gql.tada/cli-utils": "workspace:*",
     "@gql.tada/internal": "workspace:*"
   },
