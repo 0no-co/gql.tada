@@ -41,7 +41,7 @@ async function* _runDiagnostics(
 
   for (const sourceFile of sourceFiles) {
     let filePath = sourceFile.fileName;
-    const diagnostics = getGraphQLDiagnostics(filePath, schemaRef as any, pluginInfo);
+    const diagnostics = getGraphQLDiagnostics(filePath, schemaRef, pluginInfo);
     const messages: DiagnosticMessage[] = [];
 
     if (diagnostics && diagnostics.length) {
