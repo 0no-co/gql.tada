@@ -445,39 +445,3 @@ can get confusing and annoying.
 We recommend you to disable this check if you know that you're not
 going to follow [fragment co-location](/guides/fragment-colocation).
 :::
-
----
-
-### `template` <Badge type="warning" text="advanced" />
-
-By default, `@0no-co/graphqlsp` will recognize any function named `graphql()` or `gql()`
-as containing GraphQL documents.
-
-Customizing this option allows us to give these functions another name. For example,
-if we wanted to name a function `parseGraphQL` instead, we may set the option to `"parseGraphQL"`.
-
-::: code-group
-```json [tsconfig.json] {7}
-{
-  "compilerOptions": {
-    "plugins": [
-      {
-        "name": "@0no-co/graphqlsp",
-        "schema": "./schema.graphql",
-        "template": "parseGraphQL"
-      }
-    ]
-  }
-}
-```
-:::
-
-> [!NOTE]
-> It is not recommended to change the default template name to anything but `gql` or `graphql` for
-> editor support. Many editors, including VSCode, will syntax highlight GraphQL syntax inside strings
-> based on function names, and naming the functions anything but `gql` and `graphql` may break syntax
-> highlighting for you.
->
-> In VSCode however, it may be possible to restore syntax highlighting by prefixing strings inside
-> custom tag functions with an inline `/* GraphQL */` comment.
-> However, this won’t work in every editor either!
