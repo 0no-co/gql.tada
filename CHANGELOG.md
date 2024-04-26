@@ -1,5 +1,18 @@
 # gql.tada
 
+## 1.6.0
+
+### Minor Changes
+
+- Implement multi-schema support. Read more about it [in the v1.6.0 Devlog post](https://gql-tada.0no.co/devlog/2024-04-26).
+  Submitted by undefined (See https://github.com/0no-co/gql.tada/pull/261)
+
+### Patch Changes
+
+- Updated dependencies (See [#264](https://github.com/0no-co/gql.tada/pull/264), [#261](https://github.com/0no-co/gql.tada/pull/261), and https://github.com/0no-co/gql.tada/pull/261)
+  - @gql.tada/cli-utils@1.3.0
+  - @gql.tada/internal@0.3.1
+
 ## 1.5.8
 
 ### Patch Changes

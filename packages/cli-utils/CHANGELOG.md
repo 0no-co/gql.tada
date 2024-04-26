@@ -1,5 +1,21 @@
 # @gql.tada/cli-utils
 
+## 1.3.0
+
+### Minor Changes
+
+- Add multi-schema support to the CLI (See [RFC](https://github.com/0no-co/gql.tada/issues/248) for more details.) With multi-schema support, the configuration now accepts `schemas` as an option to set up multiple schemas that can be instantiated with `initGraphQLTada()` in parallel in the same codebase
+  Submitted by [@kitten](https://github.com/kitten) (See [#261](https://github.com/0no-co/gql.tada/pull/261))
+- Implement multi-schema support. Read more about it [in the v1.6.0 Devlog post](https://gql-tada.0no.co/devlog/2024-04-26).
+  Submitted by undefined (See https://github.com/0no-co/gql.tada/pull/261)
+
+### Patch Changes
+
+- Upgrade to `@0no-co/graphqlsp@^0.12.0`
+  Submitted by [@kitten](https://github.com/kitten) (See [#264](https://github.com/0no-co/gql.tada/pull/264))
+- Updated dependencies (See https://github.com/0no-co/gql.tada/pull/261)
+  - @gql.tada/internal@0.3.1
+
 ## 1.2.2
 
 ### Patch Changes
