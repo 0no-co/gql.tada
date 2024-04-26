@@ -154,6 +154,14 @@ export const parseConfig = (
     const schemas = input.schemas.map((schema): MultiSchemaConfig => {
       if (!('name' in schema) || !schema.name || typeof schema.name !== 'string')
         throw new TadaError('All `schemas` configurations must contain a `name` label.');
+      if (
+        !('tadaOutputLocation' in schema) ||
+        !schema.tadaOutputLocation ||
+        typeof schema.tadaOutputLocation !== 'string'
+      )
+        throw new TadaError(
+          'All `schemas` configurations must contain a `tadaOutputLocation` path.'
+        );
       return {
         ...parseSchemaConfig(schema, rootPath),
         name: schema.name,
@@ -161,9 +169,10 @@ export const parseConfig = (
     });
 
     for (const prop of SCHEMA_PROPS) {
-      const values = new Set(schemas.map((schema) => schema[prop])).size;
-      if (values !== schemas.length)
-        throw new TadaError(`All '${prop}' values in 'schemas' must be unique.`);
+      const values = schemas.map((schema) => schema[prop]).filter(Boolean);
+      const uniqueValues = new Set(values);
+      if (values.length !== uniqueValues.size)
+        throw new TadaError(`All '${prop}' values in \`schemas[]\` must be unique.`);
     }
 
     return { ...input, schemas };
