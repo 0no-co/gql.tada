@@ -7,6 +7,11 @@ import { graphqlLanguage } from './graphql-textmate.mts';
 
 const devlogItems = [
   {
+    text: 'v1.6.0',
+    longText: 'v1.6.0 - Multi-Schema Mode',
+    link: '/devlog/2024-04-26',
+  },
+  {
     text: 'v1.5.0',
     longText: 'v1.5.0 - New CLI Workflows',
     link: '/devlog/2024-04-15',
@@ -15,6 +20,10 @@ const devlogItems = [
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
+  rewrites: {
+    'reference/graphqlsp-config.md': 'reference/config-format.md',
+  },
+
   lang: 'en-US',
   title: 'gql.tada 🪄',
   description: 'Magical GraphQL query engine for TypeScript',
@@ -157,8 +166,8 @@ export default defineConfig({
               link: '/reference/gql-tada-cli',
             },
             {
-              text: 'GraphQLSP Config',
-              link: '/reference/graphqlsp-config',
+              text: 'Config Format',
+              link: '/reference/config-format',
             },
           ],
         },
