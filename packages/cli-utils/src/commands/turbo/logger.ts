@@ -34,16 +34,37 @@ export function warningMessage(message: TurboWarning) {
   ]);
 }
 
-export function warningSummary(warningCount: number, documentCount: number) {
-  return t.error([
-    t.cmd(t.CSI.Style, t.Style.Red),
-    `${t.Icons.Cross} ${warningCount} warnings `,
-    t.cmd(t.CSI.Style, t.Style.BrightBlack),
-    `(${documentCount} document types cached)\n`,
-  ]);
+const documentSummary = (documentCount: number | Record<string, number>) => {
+  let out = '';
+  if (typeof documentCount === 'number') {
+    out += t.text([
+      t.cmd(t.CSI.Style, t.Style.BrightGreen),
+      `${t.Icons.Tick} Type cache was generated successfully `,
+      t.cmd(t.CSI.Style, t.Style.BrightBlack),
+      `(${documentCount} document types cached)\n`,
+    ]);
+  } else {
+    out += t.text([
+      t.cmd(t.CSI.Style, t.Style.BrightGreen),
+      `${t.Icons.Tick} Type caches were generated successfully.\n`,
+    ]);
+    for (const schemaName in documentCount) {
+      out += t.text([
+        t.cmd(t.CSI.Style, t.Style.BrightBlack),
+        `${t.HeavyBox.BottomLeft} `,
+        t.cmd(t.CSI.Style, t.Style.BrightBlue),
+        `${documentCount[schemaName]} document types cached for the '${schemaName}' schema\n`,
+      ]);
+    }
+  }
+  return out;
+};
+
+export function warningSummary(warningCount: number) {
+  return t.error([t.cmd(t.CSI.Style, t.Style.Red), `${t.Icons.Cross} ${warningCount} warnings\n`]);
 }
 
-export function infoSummary(warningCount: number, documentCount: number) {
+export function infoSummary(warningCount: number, documentCount: number | Record<string, number>) {
   let out = '';
   if (warningCount) {
     out += t.text([
@@ -52,16 +73,7 @@ export function infoSummary(warningCount: number, documentCount: number) {
       ` ${warningCount} warnings\n`,
     ]);
   }
-  if (documentCount) {
-    out += t.text([
-      t.cmd(t.CSI.Style, t.Style.BrightGreen),
-      `${t.Icons.Tick} Type cache was generated successfully `,
-      t.cmd(t.CSI.Style, t.Style.BrightBlack),
-      `(${documentCount} document types cached)\n`,
-    ]);
-  } else {
-    out += t.text([t.cmd(t.CSI.Style, t.Style.Blue), `${t.Icons.Info} No documents were found\n`]);
-  }
+  out += documentSummary(documentCount);
   return out;
 }
 

@@ -5,10 +5,16 @@ export interface TurboWarning {
   col: number;
 }
 
+export interface TurboDocument {
+  schemaName: string | null;
+  argumentKey: string;
+  documentType: string;
+}
+
 export interface FileTurboSignal {
   kind: 'FILE_TURBO';
   filePath: string;
-  cache: Record<string, string>;
+  documents: TurboDocument[];
   warnings: TurboWarning[];
 }
 

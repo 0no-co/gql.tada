@@ -172,6 +172,13 @@ export const parseConfig = (
   }
 };
 
+export const getSchemaNamesFromConfig = (config: GraphQLSPConfig): Set<null | string> => {
+  return new Set<null | string>([
+    ...('schema' in config ? [null] : []),
+    ...('schemas' in config ? config.schemas.map((input) => input.name) : []),
+  ]);
+};
+
 export const getSchemaConfigForName = (
   config: GraphQLSPConfig,
   name: string | undefined

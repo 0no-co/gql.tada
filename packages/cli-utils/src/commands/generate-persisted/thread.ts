@@ -3,6 +3,7 @@ import { print } from '@0no-co/graphql.web';
 
 import type { FragmentDefinitionNode } from '@0no-co/graphql.web';
 import type { GraphQLSPConfig } from '@gql.tada/internal';
+import { getSchemaNamesFromConfig } from '@gql.tada/internal';
 
 import {
   findAllPersistedCallExpressions,
@@ -14,7 +15,7 @@ import {
 import { programFactory } from '../../ts';
 import { expose } from '../../threads';
 
-import type { PersistedSignal, PersistedWarning } from './types';
+import type { PersistedSignal, PersistedWarning, PersistedDocument } from './types';
 
 export interface PersistedParams {
   rootPath: string;
@@ -23,6 +24,7 @@ export interface PersistedParams {
 }
 
 async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<PersistedSignal> {
+  const schemaNames = getSchemaNamesFromConfig(params.pluginConfig);
   const factory = programFactory(params);
 
   const externalFiles = factory.createExternalFiles();
@@ -32,6 +34,7 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
   }
 
   const container = factory.build();
+  const pluginInfo = container.buildPluginInfo(params.pluginConfig);
   const sourceFiles = container.getSourceFiles();
 
   yield {
@@ -41,17 +44,31 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
 
   for (const sourceFile of sourceFiles) {
     let filePath = sourceFile.fileName;
-    const documents: Record<string, string> = {};
+    const documents: PersistedDocument[] = [];
     const warnings: PersistedWarning[] = [];
 
-    const calls = findAllPersistedCallExpressions(sourceFile);
+    const calls = findAllPersistedCallExpressions(sourceFile, pluginInfo);
     for (const call of calls) {
-      const position = container.getSourcePosition(sourceFile, call.getStart());
+      const position = container.getSourcePosition(sourceFile, call.node.getStart());
       filePath = position.fileName;
 
-      const hashArg = call.arguments[0];
-      const docArg = call.arguments[1];
-      const typeQuery = call.typeArguments && call.typeArguments[0];
+      if (!schemaNames.has(call.schema)) {
+        warnings.push({
+          message: call.schema
+            ? `The '${call.schema}' schema is not in the configuration but was referenced by "graphql.persisted".`
+            : schemaNames.size > 1
+              ? 'The document is not for a known schema. Have you re-generated the output file?'
+              : 'Multiple schemas are configured, but the document is not for a specific schema.',
+          file: position.fileName,
+          line: position.line,
+          col: position.col,
+        });
+        continue;
+      }
+
+      const hashArg = call.node.arguments[0];
+      const docArg = call.node.arguments[1];
+      const typeQuery = call.node.typeArguments && call.node.typeArguments[0];
       if (!hashArg || !ts.isStringLiteral(hashArg)) {
         warnings.push({
           message:
@@ -74,12 +91,12 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
       }
 
       let foundNode: ts.CallExpression | null = null;
-      let referencingNode: ts.Node = call;
+      let referencingNode: ts.Node = call.node;
       if (docArg && (ts.isCallExpression(docArg) || ts.isIdentifier(docArg))) {
         const result = getDocumentReferenceFromDocumentNode(
           docArg,
           sourceFile.fileName,
-          container.buildPluginInfo(params.pluginConfig)
+          pluginInfo
         );
         foundNode = result.node;
         referencingNode = docArg;
@@ -87,7 +104,7 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
         const result = getDocumentReferenceFromTypeQuery(
           typeQuery,
           sourceFile.fileName,
-          container.buildPluginInfo(params.pluginConfig)
+          pluginInfo
         );
         foundNode = result.node;
         referencingNode = typeQuery;
@@ -134,7 +151,12 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
 
       let document = operation;
       for (const fragment of fragments) document += '\n\n' + print(fragment);
-      documents[hashArg.getText().slice(1, -1)] = document;
+
+      documents.push({
+        schemaName: call.schema,
+        hashKey: hashArg.getText().slice(1, -1),
+        document,
+      });
     }
 
     yield {

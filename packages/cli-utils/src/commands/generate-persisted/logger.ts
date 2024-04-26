@@ -34,25 +34,20 @@ export function warningMessage(message: PersistedWarning) {
   ]);
 }
 
-export function warningSummary(warningCount: number, documentCount: number) {
-  return t.error([
-    t.cmd(t.CSI.Style, t.Style.Red),
-    `${t.Icons.Cross} ${warningCount} warnings `,
-    t.cmd(t.CSI.Style, t.Style.BrightBlack),
-    `(${documentCount} documents extracted)\n`,
-  ]);
-}
-
-export function infoSummary(warningCount: number, documentCount: number) {
+const documentSummary = (documentCount: number | Record<string, number>) => {
   let out = '';
-  if (warningCount) {
+  if (
+    typeof documentCount !== 'number'
+      ? Object.values(documentCount).every((value) => !value)
+      : !documentCount
+  ) {
     out += t.text([
-      t.cmd(t.CSI.Style, t.Style.BrightYellow),
-      t.Icons.Warning,
-      ` ${warningCount} warnings\n`,
+      t.cmd(t.CSI.Style, t.Style.Blue),
+      `${t.Icons.Info} No persisted documents were found `,
+      t.cmd(t.CSI.Style, t.Style.BrightBlack),
+      `(Persisted manifests were not generated)\n`,
     ]);
-  }
-  if (documentCount) {
+  } else if (typeof documentCount === 'number') {
     out += t.text([
       t.cmd(t.CSI.Style, t.Style.BrightGreen),
       `${t.Icons.Tick} Persisted manifest was generated successfully `,
@@ -61,12 +56,35 @@ export function infoSummary(warningCount: number, documentCount: number) {
     ]);
   } else {
     out += t.text([
-      t.cmd(t.CSI.Style, t.Style.Blue),
-      `${t.Icons.Info} No persisted documents were found `,
-      t.cmd(t.CSI.Style, t.Style.BrightBlack),
-      `(Persisted manifest was not generated)\n`,
+      t.cmd(t.CSI.Style, t.Style.BrightGreen),
+      `${t.Icons.Tick} Persisted manifests were generated successfully.\n`,
+    ]);
+    for (const schemaName in documentCount) {
+      out += t.text([
+        t.cmd(t.CSI.Style, t.Style.BrightBlack),
+        `${t.HeavyBox.BottomLeft} `,
+        t.cmd(t.CSI.Style, t.Style.BrightBlue),
+        `${documentCount[schemaName]} documents extracted for the '${schemaName}' schema\n`,
+      ]);
+    }
+  }
+  return out;
+};
+
+export function warningSummary(warningCount: number) {
+  return t.error([t.cmd(t.CSI.Style, t.Style.Red), `${t.Icons.Cross} ${warningCount} warnings\n`]);
+}
+
+export function infoSummary(warningCount: number, documentCount: number | Record<string, number>) {
+  let out = '';
+  if (warningCount) {
+    out += t.text([
+      t.cmd(t.CSI.Style, t.Style.BrightYellow),
+      t.Icons.Warning,
+      ` ${warningCount} warnings\n`,
     ]);
   }
+  out += documentSummary(documentCount);
   return out;
 }
 

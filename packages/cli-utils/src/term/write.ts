@@ -82,8 +82,10 @@ async function* convertError(outputs: AsyncIterable<ComposeInput>): AsyncIterabl
   try {
     yield* outputs;
   } catch (error) {
-    yield error instanceof CLIError ? error : '' + error;
+    yield !(error instanceof CLIError) ? ('' + error).trim() + '\n' : error;
   }
+
+  yield '\n';
 }
 
 function compose(outputs: AsyncIterable<ComposeInput>): Source<string | CLIError> {

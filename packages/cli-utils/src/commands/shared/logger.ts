@@ -77,7 +77,7 @@ export function externalError(message: string, error: unknown) {
     `\n${message.trim()}\n`,
     t.cmd(t.CSI.Style, t.Style.BrightBlack),
     `${t.HeavyBox.BottomLeft} `,
-    indent(text, '  '),
+    indent(!text.endsWith('\n') ? text + '\n' : text, '  '),
   ]);
 }
 

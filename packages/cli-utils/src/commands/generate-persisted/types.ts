@@ -5,10 +5,16 @@ export interface PersistedWarning {
   col: number;
 }
 
+export interface PersistedDocument {
+  schemaName: string | null;
+  hashKey: string;
+  document: string;
+}
+
 export interface FilePersistedSignal {
   kind: 'FILE_PERSISTED';
   filePath: string;
-  documents: Record<string, string>;
+  documents: PersistedDocument[];
   warnings: PersistedWarning[];
 }
 

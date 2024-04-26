@@ -2,7 +2,7 @@ import ts from 'typescript';
 import * as path from 'node:path';
 
 import type { GraphQLSPConfig } from '@gql.tada/internal';
-import { load } from '@gql.tada/internal';
+import { loadRef } from '@gql.tada/internal';
 import { getGraphQLDiagnostics } from '@0no-co/graphqlsp/api';
 
 import { programFactory } from '../../ts';
@@ -19,13 +19,7 @@ export interface DiagnosticsParams {
 async function* _runDiagnostics(
   params: DiagnosticsParams
 ): AsyncIterableIterator<DiagnosticSignal> {
-  if (!('schema' in params.pluginConfig)) {
-    // TODO: Implement multi-schema support
-    throw new Error('Multi-schema support is not implemented yet');
-  }
-
   const projectPath = path.dirname(params.configPath);
-  const loader = load({ origin: params.pluginConfig.schema, rootPath: projectPath });
   const factory = programFactory(params);
 
   const externalFiles = factory.createExternalFiles();
@@ -34,10 +28,10 @@ async function* _runDiagnostics(
     await factory.addVirtualFiles(externalFiles);
   }
 
+  const schemaRef = await loadRef(params.pluginConfig).load({ rootPath: projectPath });
+
   const container = factory.build();
   const pluginInfo = container.buildPluginInfo(params.pluginConfig);
-  const loadResult = await loader.load();
-  const schemaRef = { current: loadResult.schema, version: 1 };
   const sourceFiles = container.getSourceFiles();
 
   yield {
@@ -47,7 +41,7 @@ async function* _runDiagnostics(
 
   for (const sourceFile of sourceFiles) {
     let filePath = sourceFile.fileName;
-    const diagnostics = getGraphQLDiagnostics(filePath, schemaRef as any, pluginInfo);
+    const diagnostics = getGraphQLDiagnostics(filePath, schemaRef, pluginInfo);
     const messages: DiagnosticMessage[] = [];
 
     if (diagnostics && diagnostics.length) {

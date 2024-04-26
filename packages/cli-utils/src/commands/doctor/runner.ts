@@ -3,7 +3,7 @@ import path from 'node:path';
 import semiver from 'semiver';
 
 import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
-import { load, loadConfig, parseConfig } from '@gql.tada/internal';
+import { loadRef, loadConfig, parseConfig } from '@gql.tada/internal';
 
 import type { ComposeInput } from '../../term';
 import { findGraphQLConfig } from './helpers/graphqlConfig';
@@ -149,22 +149,10 @@ export async function* run(): AsyncIterable<ComposeInput> {
   try {
     pluginConfig = parseConfig(configResult.pluginConfig, configResult.rootPath);
   } catch (error) {
+    yield logger.failedTask(Messages.CHECK_TSCONFIG);
     throw logger.externalError(
       `The plugin configuration for ${logger.code('"@0no-co/graphqlsp"')} seems to be invalid.`,
       error
-    );
-  }
-
-  if (!('schema' in pluginConfig)) {
-    // TODO: Implement multi-schema support
-    throw logger.errorMessage('Multi-schema support is not implemented yet');
-  }
-
-  if (!pluginConfig.schema) {
-    yield logger.failedTask(Messages.CHECK_TSCONFIG);
-    throw logger.errorMessage(
-      `No ${logger.code('"schema"')} option was found in your configuration.\n` +
-        logger.hint(`Have you specified your SDL file or URL in your configuration yet?`)
     );
   }
 
@@ -175,14 +163,10 @@ export async function* run(): AsyncIterable<ComposeInput> {
   yield logger.runningTask(Messages.CHECK_SCHEMA);
   await delay();
 
-  const loader = load({
-    origin: pluginConfig.schema,
-    rootPath: path.dirname(configResult.configPath),
-  });
-
   try {
-    await loader.loadIntrospection();
+    await loadRef(pluginConfig).load({ rootPath: path.dirname(configResult.configPath) });
   } catch (error) {
+    yield logger.failedTask(Messages.CHECK_SCHEMA);
     throw logger.externalError('Failed to load schema.', error);
   }
 
