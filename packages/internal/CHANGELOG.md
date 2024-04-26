@@ -1,5 +1,12 @@
 # @gql.tada/internal
 
+## 0.3.2
+
+### Patch Changes
+
+- ⚠️ Fix `declare module` not being added to tada output in some cases
+  Submitted by [@kitten](https://github.com/kitten) (See [#268](https://github.com/0no-co/gql.tada/pull/268))
+
 ## 0.3.1
 
 ### Patch Changes
