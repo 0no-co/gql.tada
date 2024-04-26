@@ -5,6 +5,14 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "minor",
+  "ignore": [
+    "@gql.tada/example-pokemon-api",
+    "@gql.tada/example-pokemon-svelte",
+    "@gql.tada/example-pokemon-api",
+    "@gql.tada/website-vitepress",
+    "@gql.tada/cli-utils",
+    "gql.tada"
+  ],
   "snapshot": {
     "prereleaseTemplate": "{tag}-{commit}",
     "useCalculatedVersion": true
