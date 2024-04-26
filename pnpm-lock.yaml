@@ -220,8 +220,8 @@ importers:
   packages/cli-utils:
     dependencies:
       '@0no-co/graphqlsp':
-        specifier: ^1.12.0
-        version: 1.12.0(typescript@5.4.5)
+        specifier: ^1.12.1
+        version: 1.12.1(typescript@5.4.5)
       '@gql.tada/internal':
         specifier: workspace:*
         version: link:../internal
@@ -384,6 +384,20 @@ packages:
       typescript: 5.4.5
     transitivePeerDependencies:
       - encoding
+    dev: true
+
+  /@0no-co/graphqlsp@1.12.1(typescript@5.4.5):
+    resolution: {integrity: sha512-KHMs1a9qXoiwA4aUKGgcsyM38SXH6ddQFwu4Hf2p8XjUOkRKHy38pd4qYM0hgA1vpkUf8WSj5GyDAbezhApfpw==}
+    peerDependencies:
+      typescript: ^5.3.3
+    dependencies:
+      '@gql.tada/internal': link:packages/internal
+      graphql: 16.8.1
+      node-fetch: 2.7.0
+      typescript: 5.4.5
+    transitivePeerDependencies:
+      - encoding
+    dev: false
 
   /@0no-co/typescript.js@5.3.2-2:
     resolution: {integrity: sha512-IGQZZ7vcVD/GOUKLJckpQiq8F5raQZLR7kOVhxN5nHOywl1dB9EFMA7FJkyNoCEig7EkCb291X8FswMwwrz9yg==}
