@@ -46,7 +46,6 @@ Next, we’ll have to add `@0no-co/graphqlsp` as a plugin to our TypeScript
 configuration.
 
 ::: code-group
-
 ```json [tsconfig.json]
 {
   "compilerOptions": {
@@ -61,7 +60,6 @@ configuration.
   }
 }
 ```
-
 :::
 
 This will start up a [“TypeScript Language Service Plugin”](https://github.com/microsoft/TypeScript/wiki/Writing-a-Language-Service-Plugin#whats-a-language-service-plugin) which runs when TypeScript is analyzing a file
