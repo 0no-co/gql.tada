@@ -53,8 +53,8 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
 
   const rootNames = new Set(config.fileNames);
   const options = {
+    ...ts.getDefaultCompilerOptions(),
     getDefaultLibFilePath: ts.getDefaultLibFilePath(config.options),
-    ...defaultCompilerOptions,
     ...config.options,
   };
   const host = createVirtualCompilerHost(system, options, ts);
@@ -76,7 +76,7 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
         typeof params.sourceText === 'object'
           ? params.sourceText.getText(0, params.sourceText.getLength())
           : params.sourceText,
-        options.target,
+        options.target || ts.ScriptTarget.ESNext,
         /*setParentNodes*/ true,
         scriptKind || (params.scriptKind != null ? params.scriptKind : ts.ScriptKind.TSX)
       );
@@ -172,10 +172,6 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
   return factory;
 };
 
-const defaultCompilerOptions = {
-  target: ts.ScriptTarget.Latest,
-} satisfies ts.CompilerOptions;
-
 const resolveDefaultLibsPath = (params: ProgramFactoryParams): string => {
   const target = ts.getDefaultLibFilePath({});
   if (!ts.sys.fileExists(target)) {
@@ -208,7 +204,7 @@ const resolveConfig = (params: ProgramFactoryParams, system: ts.System): ts.Pars
     parseResult.config,
     system,
     projectRoot,
-    defaultCompilerOptions,
+    ts.getDefaultCompilerOptions(),
     params.configPath
   );
 };
