@@ -6,6 +6,7 @@ settings:
 
 overrides:
   gql.tada: workspace:*
+  '@gql.tada/internal': workspace:*
   astro-expressive-code: ^0.31.0
   typescript: ^5.3.3
 
@@ -377,7 +378,7 @@ packages:
     peerDependencies:
       typescript: ^5.3.3
     dependencies:
-      '@gql.tada/internal': 0.3.0(graphql@16.8.1)(typescript@5.4.5)
+      '@gql.tada/internal': link:packages/internal
       graphql: 16.8.1
       node-fetch: 2.7.0
       typescript: 5.4.5
@@ -1462,16 +1463,6 @@ packages:
   /@floating-ui/utils@0.2.1:
     resolution: {integrity: sha512-9TANp6GPoMtYzQdt54kfAyMmz1+osLlXdg2ENroU7zzrtflTLrrC/lgrIfaSe+Wu0b89GKccT7vxXA0MoAIO+Q==}
     dev: true
-
-  /@gql.tada/internal@0.3.0(graphql@16.8.1)(typescript@5.4.5):
-    resolution: {integrity: sha512-blWnLfkJwR4xpCO3NIpUJ99Y/AIz1tvmZGW/ygOWZwLqzUaZ2pUxGvnmDPrqHFyVVLsJUAhP+3xHSC5qRqR5bg==}
-    peerDependencies:
-      graphql: ^16.8.1
-      typescript: ^5.3.3
-    dependencies:
-      '@0no-co/graphql.web': 1.0.7(graphql@16.8.1)
-      graphql: 16.8.1
-      typescript: 5.4.5
 
   /@graphql-typed-document-node/core@3.2.0(graphql@16.8.1):
     resolution: {integrity: sha512-mB9oAsNCm9aM3/SOv4YtBMqZbYj10R7dkq8byBqxGY/ncFwhf2oQzMV+LCRlWoDSEBJ3COiR1yeDvMtsoOsuFQ==}

@@ -91,6 +91,7 @@
   "pnpm": {
     "overrides": {
       "gql.tada": "workspace:*",
+      "@gql.tada/internal": "workspace:*",
       "astro-expressive-code": "^0.31.0",
       "typescript": "^5.3.3"
     }
