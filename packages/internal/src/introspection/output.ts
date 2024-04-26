@@ -31,7 +31,7 @@ export function outputIntrospectionFile(
     // NOTE: When the `name` option is used and multiple schemas are present,
     // we omit the automatic schema declaration and rely on the user calling
     // `initGraphQLTada()` themselves
-    if (!('name' in introspection)) {
+    if (!('name' in introspection) || !introspection.name) {
       out.push(
         "declare module 'gql.tada' {",
         '  interface setupSchema {',
