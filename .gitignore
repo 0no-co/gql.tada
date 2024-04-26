@@ -15,4 +15,4 @@ package-lock.json
 /tsconfig.vitest-temp.json
 /cli
 /internal
-/lsp
+/ts-plugin

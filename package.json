@@ -39,11 +39,11 @@
       "require": "./dist/gql-tada-internal.js",
       "source": "./src/internal/index.ts"
     },
-    "./lsp": {
-      "types": "./dist/gql-tada-lsp.d.ts",
-      "import": "./dist/gql-tada-lsp.mjs",
-      "require": "./dist/gql-tada-lsp.js",
-      "source": "./src/lsp/index.ts"
+    "./ts-plugin": {
+      "types": "./dist/gql-tada-ts-plugin.d.ts",
+      "import": "./dist/gql-tada-ts-plugin.mjs",
+      "require": "./dist/gql-tada-ts-plugin.js",
+      "source": "./src/ts-plugin/index.ts"
     },
     "./package.json": "./package.json"
   },
