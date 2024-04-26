@@ -1,5 +1,12 @@
 # @gql.tada/internal
 
+## 0.3.3
+
+### Patch Changes
+
+- Improve error message when `config.schemas` is missing `tadaOutputLocation` entries or when unique values are compared
+  Submitted by [@kitten](https://github.com/kitten) (See [#270](https://github.com/0no-co/gql.tada/pull/270))
+
 ## 0.3.2
 
 ### Patch Changes

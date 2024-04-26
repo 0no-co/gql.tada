@@ -1,5 +1,12 @@
 # @gql.tada/cli-utils
 
+## 1.3.2
+
+### Patch Changes
+
+- Updated dependencies (See [#270](https://github.com/0no-co/gql.tada/pull/270))
+  - @gql.tada/internal@0.3.3
+
 ## 1.3.1
 
 ### Patch Changes
