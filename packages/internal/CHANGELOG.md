@@ -1,5 +1,17 @@
 # @gql.tada/internal
 
+## 0.3.0
+
+### Minor Changes
+
+- Add multi-schema config format and schema loading
+  Submitted by [@kitten](https://github.com/kitten) (See [#257](https://github.com/0no-co/gql.tada/pull/257))
+
+### Patch Changes
+
+- Update `loadRef` to reflect `tada*` options to result types
+  Submitted by [@kitten](https://github.com/kitten) (See [#259](https://github.com/0no-co/gql.tada/pull/259))
+
 ## 0.2.4
 
 ### Patch Changes
