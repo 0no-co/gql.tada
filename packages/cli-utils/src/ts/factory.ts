@@ -53,6 +53,7 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
 
   const rootNames = new Set(config.fileNames);
   const options = {
+    ...ts.getDefaultCompilerOptions(),
     getDefaultLibFilePath: ts.getDefaultLibFilePath(config.options),
     ...defaultCompilerOptions,
     ...config.options,
