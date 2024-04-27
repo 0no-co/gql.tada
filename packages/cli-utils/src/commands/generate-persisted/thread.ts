@@ -140,25 +140,23 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
         continue;
       }
 
-      const fragments: FragmentDefinitionNode[] = [];
+      const fragmentDefs: FragmentDefinitionNode[] = [];
       const operation = foundNode.arguments[0].getText().slice(1, -1);
       if (foundNode.arguments[1] && ts.isArrayLiteralExpression(foundNode.arguments[1])) {
         unrollTadaFragments(
           foundNode.arguments[1],
-          fragments,
+          fragmentDefs,
           container.buildPluginInfo(params.pluginConfig)
         );
       }
 
+      const seen = new Set<string>();
       let document: string;
       if (params.disableNormalization) {
         document = operation;
-        for (const fragment of fragments) document += '\n\n' + print(fragment);
       } else {
         try {
-          const definitions = [...parse(operation).definitions];
-          for (const fragment of fragments) definitions.push(fragment);
-          document = print({ kind: Kind.DOCUMENT, definitions });
+          document = print(parse(operation));
         } catch (_error) {
           warnings.push({
             message:
@@ -169,6 +167,15 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
             col: position.col,
           });
           continue;
+        }
+      }
+
+      // NOTE: Update graphqlsp not to pre-parse fragments, which also swallows errors
+      for (const fragmentDef of fragmentDefs) {
+        const printedFragmentDef = print(fragmentDef);
+        if (!seen.has(printedFragmentDef)) {
+          document += '\n\n' + print(fragmentDef);
+          seen.add(printedFragmentDef);
         }
       }
 
