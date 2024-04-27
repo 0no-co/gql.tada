@@ -682,6 +682,10 @@
   color: var(--vp-c-text-1);
 }
 
+:root .VPBadge {
+  letter-spacing: 0;
+}
+
 :root .outline-marker {
   margin-top: -0.45ch;
 }
