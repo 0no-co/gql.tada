@@ -159,6 +159,10 @@ export default defineConfig({
               text: 'Persisted Documents',
               link: '/guides/persisted-documents',
             },
+            {
+              text: 'Multiple Schemas',
+              link: '/guides/multiple-schemas',
+            },
           ],
         },
         {
