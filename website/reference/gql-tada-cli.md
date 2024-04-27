@@ -123,6 +123,7 @@ When this command is run inside a GitHub Action, [workflow commands](https://doc
 
 | Option              | Description                                                                                      |
 | ------------------- | ------------------------------------------------------------------------------------------------ |
+| `--disable-normalization`     | Whether to disable normalizing the GraphQL document. (Default: false) |
 | `--tsconfig,-c`     | Optionally, a `tsconfig.json` file to use instead of an automatically discovered one.            |
 | `--fail-on-warn,-w` | Triggers an error and a non-zero exit code if any warnings have been reported.                   |
 | `--output,-o`       | Specify where to output the file to. (Default: The `tadaPersistedLocation` configuration option) |
@@ -172,6 +173,7 @@ await generateOutput({
 
 |                     | Description                                                                                                           |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `disableNormalization`     | Disables normalizing the GraphQL document |
 | `output` option     | The filename to write the persisted JSON manifest file to (Default: the `tadaPersistedLocation` configuration option) |
 | `tsconfig` option   | The `tsconfig.json` to use instead of an automatically discovered one.                                                |
 | `failOnWarn` option | Whether to throw an error instead of logging warnings.                                                                |
