@@ -478,6 +478,12 @@
   margin-top: 12px;
 }
 
+:root .VPContent .vp-doc h1 + section {
+  bottom: 2.2em;
+  font-size: 1.125em;
+  font-weight: 400;
+}
+
 :root .VPContent .vp-doc section {
   position: relative;
   bottom: 0.57em;
@@ -533,11 +539,11 @@
   color: inherit;
 }
 
-:root .VPContent .vp-doc .custom-block.note {
+:root .VPContent .vp-doc .custom-block:is(.note, .tip) {
   background: #0d2d5c;
 }
 
-:root:not(.dark) .VPContent .vp-doc .custom-block.note {
+:root:not(.dark) .VPContent .vp-doc .custom-block:is(.note, .tip) {
   background: #cfd4fc;
 }
 
