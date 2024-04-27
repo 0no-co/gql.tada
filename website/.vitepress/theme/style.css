@@ -1,4 +1,6 @@
 :root {
+  --vp-icon-arrow-right: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E");
+
   --vp-code-line-height: 1.53;
 
   --vp-c-white: #fff;
@@ -359,11 +361,10 @@
   right: 17px;
   top: 50%;
   transform: translateY(-50%);
-  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='currentColor' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E");
   display: inline-block;
   content: '';
   margin-left: 1.3ch;
-  mask: var(--icon) no-repeat;
+  mask: var(--vp-icon-arrow-right) no-repeat;
   color: inherit;
   background-color: currentColor;
   margin-bottom: -0.1em;
@@ -470,7 +471,16 @@
   position: relative;
   bottom: 0.57em;
   color: var(--vp-c-brand-2);
+  line-height: 28px;
   font-weight: 500;
+}
+
+:root .VPContent .vp-doc section:after {
+  display: block;
+  content: "";
+  margin-top: 16px;
+  border-bottom: 1px solid var(--vp-c-divider);
+  width: 62px;
 }
 
 :root .VPContent .vp-doc p:empty {
@@ -616,6 +626,19 @@
 
 :root .VPContent .vp-doc .vp-code-group .tabs label {
   line-height: 2.7rem;
+}
+
+:root .VPContent .language-sh .line:before {
+  --padding: calc(0.5em * (var(--vp-code-line-height) - 1));
+  display: inline-block;
+  content: "";
+  width: 1em;
+  height: 1em;
+  margin: calc(0.5em * (var(--vp-code-line-height) - 1)) 0;
+  margin-right: 1ch;
+  background-color: var(--vp-c-brand-3);
+  mask: var(--vp-icon-arrow-right) no-repeat;
+  vertical-align: bottom;
 }
 
 :root .VPContent .sponsor-item {
