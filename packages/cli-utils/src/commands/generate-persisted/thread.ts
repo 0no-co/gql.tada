@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { Kind, parse, print } from '@0no-co/graphql.web';
+import { parse, print } from '@0no-co/graphql.web';
 
 import type { FragmentDefinitionNode } from '@0no-co/graphql.web';
 import type { GraphQLSPConfig } from '@gql.tada/internal';
