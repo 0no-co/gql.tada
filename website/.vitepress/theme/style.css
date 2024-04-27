@@ -497,6 +497,10 @@
   gap: 0.6rem;
 }
 
+:root .VPContent .vp-doc details.custom-block > * + * {
+  margin-top: 0.6rem;
+}
+
 :root .VPContent .vp-doc .custom-block .custom-block-title {
   font-weight: 600;
   font-size: 1rem;
@@ -565,7 +569,7 @@
 }
 
 @media (max-width: 768px) {
-  :root .VPContent .vp-doc .vp-adaptive-theme:not(.blocks > *) {
+  :root .VPContent .vp-doc .vp-adaptive-theme:not(.blocks > *):not(details > *) {
     margin: 0;
   }
 }
