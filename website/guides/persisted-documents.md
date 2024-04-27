@@ -242,3 +242,157 @@ to them, most commonly adding `__typename` fields to selection sets.
 As such, you may want to format and modify the GraphQL document strings
 before registering them with your GraphQL API.
 :::
+
+---
+
+## Integration with GraphQL Clients
+
+The ["GraphQL over HTTP" specification](https://github.com/graphql/graphql-over-http/blob/persisted-documents/spec/Appendix%20A%20--%20Persisted%20Documents.md)
+is looking to standardize how persisted documents are sent to GraphQL APIs via HTTP.
+If your GraphQL client supports this specification, you likely won't have to do
+anything else to send persisted documents to your API, as long as your API
+supports them.
+
+> [!NOTE]
+> "GraphQL over HTTP" is currently a _Stage 2_ proposal and is not fully implemented
+> by all GraphQL clients and servers yet. The Persisted Documents appendix of the
+> specification is an early RFC and not implemented by most servers yet.
+
+---
+
+### `urql` Client
+
+By default, `@urql/core` will omit the `query` property and send a `documentId`
+property containing the document ID instead when you're using persisted documents.
+If your API supports this request format, there's nothing else you have to do.
+
+#### `@urql/exchange-persisted`
+
+If your API supports the unofficial
+[Apollo Automatic Persisted Queries protocol](https://github.com/apollographql/apollo-link-persisted-queries#apollo-engine) instead, you'll have to use the `@urql/exchange-persisted`
+exchange.
+
+::: details Automatic Persisted Queries protocol
+The Automatic Persisted Queries protocol sends omits the `query` property
+from requests, and sends the document ID under the
+`extensions.persistedQuery.sha256Hash` property.
+
+```json
+{
+  "variables": null,
+  "extensions": {
+    "persistedQuery": {
+      "version": 1,
+      "sha256Hash": "DOCUMENT_ID"
+    }
+  }
+}
+```
+:::
+
+First, install the `@urql/exchange-persisted` package:
+
+::: code-group
+```sh [npm]
+npm install @urql/exchange-persisted
+```
+
+```sh [pnpm]
+pnpm add @urql/exchange-persisted
+```
+
+```sh [yarn]
+yarn add @urql/exchange-persisted
+```
+
+```sh [bun]
+bun add @urql/exchange-persisted
+```
+:::
+
+You'll then need to add the `persistedExchange` to your exchanges, in front of the `fetchExchange`.
+
+```ts twoslash
+import type { TadaPersistedDocumentNode } from 'gql.tada';
+import { Client, fetchExchange, cacheExchange } from 'urql';
+import { persistedExchange } from '@urql/exchange-persisted';
+
+export const client = new Client({
+  url: '/graphql',
+  exchanges: [
+    cacheExchange,
+    persistedExchange({
+      async generateHash(_, document) {
+        return (document as TadaPersistedDocumentNode).documentId;
+      },
+      preferGetForPersistedQueries: true,
+      enforcePersistedQueries: true,
+      enableForMutation: true,
+      enableForSubscriptions: true,
+    }),
+    fetchExchange,
+  ],
+});
+```
+
+When `preferGetForPersistedQueries` is enabled, query operations will be
+sent as `GET` HTTP requests instead of `POST` requests, which makes
+CDN caching simpler to enable.
+
+<a href="https://urql.dev/goto/docs/advanced/persistence-and-uploads/" class="button">
+  Learn more on the urql docs
+</a>
+
+---
+
+### Apollo Client
+
+You'll have to use the built-in `createPersistedQueryLink` function
+and add the link in front of your HTTP link.
+
+```ts twoslash
+import type { TadaPersistedDocumentNode } from 'gql.tada';
+import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
+import { createPersistedQueryLink } from '@apollo/client/link/persisted-queries';
+
+const link = createPersistedQueryLink({
+  generateHash(document) {
+    return (document as TadaPersistedDocumentNode).documentId;
+  },
+  useGETForHashedQueries: true,
+}).concat(new HttpLink({ uri: '/graphql' }));
+
+export const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  link,
+});
+```
+
+This will send your persisted documents using the unofficial
+[Apollo Automatic Persisted Queries protocol](https://github.com/apollographql/apollo-link-persisted-queries#apollo-engine).
+
+::: details Automatic Persisted Queries protocol
+The Automatic Persisted Queries protocol sends omits the `query` property
+from requests, and sends the document ID under the
+`extensions.persistedQuery.sha256Hash` property.
+
+```json
+{
+  "variables": null,
+  "extensions": {
+    "persistedQuery": {
+      "version": 1,
+      "sha256Hash": "DOCUMENT_ID"
+    }
+  }
+}
+```
+:::
+
+When `useGETForHashedQueries` is enabled, query operations will be
+sent as `GET` HTTP requests instead of `POST` requests, which makes
+CDN caching simpler to enable.
+
+<a href="https://www.apollographql.com/docs/react/api/link/persisted-queries/#apq-implementation" class="button">
+  Learn more on the Apollo Client docs
+</a>

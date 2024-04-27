@@ -323,6 +323,9 @@ importers:
       '@urql/core':
         specifier: ^5.0.2
         version: 5.0.2(graphql@16.8.1)
+      '@urql/exchange-persisted':
+        specifier: ^4.2.0
+        version: 4.2.0(graphql@16.8.1)
       gql.tada:
         specifier: workspace:*
         version: link:..
@@ -2214,6 +2217,15 @@ packages:
       wonka: 6.3.4
     transitivePeerDependencies:
       - graphql
+
+  /@urql/exchange-persisted@4.2.0(graphql@16.8.1):
+    resolution: {integrity: sha512-Q23UOcO9YPibPcAZ+4+PMPstijoVIzjqAfPufOmgK3rmuEjnIQYlzRJGxn90r3uunXYiVj3gHXo9qhfrzGRreQ==}
+    dependencies:
+      '@urql/core': 5.0.2(graphql@16.8.1)
+      wonka: 6.3.4
+    transitivePeerDependencies:
+      - graphql
+    dev: false
 
   /@urql/exchange-retry@1.2.1(graphql@16.8.1):
     resolution: {integrity: sha512-+BP73EJA0zJpGbdU1V6l2v8hb2m7/9dMHnF85ZjkaG6INkq4O7Tu9+jfC2wYxt2cajRxgxOoAL3iEJ5Xeerzyg==}

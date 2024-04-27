@@ -19,6 +19,7 @@
     "@apollo/client": "^3.10.1",
     "@graphql-typed-document-node/core": "^3.2.0",
     "@urql/core": "^5.0.2",
+    "@urql/exchange-persisted": "^4.2.0",
     "gql.tada": "workspace:*",
     "graphql": "^16.8.1",
     "graphql-request": "^6.1.0",
