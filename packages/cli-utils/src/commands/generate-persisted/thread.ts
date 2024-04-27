@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { print } from '@0no-co/graphql.web';
+import { Kind, parse, print } from '@0no-co/graphql.web';
 
 import type { FragmentDefinitionNode } from '@0no-co/graphql.web';
 import type { GraphQLSPConfig } from '@gql.tada/internal';
@@ -18,6 +18,7 @@ import { expose } from '../../threads';
 import type { PersistedSignal, PersistedWarning, PersistedDocument } from './types';
 
 export interface PersistedParams {
+  disableNormalization: boolean;
   rootPath: string;
   configPath: string;
   pluginConfig: GraphQLSPConfig;
@@ -149,8 +150,27 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
         );
       }
 
-      let document = operation;
-      for (const fragment of fragments) document += '\n\n' + print(fragment);
+      let document: string;
+      if (params.disableNormalization) {
+        document = operation;
+        for (const fragment of fragments) document += '\n\n' + print(fragment);
+      } else {
+        try {
+          const definitions = [...parse(operation).definitions];
+          for (const fragment of fragments) definitions.push(fragment);
+          document = print({ kind: Kind.DOCUMENT, definitions });
+        } catch (_error) {
+          warnings.push({
+            message:
+              `The referenced document of "${referencingNode.getText()}" could not be parsed.\n` +
+              'Run `check` to see specific validation errors.',
+            file: position.fileName,
+            line: position.line,
+            col: position.col,
+          });
+          continue;
+        }
+      }
 
       documents.push({
         schemaName: call.schema,

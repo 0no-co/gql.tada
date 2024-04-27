@@ -11,6 +11,10 @@ export class GeneratePersisted extends Command {
     description: 'Specify the `tsconfig.json` used to read, unless `--output` is passed.',
   });
 
+  disableNormalization = Option.Boolean('--disable-normalization', false, {
+    description: 'Disables normalizing of GraphQL documents (parsing then printing documents)',
+  });
+
   failOnWarn = Option.Boolean('--fail-on-warn', false, {
     description: 'Triggers an error and a non-zero exit code if any warnings have been reported',
   });
@@ -25,6 +29,7 @@ export class GeneratePersisted extends Command {
     const tty = initTTY();
     const result = await tty.start(
       run(tty, {
+        disableNormalization: this.disableNormalization,
         failOnWarn: this.failOnWarn,
         output: this.output,
         tsconfig: this.tsconfig,
