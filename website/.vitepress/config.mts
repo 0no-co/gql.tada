@@ -137,6 +137,10 @@ export default defineConfig({
               text: 'Writing GraphQL',
               link: '/get-started/writing-graphql',
             },
+            {
+              text: 'Essential Workflows',
+              link: '/get-started/workflows',
+            },
           ],
         },
         {
