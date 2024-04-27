@@ -155,6 +155,10 @@ export default defineConfig({
               text: 'Fragment Colocation',
               link: '/guides/fragment-colocation',
             },
+            {
+              text: 'Persisted Documents',
+              link: '/guides/persisted-documents',
+            },
           ],
         },
         {
