@@ -1,6 +1,6 @@
 ---
 title: Essential Workflows
-description: How to get set up and ready
+description: How to use and adapt the CLI in your workflows
 ---
 
 # Essential Workflows
