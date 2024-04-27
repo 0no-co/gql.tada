@@ -129,8 +129,19 @@
 }
 
 :root .Layout :where(.VPNavBar:not(.top), .VPLocalNav) .wrapper {
+  position: relative;
   border-bottom: 1px solid var(--vp-c-divider);
+  overflow: hidden;
+}
+
+:root .Layout :where(.VPNavBar:not(.top), .VPLocalNav) .wrapper:after {
   backdrop-filter: blur(24px) saturate(250%);
+  height: calc(100% + 48px);
+  display: block;
+  content: '';
+  position: absolute;
+  inset: 0;
+  top: -24px;
 }
 
 :root .VPNavBar .divider {
