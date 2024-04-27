@@ -5,7 +5,7 @@
   --vp-c-black: hsl(240, 20%, 1%);
   --vp-c-bg: hsl(240, 20%, 1%);
   --vp-c-bg-alt: hsl(240, 5%, 4%);
-  --vp-nav-bg-color: rgba(0, 0, 0, 0.62);
+  --vp-nav-bg-color: transparent;
 
   --vp-c-gray-1: hsl(235, 5%, 87%);
   --vp-c-gray-2: hsl(235, 5%, 57%);
@@ -112,9 +112,23 @@
 }
 
 :root .Layout :where(.VPNavBar:not(.top), .VPLocalNav) {
+  border: none;
+  background: none;
+}
+
+:root .Layout :where(.VPNavBar:not(.top), .VPLocalNav) .title {
+  border: none;
+  background: none;
+}
+
+:root .Layout :where(.VPNavBar, .VPLocalNav) .wrapper {
+  transition: 0.25s border-bottom;
+  border-bottom: 1px solid transparent;
+}
+
+:root .Layout :where(.VPNavBar:not(.top), .VPLocalNav) .wrapper {
   border-bottom: 1px solid var(--vp-c-divider);
   backdrop-filter: blur(24px) saturate(250%);
-  background: var(--vp-nav-bg-color);
 }
 
 :root .VPNavBar .divider {
@@ -450,6 +464,13 @@
 
 :root .VPContent :is(h1, h2, h3) + .column {
   margin-top: 12px;
+}
+
+:root .VPContent .vp-doc section {
+  position: relative;
+  bottom: 0.57em;
+  color: var(--vp-c-brand-2);
+  font-weight: 500;
 }
 
 :root .VPContent .vp-doc p:empty {
