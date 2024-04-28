@@ -266,6 +266,27 @@ By default, `@urql/core` will omit the `query` property and send a `documentId`
 property containing the document ID instead when you're using persisted documents.
 If your API supports this request format, there's nothing else you have to do.
 
+#### Formatting Persisted Documents
+
+Before you can register the documents in your persisted manifest file
+with your GraphQL API, you should format the documents the same way
+`@urql/core` does, if you're using a `cacheExchange`.
+
+```ts twoslash
+import { print, parse } from '@0no-co/graphql.web';
+import { formatDocument } from '@urql/core';
+
+export function formatClientDocument(document: string) {
+  return print(formatDocument(parse(document)));
+}
+```
+
+Before `urql` sends a GraphQL document to your API, it formats
+the document to add `__typename` fields to the selection set. Applying
+the above transform to your persisted JSON manifest file's documents
+ensures that your API will process the same GraphQL operation that
+`urql` expects to receive a result for.
+
 #### `@urql/exchange-persisted`
 
 If your API supports the unofficial
@@ -392,6 +413,27 @@ from requests, and sends the document ID under the
 When `useGETForHashedQueries` is enabled, query operations will be
 sent as `GET` HTTP requests instead of `POST` requests, which makes
 CDN caching simpler to enable.
+
+#### Formatting Persisted Documents
+
+Before you can register the documents in your persisted manifest file
+with your GraphQL API, you should format the documents the same way
+the Apollo Client does.
+
+```ts twoslash
+import { print, parse } from 'graphql';
+import { addTypenameToDocument } from '@apollo/client/utilities';
+
+export function formatClientDocument(document: string) {
+  return print(addTypenameToDocument(parse(document)));
+}
+```
+
+Before Apollo Client sends a GraphQL document to your API, it formats
+the document to add `__typename` fields to the selection set. Applying
+the above transform to your persisted JSON manifest file's documents
+ensures that your API will process the same GraphQL operation that
+Apollo Client expects to receive a result for.
 
 <a href="https://www.apollographql.com/docs/react/api/link/persisted-queries/#apq-implementation" class="button">
   Learn more on the Apollo Client docs
