@@ -137,6 +137,10 @@ export default defineConfig({
               text: 'Writing GraphQL',
               link: '/get-started/writing-graphql',
             },
+            {
+              text: 'Essential Workflows',
+              link: '/get-started/workflows',
+            },
           ],
         },
         {
@@ -150,6 +154,14 @@ export default defineConfig({
             {
               text: 'Fragment Colocation',
               link: '/guides/fragment-colocation',
+            },
+            {
+              text: 'Persisted Documents',
+              link: '/guides/persisted-documents',
+            },
+            {
+              text: 'Multiple Schemas',
+              link: '/guides/multiple-schemas',
             },
           ],
         },
