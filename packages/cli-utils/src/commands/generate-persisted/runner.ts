@@ -10,6 +10,13 @@ import type { PersistedDocument } from './types';
 import * as logger from './logger';
 
 export interface PersistedOptions {
+  /** Whether to disable normalization of GraphQL documents in the output.
+   * @defaultValue `false`
+   * @remarks
+   * Normalizing a GraphQL document means to parse then print them, which
+   * removes comments and normalizes formatting.
+   */
+  disableNormalization?: boolean;
   /** The `tsconfig.json` to use for configurations and the TypeScript program.
    * @defaultValue A `tsconfig.json` in the current or any parent directory. */
   tsconfig: string | undefined;
@@ -35,6 +42,7 @@ export async function* run(tty: TTY, opts: PersistedOptions): AsyncIterable<Comp
   if (tty.isInteractive) yield logger.runningPersisted();
 
   const generator = runPersisted({
+    disableNormalization: !!opts.disableNormalization,
     rootPath: configResult.rootPath,
     configPath: configResult.configPath,
     pluginConfig,

@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { print } from '@0no-co/graphql.web';
+import { parse, print } from '@0no-co/graphql.web';
 
 import type { FragmentDefinitionNode } from '@0no-co/graphql.web';
 import type { GraphQLSPConfig } from '@gql.tada/internal';
@@ -18,6 +18,7 @@ import { expose } from '../../threads';
 import type { PersistedSignal, PersistedWarning, PersistedDocument } from './types';
 
 export interface PersistedParams {
+  disableNormalization: boolean;
   rootPath: string;
   configPath: string;
   pluginConfig: GraphQLSPConfig;
@@ -139,18 +140,44 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
         continue;
       }
 
-      const fragments: FragmentDefinitionNode[] = [];
+      const fragmentDefs: FragmentDefinitionNode[] = [];
       const operation = foundNode.arguments[0].getText().slice(1, -1);
       if (foundNode.arguments[1] && ts.isArrayLiteralExpression(foundNode.arguments[1])) {
         unrollTadaFragments(
           foundNode.arguments[1],
-          fragments,
+          fragmentDefs,
           container.buildPluginInfo(params.pluginConfig)
         );
       }
 
-      let document = operation;
-      for (const fragment of fragments) document += '\n\n' + print(fragment);
+      const seen = new Set<string>();
+      let document: string;
+      if (params.disableNormalization) {
+        document = operation;
+      } else {
+        try {
+          document = print(parse(operation));
+        } catch (_error) {
+          warnings.push({
+            message:
+              `The referenced document of "${referencingNode.getText()}" could not be parsed.\n` +
+              'Run `check` to see specific validation errors.',
+            file: position.fileName,
+            line: position.line,
+            col: position.col,
+          });
+          continue;
+        }
+      }
+
+      // NOTE: Update graphqlsp not to pre-parse fragments, which also swallows errors
+      for (const fragmentDef of fragmentDefs) {
+        const printedFragmentDef = print(fragmentDef);
+        if (!seen.has(printedFragmentDef)) {
+          document += '\n\n' + print(fragmentDef);
+          seen.add(printedFragmentDef);
+        }
+      }
 
       documents.push({
         schemaName: call.schema,

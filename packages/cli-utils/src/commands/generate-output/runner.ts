@@ -20,7 +20,7 @@ export interface OutputOptions {
   forceTSFormat?: boolean;
   /** Whether to disable the optimized output format for `.d.ts` files.
    * @defaultValue `false` */
-  disablePreprocessing: boolean;
+  disablePreprocessing?: boolean;
   /** The filename to write the cache file to.
    * @defaultValue The `tadaTurboLocation` configuration option */
   output: string | undefined;
