@@ -137,7 +137,6 @@
   :root .Layout .VPNavBar:not(.top) .wrapper {
     position: relative;
     border-bottom: 1px solid var(--vp-c-divider);
-    overflow: hidden;
   }
 }
 
@@ -155,12 +154,13 @@
 @media (min-width: 1280px) {
   :root .Layout .VPNavBar:not(.top) .wrapper:after {
     backdrop-filter: blur(24px) saturate(250%);
-    height: calc(100% + 48px);
+    height: calc(100% + 24px);
     display: block;
     content: '';
     position: absolute;
     inset: 0;
     top: -24px;
+    z-index: -1;
   }
 }
 
