@@ -6,11 +6,6 @@ next: false
 
 # Introduction
 
-> [!NOTE]
->
-> `gql.tada`’s documentation is still a work in progress.
-> If you have any feedback, feel free to let us know what you’d like to see explained or changed.
-
 The `gql.tada` project aims to improve the experience of writing and using GraphQL
 with TypeScript on the client-side by providing more feedback when writing GraphQL,
 and reducing friction between TypeScript and GraphQL.
@@ -24,7 +19,10 @@ GraphQL schema and provides immediate feedback, auto-completion, diagnostics,
 and GraphQL type hints.<br />
 This all happens on-the-fly in TypeScript.
 
-[Read on on the “Installation” page, to get started! 🪄](./installation)
+<a href="/get-started/installation" class="button">
+  <h3>Installation</h3>
+  <p>Learn how to get started with <code>gql.tada</code> 🪄</p>
+</a>
 
 ### A demo in 128 seconds
 
