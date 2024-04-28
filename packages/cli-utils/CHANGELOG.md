@@ -1,5 +1,12 @@
 # @gql.tada/cli-utils
 
+## 1.3.3
+
+### Patch Changes
+
+- Add missing fragment deduplication to `generate persisted` command's output and add document normalization, which can be disabled using the `--disable-normalization` argument
+  Submitted by [@kitten](https://github.com/kitten) (See [#275](https://github.com/0no-co/gql.tada/pull/275))
+
 ## 1.3.2
 
 ### Patch Changes
