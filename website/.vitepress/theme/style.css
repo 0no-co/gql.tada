@@ -123,25 +123,45 @@
   background: none;
 }
 
-:root .Layout :where(.VPNavBar, .VPLocalNav) .wrapper {
+:root .Layout :where(.VPNavBar .wrapper, .VPLocalNav .container) {
   transition: 0.25s border-bottom;
   border-bottom: 1px solid transparent;
 }
 
-:root .Layout :where(.VPNavBar:not(.top), .VPLocalNav) .wrapper {
+:root .Layout .VPLocalNav .container {
   position: relative;
   border-bottom: 1px solid var(--vp-c-divider);
-  overflow: hidden;
 }
 
-:root .Layout :where(.VPNavBar:not(.top), .VPLocalNav) .wrapper:after {
+@media (min-width: 1280px) {
+  :root .Layout .VPNavBar:not(.top) .wrapper {
+    position: relative;
+    border-bottom: 1px solid var(--vp-c-divider);
+    overflow: hidden;
+  }
+}
+
+:root .Layout .VPLocalNav .container:after {
   backdrop-filter: blur(24px) saturate(250%);
-  height: calc(100% + 48px);
+  height: calc(100% + 24px + var(--vp-nav-height));
   display: block;
   content: '';
   position: absolute;
   inset: 0;
-  top: -24px;
+  top: calc(-24px - var(--vp-nav-height));
+  z-index: -1;
+}
+
+@media (min-width: 1280px) {
+  :root .Layout .VPNavBar:not(.top) .wrapper:after {
+    backdrop-filter: blur(24px) saturate(250%);
+    height: calc(100% + 48px);
+    display: block;
+    content: '';
+    position: absolute;
+    inset: 0;
+    top: -24px;
+  }
 }
 
 :root .VPNavBar .divider {
