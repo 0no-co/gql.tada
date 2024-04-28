@@ -242,15 +242,17 @@
   position: relative;
   width: var(--size);
   height: var(--size);
-  line-height: var(--size);
   display: inline-block;
+  overflow: hidden;
   visibility: hidden;
   white-space: nowrap;
+  vertical-align: baseline;
   margin-right: 0.4ch;
+  margin-bottom: -0.2ch;
 }
 
-:root .VPContent .vp-doc :where(h1, h2, h3, h4, h5) [data-step]::first-line {
-  font-size: 0;
+:root .VPContent .vp-doc :where(h1, h2, h3, h4, h5) [data-step]:first-line {
+  color: transparent;
 }
 
 :root .VPContent .vp-doc [data-step]:after {
@@ -259,11 +261,12 @@
   width: 100%;
   height: 100%;
   display: block;
+  color: var(--vp-c-text-1);
   background: var(--vp-c-default-soft);
   visibility: visible;
   font-variant-numeric: tabular-nums;
   content: attr(data-step);
-  line-height: inherit;
+  line-height: 1.54em;
   border-radius: 50%;
   text-align: center;
   font-size: 0.65em;
