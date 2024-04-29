@@ -126,7 +126,7 @@ Hold up, that's **automated**! Since we use `changeset` to document our changes,
 goes into the changelog and what kind of version bump a change should make, you can also use the
 tool to check what's currently posed to change after a release batch using: `pnpm changeset status`.
 
-We have a [GitHub Actions workflow](./.github/workflow/release.yml) which is triggered whenever new
+We have a [GitHub Actions workflow](./.github/workflows/release.yml) which is triggered whenever new
 changes are merged. It will always open a **"Version Packages" PR** which is kept up-to-date. This PR
 documents all changes that are made and will show in its description what all new changelogs are
 going to contain for their new entries.
