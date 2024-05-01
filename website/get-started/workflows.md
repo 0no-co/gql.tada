@@ -59,7 +59,7 @@ your setup, the `doctor` command exists.
 gql.tada doctor
 ```
 
-The `doctor` command runs through several environemnt checks,
+The `doctor` command runs through several environment checks,
 loads your configuration, and checks your schema to make sure
 you don't run into any unexpected issues.
 
