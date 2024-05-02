@@ -7,9 +7,11 @@ import {
   makeIntrospectionQuery,
   makeIntrospectSupportQuery,
   toSupportedFeatures,
+  ALL_SUPPORTED_FEATURES,
+  NO_SUPPORTED_FEATURES,
 } from './introspection';
-import type { SupportedFeatures, IntrospectSupportQueryData } from './introspection';
 
+import type { SupportedFeatures, IntrospectSupportQueryData } from './introspection';
 import type { SchemaLoader, SchemaLoaderResult, OnSchemaUpdate } from './types';
 
 interface LoadFromURLConfig {
@@ -18,22 +20,6 @@ interface LoadFromURLConfig {
   headers?: HeadersInit;
   interval?: number;
 }
-
-const ALL_SUPPORTED_FEATURES: SupportedFeatures = {
-  directiveIsRepeatable: true,
-  specifiedByURL: true,
-  inputValueDeprecation: true,
-  directiveArgumentsIsDeprecated: true,
-  fieldArgumentsIsDeprecated: true,
-};
-
-const NO_SUPPORTED_FEATURES: SupportedFeatures = {
-  directiveIsRepeatable: false,
-  specifiedByURL: false,
-  inputValueDeprecation: false,
-  directiveArgumentsIsDeprecated: false,
-  fieldArgumentsIsDeprecated: false,
-};
 
 export function loadFromURL(config: LoadFromURLConfig): SchemaLoader {
   const interval = config.interval || 60_000;
