@@ -4,8 +4,24 @@ import { print } from '@0no-co/graphql.web';
 import {
   makeIntrospectionQuery,
   makeIntrospectSupportQuery,
+  getPeerSupportedFeatures,
   toSupportedFeatures,
 } from '../introspection';
+
+describe('getPeerSupportedFeatures', () => {
+  it('calculates supported features of local graphql installation', () => {
+    const support = getPeerSupportedFeatures();
+    expect(support).toMatchInlineSnapshot(`
+      {
+        "directiveArgumentsIsDeprecated": true,
+        "directiveIsRepeatable": true,
+        "fieldArgumentsIsDeprecated": true,
+        "inputValueDeprecation": true,
+        "specifiedByURL": true,
+      }
+    `);
+  });
+});
 
 describe('makeIntrospectSupportQuery', () => {
   it('prints to introspection support query', () => {
