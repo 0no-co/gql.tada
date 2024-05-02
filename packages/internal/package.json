@@ -54,7 +54,7 @@
     "@0no-co/graphql.web": "^1.0.5"
   },
   "peerDependencies": {
-    "graphql": "^16.8.1",
+    "graphql": "^15.5.0 || ^16.0.0 || ^17.0.0",
     "typescript": "^5.0.0"
   },
   "publishConfig": {
