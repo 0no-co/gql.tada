@@ -232,7 +232,7 @@ importers:
         specifier: ^2.0.0
         version: 2.0.14(typescript@5.4.5)
       graphql:
-        specifier: ^16.8.1
+        specifier: ^15.5.0 || ^16.0.0 || ^17.0.0
         version: 16.8.1
       svelte2tsx:
         specifier: ^0.7.6
