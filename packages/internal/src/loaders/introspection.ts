@@ -1,3 +1,4 @@
+import { GraphQLID, GraphQLObjectType, GraphQLSchema, executeSync } from 'graphql';
 import { Kind, OperationTypeNode } from '@0no-co/graphql.web';
 
 import type {
@@ -41,6 +42,22 @@ const _supportsDeprecatedArgumentsArg = (
   );
 };
 
+export const ALL_SUPPORTED_FEATURES: SupportedFeatures = {
+  directiveIsRepeatable: true,
+  specifiedByURL: true,
+  inputValueDeprecation: true,
+  directiveArgumentsIsDeprecated: true,
+  fieldArgumentsIsDeprecated: true,
+};
+
+export const NO_SUPPORTED_FEATURES: SupportedFeatures = {
+  directiveIsRepeatable: false,
+  specifiedByURL: false,
+  inputValueDeprecation: false,
+  directiveArgumentsIsDeprecated: false,
+  fieldArgumentsIsDeprecated: false,
+};
+
 /** Evaluates data from a {@link makeIntrospectSupportQuery} result to {@link SupportedFeatures} */
 export const toSupportedFeatures = (data: IntrospectSupportQueryData): SupportedFeatures => ({
   directiveIsRepeatable: _hasField(data.directive, 'isRepeatable'),
@@ -49,6 +66,25 @@ export const toSupportedFeatures = (data: IntrospectSupportQueryData): Supported
   directiveArgumentsIsDeprecated: _supportsDeprecatedArgumentsArg(data.directive),
   fieldArgumentsIsDeprecated: _supportsDeprecatedArgumentsArg(data.field),
 });
+
+let _localSupport: SupportedFeatures | undefined;
+
+/** Evaluates supported features for local graphql peer-dependency */
+export const getPeerSupportedFeatures = () => {
+  if (!_localSupport) {
+    const schema = new GraphQLSchema({
+      query: new GraphQLObjectType({
+        name: 'Query',
+        fields: { _noop: { type: GraphQLID } },
+      }),
+    });
+    const result = executeSync({ schema, document: makeIntrospectSupportQuery() });
+    return (_localSupport = result.data
+      ? toSupportedFeatures(result.data as any)
+      : NO_SUPPORTED_FEATURES);
+  }
+  return _localSupport;
+};
 
 let _introspectionQuery: DocumentNode | undefined;
 let _previousSupport: SupportedFeatures | undefined;
