@@ -1,7 +1,11 @@
 import { expect, describe, it } from 'vitest';
 import { print } from '@0no-co/graphql.web';
 
-import { makeIntrospectionQuery, makeIntrospectSupportQuery, toSupportedFeatures } from '../query';
+import {
+  makeIntrospectionQuery,
+  makeIntrospectSupportQuery,
+  toSupportedFeatures,
+} from '../introspection';
 
 describe('makeIntrospectSupportQuery', () => {
   it('prints to introspection support query', () => {

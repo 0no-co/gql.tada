@@ -4,8 +4,8 @@ import { CombinedError } from '@urql/core';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { makeIntrospectionQuery } from './query';
-import type { SupportedFeatures } from './query';
+import { makeIntrospectionQuery } from './introspection';
+import type { SupportedFeatures } from './introspection';
 
 import type { SchemaLoader, SchemaLoaderResult, OnSchemaUpdate } from './types';
 

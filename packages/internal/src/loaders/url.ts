@@ -3,8 +3,12 @@ import { buildClientSchema } from 'graphql';
 import { Client, fetchExchange } from '@urql/core';
 import { retryExchange } from '@urql/exchange-retry';
 
-import { makeIntrospectionQuery, makeIntrospectSupportQuery, toSupportedFeatures } from './query';
-import type { SupportedFeatures, IntrospectSupportQueryData } from './query';
+import {
+  makeIntrospectionQuery,
+  makeIntrospectSupportQuery,
+  toSupportedFeatures,
+} from './introspection';
+import type { SupportedFeatures, IntrospectSupportQueryData } from './introspection';
 
 import type { SchemaLoader, SchemaLoaderResult, OnSchemaUpdate } from './types';
 
