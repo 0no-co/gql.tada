@@ -4,8 +4,7 @@ import { CombinedError } from '@urql/core';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { makeIntrospectionQuery } from './introspection';
-import type { SupportedFeatures } from './introspection';
+import { makeIntrospectionQuery, getPeerSupportedFeatures } from './introspection';
 
 import type { SchemaLoader, SchemaLoaderResult, OnSchemaUpdate } from './types';
 
@@ -14,14 +13,6 @@ interface LoadFromSDLConfig {
   assumeValid?: boolean;
   file: string;
 }
-
-const ALL_SUPPORTED_FEATURES: SupportedFeatures = {
-  directiveIsRepeatable: true,
-  specifiedByURL: true,
-  inputValueDeprecation: true,
-  directiveArgumentsIsDeprecated: true,
-  fieldArgumentsIsDeprecated: true,
-};
 
 export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
   const subscriptions = new Set<OnSchemaUpdate>();
@@ -49,7 +40,7 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
       };
     } else {
       const schema = buildSchema(data, { assumeValidSDL: !!config.assumeValid });
-      const query = makeIntrospectionQuery(ALL_SUPPORTED_FEATURES);
+      const query = makeIntrospectionQuery(getPeerSupportedFeatures());
       const queryResult = executeSync({ schema, document: query });
       if (queryResult.errors) {
         throw new CombinedError({ graphQLErrors: queryResult.errors as any[] });
