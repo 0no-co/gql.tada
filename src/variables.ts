@@ -3,35 +3,6 @@ import type { SchemaLike } from './introspection';
 import type { DocumentNodeLike } from './parser';
 import type { obj } from './utils';
 
-type GetInputObjectType<
-  InputField,
-  Introspection extends SchemaLike,
-  IgnoreNonNull,
-> = InputField extends {
-  name: any;
-  type: any;
-}
-  ? InputField extends { defaultValue?: undefined | null; type: { kind: 'NON_NULL' } }
-    ? {
-        [Name in InputField['name']]: unwrapTypeRec<
-          InputField['type'],
-          Introspection,
-          IgnoreNonNull extends true ? false : true
-        >;
-      }
-    : IgnoreNonNull extends true
-      ? {
-          [Name in InputField['name']]: unwrapTypeRec<InputField['type'], Introspection, false>;
-        }
-      : {
-          [Name in InputField['name']]?: unwrapTypeRec<
-            InputField['type'],
-            Introspection,
-            true
-          > | null;
-        }
-  : {};
-
 type getInputObjectTypeRec<
   InputFields,
   Introspection extends SchemaLike,
@@ -40,7 +11,23 @@ type getInputObjectTypeRec<
   ? getInputObjectTypeRec<
       Rest,
       Introspection,
-      GetInputObjectType<InputField, Introspection, false> & InputObject
+      (InputField extends {
+        name: any;
+        type: any;
+      }
+        ? InputField extends { defaultValue?: undefined | null; type: { kind: 'NON_NULL' } }
+          ? {
+              [Name in InputField['name']]: unwrapTypeRec<InputField['type'], Introspection, true>;
+            }
+          : {
+              [Name in InputField['name']]?: unwrapTypeRec<
+                InputField['type'],
+                Introspection,
+                true
+              > | null;
+            }
+        : {}) &
+        InputObject
     >
   : obj<InputObject>;
 
@@ -52,7 +39,27 @@ type getInputObjectTypeOneOfRec<
   ? getInputObjectTypeOneOfRec<
       Rest,
       Introspection,
-      GetInputObjectType<InputField, Introspection, true> | InputObject
+      | (InputField extends {
+          name: any;
+          type: any;
+        }
+          ? InputField extends { defaultValue?: undefined | null; type: { kind: 'NON_NULL' } }
+            ? {
+                [Name in InputField['name']]: unwrapTypeRec<
+                  InputField['type'],
+                  Introspection,
+                  false
+                >;
+              }
+            : {
+                [Name in InputField['name']]: unwrapTypeRec<
+                  InputField['type'],
+                  Introspection,
+                  false
+                >;
+              }
+          : {})
+      | InputObject
     >
   : obj<InputObject>;
 
