@@ -13,7 +13,11 @@ type GetInputObjectType<
 }
   ? InputField extends { defaultValue?: undefined | null; type: { kind: 'NON_NULL' } }
     ? {
-        [Name in InputField['name']]: unwrapTypeRec<InputField['type'], Introspection, true>;
+        [Name in InputField['name']]: unwrapTypeRec<
+          InputField['type'],
+          Introspection,
+          IgnoreNonNull extends true ? false : true
+        >;
       }
     : IgnoreNonNull extends true
       ? {
