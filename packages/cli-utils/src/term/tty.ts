@@ -88,7 +88,6 @@ export function initTTY(params: TTYParams = {}): TTY {
   let output: WriteStream = process.stdout;
   if (isGithubCI) {
     output = process.stderr;
-    if (!output.isTTY) pipeTo = process.stdout;
   } else if (!output.isTTY && process.stderr.isTTY) {
     output = process.stderr;
     pipeTo = process.stdout;
