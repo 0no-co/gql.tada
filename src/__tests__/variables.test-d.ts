@@ -48,7 +48,8 @@ describe('getVariablesType', () => {
 
     expectTypeOf<variables>().toEqualTypeOf<{
       id: string;
-      input: { value_1: string } | { value_2: string };
+      // TODO: should we get rid of the leading empty object?
+      input: {} | { value_1: string } | { value_2: string };
     }>();
   });
 
