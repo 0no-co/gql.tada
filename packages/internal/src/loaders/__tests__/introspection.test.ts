@@ -18,7 +18,7 @@ describe('getPeerSupportedFeatures', () => {
         "fieldArgumentsIsDeprecated": true,
         "inputValueDeprecation": true,
         "specifiedByURL": true,
-        "typesIsOneOf": false,
+        "inputOneOf": false,
       }
     `);
   });
@@ -69,7 +69,7 @@ describe('toSupportedFeatures', () => {
       inputValueDeprecation: false,
       directiveArgumentsIsDeprecated: false,
       fieldArgumentsIsDeprecated: false,
-      typesIsOneOf: false,
+      inputOneOf: false,
     });
   });
 
@@ -146,7 +146,7 @@ describe('makeIntrospectionQuery', () => {
       inputValueDeprecation: true,
       directiveArgumentsIsDeprecated: true,
       fieldArgumentsIsDeprecated: true,
-      typesIsOneOf: true,
+      inputOneOf: true,
     };
 
     const output = print(makeIntrospectionQuery(support));
@@ -278,7 +278,7 @@ describe('makeIntrospectionQuery', () => {
       inputValueDeprecation: false,
       directiveArgumentsIsDeprecated: false,
       fieldArgumentsIsDeprecated: false,
-      typesIsOneOf: false,
+      inputOneOf: false,
     };
 
     const output = print(makeIntrospectionQuery(support));

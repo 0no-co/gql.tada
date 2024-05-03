@@ -15,7 +15,7 @@ export interface SupportedFeatures {
   inputValueDeprecation: boolean;
   directiveArgumentsIsDeprecated: boolean;
   fieldArgumentsIsDeprecated: boolean;
-  typesIsOneOf: boolean;
+  inputOneOf: boolean;
 }
 
 /** Data from a {@link makeIntrospectSupportQuery} result */
@@ -49,7 +49,7 @@ export const toSupportedFeatures = (data: IntrospectSupportQueryData): Supported
   inputValueDeprecation: _hasField(data.inputValue, 'isDeprecated'),
   directiveArgumentsIsDeprecated: _supportsDeprecatedArgumentsArg(data.directive),
   fieldArgumentsIsDeprecated: _supportsDeprecatedArgumentsArg(data.field),
-  typesIsOneOf: _hasField(data.type, 'isOneOf'),
+  inputOneOf: _hasField(data.type, 'isOneOf'),
 });
 
 let _introspectionQuery: DocumentNode | undefined;
