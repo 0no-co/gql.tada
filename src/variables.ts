@@ -3,7 +3,11 @@ import type { SchemaLike } from './introspection';
 import type { DocumentNodeLike } from './parser';
 import type { obj } from './utils';
 
-type GetInputObjectType<InputField, Introspection extends SchemaLike> = InputField extends {
+type GetInputObjectType<
+  InputField,
+  Introspection extends SchemaLike,
+  IgnoreNonNull,
+> = InputField extends {
   name: any;
   type: any;
 }
@@ -11,13 +15,17 @@ type GetInputObjectType<InputField, Introspection extends SchemaLike> = InputFie
     ? {
         [Name in InputField['name']]: unwrapTypeRec<InputField['type'], Introspection, true>;
       }
-    : {
-        [Name in InputField['name']]?: unwrapTypeRec<
-          InputField['type'],
-          Introspection,
-          true
-        > | null;
-      }
+    : IgnoreNonNull extends true
+      ? {
+          [Name in InputField['name']]: unwrapTypeRec<InputField['type'], Introspection, false>;
+        }
+      : {
+          [Name in InputField['name']]?: unwrapTypeRec<
+            InputField['type'],
+            Introspection,
+            true
+          > | null;
+        }
   : {};
 
 type getInputObjectTypeRec<
@@ -28,7 +36,7 @@ type getInputObjectTypeRec<
   ? getInputObjectTypeRec<
       Rest,
       Introspection,
-      GetInputObjectType<InputField, Introspection> & InputObject
+      GetInputObjectType<InputField, Introspection, false> & InputObject
     >
   : obj<InputObject>;
 
@@ -40,7 +48,7 @@ type getInputObjectTypeOneOfRec<
   ? getInputObjectTypeOneOfRec<
       Rest,
       Introspection,
-      GetInputObjectType<InputField, Introspection> | InputObject
+      GetInputObjectType<InputField, Introspection, true> | InputObject
     >
   : obj<InputObject>;
 
