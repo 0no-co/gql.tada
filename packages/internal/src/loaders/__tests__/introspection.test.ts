@@ -16,9 +16,9 @@ describe('getPeerSupportedFeatures', () => {
         "directiveArgumentsIsDeprecated": true,
         "directiveIsRepeatable": true,
         "fieldArgumentsIsDeprecated": true,
+        "inputOneOf": false,
         "inputValueDeprecation": true,
         "specifiedByURL": true,
-        "inputOneOf": false,
       }
     `);
   });
