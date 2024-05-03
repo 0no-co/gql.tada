@@ -62,7 +62,9 @@ export const printIntrospectionType = (type: IntrospectionType) => {
     return `{ name: ${printName(type.name)}; enumValues: ${values}; }`;
   } else if (type.kind === 'INPUT_OBJECT') {
     const fields = printInputFields(type.inputFields);
-    return `{ kind: 'INPUT_OBJECT'; name: ${printName(type.name)}; inputFields: ${fields}; }`;
+    return `{ kind: 'INPUT_OBJECT'; name: ${printName(type.name)}; isOneOf: ${
+      (type as any).isOneOf || false
+    }; inputFields: ${fields}; }`;
   } else if (type.kind === 'OBJECT') {
     const fields = printFields(type.fields);
     return `{ kind: 'OBJECT'; name: ${printName(type.name)}; fields: ${fields}; }`;

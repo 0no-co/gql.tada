@@ -11,9 +11,14 @@ type getInputObjectTypeRec<
   ? getInputObjectTypeRec<
       Rest,
       Introspection,
-      (InputField extends { name: any; type: any }
+      (InputField extends {
+        name: any;
+        type: any;
+      }
         ? InputField extends { defaultValue?: undefined | null; type: { kind: 'NON_NULL' } }
-          ? { [Name in InputField['name']]: unwrapTypeRec<InputField['type'], Introspection, true> }
+          ? {
+              [Name in InputField['name']]: unwrapTypeRec<InputField['type'], Introspection, true>;
+            }
           : {
               [Name in InputField['name']]?: unwrapTypeRec<
                 InputField['type'],
@@ -25,6 +30,26 @@ type getInputObjectTypeRec<
         InputObject
     >
   : obj<InputObject>;
+
+type getInputObjectTypeOneOfRec<
+  InputFields,
+  Introspection extends SchemaLike,
+  InputObject = never,
+> = InputFields extends [infer InputField, ...infer Rest]
+  ? getInputObjectTypeOneOfRec<
+      Rest,
+      Introspection,
+      | (InputField extends {
+          name: any;
+          type: any;
+        }
+          ? {
+              [Name in InputField['name']]: unwrapTypeRec<InputField['type'], Introspection, false>;
+            }
+          : never)
+      | InputObject
+    >
+  : InputObject;
 
 type unwrapTypeRec<TypeRef, Introspection extends SchemaLike, IsOptional> = TypeRef extends {
   kind: 'NON_NULL';
@@ -94,8 +119,14 @@ type getScalarType<
   TypeName,
   Introspection extends SchemaLike,
 > = TypeName extends keyof Introspection['types']
-  ? Introspection['types'][TypeName] extends { kind: 'INPUT_OBJECT'; inputFields: any }
-    ? getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>
+  ? Introspection['types'][TypeName] extends {
+      kind: 'INPUT_OBJECT';
+      inputFields: any;
+      isOneOf?: any;
+    }
+    ? Introspection['types'][TypeName]['isOneOf'] extends true
+      ? getInputObjectTypeOneOfRec<Introspection['types'][TypeName]['inputFields'], Introspection>
+      : getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>
     : Introspection['types'][TypeName] extends { type: any }
       ? Introspection['types'][TypeName]['type']
       : Introspection['types'][TypeName]['enumValues']

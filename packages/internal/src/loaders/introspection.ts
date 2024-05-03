@@ -16,6 +16,7 @@ export interface SupportedFeatures {
   inputValueDeprecation: boolean;
   directiveArgumentsIsDeprecated: boolean;
   fieldArgumentsIsDeprecated: boolean;
+  inputOneOf: boolean;
 }
 
 /** Data from a {@link makeIntrospectSupportQuery} result */
@@ -48,6 +49,7 @@ export const ALL_SUPPORTED_FEATURES: SupportedFeatures = {
   inputValueDeprecation: true,
   directiveArgumentsIsDeprecated: true,
   fieldArgumentsIsDeprecated: true,
+  inputOneOf: true,
 };
 
 export const NO_SUPPORTED_FEATURES: SupportedFeatures = {
@@ -56,12 +58,14 @@ export const NO_SUPPORTED_FEATURES: SupportedFeatures = {
   inputValueDeprecation: false,
   directiveArgumentsIsDeprecated: false,
   fieldArgumentsIsDeprecated: false,
+  inputOneOf: false,
 };
 
 /** Evaluates data from a {@link makeIntrospectSupportQuery} result to {@link SupportedFeatures} */
 export const toSupportedFeatures = (data: IntrospectSupportQueryData): SupportedFeatures => ({
   directiveIsRepeatable: _hasField(data.directive, 'isRepeatable'),
   specifiedByURL: _hasField(data.type, 'specifiedByURL'),
+  inputOneOf: _hasField(data.type, 'isOneOf'),
   inputValueDeprecation: _hasField(data.inputValue, 'isDeprecated'),
   directiveArgumentsIsDeprecated: _supportsDeprecatedArgumentsArg(data.directive),
   fieldArgumentsIsDeprecated: _supportsDeprecatedArgumentsArg(data.field),
@@ -339,6 +343,9 @@ const _makeSchemaFullTypeFragment = (support: SupportedFeatures): FragmentDefini
         kind: Kind.FIELD,
         name: { kind: Kind.NAME, value: 'description' },
       },
+      ...(support.inputOneOf
+        ? ([{ kind: Kind.FIELD, name: { kind: Kind.NAME, value: 'isOneOf' } }] as const)
+        : []),
       ...(support.specifiedByURL
         ? ([
             {

@@ -16,6 +16,7 @@ describe('getPeerSupportedFeatures', () => {
         "directiveArgumentsIsDeprecated": true,
         "directiveIsRepeatable": true,
         "fieldArgumentsIsDeprecated": true,
+        "inputOneOf": false,
         "inputValueDeprecation": true,
         "specifiedByURL": true,
       }
@@ -68,6 +69,7 @@ describe('toSupportedFeatures', () => {
       inputValueDeprecation: false,
       directiveArgumentsIsDeprecated: false,
       fieldArgumentsIsDeprecated: false,
+      inputOneOf: false,
     });
   });
 
@@ -144,6 +146,7 @@ describe('makeIntrospectionQuery', () => {
       inputValueDeprecation: true,
       directiveArgumentsIsDeprecated: true,
       fieldArgumentsIsDeprecated: true,
+      inputOneOf: true,
     };
 
     const output = print(makeIntrospectionQuery(support));
@@ -183,6 +186,7 @@ describe('makeIntrospectionQuery', () => {
         kind
         name
         description
+        isOneOf
         specifiedByURL
         fields(includeDeprecated: true) {
           name
@@ -274,6 +278,7 @@ describe('makeIntrospectionQuery', () => {
       inputValueDeprecation: false,
       directiveArgumentsIsDeprecated: false,
       fieldArgumentsIsDeprecated: false,
+      inputOneOf: false,
     };
 
     const output = print(makeIntrospectionQuery(support));

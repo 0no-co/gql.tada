@@ -21,7 +21,7 @@ function mapTypeRef(fromType: IntrospectionTypeRef): IntrospectionTypeRef;
 function mapTypeRef(fromType: IntrospectionOutputTypeRef): IntrospectionOutputTypeRef;
 function mapTypeRef(fromType: IntrospectionInputTypeRef): IntrospectionInputTypeRef;
 
-function mapTypeRef(fromType: IntrospectionTypeRef): IntrospectionTypeRef {
+function mapTypeRef(fromType: IntrospectionTypeRef): IntrospectionTypeRef & { isOneOf?: boolean } {
   switch (fromType.kind) {
     case 'NON_NULL':
       return {
@@ -33,8 +33,8 @@ function mapTypeRef(fromType: IntrospectionTypeRef): IntrospectionTypeRef {
         kind: fromType.kind,
         ofType: mapTypeRef(fromType.ofType),
       };
-    case 'ENUM':
     case 'INPUT_OBJECT':
+    case 'ENUM':
     case 'SCALAR':
     case 'OBJECT':
     case 'INTERFACE':
@@ -99,7 +99,8 @@ function minifyIntrospectionType(type: IntrospectionType): IntrospectionType {
         kind: 'INPUT_OBJECT',
         name: type.name,
         inputFields: type.inputFields.map(mapInputField),
-      };
+        isOneOf: (type as any).isOneOf || false,
+      } as IntrospectionType;
     }
 
     case 'OBJECT':

@@ -56,6 +56,38 @@
       },
       {
         "kind": "INPUT_OBJECT",
+        "name": "OneOfPayload",
+        "fields": null,
+        "isOneOf": true,
+        "inputFields": [
+          {
+            "name": "value_1",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null
+          },
+          {
+            "name": "value_2",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          }
+        ],
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
         "name": "DefaultPayload",
         "fields": null,
         "inputFields": [

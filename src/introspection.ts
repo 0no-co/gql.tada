@@ -65,6 +65,7 @@ interface IntrospectionEnumType {
 interface IntrospectionInputObjectType {
   readonly kind: 'INPUT_OBJECT';
   readonly name: string;
+  readonly isOneOf?: boolean;
   readonly inputFields: readonly any[] /*readonly IntrospectionInputValue[]*/;
 }
 
@@ -128,6 +129,7 @@ export type mapObject<T extends IntrospectionObjectType> = {
 export type mapInputObject<T extends IntrospectionInputObjectType> = {
   kind: 'INPUT_OBJECT';
   name: T['name'];
+  isOneOf: T['isOneOf'] extends boolean ? T['isOneOf'] : false;
   inputFields: [...T['inputFields']];
 };
 
