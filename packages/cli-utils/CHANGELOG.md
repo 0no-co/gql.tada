@@ -1,5 +1,16 @@
 # @gql.tada/cli-utils
 
+## 1.3.4
+
+### Patch Changes
+
+- Update CLI and `@gql.tada/internal` to variably support graphql `^15.5.0` in addition to the preferred v16, and include future support for v17
+  Submitted by [@kitten](https://github.com/kitten) (See [#282](https://github.com/0no-co/gql.tada/pull/282))
+- Disable output piping on GitHub CI, as it can't reliably be detected
+  Submitted by [@kitten](https://github.com/kitten) (See [#286](https://github.com/0no-co/gql.tada/pull/286))
+- Updated dependencies (See [#284](https://github.com/0no-co/gql.tada/pull/284) and [#282](https://github.com/0no-co/gql.tada/pull/282))
+  - @gql.tada/internal@0.4.0
+
 ## 1.3.3
 
 ### Patch Changes

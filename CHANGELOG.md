@@ -1,5 +1,18 @@
 # gql.tada
 
+## 1.7.0
+
+### Minor Changes
+
+- Add support for `oneOf` input objects as specified in [the RFC](https://github.com/graphql/graphql-spec/pull/825)
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#284](https://github.com/0no-co/gql.tada/pull/284))
+
+### Patch Changes
+
+- Updated dependencies (See [#284](https://github.com/0no-co/gql.tada/pull/284), [#282](https://github.com/0no-co/gql.tada/pull/282), and [#286](https://github.com/0no-co/gql.tada/pull/286))
+  - @gql.tada/internal@0.4.0
+  - @gql.tada/cli-utils@1.3.4
+
 ## 1.6.3
 
 ### Patch Changes

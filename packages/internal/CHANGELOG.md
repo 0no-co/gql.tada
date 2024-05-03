@@ -1,5 +1,17 @@
 # @gql.tada/internal
 
+## 0.4.0
+
+### Minor Changes
+
+- Add support for querying `isOneOf` in the introspection
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#284](https://github.com/0no-co/gql.tada/pull/284))
+
+### Patch Changes
+
+- Update CLI and `@gql.tada/internal` to variably support graphql `^15.5.0` in addition to the preferred v16, and include future support for v17
+  Submitted by [@kitten](https://github.com/kitten) (See [#282](https://github.com/0no-co/gql.tada/pull/282))
+
 ## 0.3.3
 
 ### Patch Changes
