@@ -18,6 +18,7 @@ describe('getPeerSupportedFeatures', () => {
         "fieldArgumentsIsDeprecated": true,
         "inputValueDeprecation": true,
         "specifiedByURL": true,
+        "typesIsOneOf": false,
       }
     `);
   });
@@ -68,6 +69,7 @@ describe('toSupportedFeatures', () => {
       inputValueDeprecation: false,
       directiveArgumentsIsDeprecated: false,
       fieldArgumentsIsDeprecated: false,
+      typesIsOneOf: false,
     });
   });
 
@@ -144,6 +146,7 @@ describe('makeIntrospectionQuery', () => {
       inputValueDeprecation: true,
       directiveArgumentsIsDeprecated: true,
       fieldArgumentsIsDeprecated: true,
+      typesIsOneOf: true,
     };
 
     const output = print(makeIntrospectionQuery(support));
@@ -183,6 +186,7 @@ describe('makeIntrospectionQuery', () => {
         kind
         name
         description
+        isOneOf
         specifiedByURL
         fields(includeDeprecated: true) {
           name
@@ -274,6 +278,7 @@ describe('makeIntrospectionQuery', () => {
       inputValueDeprecation: false,
       directiveArgumentsIsDeprecated: false,
       fieldArgumentsIsDeprecated: false,
+      typesIsOneOf: false,
     };
 
     const output = print(makeIntrospectionQuery(support));

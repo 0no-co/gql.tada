@@ -101,6 +101,7 @@ export type simpleSchema =
       DefaultPayload: {
         kind: 'INPUT_OBJECT';
         name: 'DefaultPayload';
+        isOneOf: false;
         inputFields: [
           {
             name: 'value';
@@ -400,6 +401,7 @@ export type simpleSchema =
       TodoPayload: {
         kind: 'INPUT_OBJECT';
         name: 'TodoPayload';
+        isOneOf: false;
         inputFields: [
           {
             name: 'title';
