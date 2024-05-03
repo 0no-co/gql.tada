@@ -3,6 +3,23 @@ import type { SchemaLike } from './introspection';
 import type { DocumentNodeLike } from './parser';
 import type { obj } from './utils';
 
+type GetInputObjectType<InputField, Introspection extends SchemaLike> = InputField extends {
+  name: any;
+  type: any;
+}
+  ? InputField extends { defaultValue?: undefined | null; type: { kind: 'NON_NULL' } }
+    ? {
+        [Name in InputField['name']]: unwrapTypeRec<InputField['type'], Introspection, true>;
+      }
+    : {
+        [Name in InputField['name']]?: unwrapTypeRec<
+          InputField['type'],
+          Introspection,
+          true
+        > | null;
+      }
+  : {};
+
 type getInputObjectTypeRec<
   InputFields,
   Introspection extends SchemaLike,
@@ -14,43 +31,8 @@ type getInputObjectTypeRec<
       Introspection,
       IsOneOf,
       IsOneOf extends true
-        ?
-            | (InputField extends { name: any; type: any }
-                ? InputField extends { defaultValue?: undefined | null; type: { kind: 'NON_NULL' } }
-                  ? {
-                      [Name in InputField['name']]: unwrapTypeRec<
-                        InputField['type'],
-                        Introspection,
-                        true
-                      >;
-                    }
-                  : {
-                      [Name in InputField['name']]?: unwrapTypeRec<
-                        InputField['type'],
-                        Introspection,
-                        true
-                      > | null;
-                    }
-                : {})
-            | InputObject
-        : (InputField extends { name: any; type: any }
-            ? InputField extends { defaultValue?: undefined | null; type: { kind: 'NON_NULL' } }
-              ? {
-                  [Name in InputField['name']]: unwrapTypeRec<
-                    InputField['type'],
-                    Introspection,
-                    true
-                  >;
-                }
-              : {
-                  [Name in InputField['name']]?: unwrapTypeRec<
-                    InputField['type'],
-                    Introspection,
-                    true
-                  > | null;
-                }
-            : {}) &
-            InputObject
+        ? GetInputObjectType<InputField, Introspection> | InputObject
+        : GetInputObjectType<InputField, Introspection> & InputObject
     >
   : obj<InputObject>;
 
