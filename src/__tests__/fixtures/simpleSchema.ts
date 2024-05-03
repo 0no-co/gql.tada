@@ -217,6 +217,39 @@ export type simpleSchema =
           };
         };
       };
+      OneOfPayload: {
+        kind: 'INPUT_OBJECT';
+        name: 'OneOfPayload';
+        isOneOf: true;
+        inputFields: [
+          {
+            name: 'value_1';
+            type: {
+              kind: 'NON_NULL';
+              name: never;
+              ofType: {
+                kind: 'SCALAR';
+                name: 'String';
+                ofType: null;
+              };
+            };
+            defaultValue: null;
+          },
+          {
+            name: 'value_2';
+            type: {
+              kind: 'NON_NULL';
+              name: never;
+              ofType: {
+                kind: 'SCALAR';
+                name: 'String';
+                ofType: null;
+              };
+            };
+            defaultValue: null;
+          },
+        ];
+      };
       Query: {
         kind: 'OBJECT';
         name: 'Query';

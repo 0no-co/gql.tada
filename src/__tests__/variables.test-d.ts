@@ -36,6 +36,23 @@ describe('getVariablesType', () => {
     }>();
   });
 
+  it('works for one-of-objects', () => {
+    const query = `
+      mutation ($id: ID!, $input: OneOfPayload!) {
+        toggleTodo (id: $id input: $input) { id }
+      }
+    `;
+
+    type doc = parseDocument<typeof query>;
+    type variables = getVariablesType<doc, schema>;
+
+    expectTypeOf<variables>().toEqualTypeOf<{
+      id: string;
+      // TODO: should we get rid of the leading empty object?
+      input: {} | { value_1: string } | { value_2: string };
+    }>();
+  });
+
   it('allows optionals for default values', () => {
     const query = `
       mutation ($id: ID! = "default") {
