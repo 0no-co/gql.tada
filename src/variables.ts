@@ -6,23 +6,51 @@ import type { obj } from './utils';
 type getInputObjectTypeRec<
   InputFields,
   Introspection extends SchemaLike,
+  IsOneOf extends boolean,
   InputObject = {},
 > = InputFields extends [infer InputField, ...infer Rest]
   ? getInputObjectTypeRec<
       Rest,
       Introspection,
-      (InputField extends { name: any; type: any }
-        ? InputField extends { defaultValue?: undefined | null; type: { kind: 'NON_NULL' } }
-          ? { [Name in InputField['name']]: unwrapTypeRec<InputField['type'], Introspection, true> }
-          : {
-              [Name in InputField['name']]?: unwrapTypeRec<
-                InputField['type'],
-                Introspection,
-                true
-              > | null;
-            }
-        : {}) &
-        InputObject
+      IsOneOf,
+      IsOneOf extends true
+        ?
+            | (InputField extends { name: any; type: any }
+                ? InputField extends { defaultValue?: undefined | null; type: { kind: 'NON_NULL' } }
+                  ? {
+                      [Name in InputField['name']]: unwrapTypeRec<
+                        InputField['type'],
+                        Introspection,
+                        true
+                      >;
+                    }
+                  : {
+                      [Name in InputField['name']]?: unwrapTypeRec<
+                        InputField['type'],
+                        Introspection,
+                        true
+                      > | null;
+                    }
+                : {})
+            | InputObject
+        : (InputField extends { name: any; type: any }
+            ? InputField extends { defaultValue?: undefined | null; type: { kind: 'NON_NULL' } }
+              ? {
+                  [Name in InputField['name']]: unwrapTypeRec<
+                    InputField['type'],
+                    Introspection,
+                    true
+                  >;
+                }
+              : {
+                  [Name in InputField['name']]?: unwrapTypeRec<
+                    InputField['type'],
+                    Introspection,
+                    true
+                  > | null;
+                }
+            : {}) &
+            InputObject
     >
   : obj<InputObject>;
 
@@ -94,8 +122,16 @@ type getScalarType<
   TypeName,
   Introspection extends SchemaLike,
 > = TypeName extends keyof Introspection['types']
-  ? Introspection['types'][TypeName] extends { kind: 'INPUT_OBJECT'; inputFields: any }
-    ? getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>
+  ? Introspection['types'][TypeName] extends {
+      kind: 'INPUT_OBJECT';
+      inputFields: any;
+      isOneOf?: any;
+    }
+    ? getInputObjectTypeRec<
+        Introspection['types'][TypeName]['inputFields'],
+        Introspection,
+        Introspection['types'][TypeName]['isOneOf'] extends true ? true : false
+      >
     : Introspection['types'][TypeName] extends { type: any }
       ? Introspection['types'][TypeName]['type']
       : Introspection['types'][TypeName]['enumValues']
