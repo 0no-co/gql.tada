@@ -43,25 +43,13 @@ type getInputObjectTypeOneOfRec<
           name: any;
           type: any;
         }
-          ? InputField extends { defaultValue?: undefined | null; type: { kind: 'NON_NULL' } }
-            ? {
-                [Name in InputField['name']]: unwrapTypeRec<
-                  InputField['type'],
-                  Introspection,
-                  false
-                >;
-              }
-            : {
-                [Name in InputField['name']]: unwrapTypeRec<
-                  InputField['type'],
-                  Introspection,
-                  false
-                >;
-              }
-          : {})
+          ? {
+              [Name in InputField['name']]: unwrapTypeRec<InputField['type'], Introspection, false>;
+            }
+          : never)
       | InputObject
     >
-  : obj<InputObject>;
+  : InputObject;
 
 type unwrapTypeRec<TypeRef, Introspection extends SchemaLike, IsOptional> = TypeRef extends {
   kind: 'NON_NULL';
