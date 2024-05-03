@@ -1,639 +1,639 @@
 export type simpleIntrospection = {
-  name: 'simpleSchema',
+  name: 'simpleSchema';
   __schema: {
     queryType: {
-      name: 'Query',
-    },
+      name: 'Query';
+    };
     mutationType: {
-      name: 'Mutation',
-    },
+      name: 'Mutation';
+    };
     subscriptionType: {
-      name: 'Subscription',
-    },
+      name: 'Subscription';
+    };
     types: [
       {
-        kind: 'INPUT_OBJECT',
-        name: 'TodoPayload',
-        fields: null,
+        kind: 'INPUT_OBJECT';
+        name: 'TodoPayload';
+        fields: null;
         inputFields: [
           {
-            name: 'title',
+            name: 'title';
             type: {
-              kind: 'NON_NULL',
-              name: null,
+              kind: 'NON_NULL';
+              name: null;
               ofType: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-            },
-            defaultValue: null,
+                kind: 'SCALAR';
+                name: 'String';
+                ofType: null;
+              };
+            };
+            defaultValue: null;
           },
           {
-            name: 'description',
+            name: 'description';
             type: {
-              kind: 'NON_NULL',
+              kind: 'NON_NULL';
               ofType: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-            },
+                kind: 'SCALAR';
+                name: 'String';
+                ofType: null;
+              };
+            };
           },
           {
-            name: 'complete',
+            name: 'complete';
             type: {
-              kind: 'SCALAR',
-              name: 'Boolean',
-              ofType: null,
-            },
-            defaultValue: null,
+              kind: 'SCALAR';
+              name: 'Boolean';
+              ofType: null;
+            };
+            defaultValue: null;
           },
-        ],
-        interfaces: null,
-        enumValues: null,
-        possibleTypes: null,
+        ];
+        interfaces: null;
+        enumValues: null;
+        possibleTypes: null;
       },
       {
-        kind: 'INPUT_OBJECT',
-        name: 'DefaultPayload',
-        fields: null,
+        kind: 'INPUT_OBJECT';
+        name: 'DefaultPayload';
+        fields: null;
         inputFields: [
           {
-            name: 'value',
+            name: 'value';
             type: {
-              kind: 'NON_NULL',
-              name: null,
+              kind: 'NON_NULL';
+              name: null;
               ofType: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-            },
-            defaultValue: 'DEFAULT',
-          }
-        ],
-        interfaces: null,
-        enumValues: null,
-        possibleTypes: null,
+                kind: 'SCALAR';
+                name: 'String';
+                ofType: null;
+              };
+            };
+            defaultValue: 'DEFAULT';
+          },
+        ];
+        interfaces: null;
+        enumValues: null;
+        possibleTypes: null;
       },
       {
-        kind: 'OBJECT',
-        name: 'Query',
+        kind: 'OBJECT';
+        name: 'Query';
         fields: [
           {
-            name: 'todos',
-            args: [],
+            name: 'todos';
+            args: [];
             type: {
-              kind: 'LIST',
-              name: null,
+              kind: 'LIST';
+              name: null;
               ofType: {
-                kind: 'OBJECT',
-                name: 'Todo',
-                ofType: null,
-              },
-            },
+                kind: 'OBJECT';
+                name: 'Todo';
+                ofType: null;
+              };
+            };
           },
           {
-            name: 'test',
-            args: [],
+            name: 'test';
+            args: [];
             type: {
-              kind: 'UNION',
-              name: 'Search',
-              ofType: null,
-            },
+              kind: 'UNION';
+              name: 'Search';
+              ofType: null;
+            };
           },
           {
-            name: 'latestTodo',
-            args: [],
+            name: 'latestTodo';
+            args: [];
             type: {
-              kind: 'NON_NULL',
-              name: null,
+              kind: 'NON_NULL';
+              name: null;
               ofType: {
-                kind: 'UNION',
-                name: 'LatestTodoResult',
-                ofType: null,
-              },
-            },
+                kind: 'UNION';
+                name: 'LatestTodoResult';
+                ofType: null;
+              };
+            };
           },
           {
-            name: 'itodo',
-            args: [],
+            name: 'itodo';
+            args: [];
             type: {
-              kind: 'NON_NULL',
-              name: null,
+              kind: 'NON_NULL';
+              name: null;
               ofType: {
-                kind: 'INTERFACE',
-                name: 'ITodo',
-                ofType: null,
-              },
-            },
+                kind: 'INTERFACE';
+                name: 'ITodo';
+                ofType: null;
+              };
+            };
           },
-        ],
-        inputFields: null,
-        interfaces: [],
-        enumValues: null,
-        possibleTypes: null,
+        ];
+        inputFields: null;
+        interfaces: [];
+        enumValues: null;
+        possibleTypes: null;
       },
       {
-        name: 'LatestTodoResult',
-        kind: 'UNION',
-        args: [],
+        name: 'LatestTodoResult';
+        kind: 'UNION';
+        args: [];
         possibleTypes: [
           {
-            kind: 'OBJECT',
-            name: 'Todo',
-            ofType: null,
+            kind: 'OBJECT';
+            name: 'Todo';
+            ofType: null;
           },
           {
-            kind: 'OBJECT',
-            name: 'NoTodosError',
-            ofType: null,
+            kind: 'OBJECT';
+            name: 'NoTodosError';
+            ofType: null;
           },
-        ],
+        ];
       },
       {
-        kind: 'OBJECT',
-        name: 'NoTodosError',
-        interfaces: [],
+        kind: 'OBJECT';
+        name: 'NoTodosError';
+        interfaces: [];
         fields: [
           {
-            name: 'message',
-            args: [],
+            name: 'message';
+            args: [];
             type: {
-              kind: 'NON_NULL',
-              name: null,
+              kind: 'NON_NULL';
+              name: null;
               ofType: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-            },
+                kind: 'SCALAR';
+                name: 'String';
+                ofType: null;
+              };
+            };
           },
-        ],
+        ];
       },
       {
-        kind: 'OBJECT',
-        name: 'Todo',
+        kind: 'OBJECT';
+        name: 'Todo';
         fields: [
           {
-            name: 'id',
-            args: [],
+            name: 'id';
+            args: [];
             type: {
-              kind: 'NON_NULL',
-              name: null,
+              kind: 'NON_NULL';
+              name: null;
               ofType: {
-                kind: 'SCALAR',
-                name: 'ID',
-                ofType: null,
-              },
-            },
+                kind: 'SCALAR';
+                name: 'ID';
+                ofType: null;
+              };
+            };
           },
           {
-            name: 'text',
-            args: [],
+            name: 'text';
+            args: [];
             type: {
-              kind: 'NON_NULL',
-              name: null,
+              kind: 'NON_NULL';
+              name: null;
               ofType: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-            },
+                kind: 'SCALAR';
+                name: 'String';
+                ofType: null;
+              };
+            };
           },
           {
-            name: 'complete',
-            args: [],
+            name: 'complete';
+            args: [];
             type: {
-              kind: 'SCALAR',
-              name: 'Boolean',
-              ofType: null,
-            },
+              kind: 'SCALAR';
+              name: 'Boolean';
+              ofType: null;
+            };
           },
           {
-            name: 'test',
-            args: [],
+            name: 'test';
+            args: [];
             type: {
-              kind: 'ENUM',
-              name: 'test',
-              ofType: null,
-            },
+              kind: 'ENUM';
+              name: 'test';
+              ofType: null;
+            };
           },
           {
-            name: 'author',
-            args: [],
+            name: 'author';
+            args: [];
             type: {
-              kind: 'OBJECT',
-              name: 'Author',
-              ofType: null,
-            },
+              kind: 'OBJECT';
+              name: 'Author';
+              ofType: null;
+            };
           },
-        ],
-        inputFields: null,
-        interfaces: [],
-        enumValues: null,
-        possibleTypes: null,
+        ];
+        inputFields: null;
+        interfaces: [];
+        enumValues: null;
+        possibleTypes: null;
       },
       {
-        kind: 'SCALAR',
-        name: 'ID',
-        fields: null,
-        inputFields: null,
-        interfaces: null,
-        enumValues: null,
-        possibleTypes: null,
+        kind: 'SCALAR';
+        name: 'ID';
+        fields: null;
+        inputFields: null;
+        interfaces: null;
+        enumValues: null;
+        possibleTypes: null;
       },
       {
-        kind: 'SCALAR',
-        name: 'String',
-        fields: null,
-        inputFields: null,
-        interfaces: null,
-        enumValues: null,
-        possibleTypes: null,
+        kind: 'SCALAR';
+        name: 'String';
+        fields: null;
+        inputFields: null;
+        interfaces: null;
+        enumValues: null;
+        possibleTypes: null;
       },
       {
-        kind: 'SCALAR',
-        name: 'Boolean',
-        fields: null,
-        inputFields: null,
-        interfaces: null,
-        enumValues: null,
-        possibleTypes: null,
+        kind: 'SCALAR';
+        name: 'Boolean';
+        fields: null;
+        inputFields: null;
+        interfaces: null;
+        enumValues: null;
+        possibleTypes: null;
       },
       {
-        kind: 'OBJECT',
-        name: 'Author',
+        kind: 'OBJECT';
+        name: 'Author';
         fields: [
           {
-            name: 'id',
-            args: [],
+            name: 'id';
+            args: [];
             type: {
-              kind: 'NON_NULL',
-              name: null,
+              kind: 'NON_NULL';
+              name: null;
               ofType: {
-                kind: 'SCALAR',
-                name: 'ID',
-                ofType: null,
-              },
-            },
+                kind: 'SCALAR';
+                name: 'ID';
+                ofType: null;
+              };
+            };
           },
           {
-            name: 'name',
-            args: [],
+            name: 'name';
+            args: [];
             type: {
-              kind: 'NON_NULL',
-              name: null,
+              kind: 'NON_NULL';
+              name: null;
               ofType: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-            },
+                kind: 'SCALAR';
+                name: 'String';
+                ofType: null;
+              };
+            };
           },
           {
-            name: 'known',
-            args: [],
+            name: 'known';
+            args: [];
             type: {
-              kind: 'SCALAR',
-              name: 'Boolean',
-              ofType: null,
-            },
+              kind: 'SCALAR';
+              name: 'Boolean';
+              ofType: null;
+            };
           },
-        ],
-        inputFields: null,
-        interfaces: [],
-        enumValues: null,
-        possibleTypes: null,
+        ];
+        inputFields: null;
+        interfaces: [];
+        enumValues: null;
+        possibleTypes: null;
       },
       {
-        kind: 'OBJECT',
-        name: 'Mutation',
+        kind: 'OBJECT';
+        name: 'Mutation';
         fields: [
           {
-            name: 'updateTodo',
+            name: 'updateTodo';
             args: [
               {
-                name: 'id',
+                name: 'id';
                 type: {
-                  kind: 'NON_NULL',
-                  name: null,
+                  kind: 'NON_NULL';
+                  name: null;
                   ofType: {
-                    kind: 'SCALAR',
-                    name: 'ID',
-                    ofType: null,
-                  },
-                },
-                defaultValue: null,
+                    kind: 'SCALAR';
+                    name: 'ID';
+                    ofType: null;
+                  };
+                };
+                defaultValue: null;
               },
               {
-                name: 'input',
+                name: 'input';
                 type: {
-                  kind: 'NON_NULL',
-                  name: null,
+                  kind: 'NON_NULL';
+                  name: null;
                   ofType: {
-                    kind: 'INPUT_OBJECT',
-                    name: 'TodoPayload',
-                    ofType: null,
-                  },
-                },
-                defaultValue: null,
+                    kind: 'INPUT_OBJECT';
+                    name: 'TodoPayload';
+                    ofType: null;
+                  };
+                };
+                defaultValue: null;
               },
-            ],
+            ];
             type: {
-              kind: 'SCALAR',
-              name: 'Boolean',
-              ofType: null,
-            },
+              kind: 'SCALAR';
+              name: 'Boolean';
+              ofType: null;
+            };
           },
           {
-            name: 'toggleTodo',
+            name: 'toggleTodo';
             args: [
               {
-                name: 'id',
+                name: 'id';
                 type: {
-                  kind: 'NON_NULL',
-                  name: null,
+                  kind: 'NON_NULL';
+                  name: null;
                   ofType: {
-                    kind: 'SCALAR',
-                    name: 'ID',
-                    ofType: null,
-                  },
-                },
+                    kind: 'SCALAR';
+                    name: 'ID';
+                    ofType: null;
+                  };
+                };
               },
-            ],
+            ];
             type: {
-              kind: 'OBJECT',
-              name: 'Todo',
-              ofType: null,
-            },
+              kind: 'OBJECT';
+              name: 'Todo';
+              ofType: null;
+            };
           },
-        ],
-        inputFields: null,
-        interfaces: [],
-        enumValues: null,
-        possibleTypes: null,
+        ];
+        inputFields: null;
+        interfaces: [];
+        enumValues: null;
+        possibleTypes: null;
       },
       {
-        kind: 'OBJECT',
-        name: 'Subscription',
+        kind: 'OBJECT';
+        name: 'Subscription';
         fields: [
           {
-            name: 'newTodo',
-            args: [],
+            name: 'newTodo';
+            args: [];
             type: {
-              kind: 'OBJECT',
-              name: 'Todo',
-              ofType: null,
-            },
+              kind: 'OBJECT';
+              name: 'Todo';
+              ofType: null;
+            };
           },
-        ],
-        inputFields: null,
-        interfaces: [],
-        enumValues: null,
-        possibleTypes: null,
+        ];
+        inputFields: null;
+        interfaces: [];
+        enumValues: null;
+        possibleTypes: null;
       },
       {
-        kind: 'ENUM',
-        name: 'test',
-        fields: null,
-        inputFields: null,
-        interfaces: null,
-        enumValues: [{ name: 'value' }, { name: 'more' }],
+        kind: 'ENUM';
+        name: 'test';
+        fields: null;
+        inputFields: null;
+        interfaces: null;
+        enumValues: [{ name: 'value' }, { name: 'more' }];
       },
       {
-        kind: 'INTERFACE',
-        name: 'ITodo',
+        kind: 'INTERFACE';
+        name: 'ITodo';
         fields: [
           {
-            name: 'id',
-            args: [],
+            name: 'id';
+            args: [];
             type: {
-              kind: 'NON_NULL',
-              name: null,
+              kind: 'NON_NULL';
+              name: null;
               ofType: {
-                kind: 'SCALAR',
-                name: 'ID',
-                ofType: null,
-              },
-            },
+                kind: 'SCALAR';
+                name: 'ID';
+                ofType: null;
+              };
+            };
           },
           {
-            name: 'text',
-            args: [],
+            name: 'text';
+            args: [];
             type: {
-              kind: 'NON_NULL',
-              name: null,
+              kind: 'NON_NULL';
+              name: null;
               ofType: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-            },
+                kind: 'SCALAR';
+                name: 'String';
+                ofType: null;
+              };
+            };
           },
           {
-            name: 'complete',
-            args: [],
+            name: 'complete';
+            args: [];
             type: {
-              kind: 'SCALAR',
-              name: 'Boolean',
-              ofType: null,
-            },
+              kind: 'SCALAR';
+              name: 'Boolean';
+              ofType: null;
+            };
           },
           {
-            name: 'author',
-            args: [],
+            name: 'author';
+            args: [];
             type: {
-              kind: 'OBJECT',
-              name: 'Author',
-              ofType: null,
-            },
+              kind: 'OBJECT';
+              name: 'Author';
+              ofType: null;
+            };
           },
-        ],
-        inputFields: null,
-        interfaces: null,
-        enumValues: null,
+        ];
+        inputFields: null;
+        interfaces: null;
+        enumValues: null;
         possibleTypes: [
           {
-            kind: 'OBJECT',
-            name: 'BigTodo',
-            ofType: null,
+            kind: 'OBJECT';
+            name: 'BigTodo';
+            ofType: null;
           },
           {
-            kind: 'OBJECT',
-            name: 'SmallTodo',
-            ofType: null,
+            kind: 'OBJECT';
+            name: 'SmallTodo';
+            ofType: null;
           },
-        ],
+        ];
       },
       {
-        kind: 'OBJECT',
-        name: 'BigTodo',
+        kind: 'OBJECT';
+        name: 'BigTodo';
         fields: [
           {
-            name: 'id',
-            args: [],
+            name: 'id';
+            args: [];
             type: {
-              kind: 'NON_NULL',
-              name: null,
+              kind: 'NON_NULL';
+              name: null;
               ofType: {
-                kind: 'SCALAR',
-                name: 'ID',
-                ofType: null,
-              },
-            },
+                kind: 'SCALAR';
+                name: 'ID';
+                ofType: null;
+              };
+            };
           },
           {
-            name: 'text',
-            args: [],
+            name: 'text';
+            args: [];
             type: {
-              kind: 'NON_NULL',
-              name: null,
+              kind: 'NON_NULL';
+              name: null;
               ofType: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-            },
+                kind: 'SCALAR';
+                name: 'String';
+                ofType: null;
+              };
+            };
           },
           {
-            name: 'complete',
-            args: [],
+            name: 'complete';
+            args: [];
             type: {
-              kind: 'SCALAR',
-              name: 'Boolean',
-              ofType: null,
-            },
+              kind: 'SCALAR';
+              name: 'Boolean';
+              ofType: null;
+            };
           },
           {
-            name: 'author',
-            args: [],
+            name: 'author';
+            args: [];
             type: {
-              kind: 'OBJECT',
-              name: 'Author',
-              ofType: null,
-            },
+              kind: 'OBJECT';
+              name: 'Author';
+              ofType: null;
+            };
           },
           {
-            name: 'wallOfText',
-            args: [],
+            name: 'wallOfText';
+            args: [];
             type: {
-              kind: 'SCALAR',
-              name: 'String',
-              ofType: null,
-            },
+              kind: 'SCALAR';
+              name: 'String';
+              ofType: null;
+            };
           },
-        ],
-        inputFields: null,
+        ];
+        inputFields: null;
         interfaces: [
           {
-            kind: 'INTERFACE',
-            name: 'ITodo',
-            ofType: null,
+            kind: 'INTERFACE';
+            name: 'ITodo';
+            ofType: null;
           },
-        ],
-        enumValues: null,
-        possibleTypes: null,
+        ];
+        enumValues: null;
+        possibleTypes: null;
       },
       {
-        kind: 'OBJECT',
-        name: 'SmallTodo',
+        kind: 'OBJECT';
+        name: 'SmallTodo';
         fields: [
           {
-            name: 'id',
-            args: [],
+            name: 'id';
+            args: [];
             type: {
-              kind: 'NON_NULL',
-              name: null,
+              kind: 'NON_NULL';
+              name: null;
               ofType: {
-                kind: 'SCALAR',
-                name: 'ID',
-                ofType: null,
-              },
-            },
+                kind: 'SCALAR';
+                name: 'ID';
+                ofType: null;
+              };
+            };
           },
           {
-            name: 'text',
-            args: [],
+            name: 'text';
+            args: [];
             type: {
-              kind: 'NON_NULL',
-              name: null,
+              kind: 'NON_NULL';
+              name: null;
               ofType: {
-                kind: 'SCALAR',
-                name: 'String',
-                ofType: null,
-              },
-            },
+                kind: 'SCALAR';
+                name: 'String';
+                ofType: null;
+              };
+            };
           },
           {
-            name: 'complete',
-            args: [],
+            name: 'complete';
+            args: [];
             type: {
-              kind: 'SCALAR',
-              name: 'Boolean',
-              ofType: null,
-            },
+              kind: 'SCALAR';
+              name: 'Boolean';
+              ofType: null;
+            };
           },
           {
-            name: 'author',
-            args: [],
+            name: 'author';
+            args: [];
             type: {
-              kind: 'OBJECT',
-              name: 'Author',
-              ofType: null,
-            },
+              kind: 'OBJECT';
+              name: 'Author';
+              ofType: null;
+            };
           },
           {
-            name: 'maxLength',
-            args: [],
+            name: 'maxLength';
+            args: [];
             type: {
-              kind: 'SCALAR',
-              name: 'Int',
-              ofType: null,
-            },
+              kind: 'SCALAR';
+              name: 'Int';
+              ofType: null;
+            };
           },
-        ],
-        inputFields: null,
+        ];
+        inputFields: null;
         interfaces: [
           {
-            kind: 'INTERFACE',
-            name: 'ITodo',
-            ofType: null,
+            kind: 'INTERFACE';
+            name: 'ITodo';
+            ofType: null;
           },
-        ],
-        enumValues: null,
-        possibleTypes: null,
+        ];
+        enumValues: null;
+        possibleTypes: null;
       },
       {
-        kind: 'SCALAR',
-        name: 'Int',
-        fields: null,
-        inputFields: null,
-        interfaces: null,
-        enumValues: null,
-        possibleTypes: null,
+        kind: 'SCALAR';
+        name: 'Int';
+        fields: null;
+        inputFields: null;
+        interfaces: null;
+        enumValues: null;
+        possibleTypes: null;
       },
       {
-        kind: 'UNION',
-        name: 'Search',
-        fields: null,
-        inputFields: null,
-        interfaces: null,
-        enumValues: null,
+        kind: 'UNION';
+        name: 'Search';
+        fields: null;
+        inputFields: null;
+        interfaces: null;
+        enumValues: null;
         possibleTypes: [
           {
-            kind: 'OBJECT',
-            name: 'SmallTodo',
-            ofType: null,
+            kind: 'OBJECT';
+            name: 'SmallTodo';
+            ofType: null;
           },
           {
-            kind: 'OBJECT',
-            name: 'BigTodo',
-            ofType: null,
+            kind: 'OBJECT';
+            name: 'BigTodo';
+            ofType: null;
           },
-        ],
+        ];
       },
-    ],
-  },
+    ];
+  };
 };

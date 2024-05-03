@@ -23,16 +23,24 @@ type GetInputObjectType<InputField, Introspection extends SchemaLike> = InputFie
 type getInputObjectTypeRec<
   InputFields,
   Introspection extends SchemaLike,
-  IsOneOf extends boolean,
   InputObject = {},
 > = InputFields extends [infer InputField, ...infer Rest]
   ? getInputObjectTypeRec<
       Rest,
       Introspection,
-      IsOneOf,
-      IsOneOf extends true
-        ? GetInputObjectType<InputField, Introspection> | InputObject
-        : GetInputObjectType<InputField, Introspection> & InputObject
+      GetInputObjectType<InputField, Introspection> & InputObject
+    >
+  : obj<InputObject>;
+
+type getInputObjectTypeOneOfRec<
+  InputFields,
+  Introspection extends SchemaLike,
+  InputObject = never,
+> = InputFields extends [infer InputField, ...infer Rest]
+  ? getInputObjectTypeOneOfRec<
+      Rest,
+      Introspection,
+      GetInputObjectType<InputField, Introspection> | InputObject
     >
   : obj<InputObject>;
 
@@ -109,11 +117,9 @@ type getScalarType<
       inputFields: any;
       isOneOf?: any;
     }
-    ? getInputObjectTypeRec<
-        Introspection['types'][TypeName]['inputFields'],
-        Introspection,
-        Introspection['types'][TypeName]['isOneOf'] extends true ? true : false
-      >
+    ? Introspection['types'][TypeName]['isOneOf'] extends true
+      ? getInputObjectTypeOneOfRec<Introspection['types'][TypeName]['inputFields'], Introspection>
+      : getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>
     : Introspection['types'][TypeName] extends { type: any }
       ? Introspection['types'][TypeName]['type']
       : Introspection['types'][TypeName]['enumValues']
