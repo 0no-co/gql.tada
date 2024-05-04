@@ -1,6 +1,5 @@
 export type * from './types';
 
-import path from 'node:path';
 import { loadFromSDL } from './sdl';
 import { loadFromURL } from './url';
 
@@ -18,7 +17,7 @@ export { loadFromSDL, loadFromURL };
 
 export const getURLConfig = (origin: SchemaOrigin | null) => {
   try {
-    return origin
+    return origin && !Array.isArray(origin)
       ? {
           url: new URL(typeof origin === 'object' ? origin.url : origin),
           headers: typeof origin === 'object' ? origin.headers : undefined,
@@ -42,13 +41,12 @@ export function load(config: LoadConfig): SchemaLoader {
       interval: config.fetchInterval,
       name: config.name,
     });
-  } else if (typeof config.origin === 'string') {
-    const file = config.rootPath ? path.resolve(config.rootPath, config.origin) : config.origin;
-    const assumeValid = config.assumeValid != null ? config.assumeValid : true;
+  } else if (typeof config.origin === 'string' || Array.isArray(config.origin)) {
     return loadFromSDL({
-      file,
-      assumeValid,
+      assumeValid: config.assumeValid != null ? config.assumeValid : true,
       name: config.name,
+      rootPath: config.rootPath,
+      include: config.origin,
     });
   } else {
     throw new Error(`Configuration contains an invalid "schema" option`);

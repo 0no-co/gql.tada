@@ -56,6 +56,7 @@ export interface SchemaRef<Result = SchemaLoaderResult | null> {
 
 export type SchemaOrigin =
   | string
+  | string[]
   | {
       url: string;
       headers?: HeadersInit;
