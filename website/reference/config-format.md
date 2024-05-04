@@ -86,7 +86,7 @@ the main plugin config or inside the `schemas[]` array items.
 The `schema` option specifies how to load your GraphQL schema and currently allows
 for three different schema formats. It accepts either:
 
-- a path to a `.graphql` file containing a schema definition (in GraphQL SDL format)
+- a path or glob to a `.graphql` file containing a schema definition (in GraphQL SDL format)
 - a path to a `.json` file containing a schema’s introspection query data
 - a URL to a GraphQL API that can be introspected
 
@@ -148,6 +148,10 @@ for three different schema formats. It accepts either:
 }
 ```
 :::
+
+If your schema consists of multiple `.graphql` files, you may pass
+an array of paths, a glob, or an array of mixed paths and globs
+to your SDL files.
 
 This option is used by both the `gql.tada` CLI and `@0no-co/graphqlsp`
 and is required for all diagnostics and in-editor support to work.
