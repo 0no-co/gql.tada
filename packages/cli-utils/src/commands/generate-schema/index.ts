@@ -24,9 +24,9 @@ const parseHeaders = (
 export class GenerateSchema extends Command {
   static paths = [['generate-schema'], ['generate', 'schema']];
 
-  input = Option.String({
+  input = Option.Rest({
     name: 'schema',
-    required: true,
+    required: 1,
   });
 
   tsconfig = Option.String('--tsconfig,-c', {
