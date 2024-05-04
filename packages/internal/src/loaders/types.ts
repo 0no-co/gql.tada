@@ -26,7 +26,7 @@ export interface SchemaLoader {
 }
 
 export interface BaseLoadConfig {
-  rootPath?: string;
+  rootPath: string;
   fetchInterval?: number;
   assumeValid?: boolean;
 }

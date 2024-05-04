@@ -61,7 +61,7 @@ export function loadRef(
   const teardowns: (() => void)[] = [];
 
   let _loaders: { input: SingleSchemaInput; loader: SchemaLoader }[] | undefined;
-  const getLoaders = (config?: BaseLoadConfig) => {
+  const getLoaders = (config: BaseLoadConfig) => {
     if (!_loaders) {
       _loaders = (('schemas' in input && input.schemas) || []).map((input) => ({
         input,
