@@ -233,7 +233,7 @@ function initGraphQLTada<const Setup extends AbstractSetupSchema>() {
       );
     }
 
-    return { kind: Kind.DOCUMENT, definitions };
+    return { kind: Kind.DOCUMENT, definitions, input };
   }
 
   graphql.scalar = function scalar(_schema: Schema, value: any) {
@@ -292,7 +292,9 @@ interface TadaDocumentNode<
   Decoration = void,
 > extends DocumentNode,
     DocumentDecoration<Result, Variables>,
-    makeDefinitionDecoration<Decoration> {}
+    makeDefinitionDecoration<Decoration> {
+  readonly input: string;
+}
 
 /** A utility type returning the `Result` type of typed GraphQL documents.
  *
