@@ -16,7 +16,7 @@ to the GraphQL API instead of the complete GraphQL documents.
 This requires that the identifiers are embedded in our code and
 that the documents are known to our GraphQL API.
 
-::: details What are Persisted Documents?
+:::details[What are Persisted Documents?]
   We call a document a "persisted document" if it has an ID that
   identifies it. A GraphQL API that implements persisted documents
   will typically accept an ID instead of a full `query` parameter,
@@ -38,7 +38,7 @@ that the documents are known to our GraphQL API.
   just documents you've written yourself.
 :::
 
-::: details How do they differ from <u>Automatic</u> Persisted Queries?
+:::details[How do they differ from <u>Automatic</u> Persisted Queries?]
   **Persisted Documents** are not the same as **Automatic Persisted Queries**.
 
   Automatic Persisted Queries are a protocol extension for which the ID
@@ -94,7 +94,9 @@ by omitting them from your client-side output bundles entirely. Compiling
 GraphQL documents is often done to completely obscure the arguments and
 types shape of your GraphQL schema.
 
-::: tip Compatibility with GraphQL clients
+:::tip
+**Compatibility with GraphQL clients**
+
 Check whether your GraphQL clients supports omitting the original GraphQL
 document.
 
@@ -131,7 +133,7 @@ itself will be omitted from your compiled output bundle, provided
 the original document - `pokemonsQuery` in our example - isn't
 referenced anywhere else in your code.
 
-::: details When and why does this work?
+:::details[When and why does this work?]
   When we refer to the document using `typeof`, this refers to a
   value by type instead of by value.
 
@@ -197,7 +199,7 @@ To omit the `--output` argument, you can update your configuration
 to change where this persisted manifest file gets written to with
 the `tadaPersistedLocation` setting:
 
-::: code-group
+:::code-group
 ```json [tsconfig.json]
 {
   "compilerOptions": {
@@ -233,7 +235,9 @@ The document string is a combination of the original string
 that your `graphql()` call receives with all fragments it
 references appended to it.
 
-::: tip Formatting Documents
+:::tip
+**Formatting Documents**
+
 The persisted manifest file may not contain the documents exactly
 how your GraphQL client would format it.
 GraphQL clients often format documents to add introspection fields
@@ -293,7 +297,7 @@ If your API supports the unofficial
 [Apollo Automatic Persisted Queries protocol](https://github.com/apollographql/apollo-link-persisted-queries#apollo-engine) instead, you'll have to use the `@urql/exchange-persisted`
 exchange.
 
-::: details Automatic Persisted Queries protocol
+:::details[Automatic Persisted Queries protocol]
 The Automatic Persisted Queries protocol sends omits the `query` property
 from requests, and sends the document ID under the
 `extensions.persistedQuery.sha256Hash` property.
@@ -313,7 +317,7 @@ from requests, and sends the document ID under the
 
 First, install the `@urql/exchange-persisted` package:
 
-::: code-group
+:::code-group
 ```sh [npm]
 npm install @urql/exchange-persisted
 ```
@@ -392,7 +396,7 @@ export const client = new ApolloClient({
 This will send your persisted documents using the unofficial
 [Apollo Automatic Persisted Queries protocol](https://github.com/apollographql/apollo-link-persisted-queries#apollo-engine).
 
-::: details Automatic Persisted Queries protocol
+:::details[Automatic Persisted Queries protocol]
 The Automatic Persisted Queries protocol sends omits the `query` property
 from requests, and sends the document ID under the
 `extensions.persistedQuery.sha256Hash` property.

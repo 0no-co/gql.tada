@@ -3,17 +3,16 @@
   "version": "0.0.22",
   "private": true,
   "scripts": {
-    "dev": "vitepress dev",
-    "export": "vitepress build",
-    "preview": "vitepress preview"
+    "dev": "vocs dev",
+    "export": "vocs build",
+    "preview": "vocs preview"
   },
   "devDependencies": {
     "@shikijs/core": "^1.3.0",
     "@types/react": "^18.3.1",
     "shikiji": "^0.10.2",
     "shikiji-twoslash": "^0.10.2",
-    "vitepress": "1.1.3",
-    "vitepress-plugin-twoslash": "^0.10.2"
+    "vocs": "1.0.0-alpha.49"
   },
   "dependencies": {
     "@apollo/client": "^3.10.1",

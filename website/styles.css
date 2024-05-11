@@ -216,16 +216,16 @@
   height: 1rem;
 }
 
-:root .VPContent .vp-doc a:not(.VPButton, .button) {
+:root .vocs_DocsLayout .vp-doc a:not(.VPButton, .button) {
   color: var(--vp-c-indigo-1);
   text-decoration: none;
 }
 
-:root .VPContent .vp-doc a:not(.VPButton, .button):hover {
+:root .vocs_DocsLayout .vp-doc a:not(.VPButton, .button):hover {
   text-decoration: underline;
 }
 
-:root .VPContent .vp-doc code:not(pre > *) {
+:root .vocs_DocsLayout .vp-doc code:not(pre > *) {
   white-space: nowrap;
   border: 1px solid var(--vp-c-gray-3);
   border-radius: 4px;
@@ -233,31 +233,31 @@
   margin-block: -.125rem;
 }
 
-:root .VPContent .vp-doc :where(h2, h3, h4, h5) code:only-child {
+:root .vocs_DocsLayout .vp-doc :where(h2, h3, h4, h5) code:only-child {
   border: none;
 }
 
-:root .VPContent .vp-doc :where(:not(li, a:not(.button), strong, em, del, span, input, code)) + :not(li, a, strong, em, del, span, input, code) {
+:root .vocs_DocsLayout .vp-doc :where(:not(li, a:not(.button), strong, em, del, span, input, code)) + :not(li, a, strong, em, del, span, input, code) {
   margin-top: 1.3rem;
 }
 
-:root .VPContent .vp-doc :not(li, a, strong, em, del, span, input, code) + :where(h2, h3, h4, h5) {
+:root .vocs_DocsLayout .vp-doc :not(li, a, strong, em, del, span, input, code) + :where(h2, h3, h4, h5) {
   margin-top: 1.2em;
   margin-bottom: 0.2em;
 }
 
-:root .VPContent .vp-doc :where(h1, h2, h3, h4, h5) {
+:root .vocs_DocsLayout .vp-doc :where(h1, h2, h3, h4, h5) {
   color: var(--vp-c-white);
   line-height: 1.2;
   padding-top: 0;
   border: none;
 }
 
-:root.dark .VPContent .vp-doc :is(h1, h2, h3, h4, h5) code {
+:root.dark .vocs_DocsLayout .vp-doc :is(h1, h2, h3, h4, h5) code {
   border: none;
 }
 
-:root .VPContent .vp-doc :where(h1, h2, h3, h4, h5) [data-step] {
+:root .vocs_DocsLayout .vp-doc :where(h1, h2, h3, h4, h5) [data-step] {
   --size: 1em;
   position: relative;
   width: var(--size);
@@ -271,11 +271,11 @@
   margin-bottom: -0.2ch;
 }
 
-:root .VPContent .vp-doc :where(h1, h2, h3, h4, h5) [data-step]:first-line {
+:root .vocs_DocsLayout .vp-doc :where(h1, h2, h3, h4, h5) [data-step]:first-line {
   color: transparent;
 }
 
-:root .VPContent .vp-doc [data-step]:after {
+:root .vocs_DocsLayout .vp-doc [data-step]:after {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -293,26 +293,26 @@
   font-weight: 500;
 }
 
-:root:not(.dark) .VPContent .vp-doc [data-step]:after {
+:root:not(.dark) .vocs_DocsLayout .vp-doc [data-step]:after {
   background: var(--vp-c-indigo-soft);
   color: var(--vp-c-black);
 }
 
 @media (min-width: 800px) {
-  :root .VPContent .vp-doc :where(h1, h2, h3, h4, h5) [data-step] {
+  :root .vocs_DocsLayout .vp-doc :where(h1, h2, h3, h4, h5) [data-step] {
     margin-left: calc(-1em - 0.7ch);
   }
 
-  :root .VPContent .vp-doc :where(h1, h2, h3, h4, h5):has([data-step]) .header-anchor {
+  :root .vocs_DocsLayout .vp-doc :where(h1, h2, h3, h4, h5):has([data-step]) .header-anchor {
     display: none;
   }
 }
 
-:root .VPContent .vp-doc h1 .header-anchor {
+:root .vocs_DocsLayout .vp-doc h1 .header-anchor {
   display: none;
 }
 
-:root .VPContent .vp-doc :where(h2, h3, h4, h5) .header-anchor {
+:root .vocs_DocsLayout .vp-doc :where(h2, h3, h4, h5) .header-anchor {
   display: none;
   font-weight: 400;
   color: var(--vp-c-gray-soft);
@@ -321,51 +321,51 @@
 }
 
 @media (min-width: 768px) {
-  :root .VPContent .vp-doc :where(h1, h2, h3, h4, h5) .header-anchor {
+  :root .vocs_DocsLayout .vp-doc :where(h1, h2, h3, h4, h5) .header-anchor {
     display: block;
   }
 }
 
-:root .VPContent .vp-doc hr {
+:root .vocs_DocsLayout .vp-doc hr {
   margin-top: 2.4rem;
   margin-bottom: 2rem;
 }
 
-:root .VPContent .vp-doc h1 {
+:root .vocs_DocsLayout .vp-doc h1 {
   font-size: 3rem;
   margin-bottom: 3.4rem;
 }
 
-:root .VPContent .vp-doc h2 {
+:root .vocs_DocsLayout .vp-doc h2 {
   font-size: 2.4rem;
 }
 
-:root .VPContent .vp-doc h3 {
+:root .vocs_DocsLayout .vp-doc h3 {
   font-size: 1.62rem;
 }
 
-:root .VPContent .vp-doc h4 {
+:root .vocs_DocsLayout .vp-doc h4 {
   font-size: 1.25rem;
 }
 
-:root .VPContent .vp-doc h5 {
+:root .vocs_DocsLayout .vp-doc h5 {
   font-size: 1.12rem;
 }
 
-:root .VPContent .vp-doc ul {
+:root .vocs_DocsLayout .vp-doc ul {
   padding-left: 1.4ch;
 }
 
-:root .VPContent .vp-doc ul li {
+:root .vocs_DocsLayout .vp-doc ul li {
   padding-left: 0.7ch;
 }
 
-:root .VPContent .vp-doc ul li::marker {
+:root .vocs_DocsLayout .vp-doc ul li::marker {
   content: '- ';
   color: var(--vp-c-gray-2);
 }
 
-:root .VPContent .vp-doc video {
+:root .vocs_DocsLayout .vp-doc video {
   border: 1px solid var(--vp-c-gray-3);
   border-radius: 7px;
 }
@@ -376,7 +376,7 @@
   margin-bottom: 0.5rem;
 }
 
-:root .VPContent :is(.VPButton, .button) {
+:root .vocs_DocsLayout :is(.VPButton, .button) {
   display: inline-flex;
   flex-direction: column;
   line-height: 1.7;
@@ -390,7 +390,7 @@
   font-weight: 600;
 }
 
-:root .VPContent :is(.VPButton, .button):before {
+:root .vocs_DocsLayout :is(.VPButton, .button):before {
   position: absolute;
   right: 17px;
   top: 50%;
@@ -407,7 +407,7 @@
 }
 
 :root .VPDocFooter .pager .VPLink,
-:root .VPContent :is(.VPButton, .button) {
+:root .vocs_DocsLayout :is(.VPButton, .button) {
   cursor: pointer;
   transition: color 0.25s, border-color 0.25s, background-color 0.25s;
   box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 1px 0px, rgba(0, 0, 0, 0.24) 0px 2px 1px 0px;
@@ -416,16 +416,16 @@
   opacity: 0.78;
 }
 
-:root .VPContent :is(.VPButton, .button):not(.column > *) {
+:root .vocs_DocsLayout :is(.VPButton, .button):not(.column > *) {
   margin-top: 1.3rem;
 }
 
-:root .VPContent :is(.VPButton, .button).alt {
+:root .vocs_DocsLayout :is(.VPButton, .button).alt {
   background: none;
 }
 
 :root:not(.dark) .VPDocFooter .pager .VPLink,
-:root:not(.dark) .VPContent :is(.VPButton, .button) {
+:root:not(.dark) .vocs_DocsLayout :is(.VPButton, .button) {
   text-decoration: none;
   border-radius: 8px;
   background: linear-gradient(180deg, #ffffff 0%, #fbfbfc 80%);
@@ -433,26 +433,26 @@
   opacity: 1.0;
 }
 
-:root .VPContent :is(.VPButton, .button):hover {
+:root .vocs_DocsLayout :is(.VPButton, .button):hover {
   text-decoration: none;
   border-color: var(--vp-button-brand-hover-border);
   color: var(--vp-button-brand-hover-text);
 }
 
-:root:not(.dark) .VPContent :is(.VPButton, .button).alt {
+:root:not(.dark) .vocs_DocsLayout :is(.VPButton, .button).alt {
   box-shadow: none !important;
 }
 
-:root .VPContent :is(.VPButton, .button).alt:hover {
+:root .vocs_DocsLayout :is(.VPButton, .button).alt:hover {
   background: none;
   border-color: var(--vp-c-gray-2);
 }
 
-:root .VPContent :is(.VPButton, .button) :last-child {
+:root .vocs_DocsLayout :is(.VPButton, .button) :last-child {
   margin-bottom: 4px;
 }
 
-:root .VPContent :is(.VPButton, .button) :is(p, span) {
+:root .vocs_DocsLayout :is(.VPButton, .button) :is(p, span) {
   margin: 0;
   display: block;
   line-height: 1.4;
@@ -461,7 +461,7 @@
   font-weight: 500;
 }
 
-:root .VPContent :is(.VPButton, .button) :is(h1, h2, h3, h4, h5) {
+:root .vocs_DocsLayout :is(.VPButton, .button) :is(h1, h2, h3, h4, h5) {
   margin: 0;
   display: block;
   line-height: 1.9;
@@ -469,23 +469,23 @@
   font-weight: 600;
 }
 
-:root .VPContent .column {
+:root .vocs_DocsLayout .column {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
 
-:root .VPContent .column > * {
+:root .vocs_DocsLayout .column > * {
   margin: 0 !important;
 }
 
 @media (max-width: 768px) {
-  :root .VPContent .column {
+  :root .vocs_DocsLayout .column {
     grid-template-columns: 1fr;
   }
 }
 
-:root .VPContent :is(h1, h2, h3):has(+ .column) {
+:root .vocs_DocsLayout :is(h1, h2, h3):has(+ .column) {
   font-size: 24px;
   color: var(--vp-c-text-1);
   padding: 14px 0;
@@ -493,21 +493,21 @@
   border-bottom: 1px solid var(--vp-c-divider);
 }
 
-:root .VPContent :is(h1, h2, h3):has(+ .column) .header-anchor {
+:root .vocs_DocsLayout :is(h1, h2, h3):has(+ .column) .header-anchor {
   display: none;
 }
 
-:root .VPContent :is(h1, h2, h3) + .column {
+:root .vocs_DocsLayout :is(h1, h2, h3) + .column {
   margin-top: 12px;
 }
 
-:root .VPContent .vp-doc h1 + section {
+:root .vocs_DocsLayout .vp-doc h1 + section {
   bottom: 2.2em;
   font-size: 1.125em;
   font-weight: 400;
 }
 
-:root .VPContent .vp-doc section {
+:root .vocs_DocsLayout .vp-doc section {
   position: relative;
   bottom: 0.57em;
   color: var(--vp-c-brand-2);
@@ -515,7 +515,7 @@
   font-weight: 500;
 }
 
-:root .VPContent .vp-doc section:after {
+:root .vocs_DocsLayout .vp-doc section:after {
   display: block;
   content: "";
   margin-top: 16px;
@@ -523,11 +523,11 @@
   width: 62px;
 }
 
-:root .VPContent .vp-doc p:empty {
+:root .vocs_DocsLayout .vp-doc p:empty {
   display: none;
 }
 
-:root .VPContent .vp-doc .custom-block {
+:root .vocs_DocsLayout .vp-doc .custom-block {
   padding: 1rem;
   box-shadow: inset 0 0 0 1px rgba(235, 235, 235, 0.2);
   border: none;
@@ -537,40 +537,40 @@
   gap: 0.6rem;
 }
 
-:root .VPContent .vp-doc .custom-block li + li {
+:root .vocs_DocsLayout .vp-doc .custom-block li + li {
   margin-top: 0.2em;
 }
 
-:root .VPContent .vp-doc details.custom-block > * + * {
+:root .vocs_DocsLayout .vp-doc details.custom-block > * + * {
   margin-top: 0.6rem;
 }
 
-:root .VPContent .vp-doc .custom-block .custom-block-title {
+:root .vocs_DocsLayout .vp-doc .custom-block .custom-block-title {
   font-weight: 600;
   font-size: 1rem;
   mix-blend-mode: color-dodge;
   color: #ccc;
 }
 
-:root:not(.dark) .VPContent .vp-doc .custom-block .custom-block-title {
+:root:not(.dark) .vocs_DocsLayout .vp-doc .custom-block .custom-block-title {
   mix-blend-mode: color-burn;
   color: #1a1a1a;
 }
 
-:root .VPContent .vp-doc .custom-block > * {
+:root .vocs_DocsLayout .vp-doc .custom-block > * {
   margin: 0;
 }
 
-:root .VPContent .vp-doc .custom-block a {
+:root .vocs_DocsLayout .vp-doc .custom-block a {
   text-decoration: underline;
   color: inherit;
 }
 
-:root .VPContent .vp-doc .custom-block:is(.note, .tip) {
+:root .vocs_DocsLayout .vp-doc .custom-block:is(.note, .tip) {
   background: #0d2d5c;
 }
 
-:root:not(.dark) .VPContent .vp-doc .custom-block:is(.note, .tip) {
+:root:not(.dark) .vocs_DocsLayout .vp-doc .custom-block:is(.note, .tip) {
   background: #cfd4fc;
 }
 
@@ -578,57 +578,57 @@
   box-shadow: inset 0 0 0 1px rgba(35, 35, 35, 0.15);
 }
 
-:root .VPContent .vp-doc a > code {
+:root .vocs_DocsLayout .vp-doc a > code {
   color: inherit;
 }
 
-:root .VPContent .vp-doc table {
+:root .vocs_DocsLayout .vp-doc table {
   width: 100%;
 }
 
-:root .VPContent .vp-doc table th {
+:root .vocs_DocsLayout .vp-doc table th {
   text-align: center;
 }
 
-:root .VPContent .vp-doc table :where(th, tr) {
+:root .vocs_DocsLayout .vp-doc table :where(th, tr) {
   background: var(--vp-c-bg);
 }
 
-:root .VPContent .vp-doc table tr:nth-child(2n) {
+:root .vocs_DocsLayout .vp-doc table tr:nth-child(2n) {
   background: hsl(235, 5%, 4%);
 }
 
-:root:not(.dark) .VPContent .vp-doc table tr:nth-child(2n) {
+:root:not(.dark) .vocs_DocsLayout .vp-doc table tr:nth-child(2n) {
   background: var(--vp-c-bg-alt);
 }
 
-:root .VPContent .vp-doc pre {
+:root .vocs_DocsLayout .vp-doc pre {
   font-size: 0.92em;
 }
 
-:root .VPContent .vp-doc .vp-adaptive-theme:not(.blocks > *) {
+:root .vocs_DocsLayout .vp-doc .vp-adaptive-theme:not(.blocks > *) {
   border: 1px solid var(--vp-c-gray-soft);
   border-radius: 8px;
   overflow: hidden;
 }
 
 @media (max-width: 768px) {
-  :root .VPContent .vp-doc .vp-adaptive-theme:not(.blocks > *):not(details > *) {
+  :root .vocs_DocsLayout .vp-doc .vp-adaptive-theme:not(.blocks > *):not(details > *) {
     margin: 0;
   }
 }
 
-:root .VPContent .vp-doc .vp-adaptive-theme .copy {
+:root .vocs_DocsLayout .vp-doc .vp-adaptive-theme .copy {
   background-color: var(--vp-c-bg-alt);
 }
 
-:root .VPContent .vp-doc .vp-adaptive-theme .twoslash-tag-line {
+:root .vocs_DocsLayout .vp-doc .vp-adaptive-theme .twoslash-tag-line {
   user-select: none;
   margin: 4px -24px;
   padding: 4px 10px;
 }
 
-:root .VPContent .vp-doc .vp-adaptive-theme .twoslash-tag-annotate-line {
+:root .vocs_DocsLayout .vp-doc .vp-adaptive-theme .twoslash-tag-annotate-line {
   display: block;
   width: min-content;
   background: rgb(92, 96, 132);
@@ -640,43 +640,43 @@
   margin: 6px 0 -1.5em -24px;
 }
 
-:root .VPContent .vp-doc .vp-adaptive-theme .twoslash-tag-annotate-line + .line {
+:root .vocs_DocsLayout .vp-doc .vp-adaptive-theme .twoslash-tag-annotate-line + .line {
   display: inline-block;
   padding-top: calc(1.5em + 2px);
 }
 
-:root .VPContent .vp-doc .vp-adaptive-theme .twoslash-tag-annotate-line .twoslash-tag-icon {
+:root .vocs_DocsLayout .vp-doc .vp-adaptive-theme .twoslash-tag-annotate-line .twoslash-tag-icon {
   display: none;
 }
 
-:root .VPContent .vp-doc .vp-adaptive-theme .twoslash-hover {
+:root .vocs_DocsLayout .vp-doc .vp-adaptive-theme .twoslash-hover {
   cursor: help;
 }
 
-:root .VPContent .vp-doc .vp-code-group {
+:root .vocs_DocsLayout .vp-doc .vp-code-group {
   display: flex;
   flex-direction: column;
 }
 
-:root .VPContent .vp-doc .vp-code-group :where(.blocks, .vp-adaptive-theme) {
+:root .vocs_DocsLayout .vp-doc .vp-code-group :where(.blocks, .vp-adaptive-theme) {
   margin: 0;
 }
 
-:root .VPContent .vp-doc .vp-code-group .tabs label:only-of-type {
+:root .vocs_DocsLayout .vp-doc .vp-code-group .tabs label:only-of-type {
   cursor: unset;
 }
 
 @media (max-width: 768px) {
-  :root .VPContent .vp-doc .vp-code-group .tabs {
+  :root .vocs_DocsLayout .vp-doc .vp-code-group .tabs {
     padding: 0 2rem;
   }
 }
 
-:root .VPContent .vp-doc .vp-code-group .tabs label {
+:root .vocs_DocsLayout .vp-doc .vp-code-group .tabs label {
   line-height: 2.7rem;
 }
 
-:root .VPContent .language-sh .line:before {
+:root .vocs_DocsLayout .language-sh .line:before {
   --padding: calc(0.5em * (var(--vp-code-line-height) - 1));
   display: inline-block;
   content: "";
@@ -689,7 +689,7 @@
   vertical-align: bottom;
 }
 
-:root .VPContent .sponsor-item {
+:root .vocs_DocsLayout .sponsor-item {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -699,12 +699,12 @@
   padding: 1em 2em;
 }
 
-:root .VPContent .sponsor-item > img {
+:root .vocs_DocsLayout .sponsor-item > img {
   width: 4rem;
   height: 4rem;
 }
 
-:root .VPContent .sponsor-item > a {
+:root .vocs_DocsLayout .sponsor-item > a {
   font-size: 1.4em;
   color: var(--vp-c-text-1);
 }

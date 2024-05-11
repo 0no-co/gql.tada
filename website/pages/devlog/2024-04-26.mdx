@@ -4,6 +4,8 @@ editLink: false
 lastUpdated: false
 ---
 
+import { Badge } from '../../components/Badge';
+
 # Multi-Schema Mode <Badge text="2024/04/26" />
 
 In our [previous minor devlog](./2024-04-15) we talked about
@@ -12,7 +14,9 @@ In v1.6.0 and our CLI releases up to it since then, we're
 further polishing and working on the CLI, but we're
 also here to introduce **Multi-Schema Support**!
 
-::: info Upgrading packages
+:::info
+**Upgrading packages**
+
 To make sure you get the best experience, don't forget to
 also upgrade to `@0no-co/graphqlsp@^0.12.0`.
 :::
@@ -49,7 +53,7 @@ these options onto a `schemas` array. You'll need to give each
 schema its own `name` property however, so they can be identified
 in the CLI and in your editor.
 
-::: code-group
+:::code-group
 ```json [tsconfig.json] {7-18}
 {
   "compilerOptions": {

@@ -2,6 +2,9 @@
 title: Configuration Format
 ---
 
+import { Badge } from '../../components/Badge';
+
+
 # Configuration Format
 
 All `gql.tada` tooling is set up using a configuration and plugin entry
@@ -12,7 +15,7 @@ in your `tsconfig.json`. This configures both:
 Update your `tsconfig.json` and add a new item to the `plugins` array on
 `compilerOptions`.
 
-::: code-group
+:::code-group
 ```json [tsconfig.json] {4-10}
 {
   "compilerOptions": {
@@ -36,7 +39,7 @@ to use and the only required options are [`schema`](#schema) and [`tadaOutputLoc
 If you have multiple schemas you'd like to use with `gql.tada`, then you'll instead want
 to create a `schemas` array.
 
-::: code-group
+:::code-group
 ```json [tsconfig.json] {7-12}
 {
   "compilerOptions": {
@@ -67,7 +70,9 @@ The `name` property in each `schemas[]` entry is arbitrary. It's important that 
 schemas a name here, but this can be any name you want and is only used to identify the schema internally
 and to you in error messages.
 
-::: info Optional Schema Options
+:::info
+**Optional Schema Options**
+
 Don't worry about setting up more than the required `schema` and `tadaOutputLocation` configuration option.
 
 All optional schema options are mostly used by the `gql.tada` CLI, which will tell you if you're missing
@@ -90,7 +95,7 @@ for three different schema formats. It accepts either:
 - a path to a `.json` file containing a schema’s introspection query data
 - a URL to a GraphQL API that can be introspected
 
-::: code-group
+:::code-group
 ```json [.graphql file] {6}
 {
   "compilerOptions": {
@@ -184,7 +189,7 @@ configures `gql.tada` to use a schema project-wide for typings.
 
 The resulting file will have the following shape:
 
-::: code-group
+:::code-group
 ```ts [graphql-env.d.ts]
 export type introspection = {
   __schema: { /*...*/ };
@@ -203,7 +208,7 @@ declare module 'gql.tada' {
 If we want to now customize scalars, for instance, we’ll need to create our own `graphql()` function
 by using the `introspection` type with [`gql.tada`’s `initGraphQLTada<>()` function](./gql-tada-api#initgraphqltada):
 
-::: code-group
+:::code-group
 ```ts [graphql.ts]
 import { initGraphQLTada } from 'gql.tada';
 import type { introspection } from './graphql-env.d.ts';
@@ -232,7 +237,7 @@ data during runtime.
 
 The resulting file will have the following shape:
 
-::: code-group
+:::code-group
 ```ts [introspection.ts]
 const introspection = {
   __schema: { /*...*/ },
@@ -312,7 +317,7 @@ the `gql.tada` CLI or `@0no-co/graphqlsp` in general.
 
 ### `trackFieldUsage`
 
-::: code-group
+:::code-group
 ```json [tsconfig.json]
 {
   "compilerOptions": {
@@ -364,7 +369,9 @@ export const PokemonItem = ({ data }: Props) => {
 In the above example, we add a `maxHP` field to a fragment that the component’s
 code does not actually access, which causes a warning to be displayed.
 
-::: info When should `trackFieldUsage` be disabled?
+:::info
+**When should `trackFieldUsage` be disabled?**
+
 Usage of any fields is based on heuristics. As such, depending on your coding
 patterns this warning can sometimes be triggered erroneously and support of
 more coding patterns is still being expanded.
@@ -377,7 +384,7 @@ or report the problematic code pattern to us in an issue.
 
 ### `shouldCheckForColocatedFragments`
 
-::: code-group
+:::code-group
 ```json [tsconfig.json]
 {
   "compilerOptions": {
@@ -435,7 +442,9 @@ export const PokemonList = () => {
 In the above example, we add an import to a `PokemonItem` component.
 If the file contains a fragment that we have to use in our query a warning is displayed.
 
-::: info When should `shouldCheckForColocatedFragments` be disabled?
+:::info
+**When should `shouldCheckForColocatedFragments` be disabled?**
+
 This warning is context-sensitive. It can be very helpful when you're
 following our recommended [fragment co-location patterns](/guides/fragment-colocation).
 However, if you're not using co-located fragments, or if you have many "mixed"
