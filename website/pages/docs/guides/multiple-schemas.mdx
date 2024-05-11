@@ -3,6 +3,8 @@ title: Multiple Schemas
 description: How to set up multiple schemas and GraphQL APIs
 ---
 
+import { Badge } from '../../components/Badge';
+
 # Multiple Schemas <Badge text="v1.6" />
 
 <section>
@@ -16,7 +18,7 @@ for a single schema - your own GraphQL API's schema. However,
 once you're interacting with another GraphQL API you can set up
 `gql.tada` for it as well.
 
-::: details When would you setup multiple schemas?
+:::details[When would you setup multiple schemas?]
   Interacting with multiple GraphQL APIs isn't uncommon anymore.
 
   - Maybe you have a public GraphQL API and a private, admin GraphQL API?
@@ -44,7 +46,7 @@ in the plugin configuration.
 To add multiple schemas, you'll have to update your configuration and move
 all schema options onto a `schemas[]` array.
 
-::: code-group
+:::code-group
 ```json [tsconfig.json]
 {
   "compilerOptions": {
@@ -104,7 +106,9 @@ This is because the GraphQL schema types are different
 for each schema we've set up, and `gql.tada`'s tooling also needs to be able
 to identify each schema per document.
 
-::: info Installation Steps
+:::info
+**Installation Steps**
+
 For this section, you'll basically repeating the steps from
 [the Installation page's "Intializing `gql.tada` manually" section](/get-started/installation#initializing-gql-tada-manually)
 for each schema you're setting up.
@@ -240,7 +244,7 @@ to configure their output file paths in your schema options instead.
 - [`tadaPersistedLocation`](/reference/config-format#tadapersistedlocation) for
   the [`generate persisted`](/reference/gql-tada-cli#generate-persisted) command
 
-::: code-group
+:::code-group
 ```json [tsconfig.json] {10-12}
 {
   "compilerOptions": {

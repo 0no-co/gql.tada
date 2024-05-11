@@ -4,6 +4,8 @@ editLink: false
 lastUpdated: false
 ---
 
+import { Badge } from '../../components/Badge';
+
 # New CLI Workflows <Badge text="2024/04/15" />
 
 #### the tl;dr
@@ -109,7 +111,7 @@ on GitHub Actions.
 To close another gap in the workflows we support, the CLI also supports a `generate schema`
 command. This command is used to introspect a GraphQL API and output a `.graphql` SDL file.
 
-::: code-group
+:::code-group
 ```sh [npm]
 npm gql.tada generate schema 'https://api.github.com/graphql'
 ```
@@ -387,7 +389,7 @@ of generated files.
 **We really do want to have our cake and eat it too,** which is why
 we're introducing a "Turbo Mode" enabled by our CLI.
 
-::: code-group
+:::code-group
 ```sh [npm]
 npm gql.tada turbo
 ```

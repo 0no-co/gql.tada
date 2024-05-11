@@ -13,7 +13,9 @@ In this section, we'll see what operation types look like, how
 we write fragments, and how to use scalar, enum, and input object
 types.
 
-::: info Imports
+:::info
+**Imports**
+
 Some code examples may import `graphql()` from `gql.tada`.
 However, if you’ve previously followed the steps on the “Installation” page
 [to initialize `gql.tada` manually](./installation#initializing-gqltada-manually),
@@ -281,7 +283,7 @@ data requirements to UI component relationship.
 For example, our `PokemonFragment` may be associated with a `Pokemon` component rendering
 individual items:
 
-::: code-group
+:::code-group
 ```tsx twoslash [components/Pokemon.tsx]
 import './graphql/graphql-env.d.ts';
 // ---cut-before---
@@ -318,7 +320,7 @@ and creates the fragment mask that a fragment spread would create as well.
 We can then use our new `PokemonComponent` in our `PokemonsListComponent` and compose its `PokemonFragment`
 into our query:
 
-::: code-group
+:::code-group
 ```tsx twoslash [components/PokemonsList.tsx]
 import './graphql/graphql-env.d.ts';
 // ---cut-before---
@@ -426,7 +428,7 @@ export { readFragment } from 'gql.tada';
 Now, creating the `PokemonFragment` with our custom `graphql()` function,
 the `id` field changes to the specified `ID` type.
 
-::: code-group
+:::code-group
 ```tsx twoslash [components/Pokemon.tsx]
 // @filename: src/graphql.ts
 import { initGraphQLTada } from 'gql.tada';
@@ -483,7 +485,7 @@ To do this, we can use the [`graphql.scalar()` helper
 function](../reference/gql-tada-api#graphql-scalar) to retrieve
 the type of the scalar.
 
-::: code-group
+:::code-group
 ```tsx twoslash [utils/parseId.ts]
 // @filename: src/graphql.ts
 import { initGraphQLTada } from 'gql.tada';
@@ -520,7 +522,7 @@ scalar type is compatible to a local type, we can also call `graphql.scalar()`
 directly and let TypeScript check for our value to be compatible with
 the configured type instead.
 
-::: code-group
+:::code-group
 ```tsx twoslash [utils/parseId.ts]
 // @filename: src/graphql.ts
 import { initGraphQLTada } from 'gql.tada';
@@ -605,7 +607,9 @@ Since `graphql.scalar()` will enforce the second argument to be typed as
 the scalar itself, we can also use it to enforce compatibility of local
 types to GraphQL types.
 
-::: info TypeScript Enums
+:::info
+**TypeScript Enums**
+
 Enum types can only be output as unions of string literals in `gql.tada`, but
 if you're migrating from a different code generator you may instead be using
 and importing generated TypeScript `enum`s or `const enum`s.

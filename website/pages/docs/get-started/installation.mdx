@@ -18,7 +18,7 @@ repository.](https://github.com/0no-co/gql.tada/blob/main/examples/example-pokem
 We’ll start by installing `gql.tada` as a dependency, and `@0no-co/graphqlsp` as
 a dev-dependency using out project’s package manager.
 
-::: code-group
+:::code-group
 
 ```sh [npm]
 npm install gql.tada
@@ -45,7 +45,7 @@ bun add --dev @0no-co/graphqlsp
 Next, we’ll have to add `@0no-co/graphqlsp` as a plugin to our TypeScript
 configuration.
 
-::: code-group
+:::code-group
 ```json [tsconfig.json]
 {
   "compilerOptions": {
@@ -73,7 +73,7 @@ in providing you feedback and help when writing GraphQL documents.
 > [to use the workspace version of TypeScript](https://code.visualstudio.com/docs/typescript/typescript-compiling#_using-the-workspace-version-of-typescript).
 > Otherwise, the `@0no-co/graphqlsp` plugin won’t work!
 >
-> ::: code-group
+> :::code-group
 >
 > ```js [.vscode/settings.json] {2-3}
 > {
@@ -95,7 +95,7 @@ The schema provides it with the types, fields, and description information of a 
 We can set `@0no-co/graphqlsp` up with our schema in our `tsconfig.json` file.
 In the plugin options we’ll update the `schema` key.
 
-::: code-group
+:::code-group
 ```json twoslash [tsconfig.json] {6-7}
 {
   "compilerOptions": {
@@ -118,7 +118,7 @@ The `schema` option currently allows for three different formats to load a schem
 - a path to a `.json` file containing a schema’s introspection query data
 - a URL to a GraphQL API that can be introspected
 
-::: code-group
+:::code-group
 ```json [.graphql file] {6}
 {
   "compilerOptions": {
@@ -186,7 +186,7 @@ GraphQL documents automatically.
 This is configured by providing an output location to `@0no-co/graphqlsp` in our `tsconfig.json` file.
 In the plugin options we’ll update the `tadaOutputLocation` key.
 
-::: code-group
+:::code-group
 ```json twoslash [tsconfig.json] {6-7}
 {
   "compilerOptions": {
@@ -210,7 +210,7 @@ Once we start up our editor, `@0no-co/graphqlsp` will run and will create
 the output file. In this example, we’ve created a `src/graphql-env.d.ts` file.
 When opening this file we should see code that looks like the following:
 
-::: code-group
+:::code-group
 ```ts [graphql-env.d.ts]
 declare const introspection: {
   __schema: { /*...*/ };

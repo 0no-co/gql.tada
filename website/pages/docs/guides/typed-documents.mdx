@@ -106,7 +106,7 @@ then a minimal example using GraphQL is quite simple.
 In this example, we’ll have a GraphQL query sent to an API using a simple
 `fetch` call:
 
-::: code-group
+:::code-group
 ```ts twoslash [query.ts]
 import { DocumentNode, parse, print } from 'graphql';
 
@@ -143,7 +143,7 @@ With manual code generation tools, a separate tool would output a file
 containing our query’s types. For instance, it may output a separate file
 that contains the `Result` and `Variables` types we need:
 
-::: code-group
+:::code-group
 ```ts twoslash [query.generated.ts]
 export type Result = {
   helloWorld: string | null;
@@ -157,7 +157,7 @@ export type Variables = {};
 However, this now requires us to make an effort to include these types
 manually in our `execute` function:
 
-::: code-group
+:::code-group
 ```ts twoslash [query.ts]
 // @filename: query.generated.ts
 export type Result = {
@@ -219,7 +219,7 @@ As a result, GraphQL in TypeScript has two ways of attaching types to GraphQL do
 Our type generation tools can now output a `TypedDocumentNode` that has types attached
 to it directly:
 
-::: code-group
+:::code-group
 ```ts twoslash [query.generated.ts]
 import { parse } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
@@ -241,8 +241,8 @@ Which for clients executing a GraphQL query means, that they can infer the types
 of a given GraphQL query by matching it against `TypedDocumentNode` instead.
 In our example, we can now infer the generic types from the `query` instead:
 
-::: code-group
-```ts twoslash [query.ts] 
+:::code-group
+```ts twoslash [query.ts]
 // @filename: query.generated.ts
 import { parse } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
@@ -374,7 +374,7 @@ Today, supporting typed documents in GraphQL is an accepted and de-facto standar
 and below you can find a non-exhaustive list of GraphQL clients that support
 typed documents and will hence also work well with `gql.tada`.
 
-::: code-group
+:::code-group
 ```ts twoslash [@apollo/client]
 import './graphql/graphql-env.d.ts';
 // ---cut-before---

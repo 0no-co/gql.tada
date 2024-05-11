@@ -141,7 +141,7 @@ While querying fields is similar to how we _access_ data in front-end
 code, and hence map the hierarchy of data we need; Fragments are similar
 to how we may structure components.
 
-::: code-group
+:::code-group
 ```tsx twoslash [PokemonTypes.tsx]
 import './graphql/graphql-env.d.ts';
 // ---cut-before---
@@ -182,7 +182,7 @@ useful once we define more nested components, and compose their fragments.
 Let’s create a `Pokemon` component that renders the `PokemonTypes`
 component we’ve already defined above:
 
-::: code-group
+:::code-group
 ```tsx twoslash [Pokemon.tsx]
 // @filename: PokemonTypes.tsx
 import './graphql/graphql-env.d.ts';
@@ -245,7 +245,7 @@ when composing fragments.
 Let’s consider what happens if the `Pokemon` component started to accidentally
 depend on data that only the `PokemonTypes`’s fragment defines.
 
-::: code-group
+:::code-group
 ```tsx twoslash [Pokemon.tsx]
 // @filename: PokemonTypes.tsx
 import './graphql/graphql-env.d.ts';
@@ -294,7 +294,7 @@ to re-enable fragment masking. This will effectively “hide” the `pokemonType
 from the `Pokemon` component to keep the fragments isolated from one another
 on a type-level.
 
-::: code-group
+:::code-group
 ```tsx twoslash [PokemonTypes.tsx]
 import './graphql/graphql-env.d.ts';
 // ---cut-before---

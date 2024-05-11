@@ -110,7 +110,7 @@ use the `tadaOutputLocation` setting to determine where to
 write the output file to, and will load your schema
 using the `schema` setting:
 
-::: code-group
+:::code-group
 ```json [tsconfig.json] {7}
 {
   "compilerOptions": {
@@ -145,7 +145,9 @@ also preprocessed into an intermediary format.
   </a>
 </div>
 
-::: info Should the output tyings file be committed?
+:::info
+**Should the output tyings file be committed?**
+
 You can decide yourself whether you want to check the output typings file
 into version control.
 
@@ -180,7 +182,9 @@ For example, when you write a query that selects fields that
 don't exist on your schema, or you pass invalid arguments
 to a field an error will be displayed.
 
-::: info Why doesn't `tsc` show me diagnostics?
+:::info
+**Why doesn't `tsc` show me diagnostics?**
+
 TypeScript plugins are specific to the TypeScript language
 service, and during other tasks, like in `tsc` or in other
 tools that integrate with TypeScript, no plugins are loaded
@@ -241,7 +245,7 @@ You can update your configuration to change where this
 type cache gets written to with the `tadaTurboLocation`
 setting:
 
-::: code-group
+:::code-group
 ```json [tsconfig.json]
 {
   "compilerOptions": {
@@ -270,7 +274,9 @@ which [are explained further on the page on "Typed Documents"](/guides/typed-doc
 and the pure type inference approach that
 `gql.tada` takes out of the box.
 
-::: info Should the type cache be committed?
+:::info
+**Should the type cache be committed?**
+
 You can decide yourself whether you want to check the type cache file
 into version control.
 
@@ -300,7 +306,7 @@ gql.tada generate output
 gql.tada check
 ```
 
-::: details GitHub Actions Example
+:::details[GitHub Actions Example]
 If you're using GitHub Actions, you can run the commands in a simple step
 in your workflow's jobs.
 
@@ -344,7 +350,7 @@ gql.tada turbo
 git diff --name-status --exit-code .
 ```
 
-::: details GitHub Actions Example
+:::details[GitHub Actions Example]
 If you're using GitHub Actions, you can run the commands in a simple step
 in your workflow's jobs.
 
