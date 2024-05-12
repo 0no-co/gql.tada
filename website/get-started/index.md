@@ -35,7 +35,7 @@ This all happens on-the-fly in TypeScript.
 The project currently contains two installable modules:
 
 - `gql.tada`, the package providing typings and the runtime API as a library,
-- `@0no-co/graphqlsp`, a TypeScript Language Service plugins for editor feedback and integration.
+- `@0no-co/graphqlsp`, a TypeScript Language Service plugin for editor feedback and integration.
 
 As you start your editor, `@0no-co/graphqlsp` is started as a TypeScript Language Service
 plugin, which allows it to integrate with the same process that provides your editor
