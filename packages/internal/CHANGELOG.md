@@ -1,5 +1,17 @@
 # @gql.tada/internal
 
+## 1.0.0
+
+### Major Changes
+
+- Bump to `v1.0.0` (Stable Release)
+  Submitted by [@kitten](https://github.com/kitten) (See [#296](https://github.com/0no-co/gql.tada/pull/296))
+
+### Patch Changes
+
+- ⚠️ Fix regression causing `schema.url` to not be recognized
+  Submitted by [@kitten](https://github.com/kitten) (See [#295](https://github.com/0no-co/gql.tada/pull/295))
+
 ## 0.4.0
 
 ### Minor Changes
