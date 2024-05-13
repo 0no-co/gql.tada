@@ -51,7 +51,7 @@ const parseSchemaConfig = (input: unknown, rootPath: string): SchemaConfig => {
   if ('schema' in input && input.schema && typeof input.schema === 'object') {
     const { schema } = input;
     if (!('url' in schema)) {
-      throw new TadaError('Schema contains a `schema` object, but no `url` property');
+      throw new TadaError('Configuration contains a `schema` object, but no `url` property');
     }
 
     if ('headers' in schema && schema.headers && typeof schema.headers === 'object') {
@@ -63,33 +63,41 @@ const parseSchemaConfig = (input: unknown, rootPath: string): SchemaConfig => {
         }
       }
     } else if ('headers' in schema) {
-      throw new TadaError("Schema contains a `schema.headers` property, but it's not an object");
+      throw new TadaError(
+        "Configuration contains a `schema.headers` property, but it's not an object"
+      );
     }
+  } else if (!('schema' in input) || typeof input.schema !== 'string') {
+    throw new TadaError('Configuration is missing a `schema` property');
   }
 
-  if (!('schema' in input) || typeof input.schema !== 'string') {
-    throw new TadaError('Schema is missing a `schema` property');
-  } else if (
+  if (
     'tadaOutputLocation' in input &&
     input.tadaOutputLocation &&
     typeof input.tadaOutputLocation !== 'string'
   ) {
     throw new TadaError(
-      "Schema contains a `tadaOutputLocation` property, but it's not a file path"
+      "Configuration contains a `tadaOutputLocation` property, but it's not a file path"
     );
-  } else if (
+  }
+
+  if (
     'tadaTurboLocation' in input &&
     input.tadaTurboLocation &&
     typeof input.tadaTurboLocation !== 'string'
   ) {
-    throw new TadaError("Schema contains a `tadaTurboLocation` property, but it's not a file path");
-  } else if (
+    throw new TadaError(
+      "Configuration contains a `tadaTurboLocation` property, but it's not a file path"
+    );
+  }
+
+  if (
     'tadaPersistedLocation' in input &&
     input.tadaPersistedLocation &&
     typeof input.tadaPersistedLocation !== 'string'
   ) {
     throw new TadaError(
-      "Schema contains a `tadaPersistedLocation` property, but it's not a file path"
+      "Configuration contains a `tadaPersistedLocation` property, but it's not a file path"
     );
   }
 
