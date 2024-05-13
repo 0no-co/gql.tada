@@ -65,11 +65,11 @@ const parseSchemaConfig = (input: unknown, rootPath: string): SchemaConfig => {
     } else if ('headers' in schema) {
       throw new TadaError("Schema contains a `schema.headers` property, but it's not an object");
     }
+  } else if (!('schema' in input) || typeof input.schema !== 'string') {
+    throw new TadaError('Schema is missing a `schema` property');
   }
 
-  if (!('schema' in input) || typeof input.schema !== 'string') {
-    throw new TadaError('Schema is missing a `schema` property');
-  } else if (
+  if (
     'tadaOutputLocation' in input &&
     input.tadaOutputLocation &&
     typeof input.tadaOutputLocation !== 'string'
@@ -77,13 +77,17 @@ const parseSchemaConfig = (input: unknown, rootPath: string): SchemaConfig => {
     throw new TadaError(
       "Schema contains a `tadaOutputLocation` property, but it's not a file path"
     );
-  } else if (
+  }
+
+  if (
     'tadaTurboLocation' in input &&
     input.tadaTurboLocation &&
     typeof input.tadaTurboLocation !== 'string'
   ) {
     throw new TadaError("Schema contains a `tadaTurboLocation` property, but it's not a file path");
-  } else if (
+  }
+
+  if (
     'tadaPersistedLocation' in input &&
     input.tadaPersistedLocation &&
     typeof input.tadaPersistedLocation !== 'string'
