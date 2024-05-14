@@ -1,5 +1,12 @@
 # @gql.tada/cli-utils
 
+## 1.3.7
+
+### Patch Changes
+
+- Support `@vue/language-core@^2.0.1`'s updated public API
+  Submitted by [@kitten](https://github.com/kitten) (See [#301](https://github.com/0no-co/gql.tada/pull/301))
+
 ## 1.3.6
 
 ### Patch Changes
