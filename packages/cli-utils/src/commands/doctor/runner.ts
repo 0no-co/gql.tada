@@ -187,7 +187,7 @@ async function* runVSCodeChecks(): AsyncIterable<ComposeInput> {
     let userExtensions: readonly string[] = [];
     if (isVSCodeInstalled) {
       userExtensions = await vscode.loadExtensionsList();
-      if (true || !userExtensions.includes('graphql.vscode-graphql-syntax')) {
+      if (!userExtensions.includes('graphql.vscode-graphql-syntax')) {
         if (!hasEndedTask) {
           hasEndedTask = true;
           yield logger.warningTask(Messages.CHECK_VSCODE);
