@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import type { VirtualCode } from '@vue/language-core';
-import { forEachEmbeddedCode, getDefaultVueLanguagePlugins } from '@vue/language-core';
+import { forEachEmbeddedCode } from '@vue/language-core';
 import * as vueCompilerDOM from '@vue/compiler-dom';
 import * as vue from '@vue/language-core';
 
@@ -11,15 +11,22 @@ if ('VueVirtualCode' in vue) {
   VueVirtualCode = (vue as any).VueGeneratedCode;
 }
 
+let getBasePlugins: typeof vue.getBasePlugins | undefined;
+if ('getBasePlugins' in vue) {
+  getBasePlugins = vue.getBasePlugins;
+} else if ('getDefaultVueLanguagePlugins' in vue) {
+  getBasePlugins = (vue as any).getDefaultVueLanguagePlugins;
+}
+
 const vueCompilerOptions = vue.resolveVueCompilerOptions({});
 
-let plugins: ReturnType<typeof getDefaultVueLanguagePlugins> | undefined;
+let plugins: ReturnType<typeof vue.getBasePlugins> | undefined;
 
 export const transform = (sourceFile: ts.SourceFile): VirtualCode | undefined => {
-  if (!VueVirtualCode) {
+  if (!VueVirtualCode || !getBasePlugins) {
     return undefined;
   } else if (!plugins) {
-    plugins = getDefaultVueLanguagePlugins({
+    plugins = getBasePlugins({
       modules: {
         typescript: ts,
         '@vue/compiler-dom': vueCompilerDOM,
