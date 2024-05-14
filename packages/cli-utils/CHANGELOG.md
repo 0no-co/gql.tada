@@ -1,5 +1,12 @@
 # @gql.tada/cli-utils
 
+## 1.3.8
+
+### Patch Changes
+
+- ⚠️ Fix typo on VSCode Syntax extension detection in `doctor` command
+  Submitted by [@kitten](https://github.com/kitten) (See [#303](https://github.com/0no-co/gql.tada/pull/303))
+
 ## 1.3.7
 
 ### Patch Changes
