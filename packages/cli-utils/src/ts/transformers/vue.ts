@@ -1,8 +1,16 @@
 import ts from 'typescript';
 import type { VirtualCode } from '@vue/language-core';
-import { forEachEmbeddedCode } from '@vue/language-core';
 import * as vueCompilerDOM from '@vue/compiler-dom';
 import * as vue from '@vue/language-core';
+
+function* forEachEmbeddedCode(virtualCode: VirtualCode) {
+  yield virtualCode;
+  if (virtualCode.embeddedCodes) {
+    for (const embeddedCode of virtualCode.embeddedCodes) {
+      yield* forEachEmbeddedCode(embeddedCode);
+    }
+  }
+}
 
 let VueVirtualCode: typeof vue.VueVirtualCode | undefined;
 if ('VueVirtualCode' in vue) {
