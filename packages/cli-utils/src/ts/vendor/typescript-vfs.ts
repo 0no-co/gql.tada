@@ -385,6 +385,10 @@ export function createFSBackedSystem(
     name: 'fs-vfs',
     root,
     args: [],
+    realpath: (directory) => {
+      if (nodeSys.realpath) return nodeSys.realpath(directory);
+      return directory;
+    },
     createDirectory: () => notImplemented('createDirectory'),
     // TODO: could make a real file tree
     directoryExists: (directory) => {
