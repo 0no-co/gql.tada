@@ -1,5 +1,12 @@
 # @gql.tada/cli-utils
 
+## 1.3.6
+
+### Patch Changes
+
+- ⚠️ Fix modules not being resolved correctly when using `turbo` with `pnpm`-installed `gql.tada`
+  Submitted by [@kitten](https://github.com/kitten) (See [#298](https://github.com/0no-co/gql.tada/pull/298))
+
 ## 1.3.5
 
 ### Patch Changes
