@@ -3,4 +3,4 @@
 "gql.tada": patch
 ---
 
-Fix vue losing out on the SFC plugin due to our usage of `getBasePlugins`
+Fix Vue not transpiling to `.tsx` files properly due to missing SFC plugin
