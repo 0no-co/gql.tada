@@ -1,5 +1,14 @@
 # gql.tada
 
+## 1.7.5
+
+### Patch Changes
+
+- ⚠️ Fix Vue not transpiling to `.tsx` files properly due to missing SFC plugin
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#305](https://github.com/0no-co/gql.tada/pull/305))
+- Updated dependencies (See [#305](https://github.com/0no-co/gql.tada/pull/305))
+  - @gql.tada/cli-utils@1.3.9
+
 ## 1.7.4
 
 ### Patch Changes
