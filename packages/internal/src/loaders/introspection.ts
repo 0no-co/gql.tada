@@ -1,3 +1,4 @@
+import type { IntrospectionQuery } from 'graphql';
 import { GraphQLID, GraphQLObjectType, GraphQLSchema, executeSync } from 'graphql';
 import { Kind, OperationTypeNode } from '@0no-co/graphql.web';
 
@@ -70,6 +71,25 @@ export const toSupportedFeatures = (data: IntrospectSupportQueryData): Supported
   directiveArgumentsIsDeprecated: _supportsDeprecatedArgumentsArg(data.directive),
   fieldArgumentsIsDeprecated: _supportsDeprecatedArgumentsArg(data.field),
 });
+
+export const introspectionToSupportedFeatures = (data: IntrospectionQuery): SupportedFeatures => {
+  const directive = data.__schema.types.find((type) => type.name === '__Directive') as any;
+  const type = data.__schema.types.find((type) => type.name === '__Type') as any;
+  const inputValue = data.__schema.types.find((type) => type.name === '__InputValue') as any;
+  const field = data.__schema.types.find((type) => type.name === '__Field') as any;
+  if (directive && type && inputValue && field) {
+    return {
+      directiveIsRepeatable: _hasField(directive, 'isRepeatable'),
+      specifiedByURL: _hasField(type, 'specifiedByURL'),
+      inputOneOf: _hasField(type, 'isOneOf'),
+      inputValueDeprecation: _hasField(inputValue, 'isDeprecated'),
+      directiveArgumentsIsDeprecated: _supportsDeprecatedArgumentsArg(directive),
+      fieldArgumentsIsDeprecated: _supportsDeprecatedArgumentsArg(field),
+    };
+  } else {
+    return NO_SUPPORTED_FEATURES;
+  }
+};
 
 let _localSupport: SupportedFeatures | undefined;
 

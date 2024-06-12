@@ -7,7 +7,7 @@ import {
   makeIntrospectionQuery,
   makeIntrospectSupportQuery,
   toSupportedFeatures,
-  ALL_SUPPORTED_FEATURES,
+  introspectionToSupportedFeatures,
   NO_SUPPORTED_FEATURES,
 } from './introspection';
 
@@ -91,15 +91,12 @@ export function loadFromURL(config: LoadFromURLConfig): SchemaLoader {
       const query = makeIntrospectSupportQuery();
       const supportResult = await client.query<IntrospectSupportQueryData>(query, {});
       if (supportResult.error && supportResult.error.graphQLErrors.length > 0) {
-        // If we failed to determine support, we try to activate all introspection features
-        const _result = await introspect(ALL_SUPPORTED_FEATURES);
-        if (_result) {
-          // If we succeed, we can return the introspection and enable all introspection features
-          supportedFeatures = ALL_SUPPORTED_FEATURES;
-          return _result;
-        } else {
-          // Otherwise, we assume no extra introspection features are supported,
-          // since all introspection spec additions were made in a single spec revision
+        try {
+          // If we failed to determine support, we do a regular introspection
+          const { introspection } = await introspect(NO_SUPPORTED_FEATURES);
+          supportedFeatures = introspectionToSupportedFeatures(introspection);
+        } catch (_error) {
+          // If this also failed, we assume no supported features
           supportedFeatures = NO_SUPPORTED_FEATURES;
         }
       } else if (supportResult.data && !supportResult.error) {
