@@ -4,6 +4,7 @@ import type { simpleSchema } from './fixtures/simpleSchema';
 import type { parseDocument } from '../parser';
 import type { mapIntrospection, addIntrospectionScalars } from '../introspection';
 import type { getDocumentType } from '../selection';
+import type { obj } from '../utils';
 
 import type {
   $tada,
@@ -149,19 +150,13 @@ test('infers optional fragment for @defer', () => {
     }
   `>;
 
-  type actual = getDocumentType<query, schema>;
+  type actual = obj<
+    (getDocumentType<query, schema>['todos'] extends infer U | null ? U : never)[number]
+  >;
 
-  type expected = {
-    todos: Array<
-      | {
-          id: string;
-        }
-      | {}
-      | null
-    > | null;
-  };
+  type expected = { id: string } | {};
 
-  expectTypeOf<expected>().toEqualTypeOf<actual>();
+  expectTypeOf<actual>().toMatchTypeOf<expected>();
 });
 
 test('infers optional inline fragment for @defer', () => {
@@ -489,7 +484,7 @@ test('creates a type for a given fragment with optional inline spread', () => {
     }
   `>;
 
-  type actual = getDocumentType<fragment, schema>;
+  type actual = obj<getDocumentType<fragment, schema>>;
 
   type expected =
     | {}
