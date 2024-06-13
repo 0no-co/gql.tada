@@ -1,5 +1,14 @@
 # @gql.tada/cli-utils
 
+## 1.3.10
+
+### Patch Changes
+
+- Bump `@0no-co/graphqlsp` to `^1.12.8`
+  Submitted by [@kitten](https://github.com/kitten) (See [`e6f8dbc`](https://github.com/0no-co/gql.tada/commit/e6f8dbc333e98f7f0c787941b592131a217cdb6c))
+- Updated dependencies (See [#317](https://github.com/0no-co/gql.tada/pull/317))
+  - @gql.tada/internal@1.0.1
+
 ## 1.3.9
 
 ### Patch Changes

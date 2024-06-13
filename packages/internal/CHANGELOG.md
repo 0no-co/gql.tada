@@ -1,5 +1,12 @@
 # @gql.tada/internal
 
+## 1.0.1
+
+### Patch Changes
+
+- Derive supported GraphQL features from introspection result, when the introspection support query fails. This works around issues for APIs that block `__type` unintentionally, but do allow for `__schema` introspection
+  Submitted by [@kitten](https://github.com/kitten) (See [#317](https://github.com/0no-co/gql.tada/pull/317))
+
 ## 1.0.0
 
 ### Major Changes
