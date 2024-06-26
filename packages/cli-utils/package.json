@@ -51,7 +51,7 @@
     "semiver": "^1.1.0",
     "typanion": "^3.14.0",
     "type-fest": "^4.10.2",
-    "typescript": "^5.3.3",
+    "typescript": "^5.5.2",
     "vscode-languageserver-textdocument": "^1.0.11",
     "wonka": "^6.3.4"
   },
