@@ -9,7 +9,7 @@ overrides:
   '@gql.tada/internal': workspace:*
   astro-expressive-code: ^0.31.0
   typescript: ^5.5.2
-  '@0no-co/graphqlsp': ^1.12.8
+  '@0no-co/graphqlsp': ^1.12.9
 
 importers:
 
@@ -19,8 +19,8 @@ importers:
         specifier: ^1.0.5
         version: 1.0.7(graphql@16.8.1)
       '@0no-co/graphqlsp':
-        specifier: ^1.12.8
-        version: 1.12.8(graphql@16.8.1)(typescript@5.5.2)
+        specifier: ^1.12.9
+        version: 1.12.9(graphql@16.8.1)(typescript@5.5.2)
       '@gql.tada/cli-utils':
         specifier: workspace:*
         version: link:packages/cli-utils
@@ -141,8 +141,8 @@ importers:
         version: 4.0.7(graphql@16.8.1)(react@18.3.1)
     devDependencies:
       '@0no-co/graphqlsp':
-        specifier: ^1.12.8
-        version: 1.12.8(graphql@16.8.1)(typescript@5.5.2)
+        specifier: ^1.12.9
+        version: 1.12.9(graphql@16.8.1)(typescript@5.5.2)
       '@types/react':
         specifier: ^18.2.79
         version: 18.3.1
@@ -175,8 +175,8 @@ importers:
         version: 4.2.15
     devDependencies:
       '@0no-co/graphqlsp':
-        specifier: ^1.12.8
-        version: 1.12.8(graphql@16.8.1)(typescript@5.5.2)
+        specifier: ^1.12.9
+        version: 1.12.9(graphql@16.8.1)(typescript@5.5.2)
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.1.0
         version: 3.1.0(svelte@4.2.15)(vite@5.2.10(@types/node@20.12.12)(terser@5.31.0))
@@ -206,8 +206,8 @@ importers:
         version: 3.4.25(typescript@5.5.2)
     devDependencies:
       '@0no-co/graphqlsp':
-        specifier: ^1.12.8
-        version: 1.12.8(graphql@16.8.1)(typescript@5.5.2)
+        specifier: ^1.12.9
+        version: 1.12.9(graphql@16.8.1)(typescript@5.5.2)
       '@vitejs/plugin-vue':
         specifier: ^5.0.4
         version: 5.0.4(vite@5.2.10(@types/node@20.12.12)(terser@5.31.0))(vue@3.4.25(typescript@5.5.2))
@@ -224,8 +224,8 @@ importers:
   packages/cli-utils:
     dependencies:
       '@0no-co/graphqlsp':
-        specifier: ^1.12.8
-        version: 1.12.8(graphql@16.8.1)(typescript@5.5.2)
+        specifier: ^1.12.9
+        version: 1.12.9(graphql@16.8.1)(typescript@5.5.2)
       '@gql.tada/internal':
         specifier: workspace:*
         version: link:../internal
@@ -378,8 +378,8 @@ packages:
       graphql:
         optional: true
 
-  '@0no-co/graphqlsp@1.12.8':
-    resolution: {integrity: sha512-arW3ZzifyKIJhehoAlsP069AX73EN6q358bOCf+8z00PmfPR2DSxq7uGGSj0oFNe3vEDtGYl88HmFEWQ+0+dwQ==}
+  '@0no-co/graphqlsp@1.12.9':
+    resolution: {integrity: sha512-eb9KIzw23svuLmjXQ3QF1pxrn5E16O+KJF5h8suEH6ZRetjMB8Bda2rMWhadpzp0f52+T1zpbLd2Q58GTFNPiQ==}
     peerDependencies:
       graphql: ^15.5.0 || ^16.0.0 || ^17.0.0
       typescript: ^5.5.2
@@ -3879,7 +3879,7 @@ snapshots:
     optionalDependencies:
       graphql: 16.8.1
 
-  '@0no-co/graphqlsp@1.12.8(graphql@16.8.1)(typescript@5.5.2)':
+  '@0no-co/graphqlsp@1.12.9(graphql@16.8.1)(typescript@5.5.2)':
     dependencies:
       '@gql.tada/internal': link:packages/internal
       graphql: 16.8.1
