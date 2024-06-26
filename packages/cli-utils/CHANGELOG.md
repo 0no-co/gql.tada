@@ -1,5 +1,19 @@
 # @gql.tada/cli-utils
 
+## 1.4.0
+
+### Minor Changes
+
+- Add `gql.tada/ts-plugin` to the init and doctor command
+  Submitted by [@kitten](https://github.com/kitten) (See [#62](https://github.com/0no-co/gql.tada/pull/62))
+
+### Patch Changes
+
+- ⚠️ Fix regression omitting the exit status code from the CLI. Failing commands will now correctly output exit code `1` instead of `0` again
+  Submitted by [@kitten](https://github.com/kitten) (See [#329](https://github.com/0no-co/gql.tada/pull/329))
+- Updated dependencies (See [#62](https://github.com/0no-co/gql.tada/pull/62))
+  - @gql.tada/internal@1.0.2
+
 ## 1.3.10
 
 ### Patch Changes
