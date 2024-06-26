@@ -82,7 +82,12 @@ async function* convertError(outputs: AsyncIterable<ComposeInput>): AsyncIterabl
   try {
     yield* outputs;
   } catch (error) {
-    yield !(error instanceof CLIError) ? ('' + error).trim() + '\n' : error;
+    if (error instanceof CLIError) {
+      process.exitCode = error.exit;
+      yield error;
+    } else {
+      yield ('' + error).trim();
+    }
   }
 
   yield '\n';
