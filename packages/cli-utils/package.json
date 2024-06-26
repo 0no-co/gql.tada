@@ -64,6 +64,7 @@
     "svelte2tsx": "^0.7.6"
   },
   "peerDependencies": {
+    "@0no-co/graphqlsp": "^1.12.8",
     "graphql": "^15.5.0 || ^16.0.0 || ^17.0.0",
     "typescript": "^5.0.0"
   },
