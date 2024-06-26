@@ -51,12 +51,12 @@
     "semiver": "^1.1.0",
     "typanion": "^3.14.0",
     "type-fest": "^4.10.2",
-    "typescript": "^5.3.3",
+    "typescript": "^5.5.2",
     "vscode-languageserver-textdocument": "^1.0.11",
     "wonka": "^6.3.4"
   },
   "dependencies": {
-    "@0no-co/graphqlsp": "^1.12.8",
+    "@0no-co/graphqlsp": "^1.12.9",
     "@gql.tada/internal": "workspace:*",
     "@vue/compiler-dom": "^3.4.23",
     "@vue/language-core": "^2.0.17",
@@ -64,6 +64,7 @@
     "svelte2tsx": "^0.7.6"
   },
   "peerDependencies": {
+    "@0no-co/graphqlsp": "^1.12.9",
     "graphql": "^15.5.0 || ^16.0.0 || ^17.0.0",
     "typescript": "^5.0.0"
   },

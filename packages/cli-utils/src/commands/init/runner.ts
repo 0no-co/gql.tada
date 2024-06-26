@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { execa } from 'execa';
 
+import { MINIMUM_VERSIONS, semverComply } from '../../utils/semver';
 import { readTSConfigFile } from '@gql.tada/internal';
 
 const s = spinner();
@@ -90,24 +91,51 @@ export async function run(target: string) {
     process.exit(0);
   }
 
+  let supportsEmbeddedLsp = false;
+  let packageJson: {
+    dependencies: Record<string, string>;
+    devDependencies: Record<string, string>;
+  };
+
+  try {
+    const packageJsonPath = path.resolve(target, 'package.json');
+    const packageJsonContents = await fs.readFile(packageJsonPath, 'utf-8');
+    packageJson = JSON.parse(packageJsonContents);
+    const deps = Object.entries({
+      ...packageJson.dependencies,
+      ...packageJson.devDependencies,
+    });
+
+    const typeScriptVersion = deps.find((x) => x[0] === 'typescript');
+    if (typeScriptVersion && typeof typeScriptVersion[1] === 'string') {
+      supportsEmbeddedLsp = semverComply(
+        typeScriptVersion[1],
+        MINIMUM_VERSIONS.typescript_embed_lsp
+      );
+    }
+  } catch (e) {}
+
   if (shouldInstallDependencies) {
     s.start('Installing packages.');
-    await installPackages(getPkgManager(), target);
+    await installPackages(getPkgManager(), target, !supportsEmbeddedLsp);
     s.stop('Installed packages.');
   } else {
     s.start('Writing to package.json.');
     try {
       const packageJsonPath = path.resolve(target, 'package.json');
       const packageJsonContents = await fs.readFile(packageJsonPath, 'utf-8');
-      const packageJson = JSON.parse(packageJsonContents);
+      packageJson = JSON.parse(packageJsonContents);
+
       if (!packageJson.dependencies) packageJson.dependencies = {};
       if (!packageJson.dependencies['gql.tada']) {
         packageJson.dependencies['gql.tada'] = TADA_VERSION;
       }
 
-      if (!packageJson.devDependencies) packageJson.devDependencies = {};
-      if (!packageJson.devDependencies['@0no-co/graphqlsp']) {
-        packageJson.devDependencies['@0no-co/graphqlsp'] = LSP_VERSION;
+      if (!supportsEmbeddedLsp) {
+        if (!packageJson.devDependencies) packageJson.devDependencies = {};
+        if (!packageJson.devDependencies['@0no-co/graphqlsp']) {
+          packageJson.devDependencies['@0no-co/graphqlsp'] = LSP_VERSION;
+        }
       }
 
       await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
@@ -129,7 +157,7 @@ export async function run(target: string) {
       ...tsConfig.compilerOptions,
       plugins: [
         {
-          name: '@0no-co/graphqlsp',
+          name: supportsEmbeddedLsp ? 'gql.tada/ts-plugin' : '@0no-co/graphqlsp',
           schema: isFile ? path.relative(target, schemaLocation) : schemaLocation,
           tadaOutputLocation: path.relative(target, tadaLocation),
         } as any,
@@ -143,20 +171,27 @@ export async function run(target: string) {
 }
 
 type PackageManager = 'yarn' | 'pnpm' | 'npm';
-async function installPackages(packageManager: PackageManager, target: string) {
-  await execa(
-    packageManager,
-    [
-      // `yarn add` will fail if nothing is provided
-      packageManager === 'yarn' ? 'add' : 'install',
-      '-D',
-      '@0no-co/graphqlsp',
-    ],
-    {
-      stdio: 'ignore',
-      cwd: target,
-    }
-  );
+async function installPackages(
+  packageManager: PackageManager,
+  target: string,
+  shouldInstallGraphQLSP
+) {
+  if (shouldInstallGraphQLSP) {
+    await execa(
+      packageManager,
+      [
+        // `yarn add` will fail if nothing is provided
+        packageManager === 'yarn' ? 'add' : 'install',
+        '-D',
+        '@0no-co/graphqlsp',
+      ],
+      {
+        stdio: 'ignore',
+        cwd: target,
+      }
+    );
+  }
+
   await execa(packageManager, [packageManager === 'yarn' ? 'add' : 'install', 'gql.tada'], {
     stdio: 'ignore',
     cwd: target,

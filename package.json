@@ -16,6 +16,7 @@
     "LICENSE.md",
     "README.md",
     "cli/",
+    "ts-plugin/",
     "bin/",
     "dist/"
   ],
@@ -38,12 +39,22 @@
       "require": "./dist/gql-tada-internal.js",
       "source": "./src/internal/index.ts"
     },
+    "./ts-plugin": {
+      "types": "./dist/gql-tada-ts-plugin.d.ts",
+      "import": "./dist/gql-tada-ts-plugin.mjs",
+      "require": "./dist/gql-tada-ts-plugin.js",
+      "source": "./src/ts-plugin/index.ts"
+    },
     "./package.json": "./package.json"
   },
   "dependencies": {
     "@0no-co/graphql.web": "^1.0.5",
+    "@0no-co/graphqlsp": "^1.12.9",
     "@gql.tada/cli-utils": "workspace:*",
     "@gql.tada/internal": "workspace:*"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
   },
   "public": true,
   "keywords": [
@@ -93,7 +104,8 @@
       "gql.tada": "workspace:*",
       "@gql.tada/internal": "workspace:*",
       "astro-expressive-code": "^0.31.0",
-      "typescript": "^5.3.3"
+      "typescript": "^5.5.2",
+      "@0no-co/graphqlsp": "^1.12.9"
     }
   },
   "devDependencies": {
@@ -126,11 +138,8 @@
     "rollup-plugin-cjs-check": "^1.0.3",
     "rollup-plugin-dts": "^6.1.0",
     "terser": "^5.26.0",
-    "typescript": "^5.3.3",
+    "typescript": "^5.5.2",
     "vitest": "1.1.3"
-  },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
   },
   "publishConfig": {
     "access": "public",

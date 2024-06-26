@@ -62,7 +62,10 @@ const getPluginConfig = (tsconfig: TsConfigJson | null): Record<string, unknown>
     tsconfig.compilerOptions &&
     tsconfig.compilerOptions.plugins &&
     tsconfig.compilerOptions.plugins.find(
-      (x) => x.name === '@0no-co/graphqlsp' || x.name === 'gql.tada/lsp'
+      (x) =>
+        x.name === '@0no-co/graphqlsp' ||
+        x.name === 'gql.tada/lsp' ||
+        x.name === 'gql.tada/ts-plugin'
     )) ||
   null;
 
