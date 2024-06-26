@@ -3,8 +3,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { execa } from 'execa';
 
+import { MINIMUM_VERSIONS, semverComply } from '../../utils/semver';
 import { readTSConfigFile } from '@gql.tada/internal';
-import { MINIMUM_VERSIONS, semiverComply } from '../doctor/runner';
 
 const s = spinner();
 
@@ -108,7 +108,7 @@ export async function run(target: string) {
 
     const typeScriptVersion = deps.find((x) => x[0] === 'typescript');
     if (typeScriptVersion && typeof typeScriptVersion[1] === 'string') {
-      supportsEmbeddedLsp = semiverComply(
+      supportsEmbeddedLsp = semverComply(
         typeScriptVersion[1],
         MINIMUM_VERSIONS.typescript_embed_lsp
       );
