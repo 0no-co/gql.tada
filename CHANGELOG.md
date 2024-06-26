@@ -1,5 +1,20 @@
 # gql.tada
 
+## 1.8.0
+
+### Minor Changes
+
+- Add `gql.tada/ts-plugin` alias for `@0no-co/graphqlsp`
+  Submitted by [@kitten](https://github.com/kitten) (See [#62](https://github.com/0no-co/gql.tada/pull/62))
+
+### Patch Changes
+
+- ⚠️ Fix `@defer`, `@skip`, and `@include` optional fragments causing types to become exponentially more complex to evaluate, causing a recursive type error. Instead, merging field types and sub-selections from fragments is now separated, as needed
+  Submitted by [@kitten](https://github.com/kitten) (See [#319](https://github.com/0no-co/gql.tada/pull/319))
+- Updated dependencies (See [#62](https://github.com/0no-co/gql.tada/pull/62), [#329](https://github.com/0no-co/gql.tada/pull/329), and [#62](https://github.com/0no-co/gql.tada/pull/62))
+  - @gql.tada/cli-utils@1.4.0
+  - @gql.tada/internal@1.0.2
+
 ## 1.7.6
 
 ### Patch Changes

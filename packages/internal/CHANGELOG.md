@@ -1,5 +1,12 @@
 # @gql.tada/internal
 
+## 1.0.2
+
+### Patch Changes
+
+- Add `gql.tada/ts-plugin` alias for `@0no-co/graphqlsp`
+  Submitted by [@kitten](https://github.com/kitten) (See [#62](https://github.com/0no-co/gql.tada/pull/62))
+
 ## 1.0.1
 
 ### Patch Changes
