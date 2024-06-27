@@ -356,6 +356,32 @@ and hidden.
 > We recommend you not to disable Fragment Masking unless you absolutely have to,
 > to enforce fragment composition safety.
 
+::: details Disabling Fragment Masking globally
+While fragment masking is the default, you can also switch it off globally, which
+is equivalent to adding `@_unmask` to every fragment.
+
+We don't necessarily recommend starting out with this, since it makes it harder to
+switch and migrate to fragment masking incrementally, if you decide to do so in the
+future.
+
+However, if this isn't a concern to you, you can pass a `disableMasking` flag
+to the `initGraphQLTada` call:
+
+```ts twoslash [src/graphql.ts]
+import { initGraphQLTada } from 'gql.tada';
+import type { introspection } from './graphql/graphql-env.d.ts';
+
+// ---cut-before---
+export const graphql = initGraphQLTada<{
+  disableMasking: true; // [!code ++]
+  introspection: introspection;
+  scalars: {
+    DateTime: string;
+  };
+}>();
+```
+:::
+
 ### Import Diagnostic
 
 Fragment colocation and masking helps us manage large amounts of GraphQL documents
