@@ -50,7 +50,7 @@ all schema options onto a `schemas[]` array.
   "compilerOptions": {
     "plugins": [
       { // [!code focus:15]
-        "name": "@0no-co/graphqlsp",
+        "name": "gql.tada/ts-plugin",
         "schemas": [
           {
             "name": "pokemon",
@@ -246,7 +246,7 @@ to configure their output file paths in your schema options instead.
   "compilerOptions": {
     "plugins": [
       {
-        "name": "@0no-co/graphqlsp",
+        "name": "gql.tada/ts-plugin",
         "schemas": [
           {
             "name": "pokemon",
