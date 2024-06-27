@@ -62,24 +62,13 @@ language server. This is the main configuration for both the TypeScript plugin a
 Setting up `gql.tada/ts-plugin` will start up a [“TypeScript Language Service Plugin”](https://github.com/microsoft/TypeScript/wiki/Writing-a-Language-Service-Plugin#whats-a-language-service-plugin) when TypeScript is analyzing a file in our IDE or editor. This provides editor hints, such as diagnostics,
 auto-completions, and type hovers for GraphQL.
 
-> [!NOTE]
-> If you’re using VSCode, you may also want to update your `.vscode/settings.json` file to prompt you
-> [to use the workspace version of TypeScript](https://code.visualstudio.com/docs/typescript/typescript-compiling#_using-the-workspace-version-of-typescript).
-> Otherwise, the TypeScript plugin won’t work!
->
-> ::: code-group
->
-> ```js [.vscode/settings.json] {2-3}
-> {
->   "typescript.tsdk": "node_modules/typescript/lib",
->   "typescript.enablePromptUseWorkspaceTsdk": true
-> }
-> ```
->
-> :::
->
-> To enable syntax highlighting for GraphQL, you can install the official
-> [“GraphQL: Syntax Highlighting” VSCode extension.](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql-syntax)
+> [!NOTE] VSCode Setup
+> There may be extra steps you should take when you're using VSCode.
+> [Read about these steps in the "VSCode Setup" section below.](#vscode-settings-and-plugins)
+
+> [!NOTE] Prior to TypeScript 5.5
+> There are extra steps you must take when your TypeScript version is older than 5.5.
+> [Read about these steps in the "Prior to TypeScript 5.5" section below.](#prior-to-typescript-5-5)
 
 ## <span data-step="2">Step 2 —</span> Configuring a schema
 
@@ -293,3 +282,86 @@ export { readFragment } from 'gql.tada';
 
 When using these scalars, they’ll now be mapped to the types in the `scalars` object type.
 
+---
+
+## Extra Steps
+
+A few extra steps may be necessary to install and use `gql.tada`.
+These are called out, as needed, in the above sections, so you'll only
+need to follow these steps depending on your workspace and setup.
+
+### Prior to TypeScript 5.5
+
+If you're using a TypeScript version that's **older** than [TypeScript 5.5](https://devblogs.microsoft.com/typescript/announcing-typescript-5-5/)
+you will have to set up the TypeScript plugin differently.
+
+Instead, of using `gql.tada/ts-plugin`, with older versions of TypeScript we'll
+install `@0no-co/graphqlsp` directly. This is a package that contains the TypeScript
+plugin that `gql.tada/ts-plugin` uses and aliases.
+
+::: code-group
+
+```sh [npm]
+npm install --save-dev @0no-co/graphqlsp
+```
+
+```sh [pnpm]
+pnpm add --save-dev @0no-co/graphqlsp
+```
+
+```sh [yarn]
+yarn add --dev @0no-co/graphqlsp
+```
+
+```sh [bun]
+bun add --dev @0no-co/graphqlsp
+```
+
+:::
+
+Once `@0no-co/graphqlsp` is installed as a direct dependency, we'll update the `tsconfig.json`
+to use it.
+
+::: code-group
+```json [tsconfig.json]
+{
+  "compilerOptions": {
+    "strict": true,
+    "plugins": [
+      {
+        "name": "gql.tada/ts-plugin", // [!code --]
+        "name": "@0no-co/graphqlsp", // [!code ++]
+        "schema": "./schema.graphql",
+        "tadaOutputLocation": "./src/graphql-env.d.ts"
+      }
+    ]
+  }
+}
+```
+:::
+
+### VSCode Setup
+
+As shown above, `gql.tada` has a TypeScript plugin to provide
+editor hints, such as diagnostics, auto-completions, and type hovers
+for GraphQL. This plugin will load up when your workspace's
+TypeScript installation is used by your editor's TypeScript server.
+
+However, VSCode won't by default load up your workspace's TypeScript
+installation and may instead load up a global installation, which
+prevents the plugin from being loaded up.
+
+To resolve this, you should create a `.vscode/settings.json` file to prompt you
+[to use the workspace version of TypeScript](https://code.visualstudio.com/docs/typescript/typescript-compiling#_using-the-workspace-version-of-typescript).
+
+::: code-group
+```js [.vscode/settings.json] {2-3}
+{
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true
+}
+```
+:::
+
+To enable syntax highlighting for GraphQL, you can install the official
+[“GraphQL: Syntax Highlighting” VSCode extension.](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql-syntax)
