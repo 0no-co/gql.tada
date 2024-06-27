@@ -154,15 +154,16 @@ IDs for documents don't necessarily have to be human-readable, and often
 need to change when the document changes.
 
 Since it's tedious to manually generate hashes for a GraphQL document and
-to keep track of when it changes, `@0no-co/graphqlsp` has to mechanisms to
-deal with hashed document IDs:
+to keep track of when it changes, the TypeScript plugin has to mechanisms to
+help us with hashed document IDs:
 
-- provides a **code action** that generates a SHA256 hash of your document
-- warns you if this SHA256 hash needs to be updated
+- it provides a **code action** that generates a SHA256 hash of your document
+- a **diagnostic** warns you if this SHA256 hash needs to be updated
 
-The code action will be offered once you have defined a `graphql.persisted()`
-call and when activated, it will replace the current document ID passed to the
-call. In our example above, we'd end up with the following code after:
+The code action will be reported to your editor once you have defined
+a `graphql.persisted()` call. When activated, it will replace the current
+document ID passed to the call with a new hash.
+In our example above, we'd end up with the following code after:
 
 ```ts
 const persistedQuery = graphql.persisted(
@@ -203,7 +204,7 @@ the `tadaPersistedLocation` setting:
   "compilerOptions": {
     "plugins": [
       {
-        "name": "@0no-co/graphqlsp",
+        "name": "gql.tada/ts-plugin",
         "schema": "./schema.graphql"
         "tadaOutputLocation": "./src/graphql-env.d.ts",
         "tadaPersistedLocation": "./persisted.json" // [!code ++]
