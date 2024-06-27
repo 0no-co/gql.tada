@@ -326,13 +326,6 @@ export const PokemonTypes = (props: {
 ```
 :::
 
-> [!TIP]
-> This is the default behaviour in `gql.tada`, and happens unless you add `@_unmask`
-> to a fragment.
->
-> However, by default, we recommend you not to disable Fragment Masking unless you
-> absolutely have to, to enforce fragment composition.
-
 Inside the inferred TypeScript types, when fragment masking _isn’t disabled_ using
 `@_unmask`, then `gql.tada` will infer masked types. In TypeScript, the type that
 `FragmentOf<>` returns may look like the following:
@@ -350,3 +343,54 @@ type maskedPokemonTypes = {
   };
 };
 ```
+
+The `$tada.fragmentRefs` property above is just a stand-in for the fragment that we've
+used in our GraphQL document and all selections inside that fragment are not present
+and hidden.
+
+> [!TIP] Why is this the default behaviour?
+> This is the default behaviour in `gql.tada`, and happens unless you add `@_unmask`
+> to a fragment. Not only is this a great pattern to prevent mistakes, it also improves
+> TypeScript's inference performance!
+>
+> We recommend you not to disable Fragment Masking unless you absolutely have to,
+> to enforce fragment composition safety.
+
+### Import Diagnostic
+
+Fragment colocation and masking helps us manage large amounts of GraphQL documents
+when creating and composing queries, while keeping data usage isolated and minimal,
+right next to our UI components.
+However, a common mistake with this method is that sometimes we may forget to import
+and use a fragment.
+
+To prevent us from leaving out fragments, the TypeScript plugin has a diagnostic
+called `shouldCheckForColocatedFragments`. This diagnostic will issue a warning
+if any imports in your documents don't include an exported fragment.
+
+::: code-group
+```tsx twoslash {4} [Without importing a fragment]
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
+// @filename: ./src/PokemonsList.tsx
+// ---cut---
+// @warn: GraphQLSP: Unused co-located fragment definition(s)
+
+import { PokemonItem } from './PokemonItem';
+```
+
+```tsx twoslash {4} [With importing a fragment]
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
+// @filename: ./src/PokemonsList.tsx
+// ---cut---
+import { PokemonItem, PokemonItemFragment } from './PokemonItem';
+```
+:::
+
+This ties together the last loose end for the fragment colocation and masking
+patterns.
+
+<a href="/reference/config-format#shouldcheckforcolocatedfragments" class="button">
+  Learn more about this diagnostic
+</a>
