@@ -26,7 +26,7 @@ export interface SchemaLoader {
 }
 
 export interface BaseLoadConfig {
-  rootPath?: string;
+  rootPath: string;
   fetchInterval?: number;
   assumeValid?: boolean;
 }
@@ -56,6 +56,7 @@ export interface SchemaRef<Result = SchemaLoaderResult | null> {
 
 export type SchemaOrigin =
   | string
+  | string[]
   | {
       url: string;
       headers?: HeadersInit;

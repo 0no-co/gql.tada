@@ -48,6 +48,11 @@ const parseSchemaConfig = (input: unknown, rootPath: string): SchemaConfig => {
     throw new TadaError(`Schema is not configured properly (Received: ${input})`);
   }
 
+  if ('schema' in input && input.schema && Array.isArray(input.schema)) {
+    if (input.schema.some((include) => typeof include !== 'string')) {
+      throw new TadaError('All entries in `schema` array must be file paths');
+    }
+  }
   if ('schema' in input && input.schema && typeof input.schema === 'object') {
     const { schema } = input;
     if (!('url' in schema)) {

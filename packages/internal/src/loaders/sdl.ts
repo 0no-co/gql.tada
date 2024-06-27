@@ -1,6 +1,7 @@
 import type { IntrospectionQuery } from 'graphql';
 import { buildSchema, buildClientSchema, executeSync } from 'graphql';
 import { CombinedError } from '@urql/core';
+import ts from 'typescript';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -8,22 +9,45 @@ import { makeIntrospectionQuery, getPeerSupportedFeatures } from './introspectio
 
 import type { SchemaLoader, SchemaLoaderResult, OnSchemaUpdate } from './types';
 
+const EXTENSIONS = ['.graphql', '.gql', '.json'] as const;
+const EXCLUDE = ['**/node_modules'] as const;
+
+const readInclude = (rootPath: string, include: string[] | string) => {
+  const files = ts.sys.readDirectory(
+    rootPath,
+    EXTENSIONS,
+    EXCLUDE,
+    typeof include === 'string' ? [include] : include
+  );
+  if (files.length === 0) {
+    throw new Error(`No schema input was found at "${rootPath}".`);
+  } else if (files.length > 1 && files.some((file) => path.extname(file) === '.json')) {
+    throw new Error(
+      'Multiple schema inputs were passed, but at least one is a JSON file.\n' +
+        'A JSON introspection schema cannot be combined with other schemas.'
+    );
+  }
+  return files;
+};
+
 interface LoadFromSDLConfig {
+  rootPath: string;
+  include: string | string[];
   name?: string;
   assumeValid?: boolean;
-  file: string;
 }
 
 export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
   const subscriptions = new Set<OnSchemaUpdate>();
 
+  let files: string[] | undefined;
   let controller: AbortController | null = null;
   let result: SchemaLoaderResult | null = null;
 
   const load = async (): Promise<SchemaLoaderResult> => {
-    const ext = path.extname(config.file);
-    const data = await fs.readFile(config.file, { encoding: 'utf8' });
-    if (ext === '.json') {
+    files = readInclude(config.rootPath, config.include);
+    if (path.extname(files[0]) === '.json') {
+      const data = await fs.readFile(files[0], { encoding: 'utf8' });
       const introspection = JSON.parse(data) as IntrospectionQuery | null;
       if (!introspection || !introspection.__schema) {
         throw new Error(
@@ -39,6 +63,9 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
         schema: buildClientSchema(introspection, { assumeValid: !!config.assumeValid }),
       };
     } else {
+      const data = (await Promise.all(files.map((file) => fs.readFile(file, 'utf-8')))).join(
+        '\n\n'
+      );
       const schema = buildSchema(data, { assumeValidSDL: !!config.assumeValid });
       const query = makeIntrospectionQuery(getPeerSupportedFeatures());
       const queryResult = executeSync({ schema, document: query });
@@ -60,21 +87,26 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
   };
 
   const watch = async () => {
+    if (!files) return;
     controller = new AbortController();
-    const watcher = fs.watch(config.file, {
-      signal: controller.signal,
-      persistent: false,
-    });
-    try {
-      for await (const _event of watcher) {
-        if ((result = await load())) {
-          for (const subscriber of subscriptions) subscriber(result);
+    for (const file of files) {
+      const watcher = fs.watch(file, {
+        signal: controller!.signal,
+        persistent: false,
+      });
+      (async () => {
+        try {
+          for await (const _event of watcher) {
+            if ((result = await load())) {
+              for (const subscriber of subscriptions) subscriber(result);
+            }
+          }
+        } catch (error: any) {
+          if (error.name !== 'AbortError') throw error;
+        } finally {
+          controller = null;
         }
-      }
-    } catch (error: any) {
-      if (error.name !== 'AbortError') throw error;
-    } finally {
-      controller = null;
+      })();
     }
   };
 

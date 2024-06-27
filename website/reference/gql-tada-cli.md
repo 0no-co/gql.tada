@@ -68,12 +68,12 @@ When this command is run inside a GitHub Action, [workflow commands](https://doc
 
 ### `generate-schema`
 
-| Option          | Description                                                                                          |
-| --------------- | ---------------------------------------------------------------------------------------------------- |
-| `schema`        | URL to a GraphQL API or a path to a `.graphql` SDL file or introspection JSON.                       |
-| `--tsconfig,-c` | Optionally, a `tsconfig.json` file to use instead of an automatically discovered one.                |
-| `--output,-o`   | An output location to write the `.graphql` SDL file to. (Default: The `schema` configuration option) |
-| `--header,`     | A `key:value` header entry to use when retrieving the introspection from a GraphQL API.              |
+| Option          | Description                                                                                           |
+| --------------- | ----------------------------------------------------------------------------------------------------- |
+| `schema`        | URL to a GraphQL API or a path/glob to `.graphql` SDL files, or a path to an introspection JSON file. |
+| `--tsconfig,-c` | Optionally, a `tsconfig.json` file to use instead of an automatically discovered one.                 |
+| `--output,-o`   | An output location to write the `.graphql` SDL file to. (Default: The `schema` configuration option)  |
+| `--header,`     | A `key:value` header entry to use when retrieving the introspection from a GraphQL API.               |
 
 Oftentimes, an API may not be running in development, is maintained in a separate repository, or requires authorization headers, and specifying a URL in the `schema` configuration can slow down development.
 
@@ -121,12 +121,12 @@ When this command is run inside a GitHub Action, [workflow commands](https://doc
 
 ### `generate-persisted`
 
-| Option              | Description                                                                                      |
-| ------------------- | ------------------------------------------------------------------------------------------------ |
-| `--disable-normalization`     | Whether to disable normalizing the GraphQL document. (Default: false) |
-| `--tsconfig,-c`     | Optionally, a `tsconfig.json` file to use instead of an automatically discovered one.            |
-| `--fail-on-warn,-w` | Triggers an error and a non-zero exit code if any warnings have been reported.                   |
-| `--output,-o`       | Specify where to output the file to. (Default: The `tadaPersistedLocation` configuration option) |
+| Option                    | Description                                                                                      |
+| ------------------------- | ------------------------------------------------------------------------------------------------ |
+| `--disable-normalization` | Whether to disable normalizing the GraphQL document. (Default: false)                            |
+| `--tsconfig,-c`           | Optionally, a `tsconfig.json` file to use instead of an automatically discovered one.            |
+| `--fail-on-warn,-w`       | Triggers an error and a non-zero exit code if any warnings have been reported.                   |
+| `--output,-o`             | Specify where to output the file to. (Default: The `tadaPersistedLocation` configuration option) |
 
 The `gql.tada generate-persisted` command will scan your code for `graphql.persisted()` calls and generate
 a JSON manifest file containing a mapping of document IDs to the GraphQL document strings.
@@ -171,13 +171,13 @@ await generateOutput({
 
 ### `generatePersisted()`
 
-|                     | Description                                                                                                           |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `disableNormalization`     | Disables normalizing the GraphQL document |
-| `output` option     | The filename to write the persisted JSON manifest file to (Default: the `tadaPersistedLocation` configuration option) |
-| `tsconfig` option   | The `tsconfig.json` to use instead of an automatically discovered one.                                                |
-| `failOnWarn` option | Whether to throw an error instead of logging warnings.                                                                |
-| returns             | A `Promise` that resolves when the task completes.                                                                    |
+|                        | Description                                                                                                           |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `disableNormalization` | Disables normalizing the GraphQL document                                                                             |
+| `output` option        | The filename to write the persisted JSON manifest file to (Default: the `tadaPersistedLocation` configuration option) |
+| `tsconfig` option      | The `tsconfig.json` to use instead of an automatically discovered one.                                                |
+| `failOnWarn` option    | Whether to throw an error instead of logging warnings.                                                                |
+| returns                | A `Promise` that resolves when the task completes.                                                                    |
 
 The `generatePersisted()` function will scan your code for `graphql.persisted()` calls and generate
 a JSON manifest file containing a mapping of document IDs to the GraphQL document strings.
@@ -200,13 +200,13 @@ await generatePersisted({
 
 ### `generateSchema()`
 
-|                   | Description                                                                                            |
-| ----------------- | ------------------------------------------------------------------------------------------------------ |
-| `input` option    | The filename to a `.graphql` SDL file, introspection JSON, or URL to a GraphQL API to introspect.      |
-| `headers` option  | Optionally, an object of headers to send when introspecting a GraphQL API.                             |
-| `output` option   | The filename to write the persisted JSON manifest file to (Default: the `schema` configuration option) |
-| `tsconfig` option | The `tsconfig.json` to use instead of an automatically discovered one.                                 |
-| returns           | A `Promise` that resolves when the task completes.                                                     |
+|                   | Description                                                                                                         |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `input` option    | The path/glob to `.graphql` SDL files, a path to an introspection JSON file, or URL to a GraphQL API to introspect. |
+| `headers` option  | Optionally, an object of headers to send when introspecting a GraphQL API.                                          |
+| `output` option   | The filename to write the persisted JSON manifest file to (Default: the `schema` configuration option)              |
+| `tsconfig` option | The `tsconfig.json` to use instead of an automatically discovered one.                                              |
+| returns           | A `Promise` that resolves when the task completes.                                                                  |
 
 The `generateSchema()` function introspects a targeted GraphQL API by URL, a `.graphql` SDL
 or introspection JSON file, and outputs a `.graphql` SDL file. Generating a `.graphql` SDL file is
