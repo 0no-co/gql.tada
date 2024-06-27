@@ -4,13 +4,9 @@ title: Configuration Format
 
 # Configuration Format
 
-All `gql.tada` tooling is set up using a configuration and plugin entry
-in your `tsconfig.json`. This configures both:
-- the [`gql.tada` CLI](./gql-tada-cli)
-- and; the [`@0no-co/graphlsp` plugin](https://github.com/0no-co/graphqlsp).
-
-Update your `tsconfig.json` and add a new item to the `plugins` array on
-`compilerOptions`.
+Both `gql.tada`'s [CLI](/reference/gql-tada-cli) as well as the TypeScript
+plugin are configured using an entry in your `tsconfig.json` file.
+Their configurations are part of the TypeScript plugin entry:
 
 ::: code-group
 ```json [tsconfig.json] {4-10}
@@ -19,7 +15,7 @@ Update your `tsconfig.json` and add a new item to the `plugins` array on
     "strict": true,
     "plugins": [
       {
-        "name": "@0no-co/graphqlsp",
+        "name": "gql.tada/ts-plugin",
         "schema": "./schema.graphql"
         "tadaOutputLocation": "./src/graphql-env.d.ts",
       }
@@ -43,7 +39,7 @@ to create a `schemas` array.
     "strict": true,
     "plugins": [
       {
-        "name": "@0no-co/graphqlsp",
+        "name": "gql.tada/ts-plugin",
         "schemas": [
           {
             "name": "your-schema-1",
@@ -96,7 +92,7 @@ for three different schema formats. It accepts either:
   "compilerOptions": {
     "plugins": [
       {
-        "name": "@0no-co/graphqlsp",
+        "name": "gql.tada/ts-plugin",
         "schema": "./schema.graphql"
       }
     ]
@@ -109,7 +105,7 @@ for three different schema formats. It accepts either:
   "compilerOptions": {
     "plugins": [
       {
-        "name": "@0no-co/graphqlsp",
+        "name": "gql.tada/ts-plugin",
         "schema": "./introspection.json"
       }
     ]
@@ -122,7 +118,7 @@ for three different schema formats. It accepts either:
   "compilerOptions": {
     "plugins": [
       {
-        "name": "@0no-co/graphqlsp",
+        "name": "gql.tada/ts-plugin",
         "schema": "http://localhost:4321/graphql"
       }
     ]
@@ -135,7 +131,7 @@ for three different schema formats. It accepts either:
   "compilerOptions": {
     "plugins": [
       {
-        "name": "@0no-co/graphqlsp",
+        "name": "gql.tada/ts-plugin",
         "schema": {
           "url": "http://localhost:4321/graphql",
           "headers": {
@@ -149,8 +145,8 @@ for three different schema formats. It accepts either:
 ```
 :::
 
-This option is used by both the `gql.tada` CLI and `@0no-co/graphqlsp`
-and is required for all diagnostics and in-editor support to work.
+Since this option defines which GraphQL schema is used, it's required
+and both the CLI and the TypeScript plugin will not function without it.
 
 <a href="../get-started/installation#step-2-configuring-a-schema" class="button">
   <h4>Installation</h4>
@@ -163,24 +159,25 @@ and is required for all diagnostics and in-editor support to work.
 
 ### `tadaOutputLocation` <Badge type="danger" text="required" />
 
-The `tadaOutputLocation` specifies the output path to write an output file to,
-which `gql.tada` uses to infer GraphQL types.
+The `tadaOutputLocation` specifies the output path to write a typings
+output file to, which `gql.tada` uses to infer GraphQL types within
+the TypeScript type system.
 
-This option is used by `gql.tada` and is required for `gql.tada`
-type inference to work.
+The `tadaOutputLocation` option supports two different formats dependent on the
+file path you pass: the `.d.ts` format, and the `.ts` format.
+Depending on the file path's extension, either of these output
+formats are used.
 
-The `tadaOutputLocation` option accepts two different formats. Either a `.d.ts` file location,
-or a `.ts` file location. Depending on the file extension we specify, two different formats
-are used to save the introspection result.
-When the option only specifies a directory, a `introspection.d.ts` file will automatically
-be written to the output directory.
+When the option only specifies a directory, a `introspection.d.ts` file
+will automatically be written to the output directory.
 
 #### Format 1 — `.d.ts` file
 
-When writing a `.d.ts` file, `@0no-co/graphqlsp` will create a declaration file that automatically
-declares [a `setupSchema` interface on `gql.tada`](./gql-tada-api#setupschema) that,
-via [declaration merging in TypeScript](https://www.typescriptlang.org/docs/handbook/declaration-merging.html),
-configures `gql.tada` to use a schema project-wide for typings.
+The `.d.ts` output format is only a declaration file, which will also contain a
+declaration that automatically declares [a `setupSchema` interface on `gql.tada`](./gql-tada-api#setupschema).
+When this format is used, [declaration merging in TypeScript](https://www.typescriptlang.org/docs/handbook/declaration-merging.html),
+kicks in, which means that - without any additional configuration - we can then start
+importing `graphql()` from `gql.tada` and use it.
 
 The resulting file will have the following shape:
 
@@ -200,8 +197,9 @@ declare module 'gql.tada' {
 ```
 :::
 
-If we want to now customize scalars, for instance, we’ll need to create our own `graphql()` function
-by using the `introspection` type with [`gql.tada`’s `initGraphQLTada<>()` function](./gql-tada-api#initgraphqltada):
+If we want to now customize `gql.tada`, for instance to set up our scalar types, we’ll need to
+create our own `graphql()` function by importing the output typings manually and passing it
+to [`gql.tada`’s `initGraphQLTada<>()` function](./gql-tada-api#initgraphqltada):
 
 ::: code-group
 ```ts [graphql.ts]
@@ -218,17 +216,20 @@ export const graphql = initGraphQLTada<{
 ```
 :::
 
+Since this is just a declaration file, the easiest way to indicate this in our code is to
+use a `import type` statement and to refer to the file using its full file extension.
+
 #### Format 2 — `.ts` file
 
-> [!WARNING]
+> [!WARNING] A note on performance
 >
 > We strongly recommend you to use the `.d.ts` format instead. While it's less reusable, the format will
 > be more efficient and increase TypeScript inference performance.
-> You will still be able to import the `introspection` type from the `.d.ts` file.
 
-When writing a `.ts` file instead, `@0no-co/graphqlsp` will create a regular TypeScript file that
-exports an `introspection` object, which is useful if we’re planning on re-using the introspection
-data during runtime.
+When writing a `.ts` file instead, a regular TypeScript file will be created exporting
+an `introspection` object. This format is supported because, while this object may cause
+a large increase in bundlesize, occasionally other tools may also depend on the raw GraphQL
+introspection output during runtime.
 
 The resulting file will have the following shape:
 
@@ -242,9 +243,9 @@ export { introspection };
 ```
 :::
 
-Hence, with this format it’s required to import the introspection and to create a [`graphql()` function](./gql-tada-api#graphql) using
-the [`initGraphQLTada<>()` function](./gql-tada-api#initgraphqltada). The introspection type won’t be set up project-wide, since the
-`.ts` output from `@0no-co/graphqlsp` doesn’t contain a `declare module` declaration.
+Because this file doesn't include a `declare module` typings directive, with this format
+we're always required to set up `gql.tada` manually using the
+[`initGraphQLTada<>()` function](./gql-tada-api#initgraphqltada).
 
 <a href="../get-started/installation#initializing-gqltada-manually" class="button">
   <h4>Installation</h4>
@@ -307,8 +308,8 @@ be extracted into the manifest file at compile-time.
 ## Global Options
 
 This section documents all of the plugin-wide configuration options.
-These options aren't specific to a single schema and configure either
-the `gql.tada` CLI or `@0no-co/graphqlsp` in general.
+These options aren't specific to a single schema and configure both
+global features for the `gql.tada` CLI and the TypeScript plugin.
 
 ### `trackFieldUsage`
 
@@ -318,7 +319,7 @@ the `gql.tada` CLI or `@0no-co/graphqlsp` in general.
   "compilerOptions": {
     "plugins": [
       {
-        "name": "@0no-co/graphqlsp",
+        "name": "gql.tada/ts-plugin",
         "schema": "./schema.graphql"
         "tadaOutputLocation": "./src/graphql-env.d.ts",
         "trackFieldUsage": true // [!code ++]
@@ -332,9 +333,9 @@ the `gql.tada` CLI or `@0no-co/graphqlsp` in general.
 By default, this option is enabled. When enabled, your usage of
 fields will be tracked as you consume data typed using a GraphQL document.
 
-`@0no-co/graphqlsp` and the [`gql.tada check` command](/reference/gql-tada-cli#check)
-will issue warnings when any fields in your selection sets aren't used in your
-TypeScript code.
+The TypeScript plugin and the [`gql.tada check` command](/reference/gql-tada-cli#check)
+will run a diagnostic that issues warnings when any fields in your selection
+sets aren't used in your TypeScript code.
 
 ```tsx twoslash {8}
 import './graphql/graphql-env.d.ts';
@@ -383,7 +384,7 @@ or report the problematic code pattern to us in an issue.
   "compilerOptions": {
     "plugins": [
       {
-        "name": "@0no-co/graphqlsp",
+        "name": "gql.tada/ts-plugin",
         "schema": "./schema.graphql"
         "tadaOutputLocation": "./src/graphql-env.d.ts",
         "shouldCheckForColocatedFragments": true // [!code ++]
@@ -397,9 +398,10 @@ or report the problematic code pattern to us in an issue.
 By default, this option is enabled. When enabled, your imports will be scanned
 for exported fragments.
 
-`@0no-co/graphqlsp` and the [`gql.tada check` command](/reference/gql-tada-cli#check)
+The TypeScript plugin and the [`gql.tada check` command](/reference/gql-tada-cli#check)
 will issue warnings when you're missing imports to a GraphQL fragment exported by
-another module.<br />
+will run a diagnostic that issues warnings when any imports statements don't import
+a GraphQL fragment exported by another module.<br />
 This is important to help with [fragment co-location](/guides/fragment-colocation)
 as many component modules may export fragments that you should be importing and
 use in the importer's GraphQL documents.
