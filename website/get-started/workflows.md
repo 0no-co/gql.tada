@@ -41,6 +41,23 @@ use your configuration's `schema` setting, provided it's a file path.
   <p>Learn more about the <code>generate-schema</code> command</p>
 </a>
 
+`gql.tada generate schema` also comes useful when you
+need granular control on how to connect to a GraphQL endpoint. I.e. sometimes the API requires an authorization header with a token that you don't
+want to store in your reporitory. If that's the case, you can safely store the token in a `.env` file and use the `dotenv` to get the schema.
+
+::: code-group
+```json [package.json]
+{
+  "scripts": {
+    "generate-schema": "dotenv -c -- bash -c 'gql-tada generate-schema https://your.graphql.api.endpoint --header \"Authorization: $SOME_TOKEN_VIA_ENVIRONMENT_VARIABLE\"'",
+  },
+  "devDependencies": {
+    "dotenv-cli": "*"
+  }
+}
+```
+:::
+
 ---
 
 ### The `doctor` command

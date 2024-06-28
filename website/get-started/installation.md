@@ -297,3 +297,4 @@ export { readFragment } from 'gql.tada';
 :::
 
 When using these scalars, they’ll now be mapped to the types in the `scalars` object type.
+
