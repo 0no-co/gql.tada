@@ -5,6 +5,8 @@ import type { SchemaOrigin } from './loaders';
 
 export interface BaseConfig {
   template?: string;
+  trackFieldUsage?: boolean;
+  shouldCheckForColocatedFragments?: boolean;
 }
 
 export interface SchemaConfig {
