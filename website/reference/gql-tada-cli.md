@@ -60,9 +60,12 @@ The `doctor` command will check for common mistakes in the `gql.tada`’s setup 
 | `--fail-on-warn,-w` | Triggers an error and a non-zero exit code if any warnings have been reported (default: `false`). |
 | `--level,-l`        | The minimum severity of diagnostics to display: `info`, `warn` or `error` (default: `info`).      |
 
-Usually, `@0no-co/graphqlsp` runs as a TypeScript language server plugin to report warnings and errors. However, these diagnostics don’t show up when `tsc` is run.
+Usually, the TypeScript plugin will run inside your editor's TypeScript language server process and will report warnings
+and errors. However, these diagnostics aren't run when `tsc` or other TypeScript compiler processes are used, since those
+neither load plugins nor are part of the TypeScript language service API.
 
-The `gql.tada check` command exists to run these diagnostics in a standalone command, outside of editing the relevant files and reports these errors to the console.
+The `gql.tada check` command exists to run these diagnostics in a standalone command, outside of editing the relevant
+files and reports these errors to the console.
 
 When this command is run inside a GitHub Action, [workflow commands](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions) are used to annotate errors within the GitHub UI.
 
@@ -92,7 +95,9 @@ which can be overridden using the `--output` argument.
 | `--tsconfig,-c`           | Optionally, a `tsconfig.json` file to use instead of an automatically discovered one.         |
 | `--output,-o`             | Specify where to output the file to. (Default: The `tadaOutputLocation` configuration option) |
 
-The `gql.tada generate-output` command mimics the behavior of `@0no-co/graphqlsp`, outputting the `gql.tada` output file manually. It will load the schema from the specified `schema` configuration option and write the output file.
+The `gql.tada generate-output` command programmatically outputs the `gql.tada` output typings file.
+It will load the schema from the specified `schema` configuration option first then write the typings file to the specified
+location.
 
 The output file will be written to the location specified by the `tadaOutputLocation` configuration
 option, which can be overridden using the `--output` argument.

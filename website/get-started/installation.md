@@ -5,45 +5,42 @@ description: How to get set up and ready
 
 # Installation
 
-The `gql.tada` package provides typings and the runtime API as a library,
-while `@0no-co/graphqlsp` integrates with the TypeScript language server
-to integrate with an IDE or editor.
-
-On this page, we’ll go through the steps to get everything set up properly.
+We’ll go through the steps to get `gql.tada` set up properly.
 A quick demo of what this looks like can be found [in an example project in the `gql.tada`
 repository.](https://github.com/0no-co/gql.tada/blob/main/examples/example-pokemon-api/)
 
+With `gql.tada`, you'll mainly interact with three different parts of the library:
+- the library code you import from the `gql.tada` package
+- the TypeScript plugin, `gql.tada/ts-plugin`
+- and the `gql.tada` CLI
+
 ## <span data-step="1">Step 1 —</span> Installing packages
 
-We’ll start by installing `gql.tada` as a dependency, and `@0no-co/graphqlsp` as
-a dev-dependency using out project’s package manager.
+We’ll start by installing `gql.tada` as a dependency.
 
 ::: code-group
 
 ```sh [npm]
 npm install gql.tada
-npm install --save-dev @0no-co/graphqlsp
 ```
 
 ```sh [pnpm]
 pnpm add gql.tada
-pnpm add --save-dev @0no-co/graphqlsp
 ```
 
 ```sh [yarn]
 yarn add gql.tada
-yarn add --dev @0no-co/graphqlsp
 ```
 
 ```sh [bun]
 bun add gql.tada
-bun add --dev @0no-co/graphqlsp
 ```
 
 :::
 
-Next, we’ll have to add `@0no-co/graphqlsp` as a plugin to our TypeScript
-configuration.
+Next, we’ll add the TypeScrpt plugin to our `tsconfig.json` to set it up in TypeScript’s
+language server. This is the main configuration for both the TypeScript plugin and the
+`gql.tada` CLI at the same time.
 
 ::: code-group
 ```json [tsconfig.json]
@@ -52,7 +49,7 @@ configuration.
     "strict": true,
     "plugins": [ // [!code ++]
       { // [!code ++]
-        "name": "@0no-co/graphqlsp", // [!code ++]
+        "name": "gql.tada/ts-plugin", // [!code ++]
         "schema": "./schema.graphql", // [!code ++]
         "tadaOutputLocation": "./src/graphql-env.d.ts" // [!code ++]
       } // [!code ++]
@@ -62,47 +59,35 @@ configuration.
 ```
 :::
 
-This will start up a [“TypeScript Language Service Plugin”](https://github.com/microsoft/TypeScript/wiki/Writing-a-Language-Service-Plugin#whats-a-language-service-plugin) which runs when TypeScript is analyzing a file
-in our IDE or editor.
+Setting up `gql.tada/ts-plugin` will start up a [“TypeScript Language Service Plugin”](https://github.com/microsoft/TypeScript/wiki/Writing-a-Language-Service-Plugin#whats-a-language-service-plugin) when TypeScript is analyzing a file in our IDE or editor. This provides editor hints, such as diagnostics,
+auto-completions, and type hovers for GraphQL.
 
-`gql.tada` on its own won’t provide you with editor hints, diagnostics, or errors, so `@0no-co/graphqlsp` is crucial
-in providing you feedback and help when writing GraphQL documents.
+> [!NOTE] VSCode Setup
+> There may be extra steps you should take when you're using VSCode.
+> [Read about these steps in the "VSCode Setup" section below.](#vscode-settings-and-plugins)
 
-> [!NOTE]
-> If you’re using VSCode, you may also want to update your `.vscode/settings.json` file to prompt you
-> [to use the workspace version of TypeScript](https://code.visualstudio.com/docs/typescript/typescript-compiling#_using-the-workspace-version-of-typescript).
-> Otherwise, the `@0no-co/graphqlsp` plugin won’t work!
->
-> ::: code-group
->
-> ```js [.vscode/settings.json] {2-3}
-> {
->   "typescript.tsdk": "node_modules/typescript/lib",
->   "typescript.enablePromptUseWorkspaceTsdk": true
-> }
-> ```
->
-> :::
->
-> To enable syntax highlighting for GraphQL, you can install the official
-> [“GraphQL: Syntax Highlighting” VSCode extension.](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql-syntax)
+> [!NOTE] Prior to TypeScript 5.5
+> There are extra steps you must take when your TypeScript version is older than 5.5.
+> [Read about these steps in the "Prior to TypeScript 5.5" section below.](#prior-to-typescript-5-5)
 
 ## <span data-step="2">Step 2 —</span> Configuring a schema
 
-`@0no-co/graphqlsp` needs to have a GraphQL API’s schema to function correctly.
-The schema provides it with the types, fields, and description information of a GraphQL API.
+We’ll need to set up a GraphQL schema for `gql.tada` to function correctly.
+Without a schema, no typings and no editor hints will be available, since the
+schema provides the GraphQL types, fields, and description information of
+your GraphQL API.
 
-We can set `@0no-co/graphqlsp` up with our schema in our `tsconfig.json` file.
-In the plugin options we’ll update the `schema` key.
+To add a GraphQL schema to `gql.tada`, we'll be the `tsconfig.json`'s plugin
+section we've just added and modify the `schema` option.
 
 ::: code-group
-```json twoslash [tsconfig.json] {6-7}
+```json twoslash [tsconfig.json] {6}
 {
   "compilerOptions": {
     "plugins": [
       {
 // @annotate: Configure your schema here
-        "name": "@0no-co/graphqlsp",
+        "name": "gql.tada/ts-plugin",
         "schema": "./schema.graphql",
         "tadaOutputLocation": "./src/graphql-env.d.ts"
       }
@@ -124,7 +109,7 @@ The `schema` option currently allows for three different formats to load a schem
   "compilerOptions": {
     "plugins": [
       {
-        "name": "@0no-co/graphqlsp",
+        "name": "gql.tada/ts-plugin",
         "schema": "./schema.graphql"
       }
     ]
@@ -137,7 +122,7 @@ The `schema` option currently allows for three different formats to load a schem
   "compilerOptions": {
     "plugins": [
       {
-        "name": "@0no-co/graphqlsp",
+        "name": "gql.tada/ts-plugin",
         "schema": "./introspection.json"
       }
     ]
@@ -150,7 +135,7 @@ The `schema` option currently allows for three different formats to load a schem
   "compilerOptions": {
     "plugins": [
       {
-        "name": "@0no-co/graphqlsp",
+        "name": "gql.tada/ts-plugin",
         "schema": "http://localhost:4321/graphql"
       }
     ]
@@ -163,7 +148,7 @@ The `schema` option currently allows for three different formats to load a schem
   "compilerOptions": {
     "plugins": [
       {
-        "name": "@0no-co/graphqlsp",
+        "name": "gql.tada/ts-plugin",
         "schema": {
           "url": "http://localhost:4321/graphql",
           "headers": {
@@ -179,21 +164,20 @@ The `schema` option currently allows for three different formats to load a schem
 
 ## <span data-step="3">Step 3 —</span> Configuring typings
 
-Afterwards, `@0no-co/graphqlsp` is ready to also output a typings file for `gql.tada`.
-The latter needs a **type** of an introspected GraphQL schema to infer types of
-GraphQL documents automatically.
-
-This is configured by providing an output location to `@0no-co/graphqlsp` in our `tsconfig.json` file.
-In the plugin options we’ll update the `tadaOutputLocation` key.
+We're now ready to let `gql.tada` output a typings file.
+This file is generated on the fly by the TypeScript plugin,
+and can [also be generated using the CLI](/get-started/workflows#generating-the-output-file).
+Where this file will be saved to is configured in the `tsconfig.json` file as
+well using the `tadaOutputLocation` option.
 
 ::: code-group
-```json twoslash [tsconfig.json] {6-7}
+```json twoslash [tsconfig.json] {7}
 {
   "compilerOptions": {
     "plugins": [
       {
-// @annotate: Configure your schema here
-        "name": "@0no-co/graphqlsp",
+        "name": "gql.tada/ts-plugin",
+// @annotate: Configure the output typings file location here
         "schema": "./schema.graphql",
         "tadaOutputLocation": "./src/graphql-env.d.ts"
       }
@@ -203,10 +187,12 @@ In the plugin options we’ll update the `tadaOutputLocation` key.
 ```
 :::
 
-The `tadaOutputLocation` path can either be a `.ts` file, a `.d.ts` file, or
-a folder, in which case a `introspection.d.ts` file will be created.
+Depeding on the `tadaOutputLocation`'s configured file extension, there's
+[two separate formats](/reference/config-format#tadaoutputlocation) this
+file can be saved in. For most cases the `.d.ts` format is recommended
+for best performance however.
 
-Once we start up our editor, `@0no-co/graphqlsp` will run and will create
+Once we start up our editor, the TypeScript plugin will run and create
 the output file. In this example, we’ve created a `src/graphql-env.d.ts` file.
 When opening this file we should see code that looks like the following:
 
@@ -226,22 +212,20 @@ declare module 'gql.tada' {
 ```
 :::
 
-This file declares our schema’s introspection data in `gql.tada`. After this file
-is created by `@0no-co/graphqlsp` automatically, `gql.tada` is set up project-wide
-and is **ready to be used.**
+The typings file is a representation of an introspected GraphQL schema
+and allows types to be inferred for GraphQL documents in the
+TypeScript type system. After this file is created by automatically,
+`gql.tada` is set up project-wide and is **ready to be used.**
 
 ### Initializing `gql.tada` manually
 
-Above, we let `@0no-co/graphqlsp` generate a `src/graphql-env.d.ts` file, which sets
-`gql.tada` up project-wide for us.
+With the prior instructions, we can import `graphql()` from `gql.tada` directly
+and start writing GraphQL documents, but this default setup limits what we can do.
+In a full setup, we want to customize scalars or pass further type configuration to
+`gql.tada`.
 
-This allows us to import `graphql()` from `gql.tada` directly, but it limits what we
-can do, since we can’t customize any scalars, or further configuration
-for `gql.tada`. This setup also fails if we have multiple schemas (for example, in a monorepo),
-since the declaration in `graphql-env.d.ts` sets a schema up project-wide.
-
-To work around this, we’ll create a file that uses the introspection data manually with the
-`initGraphQLTada()` function to create our own `graphql()` function:
+To customize `gql.tada`, we’ll create a file that imports the output typings manually
+and uses the `initGraphQLTada()` function to create our own `graphql()` function:
 
 :::code-group
 ```ts twoslash [src/graphql.ts] {4-6}
@@ -257,11 +241,11 @@ export { readFragment } from 'gql.tada';
 ```
 :::
 
-Instead of declaring our schema project-wide, we now have created a `graphql` function
-that specifically uses the introspection inside the `graphql-env.d.ts` file that
-`@0no-co/graphqlsp` outputs for us.
+This setup is also necessary if we're setting up [multiple schemas](/guides/multiple-schemas)
+(for example, in a monorepo), since we'd have multiple output typings files if we're trying
+to use `gql.tada` for multiple GraphQL schemas.
 
-Instead of importing `graphql` from `gql.tada`, we should now import it from our
+Instead of importing `graphql()` from `gql.tada`, we should now import it from our
 custom `src/graphql.ts` file.
 
 ### Customizing scalar types
@@ -297,3 +281,87 @@ export { readFragment } from 'gql.tada';
 :::
 
 When using these scalars, they’ll now be mapped to the types in the `scalars` object type.
+
+---
+
+## Extra Steps
+
+A few extra steps may be necessary to install and use `gql.tada`.
+These are called out, as needed, in the above sections, so you'll only
+need to follow these steps depending on your workspace and setup.
+
+### Prior to TypeScript 5.5
+
+If you're using a TypeScript version that's **older** than [TypeScript 5.5](https://devblogs.microsoft.com/typescript/announcing-typescript-5-5/)
+you will have to set up the TypeScript plugin differently.
+
+Instead, of using `gql.tada/ts-plugin`, with older versions of TypeScript we'll
+install `@0no-co/graphqlsp` directly. This is a package that contains the TypeScript
+plugin that `gql.tada/ts-plugin` uses and aliases.
+
+::: code-group
+
+```sh [npm]
+npm install --save-dev @0no-co/graphqlsp
+```
+
+```sh [pnpm]
+pnpm add --save-dev @0no-co/graphqlsp
+```
+
+```sh [yarn]
+yarn add --dev @0no-co/graphqlsp
+```
+
+```sh [bun]
+bun add --dev @0no-co/graphqlsp
+```
+
+:::
+
+Once `@0no-co/graphqlsp` is installed as a direct dependency, we'll update the `tsconfig.json`
+to use it.
+
+::: code-group
+```json [tsconfig.json]
+{
+  "compilerOptions": {
+    "strict": true,
+    "plugins": [
+      {
+        "name": "gql.tada/ts-plugin", // [!code --]
+        "name": "@0no-co/graphqlsp", // [!code ++]
+        "schema": "./schema.graphql",
+        "tadaOutputLocation": "./src/graphql-env.d.ts"
+      }
+    ]
+  }
+}
+```
+:::
+
+### VSCode Setup
+
+As shown above, `gql.tada` has a TypeScript plugin to provide
+editor hints, such as diagnostics, auto-completions, and type hovers
+for GraphQL. This plugin will load up when your workspace's
+TypeScript installation is used by your editor's TypeScript server.
+
+However, VSCode won't by default load up your workspace's TypeScript
+installation and may instead load up a global installation, which
+prevents the plugin from being loaded up.
+
+To resolve this, you should create a `.vscode/settings.json` file to prompt you
+[to use the workspace version of TypeScript](https://code.visualstudio.com/docs/typescript/typescript-compiling#_using-the-workspace-version-of-typescript).
+
+::: code-group
+```js [.vscode/settings.json] {2-3}
+{
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true
+}
+```
+:::
+
+To enable syntax highlighting for GraphQL, you can install the official
+[“GraphQL: Syntax Highlighting” VSCode extension.](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql-syntax)

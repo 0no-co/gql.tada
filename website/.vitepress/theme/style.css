@@ -472,6 +472,7 @@
 :root .VPContent .column {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  padding: 0.5rem 0;
   gap: 16px;
 }
 

@@ -48,8 +48,8 @@ use your configuration's `schema` setting, provided it's a file path.
 Since you've run through the steps on the [Installation
 page](/get-started/installation), you may have seen that there
 are several moving parts to `gql.tada`, including needing
-an output file to be generated and relying on the `@0no-co/graphqlsp`
-TypeScript plugin to display diagnostics.
+an output file to be generated and relying on the TypeScript
+plugin to display diagnostics.
 
 To prevent any of these parts working improperly, and to detect
 whether there are any issues in your configuration or with
@@ -76,7 +76,7 @@ you get started or when onboarding a new team member onto
   and <code>check</code> commands.
 </section>
 
-Usually while editing your code, the `@0no-co/graphqlsp` plugin
+Usually while editing your code, the TypeScript plugin
 takes care of several things automatically:
 - it generates the output typings file
 - it provides type hints and suggestions
@@ -105,7 +105,7 @@ gql.tada generate output
 The `generate output` command loads your schema, generates
 introspection output and finally saves the output typings file.
 
-Just like the `@0no-co/graphqlsp` plugin, the command will
+Just like the TypeScript plugin, the command will
 use the `tadaOutputLocation` setting to determine where to
 write the output file to, and will load your schema
 using the `schema` setting:
@@ -116,7 +116,7 @@ using the `schema` setting:
   "compilerOptions": {
     "plugins": [
       {
-        "name": "@0no-co/graphqlsp",
+        "name": "gql.tada/ts-plugin",
         "schema": "./schema.graphql"
         "tadaOutputLocation": "./src/graphql-env.d.ts"
       }
@@ -160,9 +160,12 @@ that you'll always be in a state to run type checks.
 
 ### Running diagnostics
 
-All diagnostics that the `@0no-co/graphqlsp` runs, can also
-be run using the CLI's `check` command. This is also useful to
-run to get an idea of any issues across the entire codebase.
+The TypeScript plugin runs several checks on your code, providing
+diagnostics releant to your GraphQL schema right in your editor.
+But to run `gql.tada`'s diagnostics as a standalone process we can
+use the CLI's `check` command instead. The command runs all
+diagnostics and gives us an idea of GraphQL-related issues across
+a whole workspace.
 
 ```sh
 gql.tada check
@@ -181,19 +184,18 @@ don't exist on your schema, or you pass invalid arguments
 to a field an error will be displayed.
 
 ::: info Why doesn't `tsc` show me diagnostics?
-TypeScript plugins are specific to the TypeScript language
-service, and during other tasks, like in `tsc` or in other
-tools that integrate with TypeScript, no plugins are loaded
-or executed.
+TypeScript plugins are hook into the TypeScript language
+server API, which is specific to editor and IDE features.
+During other tasks, like when you run `tsc` or other TypeScript
+compiler tools, TypeScript plugins aren't loaded.
 
-The diagnostics that are displayed in your editor by
-`@0no-co/graphqlsp`, are specific to the `tsserver` and
-to editors, and the `gql.tada check` command has been created
-to get the same diagnostics outside of editors.
+The `gql.tada check` command exists to be a standalone
+version of GraphQL-related diagnostics instead and itself
+loads the TypeScript plugin's diagnostics code.
 :::
 
-Some diagnostics are specific to `gql.tada`, specifically
-there's two settings you can change in your configuration:
+Two diagnostics that feature in `gql.tada` output opinionated
+warnings that may not be relevant to your codebase:
 
 - [`trackFieldUsage`](/reference/config-format#trackfieldusage)
 - [`shouldCheckForColocatedFragments`](/reference/config-format#shouldcheckforcolocatedfragments)
@@ -247,7 +249,7 @@ setting:
   "compilerOptions": {
     "plugins": [
       {
-        "name": "@0no-co/graphqlsp",
+        "name": "gql.tada/ts-plugin",
         "schema": "./schema.graphql"
         "tadaOutputLocation": "./src/graphql-env.d.ts",
         "tadaTurboLocation": "./src/graphql-cache.d.ts" // [!code ++]
