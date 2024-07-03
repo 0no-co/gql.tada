@@ -40,7 +40,16 @@ async function* _runDiagnostics(
   };
 
   for (const sourceFile of sourceFiles) {
+    const isVueOrSvelte =
+      sourceFile.fileName.endsWith('.vue.ts') || sourceFile.fileName.endsWith('.svelte.ts');
     let filePath = sourceFile.fileName;
+    pluginInfo.config = {
+      ...pluginInfo.config,
+      shouldCheckForColocatedFragments: isVueOrSvelte
+        ? false
+        : pluginInfo.config.shouldCheckForColocatedFragments ?? false,
+      trackFieldUsage: isVueOrSvelte ? false : pluginInfo.config.trackFieldUsage ?? false,
+    };
     const diagnostics = getGraphQLDiagnostics(filePath, schemaRef, pluginInfo);
     const messages: DiagnosticMessage[] = [];
 
