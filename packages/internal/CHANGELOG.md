@@ -1,5 +1,12 @@
 # @gql.tada/internal
 
+## 1.0.3
+
+### Patch Changes
+
+- Add types for field-usage tracking and checking for co-located fragments
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#334](https://github.com/0no-co/gql.tada/pull/334))
+
 ## 1.0.2
 
 ### Patch Changes

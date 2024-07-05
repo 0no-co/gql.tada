@@ -1,5 +1,17 @@
 # @gql.tada/cli-utils
 
+## 1.5.0
+
+### Minor Changes
+
+- Disable field-usage tracking and the co-located fragment checking for vue/svelte
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#334](https://github.com/0no-co/gql.tada/pull/334))
+
+### Patch Changes
+
+- Updated dependencies (See [#334](https://github.com/0no-co/gql.tada/pull/334))
+  - @gql.tada/internal@1.0.3
+
 ## 1.4.0
 
 ### Minor Changes
