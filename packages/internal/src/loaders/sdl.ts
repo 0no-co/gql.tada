@@ -1,3 +1,4 @@
+import ts from 'typescript';
 import type { IntrospectionQuery } from 'graphql';
 import { buildSchema, buildClientSchema, executeSync } from 'graphql';
 import { CombinedError } from '@urql/core';
@@ -17,7 +18,7 @@ interface LoadFromSDLConfig {
 export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
   const subscriptions = new Set<OnSchemaUpdate>();
 
-  let controller: AbortController | null = null;
+  let abort: (() => void) | null = null;
   let result: SchemaLoaderResult | null = null;
 
   const load = async (): Promise<SchemaLoaderResult> => {
@@ -60,21 +61,43 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
   };
 
   const watch = async () => {
-    controller = new AbortController();
-    const watcher = fs.watch(config.file, {
-      signal: controller.signal,
-      persistent: false,
-    });
-    try {
-      for await (const _event of watcher) {
-        if ((result = await load())) {
-          for (const subscriber of subscriptions) subscriber(result);
+    if (ts.sys.watchFile) {
+      const watcher = ts.sys.watchFile(
+        config.file,
+        async () => {
+          try {
+            if ((result = await load())) {
+              for (const subscriber of subscriptions) subscriber(result);
+            }
+          } catch (_error) {}
+        },
+        250,
+        {
+          // NOTE: Using `ts.WatchFileKind.UseFsEvents` causes missed events just like fs.watch
+          // as below on macOS, as of TypeScript 5.5 and is hence avoided here
+          watchFile: ts.WatchFileKind.UseFsEventsOnParentDirectory,
+          fallbackPolling: ts.PollingWatchKind.PriorityInterval,
         }
+      );
+      abort = () => watcher.close();
+    } else {
+      const controller = new AbortController();
+      abort = () => controller.abort();
+      const watcher = fs.watch(config.file, {
+        signal: controller.signal,
+        persistent: false,
+      });
+      try {
+        for await (const _event of watcher) {
+          if ((result = await load())) {
+            for (const subscriber of subscriptions) subscriber(result);
+          }
+        }
+      } catch (error: any) {
+        if (error.name !== 'AbortError') throw error;
+      } finally {
+        abort = null;
       }
-    } catch (error: any) {
-      if (error.name !== 'AbortError') throw error;
-    } finally {
-      controller = null;
     }
   };
 
@@ -90,9 +113,7 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
       subscriptions.add(onUpdate);
       return () => {
         subscriptions.delete(onUpdate);
-        if (!subscriptions.size && controller) {
-          controller.abort();
-        }
+        if (!subscriptions.size && abort) abort();
       };
     },
     async loadIntrospection() {
