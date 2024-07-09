@@ -1,5 +1,12 @@
 # @gql.tada/internal
 
+## 1.0.4
+
+### Patch Changes
+
+- ⚠️ Fix SDL-file schema watcher missing changed file events on macOS under certain write conditions
+  Submitted by [@kitten](https://github.com/kitten) (See [#340](https://github.com/0no-co/gql.tada/pull/340))
+
 ## 1.0.3
 
 ### Patch Changes
