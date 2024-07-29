@@ -20,17 +20,19 @@ export function outputIntrospectionFile(
   opts: OutputIntrospectionFileOptions
 ): string {
   if (/\.d\.ts$/.test(opts.fileType)) {
-    const out = [PREAMBLE_IGNORE, ANNOTATION_DTS];
+    const out = [PREAMBLE_IGNORE];
     if (typeof introspection !== 'string' && opts.shouldPreprocess) {
       // NOTE: When types aren't exported separately, composite tsconfigs
       // will output a serialization error in diagnostics
       out.push(
         `export type ${TYPES_VAR} = ${preprocessIntrospectionTypes(introspection)};\n`,
+        ANNOTATION_DTS,
         `export type introspection = ${preprocessIntrospection(introspection, TYPES_VAR)};\n`,
         `import * as gqlTada from 'gql.tada';\n`
       );
     } else {
       out.push(
+        ANNOTATION_DTS,
         `export type introspection = ${stringifyJson(introspection)};\n`,
         "import * as gqlTada from 'gql.tada';\n"
       );
