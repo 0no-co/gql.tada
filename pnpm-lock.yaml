@@ -140,9 +140,6 @@ importers:
         specifier: ^4.0.7
         version: 4.0.7(graphql@16.8.1)(react@18.3.1)
     devDependencies:
-      '@0no-co/graphqlsp':
-        specifier: ^1.12.9
-        version: 1.12.9(graphql@16.8.1)(typescript@5.5.2)
       '@types/react':
         specifier: ^18.2.79
         version: 18.3.1
@@ -174,9 +171,6 @@ importers:
         specifier: ^4.0.5
         version: 4.2.15
     devDependencies:
-      '@0no-co/graphqlsp':
-        specifier: ^1.12.9
-        version: 1.12.9(graphql@16.8.1)(typescript@5.5.2)
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.1.0
         version: 3.1.0(svelte@4.2.15)(vite@5.2.10(@types/node@20.12.12)(terser@5.31.0))
@@ -205,9 +199,6 @@ importers:
         specifier: ^3.4.25
         version: 3.4.25(typescript@5.5.2)
     devDependencies:
-      '@0no-co/graphqlsp':
-        specifier: ^1.12.9
-        version: 1.12.9(graphql@16.8.1)(typescript@5.5.2)
       '@vitejs/plugin-vue':
         specifier: ^5.0.4
         version: 5.0.4(vite@5.2.10(@types/node@20.12.12)(terser@5.31.0))(vue@3.4.25(typescript@5.5.2))
