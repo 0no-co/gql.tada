@@ -82,28 +82,33 @@ export const printIntrospectionType = (type: IntrospectionType) => {
   }
 };
 
-export function preprocessIntrospection(
+export function preprocessIntrospectionTypes(
   introspection: IntrospectionResult | IntrospectionQuery
+): string {
+  let evaluatedTypes = '';
+  for (const type of introspection.__schema.types) {
+    const typeStr = printIntrospectionType(type);
+    if (evaluatedTypes) evaluatedTypes += '\n';
+    evaluatedTypes += `    ${printName(type.name)}: ${typeStr};`;
+  }
+  return `{\n${evaluatedTypes}\n}`;
+}
+
+export function preprocessIntrospection(
+  introspection: IntrospectionResult | IntrospectionQuery,
+  typesStr = preprocessIntrospectionTypes(introspection)
 ): string {
   const { __schema: schema } = introspection;
   const name = 'name' in introspection ? introspection.name : undefined;
   const queryName = printName(schema.queryType.name);
   const mutationName = printName(schema.mutationType && schema.mutationType.name);
   const subscriptionName = printName(schema.subscriptionType && schema.subscriptionType.name);
-
-  let evaluatedTypes = '';
-  for (const type of schema.types) {
-    const typeStr = printIntrospectionType(type);
-    if (evaluatedTypes) evaluatedTypes += '\n';
-    evaluatedTypes += `    ${printName(type.name)}: ${typeStr};`;
-  }
-
   return (
     '{\n' +
     `  name: ${printName(name)};\n` +
     `  query: ${queryName};\n` +
     `  mutation: ${mutationName};\n` +
     `  subscription: ${subscriptionName};\n` +
-    `  types: {\n${evaluatedTypes}\n  };\n}`
+    `  types: ${typesStr};\n}`
   );
 }

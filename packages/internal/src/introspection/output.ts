@@ -3,7 +3,9 @@ import type { IntrospectionResult } from '../loaders';
 
 import { TadaError } from '../errors';
 import { PREAMBLE_IGNORE, ANNOTATION_DTS, ANNOTATION_TS } from './constants';
-import { preprocessIntrospection } from './preprocess';
+import { preprocessIntrospection, preprocessIntrospectionTypes } from './preprocess';
+
+const TYPES_VAR = 'introspection_types';
 
 const stringifyJson = (input: unknown | string): string =>
   typeof input === 'string' ? input : JSON.stringify(input, null, 2);
@@ -18,16 +20,21 @@ export function outputIntrospectionFile(
   opts: OutputIntrospectionFileOptions
 ): string {
   if (/\.d\.ts$/.test(opts.fileType)) {
-    const json =
-      typeof introspection !== 'string' && opts.shouldPreprocess
-        ? preprocessIntrospection(introspection)
-        : stringifyJson(introspection);
-    const out = [
-      PREAMBLE_IGNORE,
-      ANNOTATION_DTS,
-      `export type introspection = ${json};\n`,
-      "import * as gqlTada from 'gql.tada';\n",
-    ];
+    const out = [PREAMBLE_IGNORE, ANNOTATION_DTS];
+    if (typeof introspection !== 'string' && opts.shouldPreprocess) {
+      // NOTE: When types aren't exported separately, composite tsconfigs
+      // will output a serialization error in diagnostics
+      out.push(
+        `export type ${TYPES_VAR} = ${preprocessIntrospectionTypes(introspection)};\n`,
+        `export type introspection = ${preprocessIntrospection(introspection, TYPES_VAR)};\n`,
+        `import * as gqlTada from 'gql.tada';\n`
+      );
+    } else {
+      out.push(
+        `export type introspection = ${stringifyJson(introspection)};\n`,
+        "import * as gqlTada from 'gql.tada';\n"
+      );
+    }
     // NOTE: When the `name` option is used and multiple schemas are present,
     // we omit the automatic schema declaration and rely on the user calling
     // `initGraphQLTada()` themselves
