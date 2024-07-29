@@ -532,18 +532,7 @@ function readFragment<
   fragment: T
 ): T extends resultOrFragmentOf<Document> ? ResultOf<Document> : T;
 
-function readFragment<const Document extends FragmentShape = never>(
-  fragment: resultOrFragmentOf<Document>
-): ResultOf<Document>;
-function readFragment<const Document extends FragmentShape = never>(
-  fragment: resultOrFragmentOf<Document> | null
-): ResultOf<Document> | null;
-function readFragment<const Document extends FragmentShape = never>(
-  fragment: resultOrFragmentOf<Document> | undefined
-): ResultOf<Document> | undefined;
-function readFragment<const Document extends FragmentShape = never>(
-  fragment: resultOrFragmentOf<Document> | null | undefined
-): ResultOf<Document> | null | undefined;
+// Reading arrays of fragments with required generic
 function readFragment<const Document extends FragmentShape = never>(
   fragment: readonly resultOrFragmentOf<Document>[]
 ): readonly ResultOf<Document>[];
@@ -556,6 +545,45 @@ function readFragment<const Document extends FragmentShape = never>(
 function readFragment<const Document extends FragmentShape = never>(
   fragment: readonly (resultOrFragmentOf<Document> | null | undefined)[]
 ): readonly (ResultOf<Document> | null | undefined)[];
+// Reading arrays of fragments with required generic with optional `{}` type
+function readFragment<const Document extends FragmentShape = never>(
+  fragment: readonly (resultOrFragmentOf<Document> | {})[]
+): readonly (ResultOf<Document> | {})[];
+function readFragment<const Document extends FragmentShape = never>(
+  fragment: readonly (resultOrFragmentOf<Document> | null | {})[]
+): readonly (ResultOf<Document> | null | {})[];
+function readFragment<const Document extends FragmentShape = never>(
+  fragment: readonly (resultOrFragmentOf<Document> | undefined | {})[]
+): readonly (ResultOf<Document> | undefined | {})[];
+function readFragment<const Document extends FragmentShape = never>(
+  fragment: readonly (resultOrFragmentOf<Document> | null | undefined | {})[]
+): readonly (ResultOf<Document> | null | undefined | {})[];
+// Reading fragments with required generic
+function readFragment<const Document extends FragmentShape = never>(
+  fragment: resultOrFragmentOf<Document>
+): ResultOf<Document>;
+function readFragment<const Document extends FragmentShape = never>(
+  fragment: resultOrFragmentOf<Document> | null
+): ResultOf<Document> | null;
+function readFragment<const Document extends FragmentShape = never>(
+  fragment: resultOrFragmentOf<Document> | undefined
+): ResultOf<Document> | undefined;
+function readFragment<const Document extends FragmentShape = never>(
+  fragment: resultOrFragmentOf<Document> | null | undefined
+): ResultOf<Document> | null | undefined;
+// Reading fragments with required generic with optional `{}` type
+function readFragment<const Document extends FragmentShape = never>(
+  fragment: resultOrFragmentOf<Document> | {}
+): ResultOf<Document> | {};
+function readFragment<const Document extends FragmentShape = never>(
+  fragment: resultOrFragmentOf<Document> | null | {}
+): ResultOf<Document> | null | {};
+function readFragment<const Document extends FragmentShape = never>(
+  fragment: resultOrFragmentOf<Document> | undefined | {}
+): ResultOf<Document> | undefined | {};
+function readFragment<const Document extends FragmentShape = never>(
+  fragment: resultOrFragmentOf<Document> | null | undefined | {}
+): ResultOf<Document> | null | undefined | {};
 
 function readFragment(...args: [unknown] | [unknown, unknown]) {
   return args.length === 2 ? args[1] : args[0];
