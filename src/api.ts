@@ -515,22 +515,22 @@ function readFragment<const Document extends FragmentShape = never>(
   _document: Document,
   fragment: resultOrFragmentOf<Document>
 ): ResultOf<Document>;
-// Reading fragments where input data is nullable
-function readFragment<
-  const Document extends FragmentShape,
-  const T extends resultOrFragmentOf<Document> | null | undefined,
->(
-  _document: Document,
-  fragment: T
-): T extends resultOrFragmentOf<Document> ? ResultOf<Document> : T;
 // Reading fragments where input data is an array and nullable
 function readFragment<
   const Document extends FragmentShape,
-  const T extends resultOrFragmentOf<Document> | null | undefined,
+  const T extends resultOrFragmentOf<Document> | null | undefined | {},
 >(
   _document: Document,
   fragments: readonly T[]
 ): readonly (T extends resultOrFragmentOf<Document> ? ResultOf<Document> : T)[];
+// Reading fragments where input data is nullable
+function readFragment<
+  const Document extends FragmentShape,
+  const T extends resultOrFragmentOf<Document> | null | undefined | {},
+>(
+  _document: Document,
+  fragment: T
+): T extends resultOrFragmentOf<Document> ? ResultOf<Document> : T;
 
 function readFragment<const Document extends FragmentShape = never>(
   fragment: resultOrFragmentOf<Document>
