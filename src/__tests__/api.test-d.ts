@@ -543,6 +543,130 @@ describe('readFragment', () => {
     const result = readFragment({} as document, {} as FragmentOf<document>);
     expectTypeOf<typeof result>().toEqualTypeOf<ResultOf<document>>();
   });
+
+  it('should unmask nullable, undefined, and optional data', () => {
+    type fragment = parseDocument<`
+      fragment Fields on Todo @_unmask {
+        id
+      }
+    `>;
+
+    type document = getDocumentNode<fragment, schema>;
+
+    const inputA: FragmentOf<document> | null = {} as any;
+    const resultA = readFragment({} as document, inputA);
+    expectTypeOf<typeof resultA>().toEqualTypeOf<ResultOf<document> | null>();
+
+    const inputB: FragmentOf<document> | undefined = {} as any;
+    const resultB = readFragment({} as document, inputB);
+    expectTypeOf<typeof resultB>().toEqualTypeOf<ResultOf<document> | undefined>();
+
+    const inputC: FragmentOf<document> | undefined | null = {} as any;
+    const resultC = readFragment({} as document, inputC);
+    expectTypeOf<typeof resultC>().toEqualTypeOf<ResultOf<document> | undefined | null>();
+
+    const inputD: FragmentOf<document> | {} = {} as any;
+    const resultD = readFragment({} as document, inputD);
+    expectTypeOf<typeof resultD>().toEqualTypeOf<ResultOf<document> | {}>();
+
+    const inputE: FragmentOf<document> | {} | null = {} as any;
+    const resultE = readFragment({} as document, inputE);
+    expectTypeOf<typeof resultE>().toEqualTypeOf<ResultOf<document> | {} | null>();
+  });
+
+  it('should unmask arrays of nullable, undefined, and optional data', () => {
+    type fragment = parseDocument<`
+      fragment Fields on Todo @_unmask {
+        id
+      }
+    `>;
+
+    type document = getDocumentNode<fragment, schema>;
+
+    const inputA: (FragmentOf<document> | null)[] = [];
+    const resultA = readFragment({} as document, inputA);
+    expectTypeOf<typeof resultA>().toEqualTypeOf<readonly (ResultOf<document> | null)[]>();
+
+    const inputB: (FragmentOf<document> | undefined)[] = [];
+    const resultB = readFragment({} as document, inputB);
+    expectTypeOf<typeof resultB>().toEqualTypeOf<readonly (ResultOf<document> | undefined)[]>();
+
+    const inputC: (FragmentOf<document> | undefined | null)[] = [];
+    const resultC = readFragment({} as document, inputC);
+    expectTypeOf<typeof resultC>().toEqualTypeOf<
+      readonly (ResultOf<document> | undefined | null)[]
+    >();
+
+    const inputD: (FragmentOf<document> | {})[] = [];
+    const resultD = readFragment({} as document, inputD);
+    expectTypeOf<typeof resultD>().toEqualTypeOf<readonly (ResultOf<document> | {})[]>();
+
+    const inputE: (FragmentOf<document> | {} | null)[] = [];
+    const resultE = readFragment({} as document, inputE);
+    expectTypeOf<typeof resultE>().toEqualTypeOf<readonly (ResultOf<document> | {} | null)[]>();
+  });
+
+  it('should unmask nullable, undefined, and optional data (with passed generic)', () => {
+    type fragment = parseDocument<`
+      fragment Fields on Todo @_unmask {
+        id
+      }
+    `>;
+
+    type document = getDocumentNode<fragment, schema>;
+
+    const inputA: FragmentOf<document> | null = {} as any;
+    const resultA = readFragment<document>(inputA);
+    expectTypeOf<typeof resultA>().toEqualTypeOf<ResultOf<document> | null>();
+
+    const inputB: FragmentOf<document> | undefined = {} as any;
+    const resultB = readFragment<document>(inputB);
+    expectTypeOf<typeof resultB>().toEqualTypeOf<ResultOf<document> | undefined>();
+
+    const inputC: FragmentOf<document> | undefined | null = {} as any;
+    const resultC = readFragment<document>(inputC);
+    expectTypeOf<typeof resultC>().toEqualTypeOf<ResultOf<document> | undefined | null>();
+
+    const inputD: FragmentOf<document> | {} = {} as any;
+    const resultD = readFragment<document>(inputD);
+    expectTypeOf<typeof resultD>().toEqualTypeOf<ResultOf<document> | {}>();
+
+    const inputE: FragmentOf<document> | {} | null = {} as any;
+    const resultE = readFragment<document>(inputE);
+    expectTypeOf<typeof resultE>().toEqualTypeOf<ResultOf<document> | {} | null>();
+  });
+
+  it('should unmask arrays of nullable, undefined, and optional data (with passed generic)', () => {
+    type fragment = parseDocument<`
+      fragment Fields on Todo @_unmask {
+        id
+      }
+    `>;
+
+    type document = getDocumentNode<fragment, schema>;
+
+    const inputA: (FragmentOf<document> | null)[] = [];
+    const resultA = readFragment<document>(inputA);
+    expectTypeOf<typeof resultA>().toEqualTypeOf<readonly (ResultOf<document> | null)[]>();
+
+    const inputB: (FragmentOf<document> | undefined)[] = [];
+    const resultB = readFragment<document>(inputB);
+    expectTypeOf<typeof resultB>().toEqualTypeOf<readonly (ResultOf<document> | undefined)[]>();
+
+    const inputC: (FragmentOf<document> | undefined | null)[] = [];
+    const resultC = readFragment<document>(inputC);
+    expectTypeOf<typeof resultC>().toEqualTypeOf<
+      readonly (ResultOf<document> | undefined | null)[]
+    >();
+
+    const inputD: (FragmentOf<document> | {})[] = [];
+    const resultD = readFragment<document>(inputD);
+    expectTypeOf<typeof resultD>().toEqualTypeOf<readonly (ResultOf<document> | {})[]>();
+
+    const inputE: (FragmentOf<document> | {} | null)[] = [];
+    const resultE = readFragment<document>(inputE);
+    expectTypeOf<typeof resultE>().toEqualTypeOf<readonly (ResultOf<document> | {} | null)[]>();
+  });
 });
 
 describe('maskFragments', () => {
