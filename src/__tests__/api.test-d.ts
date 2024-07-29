@@ -565,6 +565,30 @@ describe('readFragment', () => {
     const resultC = readFragment({} as document, inputC);
     expectTypeOf<typeof resultC>().toEqualTypeOf<ResultOf<document> | undefined | null>();
   });
+
+  it('should unmask arrays of nullable, undefined, and optional data', () => {
+    type fragment = parseDocument<`
+      fragment Fields on Todo @_unmask {
+        id
+      }
+    `>;
+
+    type document = getDocumentNode<fragment, schema>;
+
+    const inputA: (FragmentOf<document> | null)[] = [];
+    const resultA = readFragment({} as document, inputA);
+    expectTypeOf<typeof resultA>().toEqualTypeOf<readonly (ResultOf<document> | null)[]>();
+
+    const inputB: (FragmentOf<document> | undefined)[] = [];
+    const resultB = readFragment({} as document, inputB);
+    expectTypeOf<typeof resultB>().toEqualTypeOf<readonly (ResultOf<document> | undefined)[]>();
+
+    const inputC: (FragmentOf<document> | undefined | null)[] = [];
+    const resultC = readFragment({} as document, inputC);
+    expectTypeOf<typeof resultC>().toEqualTypeOf<
+      readonly (ResultOf<document> | undefined | null)[]
+    >();
+  });
 });
 
 describe('maskFragments', () => {
