@@ -512,6 +512,27 @@ type fragmentRefsOfFragmentsRec<
  * @see {@link readFragment} for how to read from fragment masks.
  */
 function readFragment<const Document extends FragmentShape = never>(
+  _document: Document,
+  fragment: resultOrFragmentOf<Document>
+): ResultOf<Document>;
+// Reading fragments where input data is nullable
+function readFragment<
+  const Document extends FragmentShape,
+  const T extends resultOrFragmentOf<Document> | null | undefined,
+>(
+  _document: Document,
+  fragment: T
+): T extends resultOrFragmentOf<Document> ? ResultOf<Document> : T;
+// Reading fragments where input data is an array and nullable
+function readFragment<
+  const Document extends FragmentShape,
+  const T extends resultOrFragmentOf<Document> | null | undefined,
+>(
+  _document: Document,
+  fragments: readonly T[]
+): readonly (T extends resultOrFragmentOf<Document> ? ResultOf<Document> : T)[];
+
+function readFragment<const Document extends FragmentShape = never>(
   fragment: resultOrFragmentOf<Document>
 ): ResultOf<Document>;
 function readFragment<const Document extends FragmentShape = never>(
@@ -535,38 +556,7 @@ function readFragment<const Document extends FragmentShape = never>(
 function readFragment<const Document extends FragmentShape = never>(
   fragment: readonly (resultOrFragmentOf<Document> | null | undefined)[]
 ): readonly (ResultOf<Document> | null | undefined)[];
-function readFragment<const Document extends FragmentShape = never>(
-  _document: Document,
-  fragment: resultOrFragmentOf<Document>
-): ResultOf<Document>;
-function readFragment<const Document extends FragmentShape>(
-  _document: Document,
-  fragment: resultOrFragmentOf<Document> | null
-): ResultOf<Document> | null;
-function readFragment<const Document extends FragmentShape>(
-  _document: Document,
-  fragment: resultOrFragmentOf<Document> | undefined
-): ResultOf<Document> | undefined;
-function readFragment<const Document extends FragmentShape>(
-  _document: Document,
-  fragment: resultOrFragmentOf<Document> | null | undefined
-): ResultOf<Document> | null | undefined;
-function readFragment<const Document extends FragmentShape>(
-  _document: Document,
-  fragment: readonly resultOrFragmentOf<Document>[]
-): readonly ResultOf<Document>[];
-function readFragment<const Document extends FragmentShape>(
-  _document: Document,
-  fragment: readonly (resultOrFragmentOf<Document> | null)[]
-): readonly (ResultOf<Document> | null)[];
-function readFragment<const Document extends FragmentShape>(
-  _document: Document,
-  fragment: readonly (resultOrFragmentOf<Document> | undefined)[]
-): readonly (ResultOf<Document> | undefined)[];
-function readFragment<const Document extends FragmentShape>(
-  _document: Document,
-  fragment: readonly (resultOrFragmentOf<Document> | null | undefined)[]
-): readonly (ResultOf<Document> | null | undefined)[];
+
 function readFragment(...args: [unknown] | [unknown, unknown]) {
   return args.length === 2 ? args[1] : args[0];
 }
