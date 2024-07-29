@@ -1,5 +1,12 @@
 # @gql.tada/internal
 
+## 1.0.5
+
+### Patch Changes
+
+- Output introspection type separately in `d.ts` output typings file. This avoids a serialization error in composite TypeScript projects
+  Submitted by [@kitten](https://github.com/kitten) (See [#350](https://github.com/0no-co/gql.tada/pull/350))
+
 ## 1.0.4
 
 ### Patch Changes

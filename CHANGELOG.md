@@ -1,5 +1,15 @@
 # gql.tada
 
+## 1.8.3
+
+### Patch Changes
+
+- Extend `readFragment` types to allow `| {}` optional fragments to be matched. When a fragment is annotated with a directive making it optional (such as `@include`, `@skip`, or `@defer`) then its typed as optional. `readFragment` previously didn't know how to match these types, but it will now match `T | {}` and infer the type as such
+  Submitted by [@kitten](https://github.com/kitten) (See [#349](https://github.com/0no-co/gql.tada/pull/349))
+- Updated dependencies (See [#350](https://github.com/0no-co/gql.tada/pull/350))
+  - @gql.tada/internal@1.0.5
+  - @gql.tada/cli-utils@1.5.2
+
 ## 1.8.2
 
 ### Patch Changes
