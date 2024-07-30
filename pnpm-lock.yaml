@@ -229,6 +229,12 @@ importers:
       '@gql.tada/internal':
         specifier: workspace:*
         version: link:../internal
+      '@gql.tada/svelte-support':
+        specifier: workspace:*
+        version: link:../svelte-support
+      '@gql.tada/vue-support':
+        specifier: workspace:*
+        version: link:../vue-support
       '@vue/compiler-dom':
         specifier: ^3.4.23
         version: 3.4.25
@@ -312,6 +318,37 @@ importers:
       type-fest:
         specifier: ^4.10.2
         version: 4.10.2
+      typescript:
+        specifier: ^5.5.2
+        version: 5.5.2
+
+  packages/svelte-support:
+    dependencies:
+      '@jridgewell/sourcemap-codec':
+        specifier: ^1.4.15
+        version: 1.5.0
+      svelte2tsx:
+        specifier: ^0.7.6
+        version: 0.7.6(svelte@4.2.17)(typescript@5.5.2)
+      typescript:
+        specifier: ^5.5.2
+        version: 5.5.2
+      vscode-languageserver-textdocument:
+        specifier: ^1.0.11
+        version: 1.0.11
+    devDependencies:
+      '@vue/language-core':
+        specifier: ~2.0.0
+        version: 2.0.29(typescript@5.5.2)
+
+  packages/vue-support:
+    dependencies:
+      '@vue/compiler-dom':
+        specifier: ^3.4.23
+        version: 3.4.25
+      '@vue/language-core':
+        specifier: ~2.0.0
+        version: 2.0.29(typescript@5.5.2)
       typescript:
         specifier: ^5.5.2
         version: 5.5.2
@@ -4755,7 +4792,7 @@ snapshots:
   '@jridgewell/gen-mapping@0.3.5':
     dependencies:
       '@jridgewell/set-array': 1.2.1
-      '@jridgewell/sourcemap-codec': 1.4.15
+      '@jridgewell/sourcemap-codec': 1.5.0
       '@jridgewell/trace-mapping': 0.3.25
 
   '@jridgewell/resolve-uri@3.1.2': {}
@@ -4780,7 +4817,7 @@ snapshots:
   '@jridgewell/trace-mapping@0.3.25':
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
-      '@jridgewell/sourcemap-codec': 1.4.15
+      '@jridgewell/sourcemap-codec': 1.5.0
 
   '@manypkg/find-root@1.1.0':
     dependencies:
@@ -5705,7 +5742,7 @@ snapshots:
 
   code-red@1.0.4:
     dependencies:
-      '@jridgewell/sourcemap-codec': 1.4.15
+      '@jridgewell/sourcemap-codec': 1.5.0
       '@types/estree': 1.0.5
       acorn: 8.11.3
       estree-walker: 3.0.3
@@ -6610,7 +6647,7 @@ snapshots:
 
   magic-string@0.30.10:
     dependencies:
-      '@jridgewell/sourcemap-codec': 1.4.15
+      '@jridgewell/sourcemap-codec': 1.5.0
 
   magic-string@0.30.11:
     dependencies:
