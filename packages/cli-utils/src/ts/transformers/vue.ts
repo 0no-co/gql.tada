@@ -86,6 +86,20 @@ const vueCompilerOptions = vue.resolveVueCompilerOptions({});
 
 let plugins: ReturnType<typeof vue.createPlugins> | undefined;
 
+export const check = () => {
+  const undefinedValues = [
+    !VueVirtualCode && 'VueVirtualCode',
+    !createPlugins && 'createPlugins',
+  ].filter(Boolean);
+  if (undefinedValues.length) {
+    throw new Error(
+      'This version of `@vue/language-core` seems to be unsupported. ' +
+        `(undefined: ${undefinedValues.join(', ')})\n` +
+        'Please report this issue along with your installed version of `@vue/language-core.'
+    );
+  }
+};
+
 export const transform = (sourceFile: ts.SourceFile): VirtualCode | undefined => {
   if (!VueVirtualCode || !createPlugins) {
     return undefined;
