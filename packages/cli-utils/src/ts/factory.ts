@@ -44,6 +44,13 @@ export interface ProgramFactory {
   build(): ProgramContainer;
 }
 
+/** Bumps the Error stack traces to a length of 100 for better debugging. */
+const bumpStackTraceLimit = () => {
+  if ('stackTraceLimit' in Error && Error.stackTraceLimit < 25) {
+    Error.stackTraceLimit = 25;
+  }
+};
+
 export const programFactory = (params: ProgramFactoryParams): ProgramFactory => {
   const vfsMap = new Map<string, string>();
   const virtualMap: VirtualMap = new Map();
@@ -154,6 +161,8 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
     },
 
     build() {
+      bumpStackTraceLimit();
+
       // NOTE: This is necessary for `@0no-co/graphqlsp/api` to use the right instance
       // of the typescript library
       init({ typescript: ts });
