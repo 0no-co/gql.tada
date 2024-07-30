@@ -4,7 +4,7 @@ import * as vueCompilerDOM from '@vue/compiler-dom';
 import * as vue from '@vue/language-core';
 import { parse } from '@vue/language-core';
 
-const useVueFilePlugin: vue.VueLanguagePlugin = (_ctx) => {
+const useVueFilePlugin = (): vue.VueLanguagePluginReturn => {
   return {
     version: 2,
 
@@ -73,19 +73,21 @@ if ('VueVirtualCode' in vue) {
   VueVirtualCode = (vue as any).VueGeneratedCode;
 }
 
-let getBasePlugins: typeof vue.getBasePlugins | undefined;
-if ('getBasePlugins' in vue) {
-  getBasePlugins = vue.getBasePlugins;
+let createPlugins: typeof vue.createPlugins | undefined;
+if ('createPlugins' in vue) {
+  createPlugins = vue.createPlugins;
+} else if ('getBasePlugins' in vue) {
+  createPlugins = (vue as any).getBasePlugins;
 } else if ('getDefaultVueLanguagePlugins' in vue) {
-  getBasePlugins = (vue as any).getDefaultVueLanguagePlugins;
+  createPlugins = (vue as any).getDefaultVueLanguagePlugins;
 }
 
 const vueCompilerOptions = vue.resolveVueCompilerOptions({});
 
-let plugins: ReturnType<typeof vue.getBasePlugins> | undefined;
+let plugins: ReturnType<typeof vue.createPlugins> | undefined;
 
 export const transform = (sourceFile: ts.SourceFile): VirtualCode | undefined => {
-  if (!VueVirtualCode || !getBasePlugins) {
+  if (!VueVirtualCode || !createPlugins) {
     return undefined;
   } else if (!plugins) {
     const pluginContext = {
@@ -97,9 +99,8 @@ export const transform = (sourceFile: ts.SourceFile): VirtualCode | undefined =>
       globalTypesHolder: undefined,
       vueCompilerOptions,
     };
-    plugins = getBasePlugins(pluginContext);
-    const vueSfcPlugin = useVueFilePlugin(pluginContext);
-    plugins.push(vueSfcPlugin);
+    plugins = createPlugins(pluginContext);
+    plugins.push(useVueFilePlugin());
   }
 
   const snapshot = ts.ScriptSnapshot.fromString(sourceFile.getFullText());
