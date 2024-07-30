@@ -44,7 +44,7 @@ export interface ProgramFactory {
   build(): ProgramContainer;
 }
 
-/** Bumps the Error stack traces to a length of 100 for better debugging. */
+/** Bumps the Error stack traces to a length of 25 for better debugging. */
 const bumpStackTraceLimit = () => {
   if ('stackTraceLimit' in Error && Error.stackTraceLimit < 25) {
     Error.stackTraceLimit = 25;
