@@ -1,5 +1,16 @@
 # @gql.tada/cli-utils
 
+## 1.5.3
+
+### Patch Changes
+
+- Prevent `NodeNext` module resolution from being used over `Bundler` mode, since this is almost always a mistake
+  Submitted by [@kitten](https://github.com/kitten) (See [#356](https://github.com/0no-co/gql.tada/pull/356))
+- Support breaking changes in `@vue/language-core@2.0.28` (`getBasePlugins` renamed to `createPlugins`)
+  Submitted by [@kitten](https://github.com/kitten) (See [#353](https://github.com/0no-co/gql.tada/pull/353))
+- Bump stack trace limit to 25 when TypeScript is used, which requires a larger stack depths to debug properly
+  Submitted by [@kitten](https://github.com/kitten) (See [#355](https://github.com/0no-co/gql.tada/pull/355))
+
 ## 1.5.2
 
 ### Patch Changes
