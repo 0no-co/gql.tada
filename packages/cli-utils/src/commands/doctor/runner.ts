@@ -1,3 +1,4 @@
+import type ts from 'typescript';
 import path from 'node:path';
 
 import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
@@ -5,6 +6,7 @@ import { loadRef, loadConfig, parseConfig } from '@gql.tada/internal';
 
 import type { ComposeInput } from '../../term';
 import { MINIMUM_VERSIONS, semverComply } from '../../utils/semver';
+import { programFactory } from '../../ts';
 import { findGraphQLConfig } from './helpers/graphqlConfig';
 import * as versions from './helpers/versions';
 import * as vscode from './helpers/vscode';
@@ -28,6 +30,7 @@ const enum Messages {
   CHECK_TS_VERSION = 'Checking TypeScript version',
   CHECK_DEPENDENCIES = 'Checking installed dependencies',
   CHECK_TSCONFIG = 'Checking tsconfig.json',
+  CHECK_EXTERNAL_FILES = 'Checking external files support',
   CHECK_VSCODE = 'Checking VSCode setup',
   CHECK_SCHEMA = 'Checking schema',
 }
@@ -40,8 +43,7 @@ export async function* run(): AsyncIterable<ComposeInput> {
   // Check TypeScript version
   let packageJson: versions.PackageJson;
   try {
-    // packageJson = await versions.readPackageJson();
-    packageJson = {};
+    packageJson = await versions.readPackageJson();
   } catch (_error) {
     yield logger.failedTask(Messages.CHECK_TS_VERSION);
     throw logger.errorMessage(
@@ -146,6 +148,8 @@ export async function* run(): AsyncIterable<ComposeInput> {
 
   yield logger.completedTask(Messages.CHECK_TSCONFIG);
 
+  yield* runExternalFilesChecks(configResult, packageJson);
+
   yield* runVSCodeChecks();
 
   yield logger.runningTask(Messages.CHECK_SCHEMA);
@@ -215,5 +219,50 @@ async function* runVSCodeChecks(): AsyncIterable<ComposeInput> {
     if (!hasEndedTask) {
       yield logger.completedTask(Messages.CHECK_VSCODE);
     }
+  }
+}
+
+async function* runExternalFilesChecks(
+  configResult: LoadConfigResult,
+  packageJson: versions.PackageJson
+): AsyncIterable<ComposeInput> {
+  let externalFiles: readonly ts.SourceFile[] = [];
+  try {
+    const factory = programFactory(configResult);
+    externalFiles = factory.createExternalFiles();
+  } catch (_error) {
+    // NOTE: If the project fails to load, we currently just ignore this check and move on
+    return;
+  }
+
+  if (externalFiles.length) {
+    yield logger.runningTask(Messages.CHECK_EXTERNAL_FILES);
+    await delay();
+
+    const extensions = new Set(
+      externalFiles.map((sourceFile) => path.extname(sourceFile.fileName))
+    );
+
+    if (extensions.has('.svelte') && !(await versions.hasSvelteSupport(packageJson))) {
+      yield logger.failedTask(Messages.CHECK_EXTERNAL_FILES);
+      throw logger.errorMessage(
+        `A version of ${logger.code(
+          '@gql.tada/svelte-support'
+        )} must be installed for Svelte file support.\n` +
+          logger.hint(`Have you installed ${logger.code('@gql.tada/svelte-support')}?`)
+      );
+    }
+
+    if (extensions.has('.vue') && !(await versions.hasVueSupport(packageJson))) {
+      yield logger.failedTask(Messages.CHECK_EXTERNAL_FILES);
+      throw logger.errorMessage(
+        `A version of ${logger.code(
+          '@gql.tada/vue-support'
+        )} must be installed for Vue file support.\n` +
+          logger.hint(`Have you installed ${logger.code('@gql.tada/vue-support')}?`)
+      );
+    }
+
+    yield logger.completedTask(Messages.CHECK_EXTERNAL_FILES);
   }
 }
