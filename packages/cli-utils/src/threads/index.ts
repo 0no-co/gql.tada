@@ -28,6 +28,7 @@ interface ThreadMessage {
   id?: number;
   kind: ThreadMessageCodes;
   data?: any;
+  extra?: Record<string, unknown>;
 }
 
 const workerOpts: WorkerOptions = {
@@ -35,6 +36,17 @@ const workerOpts: WorkerOptions = {
   stderr: false,
   stdout: false,
   stdin: false,
+};
+
+const getMessageData = (message: ThreadMessage) => {
+  const data = message.data;
+  if (message.kind === ThreadMessageCodes.Throw) {
+    return typeof data === 'object' && data && message.extra != null
+      ? Object.assign(data, message.extra)
+      : data;
+  } else {
+    return data;
+  }
 };
 
 const asyncIteratorSymbol = (): typeof Symbol.asyncIterator =>
@@ -106,14 +118,14 @@ function main<Args extends readonly any[], Next>(url: string | URL): Generator<A
       if (!message) {
         return;
       } else if (reject && message.kind === ThreadMessageCodes.Throw) {
-        reject(message.data);
+        reject(getMessageData(message));
         cleanup();
       } else if (resolve && message.kind === ThreadMessageCodes.Return) {
-        resolve({ done: true, value: message.data });
+        resolve({ done: true, value: getMessageData(message) });
         cleanup();
       } else if (resolve && message.kind === ThreadMessageCodes.Next) {
         pulled = false;
-        resolve({ done: false, value: message.data });
+        resolve({ done: false, value: getMessageData(message) });
       } else if (
         message.kind === ThreadMessageCodes.Throw ||
         message.kind === ThreadMessageCodes.Return
@@ -147,12 +159,12 @@ function main<Args extends readonly any[], Next>(url: string | URL): Generator<A
         const message = buffer.shift();
         if (message && message.kind === ThreadMessageCodes.Throw) {
           cleanup();
-          throw message.data;
+          throw getMessageData(message);
         } else if (message && message.kind === ThreadMessageCodes.Return) {
           cleanup();
-          return { value: message.data, done: true };
+          return { value: getMessageData(message), done: true };
         } else if (message && message.kind === ThreadMessageCodes.Next) {
-          return { value: message.data, done: false };
+          return { value: getMessageData(message), done: false };
         } else {
           return new Promise((_resolve, _reject) => {
             resolve = (value) => {
@@ -201,7 +213,11 @@ function thread<Args extends readonly any[], Next>(
 
   async function sendMessage(kind: ThreadMessageCodes, data?: any) {
     try {
-      port.postMessage({ id, kind, data });
+      const message: ThreadMessage = { id, kind, data };
+      // NOTE: Copy error annotations to separate property
+      if (kind === ThreadMessageCodes.Throw && typeof data === 'object' && data != null)
+        message.extra = { ...data };
+      port.postMessage(message);
     } catch (error) {
       cleanup();
       if (iterator.throw) {
