@@ -1,4 +1,3 @@
-import fs from 'node:fs/promises';
 import path from 'node:path';
 
 import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
@@ -7,6 +6,7 @@ import { loadRef, loadConfig, parseConfig } from '@gql.tada/internal';
 import type { ComposeInput } from '../../term';
 import { MINIMUM_VERSIONS, semverComply } from '../../utils/semver';
 import { findGraphQLConfig } from './helpers/graphqlConfig';
+import * as versions from './helpers/versions';
 import * as vscode from './helpers/vscode';
 import * as logger from './logger';
 
@@ -38,16 +38,10 @@ export async function* run(): AsyncIterable<ComposeInput> {
   await delay();
 
   // Check TypeScript version
-  const cwd = process.cwd();
-  const packageJsonPath = path.resolve(cwd, 'package.json');
-  let packageJsonContents: {
-    dependencies: Record<string, string>;
-    devDependencies: Record<string, string>;
-  };
-
+  let packageJson: versions.PackageJson;
   try {
-    const file = path.resolve(packageJsonPath);
-    packageJsonContents = JSON.parse(await fs.readFile(file, 'utf-8'));
+    // packageJson = await versions.readPackageJson();
+    packageJson = {};
   } catch (_error) {
     yield logger.failedTask(Messages.CHECK_TS_VERSION);
     throw logger.errorMessage(
@@ -56,19 +50,14 @@ export async function* run(): AsyncIterable<ComposeInput> {
     );
   }
 
-  const deps = Object.entries({
-    ...packageJsonContents.dependencies,
-    ...packageJsonContents.devDependencies,
-  });
-
-  const typeScriptVersion = deps.find((x) => x[0] === 'typescript');
+  const typeScriptVersion = await versions.getTypeScriptVersion(packageJson);
   if (!typeScriptVersion) {
     yield logger.failedTask(Messages.CHECK_TS_VERSION);
     throw logger.errorMessage(
       `A version of ${logger.code('typescript')} was not found in your dependencies.\n` +
         logger.hint(`Is ${logger.code('typescript')} installed in this package?`)
     );
-  } else if (!semverComply(typeScriptVersion[1], MINIMUM_VERSIONS.typescript)) {
+  } else if (!semverComply(typeScriptVersion, MINIMUM_VERSIONS.typescript)) {
     // TypeScript version lower than v4.1 which is when they introduced template lits
     yield logger.failedTask(Messages.CHECK_TS_VERSION);
     throw logger.errorMessage(
@@ -84,18 +73,18 @@ export async function* run(): AsyncIterable<ComposeInput> {
   await delay();
 
   const supportsEmbeddedLsp = semverComply(
-    typeScriptVersion[1],
+    typeScriptVersion,
     MINIMUM_VERSIONS.typescript_embed_lsp
   );
   if (!supportsEmbeddedLsp) {
-    const gqlspVersion = deps.find((x) => x[0] === '@0no-co/graphqlsp');
+    const gqlspVersion = await versions.getGraphQLSPVersion(packageJson);
     if (!gqlspVersion) {
       yield logger.failedTask(Messages.CHECK_DEPENDENCIES);
       throw logger.errorMessage(
         `A version of ${logger.code('@0no-co/graphqlsp')} was not found in your dependencies.\n` +
           logger.hint(`Is ${logger.code('@0no-co/graphqlsp')} installed?`)
       );
-    } else if (!semverComply(gqlspVersion[1], MINIMUM_VERSIONS.lsp)) {
+    } else if (!semverComply(gqlspVersion, MINIMUM_VERSIONS.lsp)) {
       yield logger.failedTask(Messages.CHECK_DEPENDENCIES);
       throw logger.errorMessage(
         `The version of ${logger.code(
@@ -108,14 +97,14 @@ export async function* run(): AsyncIterable<ComposeInput> {
     }
   }
 
-  const gqlTadaVersion = deps.find((x) => x[0] === 'gql.tada');
+  const gqlTadaVersion = await versions.getGqlTadaVersion(packageJson);
   if (!gqlTadaVersion) {
     yield logger.failedTask(Messages.CHECK_DEPENDENCIES);
     throw logger.errorMessage(
       `A version of ${logger.code('gql.tada')} was not found in your dependencies.\n` +
         logger.hint(`Is ${logger.code('gql.tada')} installed?`)
     );
-  } else if (!semverComply(gqlTadaVersion[1], '1.0.0')) {
+  } else if (!semverComply(gqlTadaVersion, '1.0.0')) {
     yield logger.failedTask(Messages.CHECK_DEPENDENCIES);
     throw logger.errorMessage(
       `The version of ${logger.code('gql.tada')} in your dependencies is out of date.\n` +
