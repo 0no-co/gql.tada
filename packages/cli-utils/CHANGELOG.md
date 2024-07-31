@@ -1,5 +1,25 @@
 # @gql.tada/cli-utils
 
+## 1.6.0
+
+### Minor Changes
+
+- Split `.vue` and `.svelte` SFC file support out into support packages. If you need Vue support, you must now install `@gql.tada/vue-support` alongside `gql.tada`, and if you need Svelte support, you must now install `@gql.tada/svelte-support` alongside `gql.tada`
+  Submitted by [@kitten](https://github.com/kitten) (See [#361](https://github.com/0no-co/gql.tada/pull/361))
+
+### Patch Changes
+
+- Add fallback version checks to `doctor` command
+  Submitted by [@kitten](https://github.com/kitten) (See [#358](https://github.com/0no-co/gql.tada/pull/358))
+- When threading, transfer error properties to thread host
+  Submitted by [@kitten](https://github.com/kitten) (See [#359](https://github.com/0no-co/gql.tada/pull/359))
+- Add per-package readme files
+  Submitted by [@kitten](https://github.com/kitten) (See [#363](https://github.com/0no-co/gql.tada/pull/363))
+- Updated dependencies (See [#363](https://github.com/0no-co/gql.tada/pull/363))
+  - @gql.tada/internal@1.0.6
+  - @gql.tada/svelte-support@1.0.1
+  - @gql.tada/vue-support@1.0.1
+
 ## 1.5.3
 
 ### Patch Changes
