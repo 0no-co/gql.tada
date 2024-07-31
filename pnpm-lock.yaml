@@ -235,25 +235,16 @@ importers:
       '@gql.tada/vue-support':
         specifier: workspace:*
         version: link:../vue-support
-      '@vue/compiler-dom':
-        specifier: ^3.4.23
-        version: 3.4.25
       '@vue/language-core':
         specifier: ~2.0.0
         version: 2.0.29(typescript@5.5.2)
       graphql:
         specifier: ^15.5.0 || ^16.0.0 || ^17.0.0
         version: 16.8.1
-      svelte2tsx:
-        specifier: ^0.7.6
-        version: 0.7.6(svelte@4.2.17)(typescript@5.5.2)
     devDependencies:
       '@clack/prompts':
         specifier: ^0.7.0
         version: 0.7.0
-      '@jridgewell/sourcemap-codec':
-        specifier: ^1.4.15
-        version: 1.4.15
       '@types/node':
         specifier: ^20.11.0
         version: 20.11.0
@@ -284,9 +275,6 @@ importers:
       typescript:
         specifier: ^5.5.2
         version: 5.5.2
-      vscode-languageserver-textdocument:
-        specifier: ^1.0.11
-        version: 1.0.11
       wonka:
         specifier: ^6.3.4
         version: 6.3.4

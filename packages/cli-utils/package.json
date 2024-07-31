@@ -41,7 +41,6 @@
   },
   "devDependencies": {
     "@clack/prompts": "^0.7.0",
-    "@jridgewell/sourcemap-codec": "^1.4.15",
     "@types/node": "^20.11.0",
     "@volar/source-map": "^2.1.6",
     "clipanion": "4.0.0-rc.3",
@@ -52,16 +51,13 @@
     "typanion": "^3.14.0",
     "type-fest": "^4.10.2",
     "typescript": "^5.5.2",
-    "vscode-languageserver-textdocument": "^1.0.11",
     "wonka": "^6.3.4"
   },
   "dependencies": {
     "@0no-co/graphqlsp": "^1.12.9",
     "@gql.tada/internal": "workspace:*",
-    "@vue/compiler-dom": "^3.4.23",
     "@vue/language-core": "~2.0.0",
-    "graphql": "^15.5.0 || ^16.0.0 || ^17.0.0",
-    "svelte2tsx": "^0.7.6"
+    "graphql": "^15.5.0 || ^16.0.0 || ^17.0.0"
   },
   "peerDependenciesMeta": {
     "@gql.tada/svelte-support": {
