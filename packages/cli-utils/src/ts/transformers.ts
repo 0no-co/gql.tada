@@ -1,7 +1,7 @@
 import type ts from 'typescript';
 import * as path from 'node:path';
 
-import { TadaError } from '../utils/error';
+import { TadaError, TadaErrorCode } from '../utils/error';
 
 let _svelte: typeof import('@gql.tada/svelte-support');
 let _vue: typeof import('@gql.tada/vue-support');
@@ -14,6 +14,7 @@ const transformSvelte = async (
       _svelte = await import('@gql.tada/svelte-support');
     } catch (_error) {
       throw new TadaError(
+        TadaErrorCode.SVELTE_SUPPORT,
         'For Svelte support the `@gql.tada/svelte-support` package must be installed.\n' +
           'Install the package and try again.'
       );
@@ -30,6 +31,7 @@ const transformVue = async (
       _vue = await import('@gql.tada/vue-support');
     } catch (_error) {
       throw new TadaError(
+        TadaErrorCode.VUE_SUPPORT,
         'For Vue support the `@gql.tada/vue-support` package must be installed.\n' +
           'Install the package and try again.'
       );
@@ -44,6 +46,7 @@ const checkVue = async (): Promise<void> => {
       _vue = await import('@gql.tada/vue-support');
     } catch (_error) {
       throw new TadaError(
+        TadaErrorCode.VUE_SUPPORT,
         'For Vue support the `@gql.tada/vue-support` package must be installed.\n' +
           'Install the package and try again.'
       );
@@ -63,6 +66,7 @@ export const transform = async (sourceFile: ts.SourceFile) => {
     return transformVue(sourceFile);
   } else {
     throw new TadaError(
+      TadaErrorCode.UNKNOWN_EXTERNAL_FILE,
       `Tried transforming unknown file type "${extname}". Supported: ${transformExtensions.join(
         ', '
       )}`
