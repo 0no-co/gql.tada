@@ -15,7 +15,7 @@ const transformSvelte = async (
       _svelte = await import('@gql.tada/svelte-support');
     } catch (_error) {
       throw new TadaError(
-        'For Svelte support the `gql.tada/svelte-support` package must be installed.\n' +
+        'For Svelte support the `@gql.tada/svelte-support` package must be installed.\n' +
           'Install the package and try again.'
       );
     }
@@ -31,7 +31,7 @@ const transformVue = async (
       _vue = await import('@gql.tada/vue-support');
     } catch (_error) {
       throw new TadaError(
-        'For Vue support the `gql.tada/vue-support` package must be installed.\n' +
+        'For Vue support the `@gql.tada/vue-support` package must be installed.\n' +
           'Install the package and try again.'
       );
     }
@@ -45,7 +45,7 @@ const checkVue = async (): Promise<void> => {
       _vue = await import('@gql.tada/vue-support');
     } catch (_error) {
       throw new TadaError(
-        'For Vue support the `gql.tada/vue-support` package must be installed.\n' +
+        'For Vue support the `@gql.tada/vue-support` package must be installed.\n' +
           'Install the package and try again.'
       );
     }
