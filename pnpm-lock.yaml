@@ -235,9 +235,6 @@ importers:
       '@gql.tada/vue-support':
         specifier: workspace:*
         version: link:../vue-support
-      '@vue/language-core':
-        specifier: ~2.0.0
-        version: 2.0.29(typescript@5.5.2)
       graphql:
         specifier: ^15.5.0 || ^16.0.0 || ^17.0.0
         version: 16.8.1

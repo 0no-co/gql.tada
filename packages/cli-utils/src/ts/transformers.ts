@@ -1,6 +1,5 @@
 import type ts from 'typescript';
 import * as path from 'node:path';
-import type { VirtualCode } from '@vue/language-core';
 
 import { TadaError } from '../utils/error';
 
@@ -55,7 +54,7 @@ const checkVue = async (): Promise<void> => {
 
 export const transformExtensions = ['.svelte', '.vue'] as const;
 
-export const transform = async (sourceFile: ts.SourceFile): Promise<VirtualCode | undefined> => {
+export const transform = async (sourceFile: ts.SourceFile) => {
   const extname = path.extname(sourceFile.fileName);
   if (extname === '.svelte') {
     return transformSvelte(sourceFile);

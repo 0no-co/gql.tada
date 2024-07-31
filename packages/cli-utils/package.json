@@ -56,7 +56,6 @@
   "dependencies": {
     "@0no-co/graphqlsp": "^1.12.9",
     "@gql.tada/internal": "workspace:*",
-    "@vue/language-core": "~2.0.0",
     "graphql": "^15.5.0 || ^16.0.0 || ^17.0.0"
   },
   "peerDependenciesMeta": {
