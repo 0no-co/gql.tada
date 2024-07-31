@@ -1,6 +1,6 @@
 {
   "name": "@gql.tada/svelte-support",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "public": true,
   "description": "Svelte Support package for gql.tada’s CLI tool.",
   "author": "0no.co <hi@0no.co>",

@@ -1,5 +1,12 @@
 # @gql.tada/internal
 
+## 1.0.6
+
+### Patch Changes
+
+- Add per-package readme files
+  Submitted by [@kitten](https://github.com/kitten) (See [#363](https://github.com/0no-co/gql.tada/pull/363))
+
 ## 1.0.5
 
 ### Patch Changes
