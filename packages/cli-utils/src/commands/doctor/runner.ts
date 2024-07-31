@@ -40,8 +40,7 @@ export async function* run(): AsyncIterable<ComposeInput> {
   // Check TypeScript version
   let packageJson: versions.PackageJson;
   try {
-    // packageJson = await versions.readPackageJson();
-    packageJson = {};
+    packageJson = await versions.readPackageJson();
   } catch (_error) {
     yield logger.failedTask(Messages.CHECK_TS_VERSION);
     throw logger.errorMessage(
