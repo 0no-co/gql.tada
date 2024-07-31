@@ -1,0 +1,57 @@
+{
+  "name": "@gql.tada/svelte-support",
+  "version": "1.0.0",
+  "public": true,
+  "description": "Svelte Support package for gql.tada’s CLI tool.",
+  "author": "0no.co <hi@0no.co>",
+  "sideEffects": false,
+  "source": "./src/index.ts",
+  "main": "./dist/gql-tada-svelte-support",
+  "module": "./dist/gql-tada-svelte-support.mjs",
+  "types": "./dist/gql-tada-svelte-support.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/gql-tada-svelte-support.d.ts",
+      "import": "./dist/gql-tada-svelte-support.mjs",
+      "require": "./dist/gql-tada-svelte-support.js",
+      "source": "./src/index.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "CHANGELOG.md",
+    "LICENSE.md",
+    "README.md",
+    "dist/"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/0no-co/gql.tada.git",
+    "directory": "packages/svelte-support"
+  },
+  "bugs": {
+    "url": "https://github.com/0no-co/gql.tada/issues"
+  },
+  "homepage": "https://gql-tada.0no.co/",
+  "license": "MIT",
+  "scripts": {
+    "build": "rollup -c ../../scripts/rollup.config.mjs",
+    "clean": "rimraf dist node_modules/.cache",
+    "prepublishOnly": "run-s clean build"
+  },
+  "dependencies": {
+    "@jridgewell/sourcemap-codec": "^1.4.15",
+    "svelte2tsx": "^0.7.6",
+    "vscode-languageserver-textdocument": "^1.0.11"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "devDependencies": {
+    "@vue/language-core": "~2.0.0"
+  }
+}

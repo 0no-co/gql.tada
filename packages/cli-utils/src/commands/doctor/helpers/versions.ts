@@ -57,3 +57,31 @@ export const getGqlTadaVersion = async (meta: PackageJson): Promise<string | nul
     return null;
   }
 };
+
+export const hasSvelteSupport = async (meta: PackageJson): Promise<boolean> => {
+  const pkg = '@gql.tada/svelte-support';
+  const isInstalled = !!meta.devDependencies?.[pkg] || !!meta.devDependencies?.[pkg];
+  if (isInstalled) {
+    return true;
+  }
+  try {
+    // NOTE: Resolved from current folder, since it's a child dependency
+    return !!createRequire(__dirname)(`${pkg}/package.json`)?.version;
+  } catch (_error) {
+    return false;
+  }
+};
+
+export const hasVueSupport = async (meta: PackageJson): Promise<boolean> => {
+  const pkg = '@gql.tada/vue-support';
+  const isInstalled = !!meta.devDependencies?.[pkg] || !!meta.devDependencies?.[pkg];
+  if (isInstalled) {
+    return true;
+  }
+  try {
+    // NOTE: Resolved from current folder, since it's a child dependency
+    return !!createRequire(__dirname)(`${pkg}/package.json`)?.version;
+  } catch (_error) {
+    return false;
+  }
+};

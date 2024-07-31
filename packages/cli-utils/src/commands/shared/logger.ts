@@ -53,7 +53,10 @@ export function externalError(message: string, error: unknown) {
       (error.name === 'TSError' || error.name === 'TadaError' || 'code' in error)
     ) {
       title = 'code' in error ? 'System Error' : 'Error';
-      text = (error as Error).message.trim();
+      text =
+        error.name === 'TadaError'
+          ? t.text([t.cmd(t.CSI.Style, t.Style.Blue), (error as Error).message])
+          : (error as Error).message.trim();
     } else if ('stack' in error && typeof error.stack === 'string') {
       title = 'Unexpected Error';
       text = `${error.stack}`;

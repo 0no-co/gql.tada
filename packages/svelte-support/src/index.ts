@@ -1,8 +1,9 @@
 import ts from 'typescript';
-import type { CodeMapping, VirtualCode } from '@vue/language-core';
 import { decode } from '@jridgewell/sourcemap-codec';
 import { svelte2tsx } from 'svelte2tsx';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+
+import type { CodeMapping, VirtualCode } from './types';
 
 // See: https://github.com/johnsoncodehk/language-tools/blob/volar2/packages/language-server/src/languagePlugin.ts
 export const transform = (sourceFile: ts.SourceFile): VirtualCode | undefined => {

@@ -1,8 +1,9 @@
 import ts from 'typescript';
-import type { VirtualCode } from '@vue/language-core';
 import * as vueCompilerDOM from '@vue/compiler-dom';
 import * as vue from '@vue/language-core';
 import { parse } from '@vue/language-core';
+
+import type { VirtualCode } from './types';
 
 const useVueFilePlugin = (): vue.VueLanguagePluginReturn => {
   return {

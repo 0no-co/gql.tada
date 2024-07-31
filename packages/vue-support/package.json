@@ -1,0 +1,53 @@
+{
+  "name": "@gql.tada/vue-support",
+  "version": "1.0.0",
+  "public": true,
+  "description": "Vue Support package for gql.tada’s CLI tool.",
+  "author": "0no.co <hi@0no.co>",
+  "sideEffects": false,
+  "source": "./src/index.ts",
+  "main": "./dist/gql-tada-vue-support",
+  "module": "./dist/gql-tada-vue-support.mjs",
+  "types": "./dist/gql-tada-vue-support.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/gql-tada-vue-support.d.ts",
+      "import": "./dist/gql-tada-vue-support.mjs",
+      "require": "./dist/gql-tada-vue-support.js",
+      "source": "./src/index.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "CHANGELOG.md",
+    "LICENSE.md",
+    "README.md",
+    "dist/"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/0no-co/gql.tada.git",
+    "directory": "packages/vue-support"
+  },
+  "bugs": {
+    "url": "https://github.com/0no-co/gql.tada/issues"
+  },
+  "homepage": "https://gql-tada.0no.co/",
+  "license": "MIT",
+  "scripts": {
+    "build": "rollup -c ../../scripts/rollup.config.mjs",
+    "clean": "rimraf dist node_modules/.cache",
+    "prepublishOnly": "run-s clean build"
+  },
+  "dependencies": {
+    "@vue/compiler-dom": "^3.4.23",
+    "@vue/language-core": "~2.0.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

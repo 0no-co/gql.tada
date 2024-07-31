@@ -12,7 +12,7 @@ repository.](https://github.com/0no-co/gql.tada/blob/main/examples/example-pokem
 With `gql.tada`, you'll mainly interact with three different parts of the library:
 - the library code you import from the `gql.tada` package
 - the TypeScript plugin, `gql.tada/ts-plugin`
-- and the `gql.tada` CLI
+- and [the `gql.tada` CLI](/get-started/workflows)
 
 ## <span data-step="1">Step 1 —</span> Installing packages
 
@@ -340,6 +340,8 @@ to use it.
 ```
 :::
 
+---
+
 ### VSCode Setup
 
 As shown above, `gql.tada` has a TypeScript plugin to provide
@@ -365,3 +367,56 @@ To resolve this, you should create a `.vscode/settings.json` file to prompt you
 
 To enable syntax highlighting for GraphQL, you can install the official
 [“GraphQL: Syntax Highlighting” VSCode extension.](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql-syntax)
+
+---
+
+### Vue and Svelte Support
+
+If you're using Vue's `.vue` files and Svelte's `.svelte` files, the
+TypeScript plugin won't be able to run in your editor under normal
+circumstances.
+While some implementations exist for TypeScript to run and type
+check Vue and Svelte files, `gql.tada` won't have any output in
+these cases.
+
+However, while the TypeScript plugin may not support `.vue` and
+`.svelte` files, [the `gql.tada check` command does.](/get-started/workflows#running-diagnostics)
+To enable support for either files, you'll need to install the
+corresponding support packages.
+
+::: code-group
+```sh [npm]
+# for Vue
+npm install -D @gql.tada/vue-support
+# for Svelte
+npm install -D @gql.tada/svelte-support
+```
+
+```sh [pnpm]
+# for Vue
+pnpm add -D @gql.tada/vue-support
+# for Svelte
+pnpm add -D @gql.tada/svelte-support
+```
+
+```sh [yarn]
+# for Vue
+yarn add -D @gql.tada/vue-support
+# for Svelte
+yarn add -D @gql.tada/svelte-support
+```
+
+```sh [bun]
+# for Vue
+bun add -d @gql.tada/vue-support
+# for Svelte
+bun add -d @gql.tada/svelte-support
+```
+:::
+
+Once these are installed, the CLI's `check` and other commands will
+be able to parse and check external files for `gql.tada` errors.
+
+<a href="/get-started/workflows" class="button">
+  Learn more about using the CLI
+</a>
