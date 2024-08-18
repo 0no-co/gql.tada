@@ -178,6 +178,19 @@ describe('graphql()', () => {
       }
     `);
 
+    // NOTE: BigTodo's fields shouldn't be included here
+    const nestedFragment = graphql(`
+      fragment Object on SmallTodo @_unmask {
+        maxLength
+        ... on ITodo {
+          id
+          ... on BigTodo {
+            wallOfText
+          }
+        }
+      }
+    `);
+
     expectTypeOf<FragmentOf<typeof objectFragment>>().toEqualTypeOf<{
       __typename: 'SmallTodo';
       id: string;
@@ -186,6 +199,11 @@ describe('graphql()', () => {
 
     expectTypeOf<FragmentOf<typeof standaloneFragment>>().toEqualTypeOf<{
       __typename: 'SmallTodo';
+      id: string;
+      maxLength: number | null;
+    }>();
+
+    expectTypeOf<FragmentOf<typeof nestedFragment>>().toEqualTypeOf<{
       id: string;
       maxLength: number | null;
     }>();
