@@ -147,6 +147,68 @@ describe('graphql()', () => {
     }>();
   });
 
+  // See: https://github.com/0no-co/gql.tada/issues/365
+  it('should create a fragment type of unmasked interface fragments on object types', () => {
+    const interfaceFragment = graphql(`
+      fragment Fields on ITodo @_unmask {
+        __typename
+        id
+      }
+    `);
+
+    const objectFragment = graphql(
+      `
+        fragment Object on SmallTodo @_unmask {
+          maxLength
+          ...Fields
+        }
+      `,
+      [interfaceFragment]
+    );
+
+    const standaloneFragment = graphql(`
+      fragment Object on SmallTodo @_unmask {
+        maxLength
+        ...Fields
+      }
+
+      fragment Fields on ITodo @_unmask {
+        __typename
+        id
+      }
+    `);
+
+    // NOTE: BigTodo's fields shouldn't be included here
+    const nestedFragment = graphql(`
+      fragment Object on SmallTodo @_unmask {
+        maxLength
+        ... on ITodo {
+          id
+          ... on BigTodo {
+            wallOfText
+          }
+        }
+      }
+    `);
+
+    expectTypeOf<FragmentOf<typeof objectFragment>>().toEqualTypeOf<{
+      __typename: 'SmallTodo';
+      id: string;
+      maxLength: number | null;
+    }>();
+
+    expectTypeOf<FragmentOf<typeof standaloneFragment>>().toEqualTypeOf<{
+      __typename: 'SmallTodo';
+      id: string;
+      maxLength: number | null;
+    }>();
+
+    expectTypeOf<FragmentOf<typeof nestedFragment>>().toEqualTypeOf<{
+      id: string;
+      maxLength: number | null;
+    }>();
+  });
+
   it('should preserve object literal types for variables', () => {
     const mutation = graphql(`
       mutation ($input: TodoPayload!) {
