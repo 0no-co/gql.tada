@@ -12,6 +12,8 @@ type ObjectLikeType = {
   fields: { [key: string]: any };
 };
 
+type narrowTypename<T, Typename> = T extends { __typename?: Typename } ? T : never;
+
 type unwrapTypeRec<
   Type,
   SelectionSet,
@@ -95,7 +97,7 @@ type getFragmentSelection<
       ? Fragments[Node['name']['value']] extends { [$tada.ref]: any }
         ? Type extends { kind: 'INTERFACE'; name: any }
           ? /* This protects against various edge cases where users forget to select `__typename` (See `getSelection`) */
-            Fragments[Node['name']['value']][$tada.ref] & { __typename?: PossibleType }
+            narrowTypename<Fragments[Node['name']['value']][$tada.ref], PossibleType>
           : Fragments[Node['name']['value']][$tada.ref]
         : getPossibleTypeSelectionRec<
             Fragments[Node['name']['value']]['selectionSet']['selections'],
@@ -227,7 +229,9 @@ type getPossibleTypeSelectionRec<
               >
           : SelectionAcc
     >
-  : obj<SelectionAcc['fields']> & SelectionAcc['rest'];
+  : SelectionAcc['rest'] extends infer T
+    ? obj<SelectionAcc['fields'] & T>
+    : never;
 
 type getOperationSelectionType<
   Definition,
