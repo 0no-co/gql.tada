@@ -246,8 +246,8 @@ importers:
         specifier: ^20.11.0
         version: 20.16.0
       '@volar/source-map':
-        specifier: ^2.1.6
-        version: 2.4.0
+        specifier: ~2.1.6
+        version: 2.1.6
       clipanion:
         specifier: 4.0.0-rc.3
         version: 4.0.0-rc.3(typanion@3.14.0)
@@ -1386,6 +1386,9 @@ packages:
 
   '@volar/source-map@1.11.1':
     resolution: {integrity: sha512-hJnOnwZ4+WT5iupLRnuzbULZ42L7BWWPMmruzwtLhJfpDVoZLjNBxHDi2sY2bgZXCKlpU5XcsMFoYrsQmPhfZg==}
+
+  '@volar/source-map@2.1.6':
+    resolution: {integrity: sha512-TeyH8pHHonRCHYI91J7fWUoxi0zWV8whZTVRlsWHSYfjm58Blalkf9LrZ+pj6OiverPTmrHRkBsG17ScQyWECw==}
 
   '@volar/source-map@2.4.0':
     resolution: {integrity: sha512-2ceY8/NEZvN6F44TXw2qRP6AQsvCYhV2bxaBPWxV9HqIfkbRydSksTFObCF1DBDNBfKiZTS8G/4vqV6cvjdOIQ==}
@@ -4808,6 +4811,10 @@ snapshots:
   '@volar/source-map@1.11.1':
     dependencies:
       muggle-string: 0.3.1
+
+  '@volar/source-map@2.1.6':
+    dependencies:
+      muggle-string: 0.4.1
 
   '@volar/source-map@2.4.0': {}
 

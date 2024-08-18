@@ -42,7 +42,7 @@
   "devDependencies": {
     "@clack/prompts": "^0.7.0",
     "@types/node": "^20.11.0",
-    "@volar/source-map": "^2.1.6",
+    "@volar/source-map": "~2.1.6",
     "clipanion": "4.0.0-rc.3",
     "execa": "^8.0.1",
     "rollup": "^4.9.4",
