@@ -47,8 +47,8 @@ async function* _runDiagnostics(
       ...pluginInfo.config,
       shouldCheckForColocatedFragments: isVueOrSvelte
         ? false
-        : pluginInfo.config.shouldCheckForColocatedFragments ?? false,
-      trackFieldUsage: isVueOrSvelte ? false : pluginInfo.config.trackFieldUsage ?? false,
+        : (pluginInfo.config.shouldCheckForColocatedFragments ?? false),
+      trackFieldUsage: isVueOrSvelte ? false : (pluginInfo.config.trackFieldUsage ?? false),
     };
     const diagnostics = getGraphQLDiagnostics(filePath, schemaRef, pluginInfo);
     const messages: DiagnosticMessage[] = [];

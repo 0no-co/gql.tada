@@ -79,15 +79,16 @@ type getFragmentsOfDocuments<Documents extends readonly FragmentShape[]> = overl
     : never
 >;
 
-type makeFragmentRef<Document> = Document extends FragmentShape<infer Definition, infer Result>
-  ? Definition['masked'] extends false
-    ? Result
-    : {
-        [$tada.fragmentRefs]: {
-          [Name in Definition['fragment']]: Definition['on'];
-        };
-      }
-  : never;
+type makeFragmentRef<Document> =
+  Document extends FragmentShape<infer Definition, infer Result>
+    ? Definition['masked'] extends false
+      ? Result
+      : {
+          [$tada.fragmentRefs]: {
+            [Name in Definition['fragment']]: Definition['on'];
+          };
+        }
+    : never;
 
 type omitFragmentRefsRec<Data> = Data extends readonly (infer Value)[]
   ? readonly omitFragmentRefsRec<Value>[]

@@ -347,13 +347,14 @@ export type getDocumentNode<
   Introspection extends SchemaLike,
   Fragments extends { [name: string]: any } = {},
   isMaskingDisabled = false,
-> = getDocumentType<Document, Introspection, Fragments> extends never
-  ? never
-  : TadaDocumentNode<
-      getDocumentType<Document, Introspection, Fragments>,
-      getVariablesType<Document, Introspection>,
-      decorateFragmentDef<Document, isMaskingDisabled>
-    >;
+> =
+  getDocumentType<Document, Introspection, Fragments> extends never
+    ? never
+    : TadaDocumentNode<
+        getDocumentType<Document, Introspection, Fragments>,
+        getVariablesType<Document, Introspection>,
+        decorateFragmentDef<Document, isMaskingDisabled>
+      >;
 
 /** A GraphQL `DocumentNode` with attached types for results and variables.
  *
@@ -410,9 +411,8 @@ type ResultOf<Document> = Document extends DocumentDecoration<infer Result, any>
  * This accepts a {@link TadaDocumentNode} and returns the attached `Variables` type
  * of GraphQL documents.
  */
-type VariablesOf<Document> = Document extends DocumentDecoration<any, infer Variables>
-  ? Variables
-  : never;
+type VariablesOf<Document> =
+  Document extends DocumentDecoration<any, infer Variables> ? Variables : never;
 
 /** Creates a fragment mask for a given fragment document.
  *
@@ -449,16 +449,14 @@ type FragmentOf<Document extends FragmentShape> = makeFragmentRef<Document>;
 
 type resultOrFragmentOf<Document extends FragmentShape> = FragmentOf<Document> | ResultOf<Document>;
 
-type resultOfT<Document extends FragmentShape, T = unknown> = Document extends DocumentDecoration<
-  infer Result,
-  any
->
-  ? '__typename' extends keyof T
-    ? Result extends { __typename?: T['__typename'] }
-      ? Result
-      : never
-    : Result
-  : never;
+type resultOfT<Document extends FragmentShape, T = unknown> =
+  Document extends DocumentDecoration<infer Result, any>
+    ? '__typename' extends keyof T
+      ? Result extends { __typename?: T['__typename'] }
+        ? Result
+        : never
+      : Result
+    : never;
 
 type resultOfFragmentsRec<
   Fragments extends readonly any[],

@@ -149,11 +149,12 @@ export function readSourceFolders(directories: string[]): Files {
   return combinedFiles;
 }
 
-export type VirtualHost = ReturnType<typeof createVirtualHost> extends infer U
-  ? U extends CompilerHost
-    ? U
-    : never
-  : never;
+export type VirtualHost =
+  ReturnType<typeof createVirtualHost> extends infer U
+    ? U extends CompilerHost
+      ? U
+      : never
+    : never;
 
 export function createVirtualHost(files: Files) {
   // TODO: When another lib with references is selected, the resolution mode doesn't adapt
