@@ -147,6 +147,32 @@ describe('graphql()', () => {
     }>();
   });
 
+  // See: https://github.com/0no-co/gql.tada/issues/365
+  it('should create a fragment type of unmasked interface fragments on object types', () => {
+    const interfaceFragment = graphql(`
+      fragment Fields on ITodo @_unmask {
+        __typename
+        id
+      }
+    `);
+
+    const objectFragment = graphql(
+      `
+        fragment Object on SmallTodo @_unmask {
+          maxLength
+          ...Fields
+        }
+      `,
+      [interfaceFragment]
+    );
+
+    expectTypeOf<FragmentOf<typeof objectFragment>>().toEqualTypeOf<{
+      __typename: 'SmallTodo';
+      id: string;
+      maxLength: number | null;
+    }>();
+  });
+
   it('should preserve object literal types for variables', () => {
     const mutation = graphql(`
       mutation ($input: TodoPayload!) {
