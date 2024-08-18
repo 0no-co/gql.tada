@@ -12,7 +12,11 @@ type ObjectLikeType = {
   fields: { [key: string]: any };
 };
 
-type narrowTypename<T, Typename> = T extends { __typename?: Typename } ? T : never;
+type narrowTypename<T, Typename> = '__typename' extends keyof T
+  ? T extends { __typename?: Typename }
+    ? T
+    : never
+  : T;
 
 type unwrapTypeRec<
   Type,
