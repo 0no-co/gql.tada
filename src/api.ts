@@ -533,55 +533,55 @@ function readFragment<
 ): T extends resultOrFragmentOf<Document> ? ResultOf<Document> : T;
 
 // Reading arrays of fragments with required generic
-function readFragment<const Document extends FragmentShape = never>(
+function readFragment<const Document extends FragmentShape>(
   fragment: readonly resultOrFragmentOf<Document>[]
 ): readonly ResultOf<Document>[];
-function readFragment<const Document extends FragmentShape = never>(
+function readFragment<const Document extends FragmentShape>(
   fragment: readonly (resultOrFragmentOf<Document> | null)[]
 ): readonly (ResultOf<Document> | null)[];
-function readFragment<const Document extends FragmentShape = never>(
+function readFragment<const Document extends FragmentShape>(
   fragment: readonly (resultOrFragmentOf<Document> | undefined)[]
 ): readonly (ResultOf<Document> | undefined)[];
-function readFragment<const Document extends FragmentShape = never>(
+function readFragment<const Document extends FragmentShape>(
   fragment: readonly (resultOrFragmentOf<Document> | null | undefined)[]
 ): readonly (ResultOf<Document> | null | undefined)[];
 // Reading arrays of fragments with required generic with optional `{}` type
-function readFragment<const Document extends FragmentShape = never>(
+function readFragment<const Document extends FragmentShape>(
   fragment: readonly (resultOrFragmentOf<Document> | {})[]
 ): readonly (ResultOf<Document> | {})[];
-function readFragment<const Document extends FragmentShape = never>(
+function readFragment<const Document extends FragmentShape>(
   fragment: readonly (resultOrFragmentOf<Document> | null | {})[]
 ): readonly (ResultOf<Document> | null | {})[];
-function readFragment<const Document extends FragmentShape = never>(
+function readFragment<const Document extends FragmentShape>(
   fragment: readonly (resultOrFragmentOf<Document> | undefined | {})[]
 ): readonly (ResultOf<Document> | undefined | {})[];
-function readFragment<const Document extends FragmentShape = never>(
+function readFragment<const Document extends FragmentShape>(
   fragment: readonly (resultOrFragmentOf<Document> | null | undefined | {})[]
 ): readonly (ResultOf<Document> | null | undefined | {})[];
 // Reading fragments with required generic
-function readFragment<const Document extends FragmentShape = never>(
+function readFragment<const Document extends FragmentShape>(
   fragment: resultOrFragmentOf<Document>
 ): ResultOf<Document>;
-function readFragment<const Document extends FragmentShape = never>(
+function readFragment<const Document extends FragmentShape>(
   fragment: resultOrFragmentOf<Document> | null
 ): ResultOf<Document> | null;
-function readFragment<const Document extends FragmentShape = never>(
+function readFragment<const Document extends FragmentShape>(
   fragment: resultOrFragmentOf<Document> | undefined
 ): ResultOf<Document> | undefined;
-function readFragment<const Document extends FragmentShape = never>(
+function readFragment<const Document extends FragmentShape>(
   fragment: resultOrFragmentOf<Document> | null | undefined
 ): ResultOf<Document> | null | undefined;
 // Reading fragments with required generic with optional `{}` type
-function readFragment<const Document extends FragmentShape = never>(
+function readFragment<const Document extends FragmentShape>(
   fragment: resultOrFragmentOf<Document> | {}
 ): ResultOf<Document> | {};
-function readFragment<const Document extends FragmentShape = never>(
+function readFragment<const Document extends FragmentShape>(
   fragment: resultOrFragmentOf<Document> | null | {}
 ): ResultOf<Document> | null | {};
-function readFragment<const Document extends FragmentShape = never>(
+function readFragment<const Document extends FragmentShape>(
   fragment: resultOrFragmentOf<Document> | undefined | {}
 ): ResultOf<Document> | undefined | {};
-function readFragment<const Document extends FragmentShape = never>(
+function readFragment<const Document extends FragmentShape>(
   fragment: resultOrFragmentOf<Document> | null | undefined | {}
 ): ResultOf<Document> | null | undefined | {};
 
