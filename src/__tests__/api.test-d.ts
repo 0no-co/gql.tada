@@ -578,6 +578,14 @@ describe('readFragment', () => {
     type document = getDocumentNode<fragment, schema>;
     const result = readFragment({} as document, {} as FragmentOf<document>);
     expectTypeOf<typeof result>().toEqualTypeOf<ResultOf<document>>();
+
+    const narrowInput = {} as FragmentOf<document> & { __typename?: 'BigTodo' };
+    const narrowed = readFragment({} as document, narrowInput);
+    expectTypeOf<typeof narrowed>().toEqualTypeOf<{
+      __typename?: 'BigTodo';
+      id: unknown;
+      wallOfText: unknown;
+    }>();
   });
 
   it('unmasks fragments of interfaces while narrowing types using input', () => {
@@ -602,6 +610,51 @@ describe('readFragment', () => {
       id: unknown;
       maxLength: unknown;
     }>();
+  });
+
+  it('should allow for gradual narrowing', () => {
+    type childFragment = parseDocument<`
+      fragment Fields on ITodo {
+        id
+        ... on BigTodo {
+          wallOfText
+        }
+        ... on SmallTodo {
+          maxLength
+        }
+      }
+    `>;
+
+    type parentFragment = parseDocument<`
+      fragment Parent on ITodo {
+        __typename
+        ...Fields
+      }
+    `>;
+
+    type childFragmentDoc = getDocumentNode<childFragment, schema>;
+    type parentFragmentDoc = getDocumentNode<
+      parentFragment,
+      schema,
+      getFragmentsOfDocuments<[childFragmentDoc]>
+    >;
+
+    const input: ResultOf<parentFragmentDoc> = {} as any;
+    if (input.__typename === 'SmallTodo') {
+      const result = readFragment({} as childFragmentDoc, input);
+      expectTypeOf<typeof result>().toEqualTypeOf<{
+        __typename?: 'SmallTodo';
+        id: unknown;
+        maxLength: unknown;
+      }>();
+    } else if (input.__typename === 'BigTodo') {
+      const result = readFragment({} as childFragmentDoc, input);
+      expectTypeOf<typeof result>().toEqualTypeOf<{
+        __typename?: 'BigTodo';
+        id: unknown;
+        wallOfText: unknown;
+      }>();
+    }
   });
 
   it('unmasks fragments of interfaces with optional spreads', () => {
