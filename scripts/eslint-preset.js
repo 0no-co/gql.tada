@@ -49,6 +49,8 @@ module.exports = {
         '@typescript-eslint/no-unused-vars': 'off',
         '@typescript-eslint/no-namespace': 'off',
         '@typescript-eslint/array-type': 'off',
+        '@typescript-eslint/no-empty-object-type': 'off',
+        '@typescript-eslint/no-unsafe-function-type': 'off',
         'tsdoc/syntax': 'error',
 
         'no-restricted-syntax': [
