@@ -227,7 +227,9 @@ type getPossibleTypeSelectionRec<
               >
           : SelectionAcc
     >
-  : obj<SelectionAcc['fields']> & SelectionAcc['rest'];
+  : SelectionAcc['rest'] extends infer T
+    ? obj<SelectionAcc['fields'] & T>
+    : never;
 
 type getOperationSelectionType<
   Definition,
