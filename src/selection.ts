@@ -93,7 +93,10 @@ type getFragmentSelection<
   : Node extends { kind: Kind.FRAGMENT_SPREAD; name: any }
     ? Node['name']['value'] extends keyof Fragments
       ? Fragments[Node['name']['value']] extends { [$tada.ref]: any }
-        ? Fragments[Node['name']['value']][$tada.ref]
+        ? Type extends { kind: 'INTERFACE'; name: any }
+          ? /* This protects against various edge cases where users forget to select `__typename` (See `getSelection`) */
+            Fragments[Node['name']['value']][$tada.ref] & { __typename?: PossibleType }
+          : Fragments[Node['name']['value']][$tada.ref]
         : getPossibleTypeSelectionRec<
             Fragments[Node['name']['value']]['selectionSet']['selections'],
             PossibleType,
