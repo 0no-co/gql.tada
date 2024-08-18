@@ -453,7 +453,7 @@ type resultOfT<Document extends FragmentShape, T = unknown> = Document extends D
   infer Result,
   any
 >
-  ? T extends { __typename?: string }
+  ? '__typename' extends keyof T
     ? Result extends { __typename?: T['__typename'] }
       ? Result
       : never
