@@ -580,6 +580,30 @@ describe('readFragment', () => {
     expectTypeOf<typeof result>().toEqualTypeOf<ResultOf<document>>();
   });
 
+  it('unmasks fragments of interfaces while narrowing types using input', () => {
+    type fragment = parseDocument<`
+      fragment Fields on ITodo {
+        id
+        ... on BigTodo {
+          wallOfText
+        }
+        ... on SmallTodo {
+          maxLength
+        }
+      }
+    `>;
+
+    type document = getDocumentNode<fragment, schema>;
+
+    const data: FragmentOf<document> & { __typename?: 'SmallTodo' } = {} as any;
+    const result = readFragment({} as document, data);
+    expectTypeOf<typeof result>().toEqualTypeOf<{
+      __typename?: 'SmallTodo';
+      id: unknown;
+      maxLength: unknown;
+    }>();
+  });
+
   it('unmasks fragments of interfaces with optional spreads', () => {
     type fragment = parseDocument<`
       fragment Fields on ITodo {
