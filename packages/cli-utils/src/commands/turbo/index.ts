@@ -1,6 +1,7 @@
 import { Command, Option } from 'clipanion';
 
 import type { TurboOptions } from './runner';
+import { exitCode } from '../../utils/error';
 import { initTTY } from '../../term';
 import { run } from './runner';
 
@@ -30,7 +31,7 @@ export class TurboCommand extends Command {
         tsconfig: this.tsconfig,
       })
     );
-    return process.exitCode || (typeof result === 'object' ? result.exit : 0);
+    return exitCode() || (typeof result === 'object' ? result.exit : 0);
   }
 }
 

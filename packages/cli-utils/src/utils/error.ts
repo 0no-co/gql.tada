@@ -16,3 +16,8 @@ export class TadaError extends Error {
     this.name = 'TadaError';
   }
 }
+
+export const exitCode = () => {
+  const { exitCode } = process;
+  return typeof exitCode === 'string' ? parseInt(exitCode, 10) || 0 : exitCode;
+};
