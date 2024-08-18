@@ -166,7 +166,25 @@ describe('graphql()', () => {
       [interfaceFragment]
     );
 
+    const standaloneFragment = graphql(`
+      fragment Object on SmallTodo @_unmask {
+        maxLength
+        ...Fields
+      }
+
+      fragment Fields on ITodo @_unmask {
+        __typename
+        id
+      }
+    `);
+
     expectTypeOf<FragmentOf<typeof objectFragment>>().toEqualTypeOf<{
+      __typename: 'SmallTodo';
+      id: string;
+      maxLength: number | null;
+    }>();
+
+    expectTypeOf<FragmentOf<typeof standaloneFragment>>().toEqualTypeOf<{
       __typename: 'SmallTodo';
       id: string;
       maxLength: number | null;
