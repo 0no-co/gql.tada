@@ -54,7 +54,7 @@
     "wonka": "^6.3.4"
   },
   "dependencies": {
-    "@0no-co/graphqlsp": "^1.12.9",
+    "@0no-co/graphqlsp": "^1.12.13",
     "@gql.tada/internal": "workspace:*",
     "graphql": "^15.5.0 || ^16.0.0 || ^17.0.0"
   },
@@ -67,7 +67,7 @@
     }
   },
   "peerDependencies": {
-    "@0no-co/graphqlsp": "^1.12.9",
+    "@0no-co/graphqlsp": "^1.12.13",
     "@gql.tada/svelte-support": "workspace:*",
     "@gql.tada/vue-support": "workspace:*",
     "graphql": "^15.5.0 || ^16.0.0 || ^17.0.0",
