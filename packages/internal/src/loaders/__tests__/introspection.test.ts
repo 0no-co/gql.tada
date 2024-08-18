@@ -16,7 +16,7 @@ describe('getPeerSupportedFeatures', () => {
         "directiveArgumentsIsDeprecated": true,
         "directiveIsRepeatable": true,
         "fieldArgumentsIsDeprecated": true,
-        "inputOneOf": false,
+        "inputOneOf": true,
         "inputValueDeprecation": true,
         "specifiedByURL": true,
       }
