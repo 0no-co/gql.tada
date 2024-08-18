@@ -449,6 +449,17 @@ type FragmentOf<Document extends FragmentShape> = makeFragmentRef<Document>;
 
 type resultOrFragmentOf<Document extends FragmentShape> = FragmentOf<Document> | ResultOf<Document>;
 
+type resultOfT<Document extends FragmentShape, T = unknown> = Document extends DocumentDecoration<
+  infer Result,
+  any
+>
+  ? '__typename' extends keyof T
+    ? Result extends { __typename?: T['__typename'] }
+      ? Result
+      : never
+    : Result
+  : never;
+
 type resultOfFragmentsRec<
   Fragments extends readonly any[],
   Result = {},
@@ -513,24 +524,23 @@ type fragmentRefsOfFragmentsRec<
  */
 function readFragment<const Document extends FragmentShape = never>(
   _document: Document,
-  fragment: resultOrFragmentOf<Document>
-): ResultOf<Document>;
-// Reading fragments where input data is an array and nullable
+  fragment: never
+): resultOfT<Document>;
+
 function readFragment<
   const Document extends FragmentShape,
   const T extends resultOrFragmentOf<Document> | null | undefined | {},
 >(
   _document: Document,
   fragments: readonly T[]
-): readonly (T extends resultOrFragmentOf<Document> ? ResultOf<Document> : T)[];
-// Reading fragments where input data is nullable
+): readonly (T extends resultOrFragmentOf<Document> ? resultOfT<Document, T> : T)[];
 function readFragment<
   const Document extends FragmentShape,
   const T extends resultOrFragmentOf<Document> | null | undefined | {},
 >(
   _document: Document,
   fragment: T
-): T extends resultOrFragmentOf<Document> ? ResultOf<Document> : T;
+): T extends resultOrFragmentOf<Document> ? resultOfT<Document, T> : T;
 
 // Reading arrays of fragments with required generic
 function readFragment<const Document extends FragmentShape>(
