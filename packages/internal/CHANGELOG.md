@@ -1,5 +1,12 @@
 # @gql.tada/internal
 
+## 1.0.7
+
+### Patch Changes
+
+- Upgrade dependencies
+  Submitted by [@kitten](https://github.com/kitten) (See [#373](https://github.com/0no-co/gql.tada/pull/373))
+
 ## 1.0.6
 
 ### Patch Changes

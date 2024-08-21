@@ -1,5 +1,23 @@
 # gql.tada
 
+## 1.8.6
+
+### Patch Changes
+
+- Remove redundant `never` default on `readFragment<Document>()` signature (explicit generic passed)
+  Submitted by [@kitten](https://github.com/kitten) (See [#371](https://github.com/0no-co/gql.tada/pull/371))
+- Upgrade dependencies
+  Submitted by [@kitten](https://github.com/kitten) (See [#373](https://github.com/0no-co/gql.tada/pull/373))
+- Allow `readFragment(doc, data)` to narrow output's `__typename`s by the input type
+  Submitted by [@kitten](https://github.com/kitten) (See [#372](https://github.com/0no-co/gql.tada/pull/372))
+- Add `__typename` narrowing of unmasked interface fragment spreads, which could otherwise lead to confusion. This usually is relevant when the parent selection set forgets to include a `__typename` selection
+  Submitted by [@kitten](https://github.com/kitten) (See [#368](https://github.com/0no-co/gql.tada/pull/368))
+- Improve type output readability for interfaces with narrowed types
+  Submitted by [@kitten](https://github.com/kitten) (See [#370](https://github.com/0no-co/gql.tada/pull/370))
+- Updated dependencies (See [#373](https://github.com/0no-co/gql.tada/pull/373))
+  - @gql.tada/cli-utils@1.6.1
+  - @gql.tada/internal@1.0.7
+
 ## 1.8.5
 
 ### Patch Changes

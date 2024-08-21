@@ -1,5 +1,14 @@
 # @gql.tada/cli-utils
 
+## 1.6.1
+
+### Patch Changes
+
+- Upgrade dependencies
+  Submitted by [@kitten](https://github.com/kitten) (See [#373](https://github.com/0no-co/gql.tada/pull/373))
+- Updated dependencies (See [#373](https://github.com/0no-co/gql.tada/pull/373))
+  - @gql.tada/internal@1.0.7
+
 ## 1.6.0
 
 ### Minor Changes
