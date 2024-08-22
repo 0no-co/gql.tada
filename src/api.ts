@@ -259,6 +259,33 @@ type configOfSetup<Setup extends AbstractSetupSchema> = {
   isMaskingDisabled: Setup['disableMasking'] extends true ? true : false;
 };
 
+/** Utility to type-instantiate a `graphql` document function with.
+ *
+ * @remarks
+ * The `initGraphQLTada` type may be used to manually instantiate a type
+ * as returned by `initGraphQLTada<>()` with the same input type.
+ *
+ * @example
+ * ```
+ * import { initGraphQLTada } from 'gql.tada';
+ * import type { myIntrospection } from './myIntrospection';
+ *
+ * export const graphql: initGraphQLTada<{
+ *   introspection: typeof myIntrospection;
+ *   scalars: {
+ *     DateTime: string;
+ *     Json: any;
+ *   };
+ * }> = initGraphQLTada();
+ *
+ * const query = graphql(`{ __typename }`);
+ * ```
+ */
+export type initGraphQLTada<Setup extends AbstractSetupSchema> = GraphQLTadaAPI<
+  schemaOfSetup<Setup>,
+  configOfSetup<Setup>
+>;
+
 /** Setup function to create a typed `graphql` document function with.
  *
  * @remarks
@@ -285,7 +312,7 @@ type configOfSetup<Setup extends AbstractSetupSchema> = {
  * const query = graphql(`{ __typename }`);
  * ```
  */
-function initGraphQLTada<const Setup extends AbstractSetupSchema>() {
+export function initGraphQLTada<const Setup extends AbstractSetupSchema>(): initGraphQLTada<Setup> {
   type Schema = schemaOfSetup<Setup>;
   type Config = configOfSetup<Setup>;
 
@@ -709,12 +736,9 @@ function unsafe_readResult<
   return data as any;
 }
 
-const graphql: GraphQLTadaAPI<
-  schemaOfSetup<setupSchema>,
-  configOfSetup<setupSchema>
-> = initGraphQLTada();
+const graphql: initGraphQLTada<setupSchema> = initGraphQLTada();
 
-export { parse, graphql, readFragment, maskFragments, unsafe_readResult, initGraphQLTada };
+export { parse, graphql, readFragment, maskFragments, unsafe_readResult };
 
 export type {
   setupCache,
