@@ -205,7 +205,7 @@ the `tadaPersistedLocation` setting:
     "plugins": [
       {
         "name": "gql.tada/ts-plugin",
-        "schema": "./schema.graphql"
+        "schema": "./schema.graphql",
         "tadaOutputLocation": "./src/graphql-env.d.ts",
         "tadaPersistedLocation": "./persisted.json" // [!code ++]
       }
