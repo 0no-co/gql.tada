@@ -1,5 +1,5 @@
 import type { DocumentNode, DefinitionNode } from '@0no-co/graphql.web';
-import { Kind, parse as _parse, print } from '@0no-co/graphql.web';
+import { Kind, parse as _parse } from '@0no-co/graphql.web';
 
 import type {
   IntrospectionLikeInput,
@@ -738,7 +738,7 @@ function unsafe_readResult<
 
 const graphql: initGraphQLTada<setupSchema> = initGraphQLTada();
 
-export { parse, graphql, readFragment, maskFragments, unsafe_readResult, print };
+export { parse, graphql, readFragment, maskFragments, unsafe_readResult };
 
 export type {
   setupCache,

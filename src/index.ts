@@ -1,12 +1,14 @@
 export {
   parse,
-  print,
   graphql,
   readFragment,
   maskFragments,
   unsafe_readResult,
   initGraphQLTada,
 } from './api';
+
+// A `print` function compatible with `parse` exported above
+export { print } from '@0no-co/graphql.web';
 
 export type {
   setupCache,
