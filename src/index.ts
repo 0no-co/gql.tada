@@ -1,5 +1,6 @@
 export {
   parse,
+  print,
   graphql,
   readFragment,
   maskFragments,
