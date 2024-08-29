@@ -102,13 +102,13 @@ export const loadConfig = async (targetPath?: string): Promise<LoadConfigResult>
         if (path.extname(extend) !== '.json') extend += '.json';
         try {
           const tsconfigPath = await resolveExtend(extend, path.dirname(rootTsconfigPath));
-          if (tsconfigPath) return load(tsconfigPath);
+          if (tsconfigPath) return await load(tsconfigPath);
         } catch (_error) {}
       }
     } else if (tsconfig.extends) {
       try {
         const tsconfigPath = await resolveExtend(tsconfig.extends, path.dirname(rootTsconfigPath));
-        if (tsconfigPath) return load(tsconfigPath);
+        if (tsconfigPath) return await load(tsconfigPath);
       } catch (_error) {}
     }
 
