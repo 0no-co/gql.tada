@@ -1,5 +1,12 @@
 # @gql.tada/internal
 
+## 1.0.8
+
+### Patch Changes
+
+- Update the tsconfig resolver to better handle an array of "extends" values in tsconfig.json files when trying to locate the GraphQLSP plugin entry. Before, if you were using an array for "extends", e.g. `"extends: ["./file1.json", "./file2.json"]`, the first file loaded that did not have a GraphQLSP plugin entry defined would throw an error and prevent subsequent files from being loaded and evaluated. The implemented change now allows for the resolver to continue iterating over `extends` values trying to locate a GraphQLSP plugin entry
+  Submitted by [@aweber1](https://github.com/aweber1) (See [#386](https://github.com/0no-co/gql.tada/pull/386))
+
 ## 1.0.7
 
 ### Patch Changes

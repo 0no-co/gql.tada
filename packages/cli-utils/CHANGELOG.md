@@ -1,5 +1,14 @@
 # @gql.tada/cli-utils
 
+## 1.6.2
+
+### Patch Changes
+
+- Strip our internal `@_unmask` directive from fragment-definitions during persisted-operations generation
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#388](https://github.com/0no-co/gql.tada/pull/388))
+- Updated dependencies (See [#386](https://github.com/0no-co/gql.tada/pull/386))
+  - @gql.tada/internal@1.0.8
+
 ## 1.6.1
 
 ### Patch Changes
