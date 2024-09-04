@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { parse, print } from '@0no-co/graphql.web';
+import { Kind, parse, print } from '@0no-co/graphql.web';
 
 import type { FragmentDefinitionNode } from '@0no-co/graphql.web';
 import type { GraphQLSPConfig } from '@gql.tada/internal';
@@ -156,7 +156,14 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
         document = operation;
       } else {
         try {
-          document = print(parse(operation));
+          const parsed = parse(operation);
+          const seen = new Set<unknown>();
+          for (const definition of parsed.definitions) {
+            if (definition.kind === Kind.FRAGMENT_DEFINITION && !seen.has(definition)) {
+              stripUnmaskDirectivesFromDefinition(definition);
+            }
+          }
+          document = print(parsed);
         } catch (_error) {
           warnings.push({
             message:
@@ -172,6 +179,7 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
 
       // NOTE: Update graphqlsp not to pre-parse fragments, which also swallows errors
       for (const fragmentDef of fragmentDefs) {
+        stripUnmaskDirectivesFromDefinition(fragmentDef);
         const printedFragmentDef = print(fragmentDef);
         if (!seen.has(printedFragmentDef)) {
           document += '\n\n' + print(fragmentDef);
@@ -196,3 +204,10 @@ async function* _runPersisted(params: PersistedParams): AsyncIterableIterator<Pe
 }
 
 export const runPersisted = expose(_runPersisted);
+type writable<T> = { -readonly [K in keyof T]: T[K] };
+
+const stripUnmaskDirectivesFromDefinition = (definition: FragmentDefinitionNode) => {
+  (definition as writable<FragmentDefinitionNode>).directives = definition.directives?.filter(
+    (directive) => directive.name.value !== '_unmask'
+  );
+};
