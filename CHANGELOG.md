@@ -1,5 +1,15 @@
 # gql.tada
 
+## 1.8.7
+
+### Patch Changes
+
+- Update internal type signature of `initGraphQLTada<>()` function and include `initGraphQLTada<Setup>` alias type. This alias type makes it more intuitive to declare types the return type of `initGraphQLTada()`, since it mirrors the same name
+  Submitted by [@kitten](https://github.com/kitten) (See [#377](https://github.com/0no-co/gql.tada/pull/377))
+- Updated dependencies (See [#386](https://github.com/0no-co/gql.tada/pull/386) and [#388](https://github.com/0no-co/gql.tada/pull/388))
+  - @gql.tada/internal@1.0.8
+  - @gql.tada/cli-utils@1.6.2
+
 ## 1.8.6
 
 ### Patch Changes

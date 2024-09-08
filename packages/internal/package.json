@@ -1,6 +1,6 @@
 {
   "name": "@gql.tada/internal",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "public": true,
   "description": "Internal logic for gql.tada’s CLI tool and GraphQLSP.",
   "author": "0no.co <hi@0no.co>",
