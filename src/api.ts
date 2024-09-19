@@ -22,6 +22,7 @@ import type { getDocumentType } from './selection';
 import type { parseDocument, DocumentNodeLike } from './parser';
 import type { getVariablesType, getScalarType } from './variables';
 import type { obj, matchOr, writable, DocumentDecoration } from './utils';
+import { concatLocSources } from './utils';
 
 /** Abstract configuration type input for your schema and scalars.
  *
@@ -341,18 +342,21 @@ export function initGraphQLTada<const Setup extends AbstractSetupSchema>(): init
     return {
       kind: Kind.DOCUMENT,
       definitions,
+      // NOTE: This is only meant for `graphql-tag` compatibility and shouldn't be used for
+      // any other cases, since it simply appends all documents
       get loc(): Location {
-        return isFragment
-          ? {
-              start: 0,
-              end: input.length,
-              source: {
-                body: input,
-                name: 'GraphQLTada',
-                locationOffset: { line: 1, column: 1 },
-              },
-            }
-          : undefined;
+        if (isFragment) {
+          const body = input + concatLocSources(fragments || []);
+          return {
+            start: 0,
+            end: body.length,
+            source: {
+              body: body,
+              name: 'GraphQLTada',
+              locationOffset: { line: 1, column: 1 },
+            },
+          };
+        }
       },
     } satisfies DocumentNode;
   }
