@@ -1,5 +1,12 @@
 # gql.tada
 
+## 1.8.8
+
+### Patch Changes
+
+- Add `loc` getter to parsed `DocumentNode` fragment outputs to ensure that using fragments created by `gql.tada`'s `graphql()` function with `graphql-tag` doesn't crash. `graphql-tag` does not treat the `DocumentNode.loc` property as optional on interpolations, which leads to intercompatibility issues
+  Submitted by [@kitten](https://github.com/kitten) (See [#396](https://github.com/0no-co/gql.tada/pull/396))
+
 ## 1.8.7
 
 ### Patch Changes
