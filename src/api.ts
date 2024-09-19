@@ -1,4 +1,4 @@
-import type { DocumentNode, DefinitionNode } from '@0no-co/graphql.web';
+import type { DocumentNode, DefinitionNode, Location } from '@0no-co/graphql.web';
 import { Kind, parse as _parse } from '@0no-co/graphql.web';
 
 import type {
@@ -22,6 +22,7 @@ import type { getDocumentType } from './selection';
 import type { parseDocument, DocumentNodeLike } from './parser';
 import type { getVariablesType, getScalarType } from './variables';
 import type { obj, matchOr, writable, DocumentDecoration } from './utils';
+import { concatLocSources } from './utils';
 
 /** Abstract configuration type input for your schema and scalars.
  *
@@ -328,13 +329,37 @@ export function initGraphQLTada<const Setup extends AbstractSetupSchema>(): init
       }
     }
 
-    if (definitions[0].kind === Kind.FRAGMENT_DEFINITION && definitions[0].directives) {
+    let isFragment: boolean;
+    if (
+      (isFragment = definitions[0].kind === Kind.FRAGMENT_DEFINITION) &&
+      definitions[0].directives
+    ) {
       definitions[0].directives = definitions[0].directives.filter(
         (directive) => directive.name.value !== '_unmask'
       );
     }
 
-    return { kind: Kind.DOCUMENT, definitions };
+    return {
+      kind: Kind.DOCUMENT,
+      definitions,
+      get loc(): Location {
+        // NOTE: This is only meant for graphql-tag compatibility. When fragment documents
+        // are interpolated into other documents, graphql-tag blindly reads `document.loc`
+        // without checking whether it's `undefined`.
+        if (isFragment) {
+          const body = input + concatLocSources(fragments || []);
+          return {
+            start: 0,
+            end: body.length,
+            source: {
+              body: body,
+              name: 'GraphQLTada',
+              locationOffset: { line: 1, column: 1 },
+            },
+          };
+        }
+      },
+    } satisfies DocumentNode;
   }
 
   graphql.scalar = function scalar(_schema: Schema, value: any) {

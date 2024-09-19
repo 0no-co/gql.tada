@@ -1,3 +1,5 @@
+import type { DocumentNode, Location } from '@0no-co/graphql.web';
+
 /** Returns `T` if it matches `Constraint` without being equal to it. Failing this evaluates to `Fallback` otherwise. */
 export type matchOr<Constraint, T, Fallback> = Constraint extends T
   ? Fallback
@@ -49,4 +51,31 @@ export interface DocumentDecoration<Result = any, Variables = any> {
    * @internal
    */
   __ensureTypesOfVariablesAndResultMatching?: (variables: Variables) => Result;
+}
+
+let CONCAT_LOC_DEPTH = 0;
+const CONCAT_LOC_SEEN = new Set();
+
+interface LocationNode {
+  loc?: Location;
+}
+
+/** Concatenates all fragments' `loc.source.body`s */
+export function concatLocSources(fragments: readonly LocationNode[]): string {
+  try {
+    CONCAT_LOC_DEPTH++;
+    let result = '';
+    for (const fragment of fragments) {
+      if (!CONCAT_LOC_SEEN.has(fragment)) {
+        CONCAT_LOC_SEEN.add(fragment);
+        const { loc } = fragment;
+        if (loc) result += loc.source.body;
+      }
+    }
+    return result;
+  } finally {
+    if (--CONCAT_LOC_DEPTH === 0) {
+      CONCAT_LOC_SEEN.clear();
+    }
+  }
 }
