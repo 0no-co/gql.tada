@@ -328,7 +328,11 @@ export function initGraphQLTada<const Setup extends AbstractSetupSchema>(): init
       }
     }
 
-    if (definitions[0].kind === Kind.FRAGMENT_DEFINITION && definitions[0].directives) {
+    let isFragment: boolean;
+    if (
+      (isFragment = definitions[0].kind === Kind.FRAGMENT_DEFINITION) &&
+      definitions[0].directives
+    ) {
       definitions[0].directives = definitions[0].directives.filter(
         (directive) => directive.name.value !== '_unmask'
       );
@@ -338,15 +342,17 @@ export function initGraphQLTada<const Setup extends AbstractSetupSchema>(): init
       kind: Kind.DOCUMENT,
       definitions,
       get loc(): Location {
-        return {
-          start: 0,
-          end: input.length,
-          source: {
-            body: input,
-            name: 'GraphQLTada',
-            locationOffset: { line: 1, column: 1 },
-          },
-        };
+        return isFragment
+          ? {
+              start: 0,
+              end: input.length,
+              source: {
+                body: input,
+                name: 'GraphQLTada',
+                locationOffset: { line: 1, column: 1 },
+              },
+            }
+          : undefined;
       },
     } satisfies DocumentNode;
   }
