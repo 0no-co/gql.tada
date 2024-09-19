@@ -63,6 +63,7 @@ interface LocationNode {
 /** Concatenates all fragments' `loc.source.body`s */
 export function concatLocSources(fragments: readonly LocationNode[]): string {
   try {
+    CONCAT_LOC_DEPTH++;
     let result = '';
     for (const fragment of fragments) {
       if (!CONCAT_LOC_SEEN.has(fragment)) {

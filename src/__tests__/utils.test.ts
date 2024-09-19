@@ -49,7 +49,7 @@ describe('concatLocSources', () => {
       const c = { loc: makeLocation('c') };
       const d = { loc: makeLocation('d') };
 
-      const actual = concatLocSources([
+      let actual = concatLocSources([
         {
           get loc() {
             return makeLocation(concatLocSources([a, b, c, d]));
@@ -72,6 +72,33 @@ describe('concatLocSources', () => {
           },
         },
       ]);
+
+      expect(actual).toBe('abcd');
+
+      actual = concatLocSources([
+        {
+          get loc() {
+            return makeLocation(
+              concatLocSources([
+                a,
+                b,
+                c,
+                {
+                  get loc() {
+                    return makeLocation(concatLocSources([a, b, c, d]));
+                  },
+                },
+              ])
+            );
+          },
+        },
+        {
+          get loc() {
+            return makeLocation(concatLocSources([a, b, c, d]));
+          },
+        },
+      ]);
+
       expect(actual).toBe('abcd');
     }
   });
