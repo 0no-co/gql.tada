@@ -342,9 +342,10 @@ export function initGraphQLTada<const Setup extends AbstractSetupSchema>(): init
     return {
       kind: Kind.DOCUMENT,
       definitions,
-      // NOTE: This is only meant for `graphql-tag` compatibility and shouldn't be used for
-      // any other cases, since it simply appends all documents
       get loc(): Location {
+        // NOTE: This is only meant for graphql-tag compatibility. When fragment documents
+        // are interpolated into other documents, graphql-tag blindly reads `document.loc`
+        // without checking whether it's `undefined`.
         if (isFragment) {
           const body = input + concatLocSources(fragments || []);
           return {
