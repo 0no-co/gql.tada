@@ -1,4 +1,4 @@
-import type { DocumentNode, DefinitionNode } from '@0no-co/graphql.web';
+import type { DocumentNode, DefinitionNode, Location } from '@0no-co/graphql.web';
 import { Kind, parse as _parse } from '@0no-co/graphql.web';
 
 import type {
@@ -334,7 +334,21 @@ export function initGraphQLTada<const Setup extends AbstractSetupSchema>(): init
       );
     }
 
-    return { kind: Kind.DOCUMENT, definitions };
+    return {
+      kind: Kind.DOCUMENT,
+      definitions,
+      get loc(): Location {
+        return {
+          start: 0,
+          end: input.length,
+          source: {
+            body: input,
+            name: 'GraphQLTada',
+            locationOffset: { line: 1, column: 1 },
+          },
+        };
+      },
+    } satisfies DocumentNode;
   }
 
   graphql.scalar = function scalar(_schema: Schema, value: any) {
