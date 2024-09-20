@@ -339,6 +339,7 @@ export function initGraphQLTada<const Setup extends AbstractSetupSchema>(): init
       );
     }
 
+    let loc: Location | undefined;
     return {
       kind: Kind.DOCUMENT,
       definitions,
@@ -346,7 +347,7 @@ export function initGraphQLTada<const Setup extends AbstractSetupSchema>(): init
         // NOTE: This is only meant for graphql-tag compatibility. When fragment documents
         // are interpolated into other documents, graphql-tag blindly reads `document.loc`
         // without checking whether it's `undefined`.
-        if (isFragment) {
+        if (!loc && isFragment) {
           const body = input + concatLocSources(fragments || []);
           return {
             start: 0,
@@ -358,6 +359,10 @@ export function initGraphQLTada<const Setup extends AbstractSetupSchema>(): init
             },
           };
         }
+        return loc;
+      },
+      set loc(_loc: Location) {
+        loc = _loc;
       },
     } satisfies DocumentNode;
   }
