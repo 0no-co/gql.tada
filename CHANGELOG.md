@@ -1,5 +1,12 @@
 # gql.tada
 
+## 1.8.9
+
+### Patch Changes
+
+- Add missing setter to `loc` property
+  Submitted by [@kitten](https://github.com/kitten) (See [#400](https://github.com/0no-co/gql.tada/pull/400))
+
 ## 1.8.8
 
 ### Patch Changes
