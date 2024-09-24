@@ -51,11 +51,9 @@ export const writeOutput = async (target: WriteTarget, contents: string): Promis
     });
   }
 
-  if (typeof target === 'string') {
-    const targetDirectory = dirname(target);
-    if (!(await directoryExists(target))) {
-      await fs.mkdir(targetDirectory, { recursive: true });
-    }
+  const targetDirectory = dirname(typeof target !== 'string' ? await fs.realpath(target) : target);
+  if (!(await directoryExists(targetDirectory))) {
+    await fs.mkdir(targetDirectory, { recursive: true });
   }
 
   if (!(await fileExists(target))) {
