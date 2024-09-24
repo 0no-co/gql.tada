@@ -1,9 +1,26 @@
 import type { WriteStream } from 'node:tty';
 import type { PathLike } from 'node:fs';
+import { dirname } from 'node:path';
 import * as fs from 'node:fs/promises';
 
+/** Checks whether a directory exists on disk */
+const directoryExists = async (file: PathLike): Promise<boolean> => {
+  try {
+    const stat = await fs.stat(file);
+    if (stat.isDirectory()) {
+      return true;
+    } else if (stat.isSymbolicLink()) {
+      return directoryExists(await fs.realpath(file));
+    } else {
+      return false;
+    }
+  } catch {
+    return false;
+  }
+};
+
 /** Checks whether a file exists on disk */
-export const fileExists = (file: PathLike): Promise<boolean> =>
+const fileExists = (file: PathLike): Promise<boolean> =>
   fs
     .stat(file)
     .then((stat) => stat.isFile())
@@ -32,7 +49,16 @@ export const writeOutput = async (target: WriteTarget, contents: string): Promis
         }
       });
     });
-  } else if (!(await fileExists(target))) {
+  }
+
+  if (typeof target === 'string') {
+    const targetDirectory = dirname(target);
+    if (!(await directoryExists(target))) {
+      await fs.mkdir(targetDirectory, { recursive: true });
+    }
+  }
+
+  if (!(await fileExists(target))) {
     // If the file doesn't exist, we can write directly, and not
     // try-catch so the error falls through
     await fs.writeFile(target, contents);
