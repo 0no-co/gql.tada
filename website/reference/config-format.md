@@ -16,8 +16,8 @@ Their configurations are part of the TypeScript plugin entry:
     "plugins": [
       {
         "name": "gql.tada/ts-plugin",
-        "schema": "./schema.graphql"
-        "tadaOutputLocation": "./src/graphql-env.d.ts",
+        "schema": "./schema.graphql",
+        "tadaOutputLocation": "./src/graphql-env.d.ts"
       }
     ]
   }
@@ -43,13 +43,13 @@ to create a `schemas` array.
         "schemas": [
           {
             "name": "your-schema-1",
-            "schema": "./schema-1.graphql"
-            "tadaOutputLocation": "./src/graphql-env-1.d.ts",
+            "schema": "./schema-1.graphql",
+            "tadaOutputLocation": "./src/graphql-env-1.d.ts"
           },
           {
             "name": "your-schema-2",
-            "schema": "./schema-2.graphql"
-            "tadaOutputLocation": "./src/graphql-env-2.d.ts",
+            "schema": "./schema-2.graphql",
+            "tadaOutputLocation": "./src/graphql-env-2.d.ts"
           }
         ]
       }
@@ -320,7 +320,7 @@ global features for the `gql.tada` CLI and the TypeScript plugin.
     "plugins": [
       {
         "name": "gql.tada/ts-plugin",
-        "schema": "./schema.graphql"
+        "schema": "./schema.graphql",
         "tadaOutputLocation": "./src/graphql-env.d.ts",
         "trackFieldUsage": true // [!code ++]
       }
@@ -385,7 +385,7 @@ or report the problematic code pattern to us in an issue.
     "plugins": [
       {
         "name": "gql.tada/ts-plugin",
-        "schema": "./schema.graphql"
+        "schema": "./schema.graphql",
         "tadaOutputLocation": "./src/graphql-env.d.ts",
         "shouldCheckForColocatedFragments": true // [!code ++]
       }
