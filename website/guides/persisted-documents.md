@@ -175,7 +175,7 @@ const persistedQuery = graphql.persisted(
 ## Generating Persisted Manifests
 
 <section>
-  To statically extract persisted documents, we can use the <code>gql.tada</code>
+  To statically extract persisted documents, we can use the <code>gql-tada</code>
   CLI's <code>generate persisted</code> command.
 </section>
 
@@ -187,7 +187,7 @@ To generate a persisted JSON manifest file, use the `gql.tada` CLI's
 `generate persisted` command.
 
 ```sh
-gql.tada generate persisted --output persisted.json
+gql-tada generate persisted --output persisted.json
 ```
 
 The `generate persisted` command scans your codebase for persisted

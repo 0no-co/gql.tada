@@ -190,7 +190,7 @@ We must either pass the document as a generic type argument or as the second arg
 - `graphql.persisted<typeof document>("abc...")`
 - `graphql.persisted("abc...", document)`
 
-The TypeScript plugin and the [`gql.tada check` command](/reference/gql-tada-cli#check)
+The TypeScript plugin and the [`gql-tada check` command](/reference/gql-tada-cli#check)
 run a diagnostic which can check that the document is passed into `graphql.persisted()`
 correctly. Furthermore, the TypeScript plugin offers a code action to automatically update
 the `hash` argument to a SHA256-hash computed from the document.

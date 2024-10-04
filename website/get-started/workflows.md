@@ -8,7 +8,7 @@ description: How to use and adapt the CLI in your workflows
 ## <span data-step="1">1.</span> Setup
 
 <section>
-  Before getting started, the <code>gql.tada</code> CLI has
+  Before getting started, the <code>gql-tada</code> CLI has
   the <code>generate schema</code> and <code>doctor</code>
   commands to help with getting all set up.
 </section>
@@ -30,7 +30,7 @@ To introspect an API and download your schema, run the `generate schema`
 command while passing your API's URL.
 
 ```sh
-gql.tada generate schema 'http://api.test/graphql' --output './schema.graphql'
+gql-tada generate schema 'http://api.test/graphql' --output './schema.graphql'
 ```
 
 When no `--output` argument is passed, the command will attempt to
@@ -42,7 +42,7 @@ requires authentication headers, you may use this to pass in
 tokens or authorization headers.
 
 ```sh
-gql.tada generate schema 'http://api.test/graphql' --header "Authorization: $ENV_TOKEN"
+gql-tada generate schema 'http://api.test/graphql' --header "Authorization: $ENV_TOKEN"
 ```
 
 <a href="/reference/gql-tada-cli#generate-schema" class="button">
@@ -65,7 +65,7 @@ whether there are any issues in your configuration or with
 your setup, the `doctor` command exists.
 
 ```sh
-gql.tada doctor
+gql-tada doctor
 ```
 
 The `doctor` command runs through several environment checks,
@@ -104,11 +104,11 @@ the output typings file is necessary for `gql.tada` to infer types
 of GraphQL documents as it contains an introspection type of
 your schema.
 
-To generate the output typings file, use the `gql.tada` CLI's
+To generate the output typings file, use the `gql-tada` CLI's
 `generate turbo` command.
 
 ```sh
-gql.tada generate output
+gql-tada generate output
 ```
 
 The `generate output` command loads your schema, generates
@@ -177,7 +177,7 @@ diagnostics and gives us an idea of GraphQL-related issues across
 a whole workspace.
 
 ```sh
-gql.tada check
+gql-tada check
 ```
 
 The `check` command loads your schema then runs diagnostics
@@ -198,7 +198,7 @@ server API, which is specific to editor and IDE features.
 During other tasks, like when you run `tsc` or other TypeScript
 compiler tools, TypeScript plugins aren't loaded.
 
-The `gql.tada check` command exists to be a standalone
+The `gql-tada check` command exists to be a standalone
 version of GraphQL-related diagnostics instead and itself
 loads the TypeScript plugin's diagnostics code.
 :::
@@ -236,11 +236,11 @@ codebase grows.
 ### Turbo Mode
 
 To help with this and prevent performance issues,
-the `gql.tada` CLI has a `turbo` command that
+the `gql-tada` CLI has a `turbo` command that
 pre-processes types and outputs a type cache.
 
 ```sh
-gql.tada turbo
+gql-tada turbo
 ```
 
 The `turbo` command scans your codebase for GraphQL
@@ -295,11 +295,11 @@ can improve the Developer Experience on larger codebases.
 
 <section>
   For after we commit and push our work, we can set up our CI
-  environment with the <code>gql.tada</code> CLI commands we've
+  environment with the <code>gql-tada</code> CLI commands we've
   now seen to output files and run diagnostics.
 </section>
 
-Integrating the `gql.tada` CLI into your continuous integration
+Integrating the `gql-tada` CLI into your continuous integration
 pipeline takes just adding a few commands and should effectively
 replicate the errors you may see in an editor when using `gql.tada`.
 
@@ -307,8 +307,8 @@ At the very least, you'll likely want to run the `check` command in your
 CI environment.
 
 ```sh
-gql.tada generate output
-gql.tada check
+gql-tada generate output
+gql-tada check
 ```
 
 ::: details GitHub Actions Example
@@ -318,8 +318,8 @@ in your workflow's jobs.
 ```yaml
 - name: "gql.tada Checks"
   run: |
-    gql.tada generate output
-    gql.tada check
+    gql-tada generate output
+    gql-tada check
 ```
 
 On GitHub Actions, the `check` command will also integrate with GitHub's,
@@ -350,8 +350,8 @@ This may mean however that you want to keep these files up-to-date
 and check for them in your CI's checks as well.
 
 ```sh
-gql.tada generate-output
-gql.tada turbo
+gql-tada generate-output
+gql-tada turbo
 git diff --name-status --exit-code .
 ```
 
@@ -362,8 +362,8 @@ in your workflow's jobs.
 ```yaml
 - name: "gql.tada Checks"
   run: |
-    gql.tada generate output
-    gql.tada generate turbo
+    gql-tada generate output
+    gql-tada generate turbo
     git diff --name-status --exit-code .
 ```
 :::
