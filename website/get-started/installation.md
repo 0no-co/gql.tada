@@ -380,7 +380,7 @@ check Vue and Svelte files, `gql.tada` won't have any output in
 these cases.
 
 However, while the TypeScript plugin may not support `.vue` and
-`.svelte` files, [the `gql.tada check` command does.](/get-started/workflows#running-diagnostics)
+`.svelte` files, [the `gql-tada check` command does.](/get-started/workflows#running-diagnostics)
 To enable support for either files, you'll need to install the
 corresponding support packages.
 

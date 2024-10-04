@@ -86,7 +86,7 @@ After you've updated your configuration you can use the `doctor`
 command to make sure everything's working properly.
 
 ```sh
-gql.tada doctor
+gql-tada doctor
 ```
 
 ## <span data-step="2">2.</span> Initializing `gql.tada` per schema
@@ -220,13 +220,13 @@ const query = graphql(`
 ### CLI Commands
 
 ```sh
-gql.tada check
-gql.tada generate output
-gql.tada generate turbo
-gql.tada generate persisted
+gql-tada check
+gql-tada generate output
+gql-tada generate turbo
+gql-tada generate persisted
 ```
 
-All of the `gql.tada` CLI's commands still work the exact same
+All of the `gql-tada` CLI commands still work the exact same
 when multiple schemas are set up.
 
 However, while all `generate` commands accept an `--output` argument when

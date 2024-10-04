@@ -68,7 +68,7 @@ Don't worry about setting up more than the required `schema` and `tadaOutputLoca
 
 All optional schema options are mostly used by the `gql.tada` CLI, which will tell you if you're missing
 any of the extra configuration options. Additionally, to validate your configuration, you can always
-run the [`gql.tada doctor` CLI command](/reference/gql-tada-cli#doctor).
+run the [`gql-tada doctor` CLI command](/reference/gql-tada-cli#doctor).
 :::
 
 ## Schema Options
@@ -259,18 +259,18 @@ we're always required to set up `gql.tada` manually using the
 ### `tadaTurboLocation`
 
 The `tadaOutputLocation` specifies the output path that the
-[`gql.tada turbo`](/reference/gql-tada-cli#turbo) command will write
+[`gql-tada turbo`](/reference/gql-tada-cli#turbo) command will write
 the type cache output file to.
 
 Type cache files are `.d.ts` files that cache `gql.tada`'s inferred types
-This means that when you run `gql.tada turbo` after making your changes,
+This means that when you run `gql-tada turbo` after making your changes,
 TypeScript will be able to start up and type check your GraphQL documents
 much more quickly than without the type cache.
 
 <a href="/reference/gql-tada-cli#turbo" class="button">
   <h4>CLI Reference</h4>
   <p>
-    Learn more about the <code>gql.tada turbo</code> command.
+    Learn more about the <code>gql-tada turbo</code> command.
   </p>
 </a>
 
@@ -279,8 +279,8 @@ much more quickly than without the type cache.
 ### `tadaPersistedLocation`
 
 The `tadaPersistedLocation` specifies the output path that the
-[`gql.tada generate persisted`](/reference/gql-tada-cli#generate-persisted)
-command will write the persisted JSON manifest file to.
+[`gql-tada generate persisted` command](/reference/gql-tada-cli#generate-persisted)
+will write the persisted JSON manifest file to.
 
 Persisted manifest files are `.json` files that contain all GraphQL
 documents referenced using a [`graphql.persisted` call](/reference/gql-tada-api#graphql-persisted).
@@ -298,7 +298,7 @@ be extracted into the manifest file at compile-time.
   <a href="/reference/gql-tada-cli#generate-persisted" class="button">
     <h4>CLI Reference</h4>
     <p>
-      Learn more about the <code>gql.tada generate persisted</code> command.
+      Learn more about the <code>gql-tada generate persisted</code> command.
     </p>
   </a>
 </div>
@@ -333,7 +333,7 @@ global features for the `gql.tada` CLI and the TypeScript plugin.
 By default, this option is enabled. When enabled, your usage of
 fields will be tracked as you consume data typed using a GraphQL document.
 
-The TypeScript plugin and the [`gql.tada check` command](/reference/gql-tada-cli#check)
+The TypeScript plugin and the [`gql-tada check` command](/reference/gql-tada-cli#check)
 will run a diagnostic that issues warnings when any fields in your selection
 sets aren't used in your TypeScript code.
 
@@ -398,7 +398,7 @@ or report the problematic code pattern to us in an issue.
 By default, this option is enabled. When enabled, your imports will be scanned
 for exported fragments.
 
-The TypeScript plugin and the [`gql.tada check` command](/reference/gql-tada-cli#check)
+The TypeScript plugin and the [`gql-tada check` command](/reference/gql-tada-cli#check)
 will issue warnings when you're missing imports to a GraphQL fragment exported by
 will run a diagnostic that issues warnings when any imports statements don't import
 a GraphQL fragment exported by another module.<br />

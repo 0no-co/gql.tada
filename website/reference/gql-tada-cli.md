@@ -1,8 +1,8 @@
 ---
-title: gql.tada CLI
+title: gql-tada CLI
 ---
 
-# `gql.tada` CLI <Badge type="warning" text="beta" />
+# `gql-tada` CLI <Badge type="warning" text="beta" />
 
 ## Commands
 
@@ -10,14 +10,14 @@ title: gql.tada CLI
 
 > [!NOTE]
 >
-> The `gql.tada init` command is still a work in progress.
+> The `gql-tada init` command is still a work in progress.
 > If you run into any trouble, feel free to let us know what you’d like to see added or changed.
 
 | Option | Description                                                                                      |
 | ------ | ------------------------------------------------------------------------------------------------ |
 | `dir`  | A relative location from your current working directory where the project should be initialized. |
 
-The `init` command takes care of everything required to setup a `gql.tada`
+The `init` command takes care of everything required to setup a `gql-tada`
 project. The main tasks involved here are:
 
 - Locating the schema
@@ -30,15 +30,15 @@ You can run this command with your preferred package manager:
 ::: code-group
 
 ```sh [npm]
-npx gql.tada init ./my-project
+npx gql-tada init ./my-project
 ```
 
 ```sh [pnpm]
-pnpx gql.tada init ./my-project
+pnpx gql-tada init ./my-project
 ```
 
 ```sh [bun]
-bunx gql.tada init ./my-project
+bunx gql-tada init ./my-project
 ```
 
 :::
@@ -47,10 +47,10 @@ bunx gql.tada init ./my-project
 
 > [!NOTE]
 >
-> The `gql.tada doctor` command is still a work in progress.
+> The `gql-tada doctor` command is still a work in progress.
 > If you run into any trouble, feel free to let us know what you’d like to see added or changed.
 
-The `doctor` command will check for common mistakes in the `gql.tada`’s setup and configuration. It will check installed versions of packages, check the configuration, and check the schema.
+The `doctor` command will check for common mistakes in the `gql-tada`’s setup and configuration. It will check installed versions of packages, check the configuration, and check the schema.
 
 ### `check`
 
@@ -64,7 +64,7 @@ Usually, the TypeScript plugin will run inside your editor's TypeScript language
 and errors. However, these diagnostics aren't run when `tsc` or other TypeScript compiler processes are used, since those
 neither load plugins nor are part of the TypeScript language service API.
 
-The `gql.tada check` command exists to run these diagnostics in a standalone command, outside of editing the relevant
+The `gql-tada check` command exists to run these diagnostics in a standalone command, outside of editing the relevant
 files and reports these errors to the console.
 
 When this command is run inside a GitHub Action, [workflow commands](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions) are used to annotate errors within the GitHub UI.
@@ -80,7 +80,7 @@ When this command is run inside a GitHub Action, [workflow commands](https://doc
 
 Oftentimes, an API may not be running in development, is maintained in a separate repository, or requires authorization headers, and specifying a URL in the `schema` configuration can slow down development.
 
-The `gql.tada generate-schema` command introspects a targeted GraphQL API by URL, a `.graphql` SDL
+The `gql-tada generate-schema` command introspects a targeted GraphQL API by URL, a `.graphql` SDL
 or introspection JSON file, and outputs a `.graphql` SDL file. Generating a `.graphql` SDL file is
 useful if we're trying to avoid adding a URL as the `schema` configuration option.
 
@@ -95,7 +95,7 @@ which can be overridden using the `--output` argument.
 | `--tsconfig,-c`           | Optionally, a `tsconfig.json` file to use instead of an automatically discovered one.         |
 | `--output,-o`             | Specify where to output the file to. (Default: The `tadaOutputLocation` configuration option) |
 
-The `gql.tada generate-output` command programmatically outputs the `gql.tada` output typings file.
+The `gql-tada generate-output` command programmatically outputs the `gql.tada` output typings file.
 It will load the schema from the specified `schema` configuration option first then write the typings file to the specified
 location.
 
@@ -133,7 +133,7 @@ When this command is run inside a GitHub Action, [workflow commands](https://doc
 | `--fail-on-warn,-w` | Triggers an error and a non-zero exit code if any warnings have been reported.                   |
 | `--output,-o`       | Specify where to output the file to. (Default: The `tadaPersistedLocation` configuration option) |
 
-The `gql.tada generate-persisted` command will scan your code for `graphql.persisted()` calls and generate
+The `gql-tada generate-persisted` command will scan your code for `graphql.persisted()` calls and generate
 a JSON manifest file containing a mapping of document IDs to the GraphQL document strings.
 These can then be used to register known and accepted documents (known as “persisted operations”) with your GraphQL API to lock down accepted documents that are allowed to be sent.
 
