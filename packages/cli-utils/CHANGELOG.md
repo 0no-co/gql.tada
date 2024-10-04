@@ -1,5 +1,14 @@
 # @gql.tada/cli-utils
 
+## 1.6.3
+
+### Patch Changes
+
+- ⚠️ Fix `turbo` command's cache disabling override not being effective. This was a regression that meant the cached outputs would be reused during the next run of the `turbo` command
+  Submitted by [@kitten](https://github.com/kitten) (See [#409](https://github.com/0no-co/gql.tada/pull/409))
+- Create target directories if they don't exist and the CLI is trying to write to them
+  Submitted by [@kitten](https://github.com/kitten) (See [#401](https://github.com/0no-co/gql.tada/pull/401))
+
 ## 1.6.2
 
 ### Patch Changes
