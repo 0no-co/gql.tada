@@ -36,7 +36,7 @@ export interface ProgramFactory {
   createSourceFile(params: SourceFileParams, scriptKind?: ts.ScriptKind): ts.SourceFile;
   createExternalFiles(exts?: readonly VirtualExtension[]): readonly ts.SourceFile[];
 
-  addSourceFile(file: SourceFileParams | ts.SourceFile, addRootName?: boolean): this;
+  addSourceFile(file: SourceFileParams | ts.SourceFile): this;
   addMappedFile(file: SourceFileParams | ts.SourceFile, params: MappedFileParams): this;
 
   addVirtualFiles(files: readonly ts.SourceFile[]): Promise<this>;
@@ -126,11 +126,11 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
       return files;
     },
 
-    addSourceFile(input, addRootName) {
+    addSourceFile(input) {
       const sourceFile =
         'fileName' in input ? input : factory.createSourceFile(input, ts.ScriptKind.TSX);
       host.updateFile(sourceFile);
-      if (addRootName) rootNames.add(sourceFile.fileName);
+      rootNames.add(sourceFile.fileName);
       return factory;
     },
 
@@ -154,13 +154,10 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
         const virtualCode = await transform(sourceFile);
         if (virtualCode) {
           factory
-            .addSourceFile(
-              {
-                fileId: virtualFileId,
-                sourceText: virtualCode.snapshot,
-              },
-              /*addRootName*/ true
-            )
+            .addSourceFile({
+              fileId: virtualFileId,
+              sourceText: virtualCode.snapshot,
+            })
             .addMappedFile(sourceFile, {
               mappings: virtualCode.mappings,
               fileId: virtualFileId,
