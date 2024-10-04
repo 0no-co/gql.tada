@@ -22,11 +22,14 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
   // NOTE: We add our override declaration here before loading all files
   // This sets `__cacheDisabled` on the turbo cache, which disables the cache temporarily
   // If we don't disable the cache then we couldn't regenerate it from inferred types
-  factory.addSourceFile({
-    fileId: '__gql-tada-override__.d.ts',
-    sourceText: DECLARATION_OVERRIDE,
-    scriptKind: ts.ScriptKind.TS,
-  });
+  factory.addSourceFile(
+    {
+      fileId: '__gql-tada-override__.d.ts',
+      sourceText: DECLARATION_OVERRIDE,
+      scriptKind: ts.ScriptKind.TS,
+    },
+    true
+  );
 
   const externalFiles = factory.createExternalFiles();
   if (externalFiles.length) {
