@@ -64,7 +64,7 @@ auto-completions, and type hovers for GraphQL.
 
 > [!NOTE] VSCode Setup
 > There may be extra steps you should take when you're using VSCode.
-> [Read about these steps in the "VSCode Setup" section below.](#vscode-settings-and-plugins)
+> [Read about these steps in the "VSCode Setup" section below.](#vscode-setup)
 
 > [!NOTE] Prior to TypeScript 5.5
 > There are extra steps you must take when your TypeScript version is older than 5.5.
