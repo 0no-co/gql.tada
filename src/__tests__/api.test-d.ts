@@ -9,7 +9,15 @@ import type { obj } from '../utils';
 
 import { readFragment, maskFragments, unsafe_readResult, initGraphQLTada } from '../api';
 
-import type { ResultOf, VariablesOf, FragmentOf, getDocumentNode } from '../api';
+import type {
+  ResultOf,
+  VariablesOf,
+  FragmentOf,
+  getDocumentNode,
+  DocumentNodeFromQuery,
+  schemaOfSetup,
+  configOfSetup,
+} from '../api';
 
 type schema = simpleSchema;
 
@@ -964,5 +972,92 @@ describe('graphql.persisted()', () => {
 
     // @ts-expect-error
     graphql.persisted<number>('Test');
+  });
+});
+
+describe('DocumentNodeFromQuery', () => {
+  type Setup = { introspection: simpleIntrospection };
+
+  it('should parse type from string', async () => {
+    type Document = DocumentNodeFromQuery<
+      schemaOfSetup<Setup>,
+      configOfSetup<Setup>,
+      `
+      mutation ($input: TodoPayload!) {
+        updateTodo(input: $input) {
+          id
+        }
+      }
+    `,
+      []
+    >;
+
+    expectTypeOf<VariablesOf<Document>>().toEqualTypeOf<{
+      input: {
+        title: string;
+        description: string;
+        complete?: boolean | null | undefined;
+      };
+    }>();
+
+    const vars = (input: VariablesOf<Document>) => input;
+    vars({ input: { title: 'title', description: 'description' } });
+    // @ts-expect-error
+    vars({ excess: true, input: { title: 'title', description: 'description' } });
+
+    type VariablesOfQuery<In extends string> = VariablesOf<
+      DocumentNodeFromQuery<schemaOfSetup<Setup>, configOfSetup<Setup>, In, []>
+    >;
+
+    type variablesFromMutation = VariablesOfQuery<`
+      mutation ($input: TodoPayload!) {
+        updateTodo(input: $input) {
+          id
+        }
+      }
+    `>;
+
+    const varsOfMutation = (input: variablesFromMutation) => input;
+    varsOfMutation({ input: { title: 'title', description: 'description' } });
+    // @ts-expect-error
+    varsOfMutation({ excess: true, input: { title: 'title', description: 'description' } });
+
+    type ResultOfQuery<In extends string> = ResultOf<
+      DocumentNodeFromQuery<schemaOfSetup<Setup>, configOfSetup<Setup>, In, []>
+    >;
+
+    type resultOfQuery = ResultOfQuery<`
+      query Test {
+        todos {
+          id
+        }
+      }
+    `>;
+
+    const resultOfQuery = (input: resultOfQuery) => input;
+    resultOfQuery({ todos: [{ id: '' }] });
+    // @ts-expect-error
+    resultOfQuery({ excess: true, todos: [{ id: '' }] });
+
+    // test create a demo GraphQL client that infers the type.
+    function graphqlRequest<const In extends string>(
+      query: In
+    ): {
+      send(variables: VariablesOfQuery<In>): Promise<ResultOfQuery<In>>;
+    } {
+      return { send: () => query } as any;
+    }
+    const query = graphqlRequest(`
+      mutation ($input: TodoPayload!) {
+        updateTodo(input: $input) {
+          id
+        }
+      }
+    `);
+
+    const result = await query.send({ input: { title: '', description: '' } });
+    expectTypeOf<typeof result>().toEqualTypeOf<{
+      updateTodo: boolean | null;
+    }>();
   });
 });
