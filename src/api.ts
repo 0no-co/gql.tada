@@ -92,6 +92,27 @@ interface AbstractSetupCache {
 
 interface setupCache extends AbstractSetupCache {}
 
+type DocumentNodeFromQuery<
+  Schema extends SchemaLike,
+  Config extends AbstractConfig,
+  In extends string,
+  Fragments extends readonly FragmentShape[],
+> = setupCache[In] extends DocumentNodeLike
+  ? unknown extends setupCache['__cacheDisabled']
+    ? setupCache[In]
+    : getDocumentNode<
+        parseDocument<In>,
+        Schema,
+        getFragmentsOfDocuments<Fragments>,
+        Config['isMaskingDisabled']
+      >
+  : getDocumentNode<
+      parseDocument<In>,
+      Schema,
+      getFragmentsOfDocuments<Fragments>,
+      Config['isMaskingDisabled']
+    >;
+
 interface GraphQLTadaAPI<Schema extends SchemaLike, Config extends AbstractConfig> {
   /** In "multi-schema" mode this identifies the schema.
    * @internal */
@@ -139,21 +160,7 @@ interface GraphQLTadaAPI<Schema extends SchemaLike, Config extends AbstractConfi
   <const In extends string, const Fragments extends readonly FragmentShape[]>(
     input: In,
     fragments?: Fragments
-  ): setupCache[In] extends DocumentNodeLike
-    ? unknown extends setupCache['__cacheDisabled']
-      ? setupCache[In]
-      : getDocumentNode<
-          parseDocument<In>,
-          Schema,
-          getFragmentsOfDocuments<Fragments>,
-          Config['isMaskingDisabled']
-        >
-    : getDocumentNode<
-        parseDocument<In>,
-        Schema,
-        getFragmentsOfDocuments<Fragments>,
-        Config['isMaskingDisabled']
-      >;
+  ): DocumentNodeFromQuery<Schema, Config, In, Fragments>;
 
   /** Function to validate the type of a given scalar or enum value.
    *
@@ -773,9 +780,12 @@ export { parse, graphql, readFragment, maskFragments, unsafe_readResult };
 export type {
   setupCache,
   setupSchema,
+  schemaOfSetup,
+  configOfSetup,
   parseDocument,
   AbstractSetupSchema,
   AbstractSetupCache,
+  DocumentNodeFromQuery,
   GraphQLTadaAPI,
   TadaDocumentNode,
   TadaPersistedDocumentNode,
