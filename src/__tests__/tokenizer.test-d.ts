@@ -66,4 +66,27 @@ describe('tokenize', () => {
     type expected = [{ kind: Token.Directive; name: 'test' }, { kind: Token.Directive; name: 'x' }];
     expectTypeOf<actual>().toEqualTypeOf<expected>();
   });
+
+  describe('comments', () => {
+    it('skips trailing comments', () => {
+      type actual = tokenize<'@test   # test'>;
+      type expected = [{ kind: Token.Directive; name: 'test' }];
+      expectTypeOf<actual>().toEqualTypeOf<expected>();
+    });
+
+    it('skips chained trailing comments', () => {
+      type actual = tokenize<'@test   # test\n   # test2'>;
+      type expected = [{ kind: Token.Directive; name: 'test' }];
+      expectTypeOf<actual>().toEqualTypeOf<expected>();
+    });
+
+    it('skips comments until a newline', () => {
+      type actual = tokenize<'@test   # test \n   # test 2 \n  @x'>;
+      type expected = [
+        { kind: Token.Directive; name: 'test' },
+        { kind: Token.Directive; name: 'x' },
+      ];
+      expectTypeOf<actual>().toEqualTypeOf<expected>();
+    });
+  });
 });
