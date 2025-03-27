@@ -101,8 +101,8 @@ type tokenizeRec<State> =
     ? State['out']
     : State extends _state<infer In, infer Out>
     ? tokenizeRec<
-        In extends `#${infer In}` ? _state<skipIgnored<In>, Out>
-          : In extends `${ignored}${infer In}` ? _state<skipIgnored<In>, Out>
+        In extends `#${string}` ? _state<skipIgnored<In>, Out>
+          : In extends `${ignored}${string}` ? _state<skipIgnored<In>, Out>
           : In extends `...${infer In}` ? _state<In, [...Out, Token.Spread]>
           : In extends `!${infer In}` ? _state<In, [...Out, Token.Exclam]>
           : In extends `=${infer In}` ? _state<In, [...Out, Token.Equal]>
