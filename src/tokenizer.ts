@@ -36,9 +36,11 @@ type letter =
 
 type skipIgnored<In> = In extends `#${infer _}\n${infer In}`
   ? skipIgnored<In>
-  : In extends `${ignored}${infer In}`
-    ? skipIgnored<In>
-    : In;
+  : In extends `#${infer _}`
+    ? ''
+    : In extends `${ignored}${infer In}`
+      ? skipIgnored<In>
+      : In;
 
 type skipDigits<In> = In extends `${digit}${infer In}` ? skipDigits<In> : In;
 
@@ -99,7 +101,7 @@ type tokenizeRec<State> =
     ? State['out']
     : State extends _state<infer In, infer Out>
     ? tokenizeRec<
-        In extends `#${string}\n${infer In}` ? _state<In, Out>
+        In extends `#${infer In}` ? _state<skipIgnored<In>, Out>
           : In extends `${ignored}${infer In}` ? _state<skipIgnored<In>, Out>
           : In extends `...${infer In}` ? _state<In, [...Out, Token.Spread]>
           : In extends `!${infer In}` ? _state<In, [...Out, Token.Exclam]>
