@@ -1,5 +1,12 @@
 # gql.tada
 
+## 1.8.11
+
+### Patch Changes
+
+- ⚠️ Fix in-type tokenizer to support trailing comments
+  Submitted by [@kitten](https://github.com/kitten) (See [#449](https://github.com/0no-co/gql.tada/pull/449))
+
 ## 1.8.10
 
 ### Patch Changes
