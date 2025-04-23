@@ -97,7 +97,18 @@ export const loadConfig = async (targetPath?: string): Promise<LoadConfigResult>
       };
     }
 
-    if (Array.isArray(tsconfig.extends)) {
+    if (Array.isArray(tsconfig.references)) {
+      for (const ref of tsconfig.references) {
+        let refPath = ref.path;
+        if (refPath) {
+          if (path.extname(refPath) !== '.json') refPath += '.json';
+          try {
+            const tsconfigPath = await resolveExtend(refPath, path.dirname(rootTsconfigPath));
+            if (tsconfigPath) return await load(tsconfigPath);
+          } catch (_error) {}
+        }
+      }
+    } else if (Array.isArray(tsconfig.extends)) {
       for (let extend of tsconfig.extends) {
         if (path.extname(extend) !== '.json') extend += '.json';
         try {
