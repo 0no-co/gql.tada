@@ -25,7 +25,7 @@ const parseYaml = (content: string): PnpmWorkspaceConfig => {
     if (!trimmed || trimmed.startsWith('#')) continue;
 
     if (trimmed.endsWith(':') && !trimmed.includes(' ')) {
-      const key = trimmed.slice(0, -1);
+      const key = trimmed.slice(0, -1).replace(/['"]/g, '');
       if (key === 'packages') {
         currentSection = 'packages';
         result.packages = [];
@@ -45,7 +45,7 @@ const parseYaml = (content: string): PnpmWorkspaceConfig => {
       }
     } else if (trimmed.includes(':')) {
       const colonIndex = trimmed.indexOf(':');
-      const key = trimmed.slice(0, colonIndex).trim();
+      const key = trimmed.slice(0, colonIndex).trim().replace(/['"]/g, '');
       const value = trimmed
         .slice(colonIndex + 1)
         .trim()
