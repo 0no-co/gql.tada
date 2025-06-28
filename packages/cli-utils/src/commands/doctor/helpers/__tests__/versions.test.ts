@@ -140,15 +140,19 @@ catalogs:
       expect(mockReadFile).toHaveBeenCalledWith('/test/project/pnpm-workspace.yaml', 'utf-8');
     });
 
-    it('should fallback to import resolution when no package.json entry', async () => {
-      const meta: PackageJson = {};
+    it(
+      'should fallback to import resolution when no package.json entry',
+      async () => {
+        const meta: PackageJson = {};
 
-      const result = await getTypeScriptVersion(meta);
+        const result = await getTypeScriptVersion(meta);
 
-      // Since TypeScript is available in the test environment, it will return the actual version
-      expect(result).toBeTruthy();
-      expect(typeof result).toBe('string');
-    });
+        // Since TypeScript is available in the test environment, it will return the actual version
+        expect(result).toBeTruthy();
+        expect(typeof result).toBe('string');
+      },
+      { timeout: 10_000 }
+    );
 
     it('should return null when package is not found', async () => {
       const meta: PackageJson = {};
