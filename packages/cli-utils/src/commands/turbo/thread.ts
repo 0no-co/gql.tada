@@ -120,7 +120,6 @@ const BUILDER_FLAGS: ts.TypeFormatFlags =
   ts.TypeFormatFlags.InTypeAlias |
   ts.TypeFormatFlags.UseFullyQualifiedType |
   ts.TypeFormatFlags.GenerateNamesForShadowedTypeParams |
-  ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope |
   ts.TypeFormatFlags.AllowUniqueESSymbolType |
   ts.TypeFormatFlags.WriteTypeArgumentsOfSignature;
 
