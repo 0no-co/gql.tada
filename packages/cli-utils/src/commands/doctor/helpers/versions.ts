@@ -1,3 +1,15 @@
+/**
+ * Version resolution utilities with support for workspace catalogs.
+ *
+ * Supports catalog-based dependency management for:
+ * - pnpm (pnpm-workspace.yaml format)
+ * - bun (package.json workspaces format)
+ *
+ * Catalog references follow the format:
+ * - "catalog:" for default catalog
+ * - "catalog:name" for named catalogs
+ */
+
 import { createRequire } from 'node:module';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -8,10 +20,18 @@ export interface PackageJson {
   devDependencies?: Record<string, string>;
 }
 
-export interface PnpmWorkspaceConfig {
+export interface WorkspaceConfig {
   packages?: string[];
   catalog?: Record<string, string>;
   catalogs?: Record<string, Record<string, string>>;
+}
+
+export interface PnpmWorkspaceConfig extends WorkspaceConfig {
+  // Inherits from WorkspaceConfig - supports pnpm-workspace.yaml format
+}
+
+export interface BunWorkspaceConfig extends WorkspaceConfig {
+  // Inherits from WorkspaceConfig - supports package.json workspaces format
 }
 
 const parseYaml = (content: string): PnpmWorkspaceConfig => {
@@ -80,7 +100,35 @@ const findPnpmWorkspaceroot = async (startPath: string = process.cwd()): Promise
   return null;
 };
 
-const loadWorkspaceCatalogs = async (): Promise<PnpmWorkspaceConfig | null> => {
+const findBunWorkspaceRoot = async (startPath: string = process.cwd()): Promise<string | null> => {
+  let currentPath = startPath;
+  const root = path.parse(currentPath).root;
+
+  while (currentPath !== root) {
+    const packageJsonFile = path.join(currentPath, 'package.json');
+    try {
+      await fs.access(packageJsonFile);
+      const content = await fs.readFile(packageJsonFile, 'utf-8');
+      const packageJson: PackageJson & { workspaces?: any } = JSON.parse(content);
+
+      // Check if this package.json has workspaces with catalog/catalogs
+      // Bun stores catalogs in workspaces.catalog and workspaces.catalogs
+      if (
+        packageJson.workspaces &&
+        (packageJson.workspaces.catalog || packageJson.workspaces.catalogs)
+      ) {
+        return currentPath;
+      }
+    } catch {
+      // File doesn't exist or can't be parsed, continue searching
+    }
+    currentPath = path.dirname(currentPath);
+  }
+
+  return null;
+};
+
+const loadPnpmWorkspaceCatalogs = async (): Promise<PnpmWorkspaceConfig | null> => {
   const workspaceRoot = await findPnpmWorkspaceroot();
   if (!workspaceRoot) return null;
 
@@ -93,31 +141,63 @@ const loadWorkspaceCatalogs = async (): Promise<PnpmWorkspaceConfig | null> => {
   }
 };
 
-/**
- * This attempts to resolve a catalog version from a catalog reference.
- * If the reference starts with 'catalog:', it extracts the catalog name.
- * If the catalog name is 'default' or empty, it returns null to indicate
- * that the default catalog should be used.
- * If the catalog name is anything else, it returns the catalog name.
- */
-const resolvePnpmCatalogVersion = (catalogRef: string): string | null => {
+const loadBunWorkspaceCatalogs = async (): Promise<BunWorkspaceConfig | null> => {
+  const workspaceRoot = await findBunWorkspaceRoot();
+  if (!workspaceRoot) return null;
+
+  try {
+    const packageJsonFile = path.join(workspaceRoot, 'package.json');
+    const content = await fs.readFile(packageJsonFile, 'utf-8');
+    const packageJson: PackageJson & { workspaces?: any } = JSON.parse(content);
+
+    if (!packageJson.workspaces) return null;
+
+    const result: BunWorkspaceConfig = {};
+
+    if (packageJson.workspaces.packages) {
+      result.packages = packageJson.workspaces.packages;
+    }
+
+    if (packageJson.workspaces.catalog) {
+      result.catalog = packageJson.workspaces.catalog;
+    }
+
+    if (packageJson.workspaces.catalogs) {
+      result.catalogs = packageJson.workspaces.catalogs;
+    }
+
+    return result;
+  } catch {
+    return null;
+  }
+};
+
+const loadWorkspaceCatalogs = async (): Promise<WorkspaceConfig | null> => {
+  const pnpmCatalogs = await loadPnpmWorkspaceCatalogs();
+  if (pnpmCatalogs) return pnpmCatalogs;
+
+  const bunCatalogs = await loadBunWorkspaceCatalogs();
+  if (bunCatalogs) return bunCatalogs;
+
+  return null;
+};
+
+const resolveCatalogVersion = (catalogRef: string): string | null => {
   if (!catalogRef.startsWith('catalog:')) return null;
 
   const catalogName = catalogRef.slice(8); // Remove 'catalog:' prefix
 
   if (!catalogName || catalogName === 'default') {
-    // Default catalog
     return null; // Will be resolved by package name lookup
   }
 
-  // Named catalog
   return catalogName;
 };
 
-const getVersionFromPnpmCatalog = (
+const getVersionFromCatalog = (
   packageName: string,
   catalogName: string | null,
-  catalogs: PnpmWorkspaceConfig
+  catalogs: WorkspaceConfig
 ): string | null => {
   if (catalogName) {
     // Named catalog
@@ -128,20 +208,17 @@ const getVersionFromPnpmCatalog = (
   }
 };
 
-// Enhanced version checking with catalog support
 const getPackageVersion = async (
   packageName: string,
   meta: PackageJson
 ): Promise<string | null> => {
-  // Check devDependencies first
   const devVersion = meta.devDependencies?.[packageName];
   if (devVersion) {
     if (devVersion.startsWith('catalog:')) {
-      // Resolve catalog reference
       const catalogs = await loadWorkspaceCatalogs();
       if (catalogs) {
-        const catalogName = resolvePnpmCatalogVersion(devVersion);
-        const resolvedVersion = getVersionFromPnpmCatalog(packageName, catalogName, catalogs);
+        const catalogName = resolveCatalogVersion(devVersion);
+        const resolvedVersion = getVersionFromCatalog(packageName, catalogName, catalogs);
         if (resolvedVersion) return resolvedVersion;
       }
     } else {
@@ -149,15 +226,13 @@ const getPackageVersion = async (
     }
   }
 
-  // Check dependencies
   const depVersion = meta.dependencies?.[packageName];
   if (depVersion) {
     if (depVersion.startsWith('catalog:')) {
-      // Resolve catalog reference
       const catalogs = await loadWorkspaceCatalogs();
       if (catalogs) {
-        const catalogName = resolvePnpmCatalogVersion(depVersion);
-        const resolvedVersion = getVersionFromPnpmCatalog(packageName, catalogName, catalogs);
+        const catalogName = resolveCatalogVersion(depVersion);
+        const resolvedVersion = getVersionFromCatalog(packageName, catalogName, catalogs);
         if (resolvedVersion) return resolvedVersion;
       }
     } else {
@@ -221,7 +296,6 @@ export const getGqlTadaVersion = async (meta: PackageJson): Promise<string | nul
   }
 };
 
-// Enhanced support checking with catalog support
 const hasPackageSupport = async (packageName: string, meta: PackageJson): Promise<boolean> => {
   // Check if package is listed in dependencies with catalog support
   const catalogVersion = await getPackageVersion(packageName, meta);
