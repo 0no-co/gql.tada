@@ -71,3 +71,60 @@ export const loadExtensionsList = async (): Promise<readonly string[]> => {
     })
     .filter((x): x is string => !!x);
 };
+
+/** Load the global VSCode settings */
+export const loadGlobalSettings = async (): Promise<{ path: string; json: object } | undefined> => {
+  if (!process.env.HOME) return undefined;
+  const globalPath =
+    process.platform === 'darwin'
+      ? path.resolve(
+          process.env.HOME,
+          'Library',
+          'Application Support',
+          'Code',
+          'User',
+          'settings.json'
+        )
+      : path.resolve(process.env.HOME, '.config', 'Code', 'User', 'settings.json');
+  try {
+    const globalJson = await jsonParse(globalPath);
+    if (globalJson && typeof globalJson === 'object') {
+      return { path: globalPath, json: globalJson };
+    }
+  } catch {}
+  return undefined;
+};
+
+/** Load the workspace VSCode settings */
+export const loadWorkspaceSettings = async (
+  targetPath?: string
+): Promise<{ path: string; json: unknown } | undefined> => {
+  if (!process.env.HOME) return undefined;
+  let current = targetPath || process.cwd();
+  const root = path.parse(current).root;
+  while (current !== root) {
+    const settingsPath = path.resolve(current, '.vscode', 'settings.json');
+    if (await stat(settingsPath, FileType.File)) {
+      try {
+        const workspaceJson = await jsonParse(settingsPath);
+        return { path: settingsPath, json: workspaceJson };
+      } catch {}
+      break;
+    }
+    current = path.dirname(current);
+  }
+  return undefined;
+};
+
+/** Load all VSCode settings */
+export const loadSettings = async (
+  targetPath?: string
+): Promise<{
+  workspace?: { path: string; json: unknown };
+  global?: { path: string; json: unknown };
+}> => {
+  return {
+    workspace: await loadWorkspaceSettings(targetPath),
+    global: await loadGlobalSettings(),
+  };
+};

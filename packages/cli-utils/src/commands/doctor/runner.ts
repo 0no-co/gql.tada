@@ -193,6 +193,25 @@ async function* runVSCodeChecks(): AsyncIterable<ComposeInput> {
       }
     }
 
+    // Check for incompatible VSCode settings
+    const locations = await vscode.loadSettings();
+    for (const location of Object.values(locations)) {
+      const settings = location.json as any;
+      if (settings.editor?.experimental?.preferTreeSitter?.typescript) {
+        if (!hasEndedTask) {
+          hasEndedTask = true;
+          yield logger.warningTask(Messages.CHECK_VSCODE);
+        }
+        yield logger.hintMessage(
+          `The ${logger.code(
+            '"editor.experimental.preferTreeSitter.typescript"'
+          )} VSCode setting can cause problems!\n` +
+            `When enabled it may interfere with extension functionality.\n` +
+            `You may disable the setting here: ${logger.code(location.path)}\n`
+        );
+      }
+    }
+
     const hasProblemExtension =
       userExtensions.includes('graphql.vscode-graphql') ||
       suggestedExtensions.includes('graphql.vscode-graphql');
