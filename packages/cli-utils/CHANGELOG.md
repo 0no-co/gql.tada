@@ -1,5 +1,17 @@
 # @gql.tada/cli-utils
 
+## 1.7.0
+
+### Minor Changes
+
+- Add support for pnpm workspace catalog version resolution to `gql-tada doctor`
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#460](https://github.com/0no-co/gql.tada/pull/460))
+
+### Patch Changes
+
+- Remove alias outside of current scope flag for the stringification of types, this adds support for external scalar files in the Tada setup file
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#461](https://github.com/0no-co/gql.tada/pull/461))
+
 ## 1.6.3
 
 ### Patch Changes
