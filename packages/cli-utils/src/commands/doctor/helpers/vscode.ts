@@ -73,7 +73,7 @@ export const loadExtensionsList = async (): Promise<readonly string[]> => {
 };
 
 /** Load the global VSCode settings */
-export const loadGlobalSettings = async (): Promise<{ path: string; json: object } | undefined> => {
+export const loadGlobalSettings = async (): Promise<{ path: string; json: unknown } | undefined> => {
   if (!process.env.HOME) return undefined;
   const globalPath =
     process.platform === 'darwin'
@@ -88,9 +88,7 @@ export const loadGlobalSettings = async (): Promise<{ path: string; json: object
       : path.resolve(process.env.HOME, '.config', 'Code', 'User', 'settings.json');
   try {
     const globalJson = await jsonParse(globalPath);
-    if (globalJson && typeof globalJson === 'object') {
-      return { path: globalPath, json: globalJson };
-    }
+    return { path: globalPath, json: globalJson };
   } catch {}
   return undefined;
 };
