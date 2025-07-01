@@ -14,20 +14,26 @@ body:
       placeholder: Bug description
     validations:
       required: true
-  - type: input
+  - type: markdown
+    attributes:
+      value: |
+        > [!IMPORTANT]  
+        > Reproductions are necessary for **most** bug reports.
+        > Without one, maintainers will be forced to first reproduce the issue and craft missing context, rather than being able to address the report immediately.
+  - type: textarea
     id: reproduction
     attributes:
       label: Reproduction
       description: Please provide a link to a reproduction. Templates can be found in the [examples folder](https://github.com/0no-co/gql.tada/tree/main/examples)
-      placeholder: Reproduction
+      placeholder: Reproduction (Please include step-by-step instructions, if necessary)
     validations:
       required: false
-  - type: textarea
+  - type: input
     id: gql-tada-version
     attributes:
       label: gql.tada version
       description: The versions of the relevant gql.tada package you are using
-      placeholder: gql.tada v1.0.0
+      placeholder: gql.tada@1.0.0
     validations:
       required: true
   - type: checkboxes
