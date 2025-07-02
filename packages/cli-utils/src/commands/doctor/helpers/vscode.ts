@@ -50,8 +50,7 @@ export const loadSuggestedExtensionsList = async (
 
 /** Loads list of installed VSCode extensions */
 export const loadExtensionsList = async (): Promise<readonly string[]> => {
-  if (!process.env.HOME) return [];
-  const vscodeFolder = path.resolve(process.env.HOME, '.vscode');
+  const vscodeFolder = path.resolve(process.env.HOME!, '.vscode');
   const configFile = path.resolve(vscodeFolder, 'extensions', 'extensions.json');
   if (!(await stat(configFile))) return [];
   let json: unknown;
@@ -70,4 +69,56 @@ export const loadExtensionsList = async (): Promise<readonly string[]> => {
         : null;
     })
     .filter((x): x is string => !!x);
+};
+
+/** Load the global VSCode settings */
+export const loadGlobalSettings = async (): Promise<{ path: string; json: object } | undefined> => {
+  const globalPath =
+    process.platform === 'darwin'
+      ? path.join(
+          process.env.HOME!,
+          'Library',
+          'Application Support',
+          'Code',
+          'User',
+          'settings.json'
+        )
+      : path.join(process.env.HOME!, '.config', 'Code', 'User', 'settings.json');
+
+  try {
+    const globalJson = await jsonParse(globalPath);
+    if (globalJson && typeof globalJson === 'object') {
+      return { path: globalPath, json: globalJson };
+    }
+  } catch {}
+  return undefined;
+};
+
+/** Load the workspace VSCode settings */
+export const loadWorkspaceSettings = async (): Promise<
+  { path: string; json: object } | undefined
+> => {
+  const settingsPath = path.resolve(process.cwd(), '.vscode', 'settings.json');
+  if (await stat(settingsPath, FileType.File)) {
+    try {
+      const workspaceJson = await jsonParse(settingsPath);
+      if (workspaceJson && typeof workspaceJson === 'object') {
+        return { path: settingsPath, json: workspaceJson };
+      }
+    } catch {}
+  }
+  return undefined;
+};
+
+/** Load all VSCode settings */
+export const loadSettings = async (): Promise<{
+  workspace?: { path: string; json: object };
+  global?: { path: string; json: object };
+}> => {
+  const [workspace, global] = await Promise.all([loadWorkspaceSettings(), loadGlobalSettings()]);
+
+  return {
+    workspace,
+    global,
+  };
 };
