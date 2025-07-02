@@ -191,6 +191,49 @@ async function* runVSCodeChecks(): AsyncIterable<ComposeInput> {
             'See: https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql-syntax\n'
         );
       }
+
+      // Check VSCode settings
+      const locations = await vscode.loadSettings();
+
+      // 1. Check for presence of incompatible settings
+      for (const location of Object.values(locations)) {
+        if (location.json['editor.experimental.preferTreeSitter.typescript']) {
+          if (!hasEndedTask) {
+            hasEndedTask = true;
+            yield logger.warningTask(Messages.CHECK_VSCODE);
+          }
+          yield logger.hintMessage(
+            `The ${logger.code(
+              '"editor.experimental.preferTreeSitter.typescript"'
+            )} VSCode setting can cause problems!\n` +
+              `When enabled it may interfere with extension functionality.\n` +
+              `You may disable the setting here: ${logger.code(location.path)}\n`
+          );
+        }
+      }
+
+      // 2. Check for missing recommended settings
+      const workspaceSettings = locations.workspace;
+      if (
+        !workspaceSettings ||
+        workspaceSettings.json['typescript.tsdk'] !== 'node_modules/typescript/lib' ||
+        !workspaceSettings.json['typescript.enablePromptUseWorkspaceTsdk']
+      ) {
+        if (!hasEndedTask) {
+          hasEndedTask = true;
+          yield logger.warningTask(Messages.CHECK_VSCODE);
+        }
+        yield logger.hintMessage(
+          `A recommended VSCode workspace setting is missing!\n` +
+            `The following are recommended:\n` +
+            `${logger.code(
+              '{\n' +
+                '"typescript.tsdk": "node_modules/typescript/lib",\n' +
+                '"typescript.enablePromptUseWorkspaceTsdk": true\n' +
+                '}\n'
+            )}\n`
+        );
+      }
     }
 
     const hasProblemExtension =
