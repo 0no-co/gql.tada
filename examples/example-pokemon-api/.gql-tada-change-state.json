@@ -1,0 +1,17 @@
+{
+  "contentHash": "fe095a1379255bafee9884c3f16191c3c621afa8467508c7814b3b466af1617d",
+  "timestamp": 1753131414082,
+  "monitoredPaths": [
+    "schema.graphql",
+    "src/Test.ts",
+    "src/components/App.tsx",
+    "src/components/PokemonItem.tsx",
+    "src/components/PokemonList.tsx",
+    "src/components/graphql-cache.d.ts",
+    "src/graphql-cache.d.ts",
+    "src/graphql-env.d.ts",
+    "src/graphql.ts",
+    "src/index.tsx"
+  ],
+  "configHash": "3b0eaa4db382e4254b86fba66e940a329f9a371df4c2ec94917c7f30c23f0920"
+}

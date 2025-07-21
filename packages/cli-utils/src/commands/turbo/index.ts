@@ -21,6 +21,10 @@ export class TurboCommand extends Command {
       'Specifies where to output the file to.\tDefault: The `tadaTurboLocation` configuration option',
   });
 
+  skipUnchanged = Option.Boolean('--skip-unchanged', false, {
+    description: 'Skip cache regeneration when no GraphQL files have changed',
+  });
+
   async execute() {
     // TODO: Add verbose/log/list/debug/trace option that outputs discovered documents (by name) per file
     const tty = initTTY();
@@ -29,6 +33,7 @@ export class TurboCommand extends Command {
         failOnWarn: this.failOnWarn,
         output: this.output,
         tsconfig: this.tsconfig,
+        skipUnchanged: this.skipUnchanged,
       })
     );
     return exitCode() || (typeof result === 'object' ? result.exit : 0);

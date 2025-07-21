@@ -111,3 +111,21 @@ export function hintMessage(message: string) {
     `${message.trim()}\n\n`,
   ]);
 }
+
+export function skipMessage(reason: string) {
+  return t.text([
+    t.cmd(t.CSI.Style, t.Style.BrightCyan),
+    `${t.Icons.Info} Skipping cache regeneration: `,
+    t.cmd(t.CSI.Style, t.Style.Foreground),
+    `${reason}\n`,
+  ]);
+}
+
+export function regeneratingMessage(reason: string) {
+  return t.text([
+    t.cmd(t.CSI.Style, t.Style.BrightYellow),
+    `${t.Icons.Info} Regenerating cache: `,
+    t.cmd(t.CSI.Style, t.Style.Foreground),
+    `${reason}\n`,
+  ]);
+}

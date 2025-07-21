@@ -7,6 +7,7 @@ import type { TTY, ComposeInput } from '../../term';
 import type { WriteTarget } from '../shared';
 import { writeOutput } from '../shared';
 import type { TurboDocument } from './types';
+import { ChangeDetector } from './change-detection';
 import * as logger from './logger';
 
 const PREAMBLE_IGNORE = ['/* eslint-disable */', '/* prettier-ignore */'].join('\n') + '\n';
@@ -20,6 +21,8 @@ export interface TurboOptions {
   /** The filename to write the cache file to.
    * @defaultValue The `tadaTurboLocation` configuration option */
   output: string | undefined;
+  /** Skip cache regeneration when no GraphQL files have changed */
+  skipUnchanged: boolean;
 }
 
 export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeInput> {
@@ -32,6 +35,21 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
     pluginConfig = parseConfig(configResult.pluginConfig, configResult.rootPath);
   } catch (error) {
     throw logger.externalError('Failed to load configuration.', error);
+  }
+
+  // Check if we should skip regeneration due to no changes
+  const changeDetector = new ChangeDetector(configResult.rootPath, pluginConfig);
+  const changeResult = await changeDetector.shouldSkipRegeneration({
+    skipUnchanged: opts.skipUnchanged,
+  });
+
+  if (changeResult.shouldSkip) {
+    yield logger.skipMessage(changeResult.reason);
+    return;
+  }
+
+  if (opts.skipUnchanged && !changeResult.shouldSkip) {
+    yield logger.regeneratingMessage(changeResult.reason);
   }
 
   const generator = runTurbo({
@@ -122,6 +140,11 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
       for (const item of documents) cache[item.argumentKey] = item.documentType;
       const contents = createCacheContents(cache);
       await writeOutput(destination, contents);
+
+      // Save state for change detection
+      if (opts.skipUnchanged) {
+        await changeDetector.saveCurrentState();
+      }
     } catch (error) {
       throw logger.externalError('Something went wrong while writing the type cache file', error);
     }
@@ -167,6 +190,16 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
           `Something went wrong while writing the '${name}' schema's type cache file.`,
           error
         );
+      }
+    }
+
+    // Save state for change detection after all schemas are processed
+    if (opts.skipUnchanged) {
+      try {
+        await changeDetector.saveCurrentState();
+      } catch (error) {
+        // Don't fail the entire process if we can't save state
+        console.warn('Warning: Failed to save change detection state:', error);
       }
     }
 
