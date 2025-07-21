@@ -187,7 +187,7 @@ well using the `tadaOutputLocation` option.
 ```
 :::
 
-Depeding on the `tadaOutputLocation`'s configured file extension, there's
+Depending on the `tadaOutputLocation`'s configured file extension, there's
 [two separate formats](/reference/config-format#tadaoutputlocation) this
 file can be saved in. For most cases the `.d.ts` format is recommended
 for best performance however.
