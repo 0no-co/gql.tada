@@ -84,7 +84,6 @@ function resolveModulePath(
     const containingDir = path.dirname(containingFile.fileName);
     const resolvedPath = path.resolve(containingDir, moduleName);
 
-    // Try common extensions
     for (const ext of ['.ts', '.tsx', '.js', '.jsx']) {
       const fullPath = resolvedPath + ext;
       if (host.fileExists(fullPath)) {
@@ -92,7 +91,6 @@ function resolveModulePath(
       }
     }
 
-    // Try index files
     for (const ext of ['.ts', '.tsx', '.js', '.jsx']) {
       const indexPath = path.join(resolvedPath, 'index' + ext);
       if (host.fileExists(indexPath)) {
@@ -149,7 +147,6 @@ function isTadaImport(
   sourceFilePath: string,
   tadaOutputLocationPaths: string[]
 ): boolean {
-  // For relative imports, resolve to absolute path and check
   if (importSpecifier.startsWith('.')) {
     const sourceDir = path.dirname(sourceFilePath);
     const absoluteImportPath = path.resolve(sourceDir, importSpecifier);
@@ -163,7 +160,6 @@ function isTadaImport(
     });
   }
 
-  // For absolute imports, check if they match any Tada paths
   return tadaOutputLocationPaths.some(
     (tadaPath) => importSpecifier === tadaPath || importSpecifier.startsWith(tadaPath + '/')
   );
@@ -228,14 +224,13 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
         continue;
       }
 
-      // Trace back to the GraphQL source file
       const graphqlSourcePath = traceCallToImportSource(
         callExpression,
         sourceFile,
         container.program
       );
+
       if (graphqlSourcePath && !uniqueGraphQLSources.has(graphqlSourcePath)) {
-        // Load and analyze the GraphQL source file
         const graphqlSourceFile = container.program.getSourceFile(graphqlSourcePath);
         if (graphqlSourceFile) {
           const imports = collectImportsFromSourceFile(graphqlSourceFile, params.pluginConfig);
@@ -285,7 +280,6 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
     };
   }
 
-  // Emit collected GraphQL source files and their imports
   if (uniqueGraphQLSources.size > 0) {
     yield {
       kind: 'GRAPHQL_SOURCES',

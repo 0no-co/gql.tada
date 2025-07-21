@@ -193,10 +193,8 @@ function createCacheContents(
     output += `    ${key}:\n      ${cache[key]};`;
   }
 
-  // Generate adjusted imports from GraphQL source files
   let imports = "import type { TadaDocumentNode, $tada } from 'gql.tada';\n";
 
-  // Only adjust import paths if destination is a file path (not a WriteStream like stdout)
   const isFilePath =
     typeof turboDestination === 'string' ||
     (turboDestination &&
@@ -216,15 +214,12 @@ function createCacheContents(
           turboDestination.toString()
         );
 
-        // Skip imports that would create circular references to the turbo cache itself
         const turboPath = turboDestination.toString();
         const sourceDir = path.dirname(source.absolutePath);
         const absoluteImportPath = path.resolve(sourceDir, importInfo.specifier);
         const absoluteTurboPath = path.resolve(turboPath);
 
-        if (absoluteImportPath === absoluteTurboPath) {
-          continue; // Skip this import to avoid circular reference
-        }
+        if (absoluteImportPath === absoluteTurboPath) continue;
 
         adjustedImportClause = importInfo.importClause
           .replace(`'${importInfo.specifier}'`, `'${adjustedSpecifier}'`)
