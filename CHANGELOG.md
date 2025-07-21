@@ -1,5 +1,12 @@
 # gql.tada
 
+## 1.8.12
+
+### Patch Changes
+
+- Updated dependencies (See [#461](https://github.com/0no-co/gql.tada/pull/461) and [#460](https://github.com/0no-co/gql.tada/pull/460))
+  - @gql.tada/cli-utils@1.7.0
+
 ## 1.8.11
 
 ### Patch Changes
