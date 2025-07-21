@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import * as path from 'node:path';
 import type { GraphQLSPConfig } from '@gql.tada/internal';
 
 import { getSchemaNamesFromConfig } from '@gql.tada/internal';
@@ -7,12 +8,165 @@ import { findAllCallExpressions } from '@0no-co/graphqlsp/api';
 import { programFactory } from '../../ts';
 import { expose } from '../../threads';
 
-import type { TurboSignal, TurboWarning, TurboDocument } from './types';
+import type {
+  TurboSignal,
+  TurboWarning,
+  TurboDocument,
+  GraphQLSourceFile,
+  GraphQLSourceImport,
+} from './types';
 
 export interface TurboParams {
   rootPath: string;
   configPath: string;
   pluginConfig: GraphQLSPConfig;
+}
+
+function traceCallToImportSource(
+  callExpression: ts.CallExpression,
+  sourceFile: ts.SourceFile,
+  program: ts.Program
+): string | undefined {
+  const typeChecker = program.getTypeChecker();
+  const expression = callExpression.expression;
+
+  let identifier: ts.Identifier | undefined;
+  if (ts.isIdentifier(expression)) {
+    identifier = expression;
+  } else if (ts.isPropertyAccessExpression(expression) && ts.isIdentifier(expression.expression)) {
+    identifier = expression.expression;
+  }
+
+  if (!identifier) return undefined;
+
+  const symbol = typeChecker.getSymbolAtLocation(identifier);
+  if (!symbol || !symbol.declarations) return undefined;
+
+  for (const declaration of symbol.declarations) {
+    const importDeclaration = findImportDeclaration(declaration);
+    if (importDeclaration && ts.isStringLiteral(importDeclaration.moduleSpecifier)) {
+      const moduleName = importDeclaration.moduleSpecifier.text;
+      return resolveModulePath(moduleName, sourceFile, program);
+    }
+  }
+
+  return undefined;
+}
+
+function findImportDeclaration(node: ts.Node): ts.ImportDeclaration | undefined {
+  let current: ts.Node | undefined = node;
+
+  while (current) {
+    if (ts.isImportDeclaration(current)) {
+      return current;
+    }
+    current = current.parent;
+  }
+
+  return undefined;
+}
+
+function resolveModulePath(
+  moduleName: string,
+  containingFile: ts.SourceFile,
+  program: ts.Program
+): string | undefined {
+  const compilerOptions = program.getCompilerOptions();
+  const host = ts.createCompilerHost(compilerOptions);
+
+  const resolved = ts.resolveModuleName(moduleName, containingFile.fileName, compilerOptions, host);
+
+  if (resolved.resolvedModule) {
+    return resolved.resolvedModule.resolvedFileName;
+  }
+
+  if (moduleName.startsWith('.')) {
+    const containingDir = path.dirname(containingFile.fileName);
+    const resolvedPath = path.resolve(containingDir, moduleName);
+
+    // Try common extensions
+    for (const ext of ['.ts', '.tsx', '.js', '.jsx']) {
+      const fullPath = resolvedPath + ext;
+      if (host.fileExists(fullPath)) {
+        return fullPath;
+      }
+    }
+
+    // Try index files
+    for (const ext of ['.ts', '.tsx', '.js', '.jsx']) {
+      const indexPath = path.join(resolvedPath, 'index' + ext);
+      if (host.fileExists(indexPath)) {
+        return indexPath;
+      }
+    }
+  }
+
+  return undefined;
+}
+
+function collectImportsFromSourceFile(
+  sourceFile: ts.SourceFile,
+  pluginConfig: GraphQLSPConfig
+): GraphQLSourceImport[] {
+  const imports: GraphQLSourceImport[] = [];
+
+  const tadaImportPaths = getTadaOutputPaths(pluginConfig);
+
+  function visit(node: ts.Node) {
+    if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
+      const specifier = node.moduleSpecifier.text;
+
+      if (!isTadaImport(specifier, sourceFile.fileName, tadaImportPaths)) {
+        const importClause = node.getFullText().trim();
+        imports.push({ specifier, importClause });
+      }
+    }
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return imports;
+}
+
+function getTadaOutputPaths(pluginConfig: GraphQLSPConfig): string[] {
+  const paths: string[] = [];
+
+  if ('schema' in pluginConfig && pluginConfig.tadaOutputLocation) {
+    paths.push(pluginConfig.tadaOutputLocation);
+  } else if ('schemas' in pluginConfig) {
+    for (const schema of pluginConfig.schemas) {
+      if (schema.tadaOutputLocation) {
+        paths.push(schema.tadaOutputLocation);
+      }
+    }
+  }
+
+  return paths;
+}
+
+function isTadaImport(
+  importSpecifier: string,
+  sourceFilePath: string,
+  tadaOutputLocationPaths: string[]
+): boolean {
+  // For relative imports, resolve to absolute path and check
+  if (importSpecifier.startsWith('.')) {
+    const sourceDir = path.dirname(sourceFilePath);
+    const absoluteImportPath = path.resolve(sourceDir, importSpecifier);
+
+    return tadaOutputLocationPaths.some((tadaOutputLocationPath) => {
+      const absoluteTadaPath = path.resolve(tadaOutputLocationPath);
+      return (
+        absoluteImportPath === absoluteTadaPath ||
+        absoluteImportPath.startsWith(absoluteTadaPath + path.sep)
+      );
+    });
+  }
+
+  // For absolute imports, check if they match any Tada paths
+  return tadaOutputLocationPaths.some(
+    (tadaPath) => importSpecifier === tadaPath || importSpecifier.startsWith(tadaPath + '/')
+  );
 }
 
 async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSignal> {
@@ -44,6 +198,8 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
   };
 
   const checker = container.program.getTypeChecker();
+  const uniqueGraphQLSources = new Map<string, GraphQLSourceFile>();
+
   for (const sourceFile of sourceFiles) {
     let filePath = sourceFile.fileName;
     const documents: TurboDocument[] = [];
@@ -70,6 +226,24 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
           col: position.col,
         });
         continue;
+      }
+
+      // Trace back to the GraphQL source file
+      const graphqlSourcePath = traceCallToImportSource(
+        callExpression,
+        sourceFile,
+        container.program
+      );
+      if (graphqlSourcePath && !uniqueGraphQLSources.has(graphqlSourcePath)) {
+        // Load and analyze the GraphQL source file
+        const graphqlSourceFile = container.program.getSourceFile(graphqlSourcePath);
+        if (graphqlSourceFile) {
+          const imports = collectImportsFromSourceFile(graphqlSourceFile, params.pluginConfig);
+          uniqueGraphQLSources.set(graphqlSourcePath, {
+            absolutePath: graphqlSourcePath,
+            imports,
+          });
+        }
       }
 
       const returnType = checker.getTypeAtLocation(callExpression);
@@ -108,6 +282,14 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
       filePath,
       documents,
       warnings,
+    };
+  }
+
+  // Emit collected GraphQL source files and their imports
+  if (uniqueGraphQLSources.size > 0) {
+    yield {
+      kind: 'GRAPHQL_SOURCES',
+      sources: Array.from(uniqueGraphQLSources.values()),
     };
   }
 }

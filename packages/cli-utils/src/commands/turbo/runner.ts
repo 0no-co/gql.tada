@@ -6,7 +6,7 @@ import { loadConfig, parseConfig } from '@gql.tada/internal';
 import type { TTY, ComposeInput } from '../../term';
 import type { WriteTarget } from '../shared';
 import { writeOutput } from '../shared';
-import type { TurboDocument } from './types';
+import type { TurboDocument, GraphQLSourceFile } from './types';
 import * as logger from './logger';
 
 const PREAMBLE_IGNORE = ['/* eslint-disable */', '/* prettier-ignore */'].join('\n') + '\n';
@@ -41,6 +41,7 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
   });
 
   const documents: TurboDocument[] = [];
+  let graphqlSources: GraphQLSourceFile[] = [];
   let warnings = 0;
   let totalFileCount = 0;
   let fileCount = 0;
@@ -55,6 +56,8 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
         );
       } else if (signal.kind === 'FILE_COUNT') {
         totalFileCount = signal.fileCount;
+      } else if (signal.kind === 'GRAPHQL_SOURCES') {
+        graphqlSources = signal.sources;
       } else {
         fileCount++;
         documents.push(...signal.documents);
@@ -120,7 +123,7 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
     try {
       const cache: Record<string, string> = {};
       for (const item of documents) cache[item.argumentKey] = item.documentType;
-      const contents = createCacheContents(cache);
+      const contents = createCacheContents(cache, graphqlSources, destination);
       await writeOutput(destination, contents);
     } catch (error) {
       throw logger.externalError('Something went wrong while writing the type cache file', error);
@@ -160,8 +163,9 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
             documentCount[name]++;
           }
         }
-        const contents = createCacheContents(cache);
-        await writeOutput(path.resolve(projectPath, tadaTurboLocation), contents);
+        const destination = path.resolve(projectPath, tadaTurboLocation);
+        const contents = createCacheContents(cache, graphqlSources, destination);
+        await writeOutput(destination, contents);
       } catch (error) {
         throw logger.externalError(
           `Something went wrong while writing the '${name}' schema's type cache file.`,
@@ -178,19 +182,86 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
   }
 }
 
-function createCacheContents(cache: Record<string, string>): string {
+function createCacheContents(
+  cache: Record<string, string>,
+  graphqlSources: GraphQLSourceFile[],
+  turboDestination: WriteTarget
+): string {
   let output = '';
   for (const key in cache) {
     if (output) output += '\n';
     output += `    ${key}:\n      ${cache[key]};`;
   }
+
+  // Generate adjusted imports from GraphQL source files
+  let imports = "import type { TadaDocumentNode, $tada } from 'gql.tada';\n";
+
+  // Only adjust import paths if destination is a file path (not a WriteStream like stdout)
+  const isFilePath =
+    typeof turboDestination === 'string' ||
+    (turboDestination &&
+      typeof turboDestination === 'object' &&
+      'toString' in turboDestination &&
+      !('writable' in turboDestination));
+
+  for (const source of graphqlSources) {
+    for (const importInfo of source.imports) {
+      let adjustedSpecifier = importInfo.specifier;
+      let adjustedImportClause = importInfo.importClause;
+
+      if (isFilePath) {
+        adjustedSpecifier = adjustImportPath(
+          importInfo.specifier,
+          source.absolutePath,
+          turboDestination.toString()
+        );
+
+        // Skip imports that would create circular references to the turbo cache itself
+        const turboPath = turboDestination.toString();
+        const sourceDir = path.dirname(source.absolutePath);
+        const absoluteImportPath = path.resolve(sourceDir, importInfo.specifier);
+        const absoluteTurboPath = path.resolve(turboPath);
+
+        if (absoluteImportPath === absoluteTurboPath) {
+          continue; // Skip this import to avoid circular reference
+        }
+
+        adjustedImportClause = importInfo.importClause
+          .replace(`'${importInfo.specifier}'`, `'${adjustedSpecifier}'`)
+          .replace(`"${importInfo.specifier}"`, `"${adjustedSpecifier}"`);
+      }
+
+      imports += adjustedImportClause + '\n';
+    }
+  }
+
   return (
     PREAMBLE_IGNORE +
-    "import type { TadaDocumentNode, $tada } from 'gql.tada';\n\n" +
+    imports +
+    '\n' +
     "declare module 'gql.tada' {\n" +
     ' interface setupCache {\n' +
     output +
     '\n  }' +
     '\n}\n'
   );
+}
+
+function adjustImportPath(importSpecifier: string, fromPath: string, toPath: string): string {
+  if (!importSpecifier.startsWith('.')) {
+    // Absolute import, no change needed
+    return importSpecifier;
+  }
+
+  const fromDir = path.dirname(fromPath);
+  const toDir = path.dirname(toPath);
+
+  // Resolve the import to absolute path
+  const absoluteImportPath = path.resolve(fromDir, importSpecifier);
+
+  // Make it relative to the target directory
+  const relativeImportPath = path.relative(toDir, absoluteImportPath);
+
+  // Ensure it starts with ./ if it's a relative path
+  return relativeImportPath.startsWith('.') ? relativeImportPath : './' + relativeImportPath;
 }
