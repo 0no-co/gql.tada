@@ -33,11 +33,49 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
   } catch (error) {
     throw logger.externalError('Failed to load configuration.', error);
   }
+  const projectPath = path.dirname(configResult.configPath);
+
+  let destination: WriteTarget;
+  if ('schema' in pluginConfig) {
+    if (!opts.output && tty.pipeTo) {
+      destination = tty.pipeTo;
+    } else if (opts.output) {
+      destination = path.resolve(process.cwd(), opts.output);
+    } else if (pluginConfig.tadaTurboLocation) {
+      destination = path.resolve(projectPath, pluginConfig.tadaTurboLocation);
+    } else if (pluginConfig.tadaOutputLocation) {
+      destination = path.resolve(
+        projectPath,
+        pluginConfig.tadaOutputLocation,
+        '..',
+        'graphql-cache.d.ts'
+      );
+      yield logger.hintMessage(
+        'No output location was specified.\n' +
+          `The turbo cache will by default be saved as ${logger.code('"graphql-cache.d.ts"')}.\n` +
+          logger.hint(
+            `To change this, add a ${logger.code('"tadaTurboLocation"')} in your configuration,\n` +
+              `pass an ${logger.code('--output')} argument to this command,\n` +
+              'or pipe this command to an output file.'
+          )
+      );
+    } else {
+      throw logger.errorMessage(
+        'No output path was specified to write the output file to.\n' +
+          logger.hint(
+            `You have to either set ${logger.code('"tadaTurboLocation"')} in your configuration,\n` +
+              `pass an ${logger.code('--output')} argument to this command,\n` +
+              'or pipe this command to an output file.'
+          )
+      );
+    }
+  }
 
   const generator = runTurbo({
     rootPath: configResult.rootPath,
     configPath: configResult.configPath,
     pluginConfig,
+    turboOutputPath: typeof destination! === 'string' ? destination : undefined,
   });
 
   const documents: TurboDocument[] = [];
@@ -78,44 +116,7 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
     throw logger.externalError('Could not build cache', error);
   }
 
-  const projectPath = path.dirname(configResult.configPath);
   if ('schema' in pluginConfig) {
-    let destination: WriteTarget;
-    if (!opts.output && tty.pipeTo) {
-      destination = tty.pipeTo;
-    } else if (opts.output) {
-      destination = path.resolve(process.cwd(), opts.output);
-    } else if (pluginConfig.tadaTurboLocation) {
-      destination = path.resolve(projectPath, pluginConfig.tadaTurboLocation);
-    } else if (pluginConfig.tadaOutputLocation) {
-      destination = path.resolve(
-        projectPath,
-        pluginConfig.tadaOutputLocation,
-        '..',
-        'graphql-cache.d.ts'
-      );
-      yield logger.hintMessage(
-        'No output location was specified.\n' +
-          `The turbo cache will by default be saved as ${logger.code('"graphql-cache.d.ts"')}.\n` +
-          logger.hint(
-            `To change this, add a ${logger.code('"tadaTurboLocation"')} in your configuration,\n` +
-              `pass an ${logger.code('--output')} argument to this command,\n` +
-              'or pipe this command to an output file.'
-          )
-      );
-    } else {
-      throw logger.errorMessage(
-        'No output path was specified to write the output file to.\n' +
-          logger.hint(
-            `You have to either set ${logger.code(
-              '"tadaTurboLocation"'
-            )} in your configuration,\n` +
-              `pass an ${logger.code('--output')} argument to this command,\n` +
-              'or pipe this command to an output file.'
-          )
-      );
-    }
-
     if (warnings && opts.failOnWarn) {
       throw logger.warningSummary(warnings);
     }
@@ -123,8 +124,8 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
     try {
       const cache: Record<string, string> = {};
       for (const item of documents) cache[item.argumentKey] = item.documentType;
-      const contents = createCacheContents(cache, graphqlSources, destination);
-      await writeOutput(destination, contents);
+      const contents = createCacheContents(cache, graphqlSources, destination!);
+      await writeOutput(destination!, contents);
     } catch (error) {
       throw logger.externalError('Something went wrong while writing the type cache file', error);
     }
@@ -202,31 +203,22 @@ function createCacheContents(
       'toString' in turboDestination &&
       !('writable' in turboDestination));
 
+  const addedImports = new Set<string>();
   for (const source of graphqlSources) {
     for (const importInfo of source.imports) {
-      let adjustedSpecifier = importInfo.specifier;
-      let adjustedImportClause = importInfo.importClause;
-
       if (isFilePath) {
-        adjustedSpecifier = adjustImportPath(
-          importInfo.specifier,
-          source.absolutePath,
-          turboDestination.toString()
-        );
-
         const turboPath = turboDestination.toString();
         const sourceDir = path.dirname(source.absolutePath);
         const absoluteImportPath = path.resolve(sourceDir, importInfo.specifier);
         const absoluteTurboPath = path.resolve(turboPath);
 
-        if (absoluteImportPath === absoluteTurboPath) continue;
+        if (absoluteImportPath === absoluteTurboPath || addedImports.has(importInfo.specifier))
+          continue;
 
-        adjustedImportClause = importInfo.importClause
-          .replace(`'${importInfo.specifier}'`, `'${adjustedSpecifier}'`)
-          .replace(`"${importInfo.specifier}"`, `"${adjustedSpecifier}"`);
+        addedImports.add(importInfo.specifier);
       }
 
-      imports += adjustedImportClause + '\n';
+      imports += importInfo.importClause + '\n';
     }
   }
 
@@ -240,23 +232,4 @@ function createCacheContents(
     '\n  }' +
     '\n}\n'
   );
-}
-
-function adjustImportPath(importSpecifier: string, fromPath: string, toPath: string): string {
-  if (!importSpecifier.startsWith('.')) {
-    // Absolute import, no change needed
-    return importSpecifier;
-  }
-
-  const fromDir = path.dirname(fromPath);
-  const toDir = path.dirname(toPath);
-
-  // Resolve the import to absolute path
-  const absoluteImportPath = path.resolve(fromDir, importSpecifier);
-
-  // Make it relative to the target directory
-  const relativeImportPath = path.relative(toDir, absoluteImportPath);
-
-  // Ensure it starts with ./ if it's a relative path
-  return relativeImportPath.startsWith('.') ? relativeImportPath : './' + relativeImportPath;
 }
