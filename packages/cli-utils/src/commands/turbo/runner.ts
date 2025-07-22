@@ -6,7 +6,7 @@ import { loadConfig, parseConfig } from '@gql.tada/internal';
 import type { TTY, ComposeInput } from '../../term';
 import type { WriteTarget } from '../shared';
 import { writeOutput } from '../shared';
-import type { TurboDocument } from './types';
+import type { TurboDocument, GraphQLSourceFile } from './types';
 import * as logger from './logger';
 
 const PREAMBLE_IGNORE = ['/* eslint-disable */', '/* prettier-ignore */'].join('\n') + '\n';
@@ -33,51 +33,10 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
   } catch (error) {
     throw logger.externalError('Failed to load configuration.', error);
   }
-
-  const generator = runTurbo({
-    rootPath: configResult.rootPath,
-    configPath: configResult.configPath,
-    pluginConfig,
-  });
-
-  const documents: TurboDocument[] = [];
-  let warnings = 0;
-  let totalFileCount = 0;
-  let fileCount = 0;
-
-  try {
-    if (tty.isInteractive) yield logger.runningTurbo();
-
-    for await (const signal of generator) {
-      if (signal.kind === 'EXTERNAL_WARNING') {
-        yield logger.experimentMessage(
-          `${logger.code('.vue')} and ${logger.code('.svelte')} file support is experimental.`
-        );
-      } else if (signal.kind === 'FILE_COUNT') {
-        totalFileCount = signal.fileCount;
-      } else {
-        fileCount++;
-        documents.push(...signal.documents);
-        warnings += signal.warnings.length;
-        if (signal.warnings.length) {
-          let buffer = logger.warningFile(signal.filePath);
-          for (const warning of signal.warnings) {
-            buffer += logger.warningMessage(warning);
-            logger.warningGithub(warning);
-          }
-          yield buffer + '\n';
-        }
-      }
-
-      if (tty.isInteractive) yield logger.runningTurbo(fileCount, totalFileCount);
-    }
-  } catch (error) {
-    throw logger.externalError('Could not build cache', error);
-  }
-
   const projectPath = path.dirname(configResult.configPath);
+
+  let destination: WriteTarget;
   if ('schema' in pluginConfig) {
-    let destination: WriteTarget;
     if (!opts.output && tty.pipeTo) {
       destination = tty.pipeTo;
     } else if (opts.output) {
@@ -104,15 +63,60 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
       throw logger.errorMessage(
         'No output path was specified to write the output file to.\n' +
           logger.hint(
-            `You have to either set ${logger.code(
-              '"tadaTurboLocation"'
-            )} in your configuration,\n` +
+            `You have to either set ${logger.code('"tadaTurboLocation"')} in your configuration,\n` +
               `pass an ${logger.code('--output')} argument to this command,\n` +
               'or pipe this command to an output file.'
           )
       );
     }
+  }
 
+  const generator = runTurbo({
+    rootPath: configResult.rootPath,
+    configPath: configResult.configPath,
+    pluginConfig,
+    turboOutputPath: typeof destination! === 'string' ? destination : undefined,
+  });
+
+  const documents: TurboDocument[] = [];
+  let graphqlSources: GraphQLSourceFile[] = [];
+  let warnings = 0;
+  let totalFileCount = 0;
+  let fileCount = 0;
+
+  try {
+    if (tty.isInteractive) yield logger.runningTurbo();
+
+    for await (const signal of generator) {
+      if (signal.kind === 'EXTERNAL_WARNING') {
+        yield logger.experimentMessage(
+          `${logger.code('.vue')} and ${logger.code('.svelte')} file support is experimental.`
+        );
+      } else if (signal.kind === 'FILE_COUNT') {
+        totalFileCount = signal.fileCount;
+      } else if (signal.kind === 'GRAPHQL_SOURCES') {
+        graphqlSources = signal.sources;
+      } else {
+        fileCount++;
+        documents.push(...signal.documents);
+        warnings += signal.warnings.length;
+        if (signal.warnings.length) {
+          let buffer = logger.warningFile(signal.filePath);
+          for (const warning of signal.warnings) {
+            buffer += logger.warningMessage(warning);
+            logger.warningGithub(warning);
+          }
+          yield buffer + '\n';
+        }
+      }
+
+      if (tty.isInteractive) yield logger.runningTurbo(fileCount, totalFileCount);
+    }
+  } catch (error) {
+    throw logger.externalError('Could not build cache', error);
+  }
+
+  if ('schema' in pluginConfig) {
     if (warnings && opts.failOnWarn) {
       throw logger.warningSummary(warnings);
     }
@@ -120,8 +124,8 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
     try {
       const cache: Record<string, string> = {};
       for (const item of documents) cache[item.argumentKey] = item.documentType;
-      const contents = createCacheContents(cache);
-      await writeOutput(destination, contents);
+      const contents = createCacheContents(cache, graphqlSources, destination!);
+      await writeOutput(destination!, contents);
     } catch (error) {
       throw logger.externalError('Something went wrong while writing the type cache file', error);
     }
@@ -160,8 +164,9 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
             documentCount[name]++;
           }
         }
-        const contents = createCacheContents(cache);
-        await writeOutput(path.resolve(projectPath, tadaTurboLocation), contents);
+        const destination = path.resolve(projectPath, tadaTurboLocation);
+        const contents = createCacheContents(cache, graphqlSources, destination);
+        await writeOutput(destination, contents);
       } catch (error) {
         throw logger.externalError(
           `Something went wrong while writing the '${name}' schema's type cache file.`,
@@ -178,15 +183,49 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
   }
 }
 
-function createCacheContents(cache: Record<string, string>): string {
+function createCacheContents(
+  cache: Record<string, string>,
+  graphqlSources: GraphQLSourceFile[],
+  turboDestination: WriteTarget
+): string {
   let output = '';
   for (const key in cache) {
     if (output) output += '\n';
     output += `    ${key}:\n      ${cache[key]};`;
   }
+
+  let imports = "import type { TadaDocumentNode, $tada } from 'gql.tada';\n";
+
+  const isFilePath =
+    typeof turboDestination === 'string' ||
+    (turboDestination &&
+      typeof turboDestination === 'object' &&
+      'toString' in turboDestination &&
+      !('writable' in turboDestination));
+
+  const addedImports = new Set<string>();
+  for (const source of graphqlSources) {
+    for (const importInfo of source.imports) {
+      if (isFilePath) {
+        const turboPath = turboDestination.toString();
+        const sourceDir = path.dirname(source.absolutePath);
+        const absoluteImportPath = path.resolve(sourceDir, importInfo.specifier);
+        const absoluteTurboPath = path.resolve(turboPath);
+
+        if (absoluteImportPath === absoluteTurboPath || addedImports.has(importInfo.specifier))
+          continue;
+
+        addedImports.add(importInfo.specifier);
+      }
+
+      imports += importInfo.importClause + '\n';
+    }
+  }
+
   return (
     PREAMBLE_IGNORE +
-    "import type { TadaDocumentNode, $tada } from 'gql.tada';\n\n" +
+    imports +
+    '\n' +
     "declare module 'gql.tada' {\n" +
     ' interface setupCache {\n' +
     output +

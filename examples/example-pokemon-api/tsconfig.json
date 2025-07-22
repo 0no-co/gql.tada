@@ -4,7 +4,8 @@
       {
         "name": "@0no-co/graphqlsp",
         "schema": "./schema.graphql",
-        "tadaOutputLocation": "./src/graphql-env.d.ts"
+        "tadaOutputLocation": "./src/graphql-env.d.ts",
+        "tadaTurboLocation": "./src/components/graphql-cache.d.ts"
       }
     ],
     "noEmit": true,
