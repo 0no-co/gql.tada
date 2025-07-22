@@ -1,5 +1,14 @@
 # @gql.tada/cli-utils
 
+## 1.7.1
+
+### Patch Changes
+
+- ⚠️ Fix external scalars in the `graphql` definition files,
+  we will collect the imports and rewrite them into the
+  cached file
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#472](https://github.com/0no-co/gql.tada/pull/472))
+
 ## 1.7.0
 
 ### Minor Changes
