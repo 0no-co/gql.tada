@@ -11,6 +11,16 @@ export interface TurboDocument {
   documentType: string;
 }
 
+export interface GraphQLSourceImport {
+  specifier: string;
+  importClause: string;
+}
+
+export interface GraphQLSourceFile {
+  absolutePath: string;
+  imports: GraphQLSourceImport[];
+}
+
 export interface FileTurboSignal {
   kind: 'FILE_TURBO';
   filePath: string;
@@ -27,4 +37,9 @@ export interface WarningSignal {
   kind: 'EXTERNAL_WARNING';
 }
 
-export type TurboSignal = FileTurboSignal | FileCountSignal | WarningSignal;
+export interface GraphQLSourceSignal {
+  kind: 'GRAPHQL_SOURCES';
+  sources: GraphQLSourceFile[];
+}
+
+export type TurboSignal = FileTurboSignal | FileCountSignal | WarningSignal | GraphQLSourceSignal;

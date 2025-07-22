@@ -41,6 +41,8 @@ export interface ProgramFactory {
 
   addVirtualFiles(files: readonly ts.SourceFile[]): Promise<this>;
 
+  resolveModuleName(importSpecifier: string, fromPath: string, toPath: string): string;
+
   build(): ProgramContainer;
 }
 
@@ -165,6 +167,56 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
         }
       }
       return factory;
+    },
+
+    resolveModuleName(importSpecifier: string, fromPath: string, toPath: string): string {
+      // For absolute imports (including path-mapped ones), keep them as-is
+      // TypeScript's module resolution will handle them correctly
+      if (!importSpecifier.startsWith('.')) {
+        return importSpecifier;
+      }
+
+      // For relative imports, we need to adjust the path using the virtual compiler host
+      const compilerOptions = options;
+
+      // First, resolve the import from the original location to get the actual file
+      const resolved = ts.resolveModuleName(
+        importSpecifier,
+        fromPath,
+        compilerOptions,
+        host.compilerHost
+      );
+
+      if (resolved.resolvedModule) {
+        const targetFilePath = resolved.resolvedModule.resolvedFileName;
+
+        // Now create a relative path from the new location (toPath) to the target
+        const fromDir = path.dirname(toPath);
+        let relativePath = path.relative(fromDir, targetFilePath);
+
+        // Ensure it starts with ./ or ../
+        if (!relativePath.startsWith('.')) {
+          relativePath = './' + relativePath;
+        }
+
+        // Convert Windows backslashes to forward slashes for imports
+        return relativePath.replace(/\\/g, '/');
+      }
+
+      // Fallback to simple path resolution if TypeScript resolution fails
+      const fromDir = path.dirname(fromPath);
+      const toDir = path.dirname(toPath);
+
+      const absoluteImportPath = path.resolve(fromDir, importSpecifier);
+      let relativeImportPath = path.relative(toDir, absoluteImportPath);
+
+      // Ensure it starts with ./ if it's a relative path
+      if (!relativeImportPath.startsWith('.')) {
+        relativeImportPath = './' + relativeImportPath;
+      }
+
+      // Convert Windows backslashes to forward slashes for imports
+      return relativeImportPath.replace(/\\/g, '/');
     },
 
     build() {
