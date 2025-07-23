@@ -11,10 +11,11 @@ import babel from '@rollup/plugin-babel';
 import terser from '@rollup/plugin-terser';
 import cjsCheck from 'rollup-plugin-cjs-check';
 import dts from 'rollup-plugin-dts';
+import replace from '@rollup/plugin-replace';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const normalize = name => []
+const normalize = (name) => []
   .concat(name)
   .join(' ')
   .replace(/[@\s/.]+/g, ' ')
@@ -22,7 +23,7 @@ const normalize = name => []
   .replace(/\s+/, '-')
   .toLowerCase();
 
-const extension = name => {
+const extension = (name) => {
   if (/\.d.ts$/.test(name)) {
     return '.d.ts';
   } else {
@@ -32,6 +33,7 @@ const extension = name => {
 
 const meta = JSON.parse(readFileSync('package.json'));
 const name = normalize(meta.name);
+const version = meta.version || '0.0.0';
 
 const externalModules = [
   ...Object.keys(meta.dependencies || {}),
@@ -64,8 +66,7 @@ const commonConfig = {
   onwarn: () => {},
   external(id) {
     const isExternal = isBuiltin(id) || externalRe.test(id);
-    if (!isExternal && moduleRe.test(id))
-      externals.add(id);
+    if (!isExternal && moduleRe.test(id)) externals.add(id);
     return isExternal;
   },
   treeshake: {
@@ -227,6 +228,12 @@ export default [
           '@babel/plugin-transform-typescript',
           '@babel/plugin-transform-block-scoping',
         ],
+      }),
+      replace({
+        preventAssignment: true,
+        values: {
+          __VERSION__: JSON.stringify(version),
+        },
       }),
     ],
     output: [

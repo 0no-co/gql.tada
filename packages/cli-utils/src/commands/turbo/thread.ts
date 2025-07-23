@@ -1,5 +1,6 @@
 import ts from 'typescript';
 import * as path from 'node:path';
+import * as fs from 'node:fs';
 import type { GraphQLSPConfig } from '@gql.tada/internal';
 
 import { getSchemaNamesFromConfig } from '@gql.tada/internal';
@@ -15,12 +16,13 @@ import type {
   GraphQLSourceFile,
   GraphQLSourceImport,
 } from './types';
-
+import { createContentHash, parseCachedData, type CachedData } from './cache';
 export interface TurboParams {
   rootPath: string;
   configPath: string;
   pluginConfig: GraphQLSPConfig;
   turboOutputPath?: string;
+  tadaOutputLocation?: string;
 }
 
 function traceCallToImportSource(
@@ -166,6 +168,16 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
   const schemaNames = getSchemaNamesFromConfig(params.pluginConfig);
   const factory = programFactory(params);
 
+  const tadaOutputFileContents = params.tadaOutputLocation
+    ? fs.existsSync(params.tadaOutputLocation)
+      ? fs.readFileSync(params.tadaOutputLocation, 'utf-8')
+      : ''
+    : '';
+  // Parse cached data from existing cache file for change detection
+  const cachedData: CachedData = params.turboOutputPath
+    ? parseCachedData(params.turboOutputPath, schemaNames)
+    : { hashes: new Map<string, string>(), documents: new Map<string, TurboDocument[]>() };
+
   // NOTE: We add our override declaration here before loading all files
   // This sets `__cacheDisabled` on the turbo cache, which disables the cache temporarily
   // If we don't disable the cache then we couldn't regenerate it from inferred types
@@ -194,9 +206,33 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
   const uniqueGraphQLSources = new Map<string, GraphQLSourceFile>();
 
   for (const sourceFile of sourceFiles) {
-    let filePath = sourceFile.fileName;
+    let filePath = path.relative(params.rootPath, sourceFile.fileName);
     const documents: TurboDocument[] = [];
     const warnings: TurboWarning[] = [];
+
+    // Check if file content has changed by comparing hashes
+    const fileContent = sourceFile.getFullText();
+    const currentHash = createContentHash(tadaOutputFileContents, fileContent);
+    const cachedHash = cachedData.hashes.get(filePath);
+
+    // If file hasn't changed, use cached documents
+    if (cachedHash && cachedHash === currentHash) {
+      const cachedDocuments = cachedData.documents.get(filePath) || [];
+      // Update schema names for cached documents if needed
+      for (const doc of cachedDocuments) {
+        if (doc.schemaName === null && schemaNames.size === 1) {
+          doc.schemaName = Array.from(schemaNames)[0];
+        }
+      }
+
+      yield {
+        kind: 'FILE_TURBO',
+        filePath,
+        documents: cachedDocuments,
+        warnings,
+      };
+      continue;
+    }
 
     const calls = findAllCallExpressions(sourceFile, pluginInfo, false).nodes;
     for (const call of calls) {
@@ -206,7 +242,7 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
       }
 
       const position = container.getSourcePosition(sourceFile, callExpression.getStart());
-      filePath = position.fileName;
+      filePath = path.relative(params.rootPath, position.fileName);
       if (!schemaNames.has(call.schema)) {
         warnings.push({
           message: call.schema
@@ -214,7 +250,7 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
             : schemaNames.size > 1
               ? 'The document is not for a known schema. Have you re-generated the output file?'
               : 'Multiple schemas are configured, but the document is not for a specific schema.',
-          file: position.fileName,
+          file: path.relative(params.rootPath, position.fileName),
           line: position.line,
           col: position.col,
         });
@@ -252,7 +288,7 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
           message:
             `The discovered document is not of type "TadaDocumentNode".\n` +
             'If this is unexpected, please file an issue describing your case.',
-          file: position.fileName,
+          file: path.relative(params.rootPath, position.fileName),
           line: position.line,
           col: position.col,
         });
@@ -271,6 +307,8 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
         schemaName: call.schema,
         argumentKey,
         documentType,
+        fileName: filePath,
+        contentHash: currentHash,
       });
     }
 
