@@ -111,7 +111,7 @@ function collectImportsFromSourceFile(
           )
             .replace(/\.ts$/, '')
             .replace(/\.tsx$/, '');
-          if (adjustedSpecifier) {
+          if (adjustedSpecifier && !adjustedSpecifier.includes('gql.tada')) {
             imports.push({
               specifier: adjustedSpecifier,
               importClause: importClause.replace(specifier, adjustedSpecifier),
@@ -205,6 +205,7 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
   const checker = container.program.getTypeChecker();
   const uniqueGraphQLSources = new Map<string, GraphQLSourceFile>();
 
+  let imports;
   for (const sourceFile of sourceFiles) {
     let filePath = path.relative(params.rootPath, sourceFile.fileName);
     const documents: TurboDocument[] = [];
@@ -214,6 +215,41 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
     const fileContent = sourceFile.getFullText();
     const currentHash = createContentHash(tadaOutputFileContents, fileContent);
     const cachedHash = cachedData.hashes.get(filePath);
+
+    // When we are on the first run, we need to collect imports
+    // we only support single schema for now so this is safe to do
+    if (!imports) {
+      // Find all call expressions to trace imports (needed even for cache hits)
+      const calls = findAllCallExpressions(sourceFile, pluginInfo, false).nodes;
+      for (const call of calls) {
+        const callExpression = call.node.parent;
+        if (!ts.isCallExpression(callExpression)) {
+          continue;
+        }
+
+        const graphqlSourcePath = traceCallToImportSource(
+          callExpression,
+          sourceFile,
+          container.program
+        );
+
+        if (graphqlSourcePath && !uniqueGraphQLSources.has(graphqlSourcePath)) {
+          const graphqlSourceFile = container.program.getSourceFile(graphqlSourcePath);
+          if (graphqlSourceFile) {
+            const imports = collectImportsFromSourceFile(
+              graphqlSourceFile,
+              params.pluginConfig,
+              factory.resolveModuleName.bind(factory),
+              params.turboOutputPath
+            );
+            uniqueGraphQLSources.set(graphqlSourcePath, {
+              absolutePath: graphqlSourcePath,
+              imports,
+            });
+          }
+        }
+      }
+    }
 
     // If file hasn't changed, use cached documents
     if (cachedHash && cachedHash === currentHash) {
@@ -235,6 +271,7 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
     }
 
     const calls = findAllCallExpressions(sourceFile, pluginInfo, false).nodes;
+    // Process calls for document generation (not cached)
     for (const call of calls) {
       const callExpression = call.node.parent;
       if (!ts.isCallExpression(callExpression)) {
@@ -255,28 +292,6 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
           col: position.col,
         });
         continue;
-      }
-
-      const graphqlSourcePath = traceCallToImportSource(
-        callExpression,
-        sourceFile,
-        container.program
-      );
-
-      if (graphqlSourcePath && !uniqueGraphQLSources.has(graphqlSourcePath)) {
-        const graphqlSourceFile = container.program.getSourceFile(graphqlSourcePath);
-        if (graphqlSourceFile) {
-          const imports = collectImportsFromSourceFile(
-            graphqlSourceFile,
-            params.pluginConfig,
-            factory.resolveModuleName.bind(factory),
-            params.turboOutputPath
-          );
-          uniqueGraphQLSources.set(graphqlSourcePath, {
-            absolutePath: graphqlSourcePath,
-            imports,
-          });
-        }
       }
 
       const returnType = checker.getTypeAtLocation(callExpression);
