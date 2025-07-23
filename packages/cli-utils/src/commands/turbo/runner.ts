@@ -76,6 +76,8 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
     configPath: configResult.configPath,
     pluginConfig,
     turboOutputPath: typeof destination! === 'string' ? destination : undefined,
+    tadaOutputLocation:
+      'tadaOutputLocation' in pluginConfig ? pluginConfig.tadaOutputLocation : undefined,
   });
 
   const documents: TurboDocument[] = [];
@@ -122,9 +124,7 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
     }
 
     try {
-      const cache: Record<string, string> = {};
-      for (const item of documents) cache[item.argumentKey] = item.documentType;
-      const contents = createCacheContents(cache, graphqlSources, destination!);
+      const contents = createCacheContents(documents, graphqlSources, destination!);
       await writeOutput(destination!, contents);
     } catch (error) {
       throw logger.externalError('Something went wrong while writing the type cache file', error);
@@ -156,16 +156,10 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
       }
 
       try {
-        documentCount[name] = 0;
-        const cache: Record<string, string> = {};
-        for (const item of documents) {
-          if (item.schemaName === name) {
-            cache[item.argumentKey] = item.documentType;
-            documentCount[name]++;
-          }
-        }
+        const schemaDocuments = documents.filter((item) => item.schemaName === name);
+        documentCount[name] = schemaDocuments.length;
         const destination = path.resolve(projectPath, tadaTurboLocation);
-        const contents = createCacheContents(cache, graphqlSources, destination);
+        const contents = createCacheContents(schemaDocuments, graphqlSources, destination);
         await writeOutput(destination, contents);
       } catch (error) {
         throw logger.externalError(
@@ -184,14 +178,29 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
 }
 
 function createCacheContents(
-  cache: Record<string, string>,
+  documents: TurboDocument[],
   graphqlSources: GraphQLSourceFile[],
   turboDestination: WriteTarget
 ): string {
+  // Group documents by contentHash
+  const hashGroups = new Map<string, TurboDocument[]>();
+  for (const doc of documents) {
+    if (!hashGroups.has(doc.contentHash)) {
+      hashGroups.set(doc.contentHash, []);
+    }
+    hashGroups.get(doc.contentHash)!.push(doc);
+  }
+
   let output = '';
-  for (const key in cache) {
-    if (output) output += '\n';
-    output += `    ${key}:\n      ${cache[key]};`;
+  for (const [hash, docs] of hashGroups) {
+    // Add comment with file names and hash
+    const fileNames = [...new Set(docs.map((doc) => doc.fileName))].join(', ');
+    output += `    // ${fileNames}: ${hash}\n`;
+
+    // Add all documents for this hash
+    for (const doc of docs) {
+      output += `    ${doc.argumentKey}:\n      ${doc.documentType};\n`;
+    }
   }
 
   let imports = "import type { TadaDocumentNode, $tada } from 'gql.tada';\n";

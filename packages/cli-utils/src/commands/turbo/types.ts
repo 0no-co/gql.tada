@@ -9,6 +9,8 @@ export interface TurboDocument {
   schemaName: string | null;
   argumentKey: string;
   documentType: string;
+  fileName: string;
+  contentHash: string;
 }
 
 export interface GraphQLSourceImport {
