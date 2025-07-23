@@ -15,13 +15,14 @@ import replace from '@rollup/plugin-replace';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const normalize = (name) => []
-  .concat(name)
-  .join(' ')
-  .replace(/[@\s/.]+/g, ' ')
-  .trim()
-  .replace(/\s+/, '-')
-  .toLowerCase();
+const normalize = (name) =>
+  []
+    .concat(name)
+    .join(' ')
+    .replace(/[@\s/.]+/g, ' ')
+    .trim()
+    .replace(/\s+/, '-')
+    .toLowerCase();
 
 const extension = (name) => {
   if (/\.d.ts$/.test(name)) {
@@ -115,23 +116,27 @@ const outputPlugins = [
         const entry = exports[key];
         if (entry.path) {
           const output = path.relative(entry.path, process.cwd());
-          const json = JSON.stringify({
-            name: key,
-            private: true,
-            version: '0.0.0',
-            main: path.join(output, entry.require),
-            module: path.join(output, entry.import),
-            types: path.join(output, entry.types),
-            source: path.join(output, entry.source),
-            exports: {
-              '.': {
-                types: path.join(output, entry.types),
-                import: path.join(output, entry.import),
-                require: path.join(output, entry.require),
-                source: path.join(output, entry.source),
+          const json = JSON.stringify(
+            {
+              name: key,
+              private: true,
+              version: '0.0.0',
+              main: path.join(output, entry.require),
+              module: path.join(output, entry.import),
+              types: path.join(output, entry.types),
+              source: path.join(output, entry.source),
+              exports: {
+                '.': {
+                  types: path.join(output, entry.types),
+                  import: path.join(output, entry.import),
+                  require: path.join(output, entry.require),
+                  source: path.join(output, entry.source),
+                },
               },
             },
-          }, null, 2);
+            null,
+            2
+          );
 
           await fs.mkdir(entry.path, { recursive: true });
           await fs.writeFile(path.join(entry.path, 'package.json'), json);
@@ -159,8 +164,9 @@ const outputPlugins = [
           continue;
         }
         const packagePath = path.dirname(metaPath);
-        let licenseName = (await fs.readdir(packagePath).catch(() => []))
-          .find((name) => /^licen[sc]e/i.test(name));
+        let licenseName = (await fs.readdir(packagePath).catch(() => [])).find((name) =>
+          /^licen[sc]e/i.test(name)
+        );
         if (!licenseName) {
           const match = /^SEE LICENSE IN (.*)/i.exec(meta.license || '');
           licenseName = match ? match[1] : meta.license;
@@ -224,10 +230,7 @@ export default [
         extensions: ['mjs', 'js', 'jsx', 'ts', 'tsx'],
         exclude: 'node_modules/**',
         presets: [],
-        plugins: [
-          '@babel/plugin-transform-typescript',
-          '@babel/plugin-transform-block-scoping',
-        ],
+        plugins: ['@babel/plugin-transform-typescript', '@babel/plugin-transform-block-scoping'],
       }),
       replace({
         preventAssignment: true,
@@ -244,9 +247,7 @@ export default [
           return `dist/chunks/[name]-chunk${extension(chunk.name) || '.mjs'}`;
         },
         entryFileNames(chunk) {
-          return chunk.isEntry
-            ? path.normalize(exports[chunk.name].import)
-            : `dist/[name].mjs`;
+          return chunk.isEntry ? path.normalize(exports[chunk.name].import) : `dist/[name].mjs`;
         },
         plugins: outputPlugins,
       },
@@ -259,9 +260,7 @@ export default [
           return `dist/chunks/[name]-chunk${extension(chunk.name) || '.js'}`;
         },
         entryFileNames(chunk) {
-          return chunk.isEntry
-            ? path.normalize(exports[chunk.name].require)
-            : `dist/[name].js`;
+          return chunk.isEntry ? path.normalize(exports[chunk.name].require) : `dist/[name].js`;
         },
         plugins: outputPlugins,
       },
@@ -270,10 +269,7 @@ export default [
 
   {
     ...commonConfig,
-    plugins: [
-      ...commonPlugins,
-      dts(),
-    ],
+    plugins: [...commonPlugins, dts()],
     output: {
       ...commonOutput,
       sourcemap: false,
@@ -282,16 +278,14 @@ export default [
         return `dist/chunks/[name]-chunk${extension(chunk.name) || '.d.ts'}`;
       },
       entryFileNames(chunk) {
-        return chunk.isEntry
-          ? path.normalize(exports[chunk.name].types)
-          : `dist/[name].d.ts`;
+        return chunk.isEntry ? path.normalize(exports[chunk.name].types) : `dist/[name].d.ts`;
       },
       plugins: [
         {
           renderChunk(code, chunk) {
             if (chunk.fileName.endsWith('d.ts')) {
               const gqlImportRe = /(import\s+(?:[*\s{}\w\d]+)\s*from\s*'graphql';?)/g;
-              code = code.replace(gqlImportRe, x => '/*!@ts-ignore*/\n' + x);
+              code = code.replace(gqlImportRe, (x) => '/*!@ts-ignore*/\n' + x);
 
               code = prettier.format(code, {
                 filepath: chunk.fileName,

@@ -69,7 +69,7 @@
     "test": "vitest test",
     "bench": "vitest bench --typecheck.enabled=false",
     "check": "tsc",
-    "lint": "eslint --ext=js,ts .",
+    "lint": "eslint --ext=js,ts,mjs .",
     "build": "rollup -c scripts/rollup.config.mjs",
     "clean": "rimraf dist node_modules/.cache",
     "prepublishOnly": "run-s clean build check test",
