@@ -901,4 +901,29 @@ describe('parseDocument', () => {
     expectTypeOf<actual>().toMatchTypeOf<kitchensinkDocument>();
     expectTypeOf<actual>().toMatchTypeOf<DocumentNode>();
   });
+
+  it('parses document with comments', () => {
+    const document = `
+      """test"""
+      mutation { ... Field}
+      
+      """test2"""
+      fragment Field on Type {
+        field
+      }
+    `;
+
+    expectTypeOf<parseDocument<typeof document>>().not.toBeNever();
+  });
+  it('parses document with variable comments', () => {
+    const document = `
+      """test"""
+      mutation (
+        """test"""
+        $var: String!
+      ) { field }
+    `;
+
+    expectTypeOf<parseDocument<typeof document>>().not.toBeNever();
+  });
 });
