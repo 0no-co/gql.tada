@@ -6,7 +6,7 @@ import { loadConfig, parseConfig } from '@gql.tada/internal';
 import type { TTY, ComposeInput } from '../../term';
 import type { WriteTarget } from '../shared';
 import { writeOutput } from '../shared';
-import type { TurboDocument, GraphQLSourceFile } from './types';
+import type { TurboDocument, GraphQLSourceFile, TurboPath } from './types';
 import * as logger from './logger';
 
 const PREAMBLE_IGNORE = ['/* eslint-disable */', '/* prettier-ignore */'].join('\n') + '\n';
@@ -36,6 +36,7 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
   const projectPath = path.dirname(configResult.configPath);
 
   let destination: WriteTarget;
+  const destinations: TurboPath[] = [];
   if ('schema' in pluginConfig) {
     if (!opts.output && tty.pipeTo) {
       destination = tty.pipeTo;
@@ -69,13 +70,21 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
           )
       );
     }
+  } else if ('schemas' in pluginConfig) {
+    for (const schemaConfig of pluginConfig.schemas) {
+      if (schemaConfig.tadaTurboLocation)
+        destinations.push({
+          path: path.resolve(projectPath, schemaConfig.tadaTurboLocation),
+          schemaName: schemaConfig.name,
+        });
+    }
   }
 
   const generator = runTurbo({
     rootPath: configResult.rootPath,
     configPath: configResult.configPath,
     pluginConfig,
-    turboOutputPath: typeof destination! === 'string' ? destination : undefined,
+    turboOutputPath: typeof destination! === 'string' ? destination : destinations,
   });
 
   const documents: TurboDocument[] = [];

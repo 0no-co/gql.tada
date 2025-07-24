@@ -14,13 +14,14 @@ import type {
   TurboDocument,
   GraphQLSourceFile,
   GraphQLSourceImport,
+  TurboPath,
 } from './types';
 
 export interface TurboParams {
   rootPath: string;
   configPath: string;
   pluginConfig: GraphQLSPConfig;
-  turboOutputPath?: string;
+  turboOutputPath: string | TurboPath[];
 }
 
 function traceCallToImportSource(
@@ -109,7 +110,7 @@ function collectImportsFromSourceFile(
           )
             .replace(/\.ts$/, '')
             .replace(/\.tsx$/, '');
-          if (adjustedSpecifier) {
+          if (adjustedSpecifier && !adjustedSpecifier.includes('gql.tada')) {
             imports.push({
               specifier: adjustedSpecifier,
               importClause: importClause.replace(specifier, adjustedSpecifier),
@@ -230,11 +231,14 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
       if (graphqlSourcePath && !uniqueGraphQLSources.has(graphqlSourcePath)) {
         const graphqlSourceFile = container.program.getSourceFile(graphqlSourcePath);
         if (graphqlSourceFile) {
+          const turboPath = Array.isArray(params.turboOutputPath)
+            ? params.turboOutputPath.find((cfg) => cfg.schemaName === call.schema)?.path
+            : params.turboOutputPath;
           const imports = collectImportsFromSourceFile(
             graphqlSourceFile,
             params.pluginConfig,
             factory.resolveModuleName.bind(factory),
-            params.turboOutputPath
+            turboPath
           );
           uniqueGraphQLSources.set(graphqlSourcePath, {
             absolutePath: graphqlSourcePath,
