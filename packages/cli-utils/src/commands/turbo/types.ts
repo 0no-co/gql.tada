@@ -5,6 +5,11 @@ export interface TurboWarning {
   col: number;
 }
 
+export interface TurboPath {
+  schemaName: string;
+  path: string;
+}
+
 export interface TurboDocument {
   schemaName: string | null;
   argumentKey: string;
