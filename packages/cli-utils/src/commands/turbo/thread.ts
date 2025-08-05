@@ -90,7 +90,7 @@ function collectImportsFromSourceFile(
   pluginConfig: GraphQLSPConfig,
   resolveModuleName: (importSpecifier: string, fromPath: string, toPath: string) => string,
   turboOutputPath?: string,
-  compilerOptions?: ts.CompilerOptions
+  shouldTreatImportsAsNodeNext?: boolean
 ): GraphQLSourceImport[] {
   const imports: GraphQLSourceImport[] = [];
 
@@ -110,14 +110,7 @@ function collectImportsFromSourceFile(
             turboOutputPath
           );
 
-          // Handle nodenext module resolution - preserve .js extensions, convert .ts/.tsx to .js
-          // because resolveModuleName returns the .ts/.tsx file
-          const isNodeNext =
-            compilerOptions?.moduleResolution === ts.ModuleResolutionKind.NodeNext ||
-            compilerOptions?.moduleResolution === ts.ModuleResolutionKind.Node16;
-
-          if (isNodeNext) {
-            // For nodenext, we need to ensure the specifier has proper extensions
+          if (shouldTreatImportsAsNodeNext) {
             if (adjustedSpecifier.endsWith('.ts') || adjustedSpecifier.endsWith('.tsx')) {
               adjustedSpecifier = adjustedSpecifier
                 .replace(/\.ts$/, '.js')
@@ -256,7 +249,7 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
             params.pluginConfig,
             factory.resolveModuleName.bind(factory),
             turboPath,
-            container.program.getCompilerOptions()
+            !!factory.wasOriginallyNodeNext
           );
           uniqueGraphQLSources.set(graphqlSourcePath, {
             absolutePath: graphqlSourcePath,

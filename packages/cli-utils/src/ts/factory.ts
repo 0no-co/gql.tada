@@ -31,6 +31,7 @@ export interface MappedFileParams {
 
 export interface ProgramFactory {
   readonly projectPath: string;
+  readonly wasOriginallyNodeNext: boolean;
   readonly projectDirectories: readonly string[];
 
   createSourceFile(params: SourceFileParams, scriptKind?: ts.ScriptKind): ts.SourceFile;
@@ -67,11 +68,27 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
     ...config.options,
   };
 
+  let orignallyNodeNext = false;
+  // NOTE: Using "NodeNext" instead of "Bundler" is almost always a mistake
+  // this should be revisited in the next major version.
+  if (
+    'Bundler' in ts.ModuleResolutionKind &&
+    (options.moduleResolution === ts.ModuleResolutionKind.NodeNext ||
+      options.moduleResolution === ts.ModuleResolutionKind.Node16)
+  ) {
+    orignallyNodeNext = true;
+    options.moduleResolution = ts.ModuleResolutionKind.Bundler;
+  }
+
   const host = createVirtualCompilerHost(system, options, ts);
 
   const factory: ProgramFactory = {
     get projectPath() {
       return params.rootPath;
+    },
+
+    get wasOriginallyNodeNext() {
+      return orignallyNodeNext;
     },
 
     get projectDirectories() {
