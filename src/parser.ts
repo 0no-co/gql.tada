@@ -36,6 +36,12 @@ export type takeValue<In extends any[], Const extends boolean> =
       : void
     : void;
 
+export type takeString<In extends any[]> = In extends [Token.String, ...infer In]
+  ? _match<{ kind: Kind.STRING; value: string; block: false }, In>
+  : In extends [Token.BlockString, ...infer In]
+    ? _match<{ kind: Kind.STRING; value: string; block: true }, In>
+    : void;
+
 type takeListRec<Nodes extends any[], In extends any[], Const extends boolean> = In extends [
   Token.BracketClose,
   ...infer In,
@@ -277,7 +283,10 @@ type _takeVarDefinitionRec<Definitions extends any[], In extends any[]> = In ext
   ? _match<Definitions, In>
   : takeVarDefinition<In> extends _match<infer Definition, infer In>
     ? _takeVarDefinitionRec<[...Definitions, Definition], In>
-    : void;
+    : takeString<In> extends _match<infer _, infer In>
+      ? _takeVarDefinitionRec<[...Definitions], In>
+      : _match<Definitions, In>;
+
 export type takeVarDefinitions<In extends any[]> = In extends [Token.ParenOpen, ...infer In]
   ? _takeVarDefinitionRec<[], In>
   : _match<[], In>;
@@ -353,7 +362,9 @@ type _takeDocumentRec<Definitions extends any[], In extends any[]> =
     ? _takeDocumentRec<[...Definitions, Definition], In>
     : takeOperationDefinition<In> extends _match<infer Definition, infer In>
       ? _takeDocumentRec<[...Definitions, Definition], In>
-      : _match<Definitions, In>;
+      : takeString<In> extends _match<infer _, infer In>
+        ? _takeDocumentRec<[...Definitions], In>
+        : _match<Definitions, In>;
 
 export type parseDocument<In extends string> =
   _takeDocumentRec<[], tokenize<In>> extends _match<[...infer Definitions], any>
