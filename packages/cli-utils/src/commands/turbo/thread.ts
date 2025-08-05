@@ -111,6 +111,7 @@ function collectImportsFromSourceFile(
           );
 
           // Handle nodenext module resolution - preserve .js extensions, convert .ts/.tsx to .js
+          // because resolveModuleName returns the .ts/.tsx file
           const isNodeNext =
             compilerOptions?.moduleResolution === ts.ModuleResolutionKind.NodeNext ||
             compilerOptions?.moduleResolution === ts.ModuleResolutionKind.Node16;
