@@ -89,7 +89,8 @@ function collectImportsFromSourceFile(
   sourceFile: ts.SourceFile,
   pluginConfig: GraphQLSPConfig,
   resolveModuleName: (importSpecifier: string, fromPath: string, toPath: string) => string,
-  turboOutputPath?: string
+  turboOutputPath?: string,
+  compilerOptions?: ts.CompilerOptions
 ): GraphQLSourceImport[] {
   const imports: GraphQLSourceImport[] = [];
 
@@ -103,13 +104,28 @@ function collectImportsFromSourceFile(
         const importClause = node.getFullText().trim();
         if (turboOutputPath) {
           // Adjust the import specifier to point to the turbo output path
-          const adjustedSpecifier = resolveModuleName(
+          let adjustedSpecifier = resolveModuleName(
             specifier,
             sourceFile.fileName,
             turboOutputPath
-          )
-            .replace(/\.ts$/, '')
-            .replace(/\.tsx$/, '');
+          );
+
+          // Handle nodenext module resolution - preserve .js extensions, convert .ts/.tsx to .js
+          const isNodeNext =
+            compilerOptions?.moduleResolution === ts.ModuleResolutionKind.NodeNext ||
+            compilerOptions?.moduleResolution === ts.ModuleResolutionKind.Node16;
+
+          if (isNodeNext) {
+            // For nodenext, we need to ensure the specifier has proper extensions
+            if (adjustedSpecifier.endsWith('.ts') || adjustedSpecifier.endsWith('.tsx')) {
+              adjustedSpecifier = adjustedSpecifier
+                .replace(/\.ts$/, '.js')
+                .replace(/\.tsx$/, '.js');
+            }
+          } else {
+            adjustedSpecifier = adjustedSpecifier.replace(/\.ts$/, '').replace(/\.tsx$/, '');
+          }
+
           if (adjustedSpecifier && !adjustedSpecifier.includes('gql.tada')) {
             imports.push({
               specifier: adjustedSpecifier,
@@ -238,7 +254,8 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
             graphqlSourceFile,
             params.pluginConfig,
             factory.resolveModuleName.bind(factory),
-            turboPath
+            turboPath,
+            container.program.getCompilerOptions()
           );
           uniqueGraphQLSources.set(graphqlSourcePath, {
             absolutePath: graphqlSourcePath,

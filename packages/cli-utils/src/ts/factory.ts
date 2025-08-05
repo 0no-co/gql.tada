@@ -67,15 +67,6 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
     ...config.options,
   };
 
-  // NOTE: Using "NodeNext" instead of "Bundler" is almost always a mistake
-  if (
-    'Bundler' in ts.ModuleResolutionKind &&
-    (options.moduleResolution === ts.ModuleResolutionKind.NodeNext ||
-      options.moduleResolution === ts.ModuleResolutionKind.Node16)
-  ) {
-    options.moduleResolution = ts.ModuleResolutionKind.Bundler;
-  }
-
   const host = createVirtualCompilerHost(system, options, ts);
 
   const factory: ProgramFactory = {
