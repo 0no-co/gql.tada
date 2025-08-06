@@ -89,7 +89,8 @@ function collectImportsFromSourceFile(
   sourceFile: ts.SourceFile,
   pluginConfig: GraphQLSPConfig,
   resolveModuleName: (importSpecifier: string, fromPath: string, toPath: string) => string,
-  turboOutputPath?: string
+  turboOutputPath?: string,
+  shouldTreatImportsAsNodeNext?: boolean
 ): GraphQLSourceImport[] {
   const imports: GraphQLSourceImport[] = [];
 
@@ -103,13 +104,22 @@ function collectImportsFromSourceFile(
         const importClause = node.getFullText().trim();
         if (turboOutputPath) {
           // Adjust the import specifier to point to the turbo output path
-          const adjustedSpecifier = resolveModuleName(
+          let adjustedSpecifier = resolveModuleName(
             specifier,
             sourceFile.fileName,
             turboOutputPath
-          )
-            .replace(/\.ts$/, '')
-            .replace(/\.tsx$/, '');
+          );
+
+          if (shouldTreatImportsAsNodeNext) {
+            if (adjustedSpecifier.endsWith('.ts') || adjustedSpecifier.endsWith('.tsx')) {
+              adjustedSpecifier = adjustedSpecifier
+                .replace(/\.ts$/, '.js')
+                .replace(/\.tsx$/, '.js');
+            }
+          } else {
+            adjustedSpecifier = adjustedSpecifier.replace(/\.ts$/, '').replace(/\.tsx$/, '');
+          }
+
           if (adjustedSpecifier && !adjustedSpecifier.includes('gql.tada')) {
             imports.push({
               specifier: adjustedSpecifier,
@@ -238,7 +248,8 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
             graphqlSourceFile,
             params.pluginConfig,
             factory.resolveModuleName.bind(factory),
-            turboPath
+            turboPath,
+            !!factory.wasOriginallyNodeNext
           );
           uniqueGraphQLSources.set(graphqlSourcePath, {
             absolutePath: graphqlSourcePath,
