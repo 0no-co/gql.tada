@@ -67,17 +67,14 @@ jobs:
           publishedPackages: ${{ steps.changesets.outputs.publishedPackages }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
 
       - name: Publish Prerelease
         if: steps.changesets.outputs.published != 'true'
         continue-on-error: true
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          npm config set "//registry.npmjs.org/:_authToken" "$NPM_TOKEN"
           git reset --hard origin/main
           pnpm changeset version --no-git-tag --snapshot canary
           pnpm changeset publish --no-git-tag --snapshot canary --tag canary
