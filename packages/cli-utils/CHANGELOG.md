@@ -1,5 +1,12 @@
 # @gql.tada/cli-utils
 
+## 1.7.2
+
+### Patch Changes
+
+- Retain the import-extension when resolving from a NodeNext or Node16 tsconfig
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#481](https://github.com/0no-co/gql.tada/pull/481))
+
 ## 1.7.1
 
 ### Patch Changes
