@@ -333,7 +333,7 @@ generates the typings output file and since this file is necessary for
 type inference, if it's not generated and missing, running type
 checks (for instance, with `tsc`) will likely fail with type errors.
 
-### Uncommitted output files
+### Verifying committed output files
 
 As you've seen on this page, there are two different output files we're
 concerned with when running inside an continuous integration environment.
