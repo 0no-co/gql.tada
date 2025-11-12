@@ -1,5 +1,17 @@
 # gql.tada
 
+## 1.9.0
+
+### Minor Changes
+
+- Support parsing executable descriptions
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#479](https://github.com/0no-co/gql.tada/pull/479))
+
+### Patch Changes
+
+- Updated dependencies (See [#481](https://github.com/0no-co/gql.tada/pull/481))
+  - @gql.tada/cli-utils@1.7.2
+
 ## 1.8.13
 
 ### Patch Changes
