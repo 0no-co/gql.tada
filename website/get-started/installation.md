@@ -62,6 +62,10 @@ language server. This is the main configuration for both the TypeScript plugin a
 Setting up `gql.tada/ts-plugin` will start up a [“TypeScript Language Service Plugin”](https://github.com/microsoft/TypeScript/wiki/Writing-a-Language-Service-Plugin#whats-a-language-service-plugin) when TypeScript is analyzing a file in our IDE or editor. This provides editor hints, such as diagnostics,
 auto-completions, and type hovers for GraphQL.
 
+> [!NOTE] Vite Setup
+> If you are working in a Vite project, it is also necessary to add the Typescript plugin to the `tsconfig.app.json` file.
+> Otherwise you won't get any type hints while writing queries.
+
 > [!NOTE] VSCode Setup
 > There may be extra steps you should take when you're using VSCode.
 > [Read about these steps in the "VSCode Setup" section below.](#vscode-setup)
