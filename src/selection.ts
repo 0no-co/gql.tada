@@ -63,7 +63,8 @@ type unwrapTypeRec<
       : unknown;
 
 type getTypeDirective<Node> = Node extends { directives: any[] }
-  ? Node['directives'][number]['name']['value'] & ('required' | '_required') extends never
+  ? Node['directives'][number]['name']['value'] &
+      ('required' | '_required' | 'semanticNonNull') extends never
     ? Node['directives'][number]['name']['value'] & ('optional' | '_optional') extends never
       ? void
       : true

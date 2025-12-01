@@ -137,6 +137,35 @@ test('infers nullable field types for @required/@optional', () => {
   expectTypeOf<expected>().toEqualTypeOf<actual>();
 });
 
+test('infers non-null field types for @semanticNonNull', () => {
+  type query = parseDocument</* GraphQL */ `
+    query {
+      todos {
+        complete @semanticNonNull
+        author @semanticNonNull {
+          id
+          name
+        }
+      }
+    }
+  `>;
+
+  type actual = getDocumentType<query, schema>;
+  type expected = {
+    todos:
+      | ({
+          complete: boolean;
+          author: {
+            id: string;
+            name: string;
+          };
+        } | null)[]
+      | null;
+  };
+
+  expectTypeOf<expected>().toEqualTypeOf<actual>();
+});
+
 test('infers optional fragment for @defer', () => {
   type query = parseDocument</* GraphQL */ `
     query {
