@@ -87,7 +87,6 @@ interface setupSchema extends AbstractSetupSchema {
 
 interface AbstractSetupCache {
   readonly __cacheDisabled: unknown;
-  [key: string]: unknown;
 }
 
 interface setupCache extends AbstractSetupCache {}
@@ -136,24 +135,19 @@ interface GraphQLTadaAPI<Schema extends SchemaLike, Config extends AbstractConfi
    *
    * @see {@link readFragment} for how to read from fragment masks.
    */
+  <const In extends keyof setupCache, const Fragments extends readonly FragmentShape[]>(
+    input: In,
+    fragments?: Fragments
+  ): setupCache[In];
   <const In extends string, const Fragments extends readonly FragmentShape[]>(
     input: In,
     fragments?: Fragments
-  ): setupCache[In] extends DocumentNodeLike
-    ? unknown extends setupCache['__cacheDisabled']
-      ? setupCache[In]
-      : getDocumentNode<
-          parseDocument<In>,
-          Schema,
-          getFragmentsOfDocuments<Fragments>,
-          Config['isMaskingDisabled']
-        >
-    : getDocumentNode<
-        parseDocument<In>,
-        Schema,
-        getFragmentsOfDocuments<Fragments>,
-        Config['isMaskingDisabled']
-      >;
+  ): getDocumentNode<
+    parseDocument<In>,
+    Schema,
+    getFragmentsOfDocuments<Fragments>,
+    Config['isMaskingDisabled']
+  >;
 
   /** Function to validate the type of a given scalar or enum value.
    *

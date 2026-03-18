@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "target": "es2022",
+    "module": "es2022",
+    "moduleResolution": "bundler",
+    "skipLibCheck": true,
+    "plugins": [
+      {
+        "name": "gql.tada/ts-plugin",
+        "schema": "./schema.graphql",
+        "tadaOutputLocation": "./graphql-env.d.ts",
+        "tadaTurboLocation": "./graphql-cache.d.ts"
+      }
+    ]
+  },
+  "include": ["queries.ts"]
+}
