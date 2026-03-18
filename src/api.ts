@@ -135,7 +135,10 @@ interface GraphQLTadaAPI<Schema extends SchemaLike, Config extends AbstractConfi
    *
    * @see {@link readFragment} for how to read from fragment masks.
    */
-  <const In extends keyof setupCache, const Fragments extends readonly FragmentShape[]>(
+  <
+    const In extends unknown extends setupCache['__cacheDisabled'] ? keyof setupCache : never,
+    const Fragments extends readonly FragmentShape[],
+  >(
     input: In,
     fragments?: Fragments
   ): setupCache[In];
