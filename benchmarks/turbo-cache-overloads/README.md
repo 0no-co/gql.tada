@@ -32,11 +32,11 @@ Queries: 10 queries selecting fields from Node and Item.
 
 | Configuration | Instantiations |
 |---|---|
-| No cache, unpatched | 76,822 |
-| With cache, unpatched | 76,905 |
-| No cache, patched | 76,847 |
+| No cache, unpatched | 84,432 |
+| With cache, unpatched | 84,515 |
+| No cache, patched | 84,457 |
 | With cache, patched | 178 |
 
-The turbo cache has zero effect on the unpatched version (76K → 76K).
-With the overloads patch, cached queries skip `parseDocument` entirely (76K → 178).
+The turbo cache has zero effect on the unpatched version (84K → 84K).
+With the overloads patch, cached queries skip `parseDocument` entirely (84K → 178).
 Without the cache, the patched version behaves identically to unpatched (fallback works).
