@@ -142,6 +142,7 @@ interface GraphQLTadaAPI<Schema extends SchemaLike, Config extends AbstractConfi
     input: In,
     fragments?: Fragments
   ): setupCache[In];
+  // Overload for cache miss
   <const In extends string, const Fragments extends readonly FragmentShape[]>(
     input: In,
     fragments?: Fragments
