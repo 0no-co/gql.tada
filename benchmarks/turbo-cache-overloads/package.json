@@ -1,9 +1,0 @@
-{
-  "name": "turbo-cache-overloads-benchmark",
-  "private": true,
-  "type": "module",
-  "dependencies": {
-    "gql.tada": "^1.9.0",
-    "@gql.tada/cli-utils": "^1.7.2"
-  }
-}
