@@ -1,5 +1,12 @@
 # gql.tada
 
+## 1.9.1
+
+### Patch Changes
+
+- Use function overloads for the turbo cache to skip `parseDocument` during batch typechecking
+  Submitted by [@EDjur](https://github.com/EDjur) (See [#511](https://github.com/0no-co/gql.tada/pull/511))
+
 ## 1.9.0
 
 ### Minor Changes
