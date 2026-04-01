@@ -59,7 +59,7 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
   const virtualMap: VirtualMap = new Map();
 
   const system = createFSBackedSystem(vfsMap, params.rootPath, ts, resolveDefaultLibsPath(params));
-  const config = resolveConfig(params, system);
+  const config = resolveConfig(params);
 
   const rootNames = new Set(config.fileNames);
   const options = {
@@ -271,14 +271,14 @@ const resolveDefaultLibsPath = (params: ProgramFactoryParams): string => {
   }
 };
 
-const resolveConfig = (params: ProgramFactoryParams, system: ts.System): ts.ParsedCommandLine => {
-  const text = system.readFile(params.configPath, 'utf8') || '{}';
+const resolveConfig = (params: ProgramFactoryParams): ts.ParsedCommandLine => {
+  const text = ts.sys.readFile(params.configPath, 'utf8') || '{}';
   const parseResult = ts.parseConfigFileTextToJson(params.configPath, text);
   if (parseResult.error != null) throw new Error(parseResult.error.messageText.toString());
   const projectRoot = path.dirname(params.configPath);
   return ts.parseJsonConfigFileContent(
     parseResult.config,
-    system,
+    ts.sys,
     projectRoot,
     ts.getDefaultCompilerOptions(),
     params.configPath
