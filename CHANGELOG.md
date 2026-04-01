@@ -1,5 +1,15 @@
 # gql.tada
 
+## 1.9.2
+
+### Patch Changes
+
+- Add support for TS v6 in peer-deps
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#514](https://github.com/0no-co/gql.tada/pull/514))
+- Updated dependencies (See [#514](https://github.com/0no-co/gql.tada/pull/514))
+  - @gql.tada/cli-utils@1.7.3
+  - @gql.tada/internal@1.0.9
+
 ## 1.9.1
 
 ### Patch Changes

@@ -1,5 +1,16 @@
 # @gql.tada/cli-utils
 
+## 1.7.3
+
+### Patch Changes
+
+- Add support for TS v6 in peer-deps
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#514](https://github.com/0no-co/gql.tada/pull/514))
+- Updated dependencies (See [#514](https://github.com/0no-co/gql.tada/pull/514))
+  - @gql.tada/svelte-support@1.0.2
+  - @gql.tada/vue-support@1.0.2
+  - @gql.tada/internal@1.0.9
+
 ## 1.7.2
 
 ### Patch Changes
