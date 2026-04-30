@@ -1,4 +1,3 @@
-import ts from 'typescript';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 import { createRequire } from 'node:module';
@@ -6,7 +5,7 @@ import type { Stats } from 'node:fs';
 import type { TsConfigJson } from 'type-fest';
 
 import { cwd, maybeRelative } from './helpers';
-import { TSError, TadaError } from './errors';
+import { TadaError } from './errors';
 
 const TSCONFIG = 'tsconfig.json';
 
@@ -35,12 +34,76 @@ const toTSConfigPath = (tsconfigPath: string): string =>
     ? path.resolve(cwd, tsconfigPath, TSCONFIG)
     : path.resolve(cwd, tsconfigPath);
 
+/**
+ * Parses a JSONC (JSON with Comments) configuration file.
+ * Handles // line comments, /* block comments, and trailing commas.
+ */
+function parseJSONC(raw: string): unknown {
+  let result = '';
+  let inString = false;
+  let inSingleLineComment = false;
+  let inMultiLineComment = false;
+  let prev: string | null = null;
+
+  for (let i = 0; i < raw.length; i++) {
+    const char = raw[i]!;
+
+    if (inSingleLineComment) {
+      if (char === '\n') {
+        inSingleLineComment = false;
+        result += char;
+      }
+      continue;
+    }
+
+    if (inMultiLineComment) {
+      if (char === '/' && prev === '*') {
+        inMultiLineComment = false;
+      }
+      prev = char;
+      continue;
+    }
+
+    if (inString) {
+      result += char;
+      if (char === '"' && prev !== '\\') {
+        inString = false;
+      }
+    } else {
+      if (char === '"' && prev !== '\\') {
+        inString = true;
+        result += char;
+      } else if (char === '/' && raw[i + 1] === '/') {
+        inSingleLineComment = true;
+        i++;
+        continue;
+      } else if (char === '/' && raw[i + 1] === '*') {
+        inMultiLineComment = true;
+        i++;
+        prev = null;
+        continue;
+      } else {
+        result += char;
+      }
+    }
+
+    prev = char;
+  }
+
+  return JSON.parse(result.replace(/,\s*([}\]])/g, '$1'));
+}
+
 export const readTSConfigFile = async (filePath: string): Promise<TsConfigJson> => {
   const tsconfigPath = toTSConfigPath(filePath);
   const contents = await fs.readFile(tsconfigPath, 'utf8');
-  const result = ts.parseConfigFileTextToJson(tsconfigPath, contents);
-  if (result.error) throw new TSError(result.error);
-  return result.config || {};
+  try {
+    const config = parseJSONC(contents);
+    return (config as Record<string, unknown> | null) || {};
+  } catch (error) {
+    throw new TadaError(
+      `Failed to parse ${maybeRelative(tsconfigPath)}: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
 };
 
 export const findTSConfigFile = async (targetPath?: string): Promise<string | null> => {
