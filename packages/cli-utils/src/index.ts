@@ -1,13 +1,9 @@
 import { Cli } from 'clipanion';
 import * as api from './api';
 
-import { CheckCommand } from './commands/check/index';
-import { DoctorCommand } from './commands/doctor/index';
 import { GenerateOutputCommand } from './commands/generate-output/index';
-import { GeneratePersisted } from './commands/generate-persisted/index';
 import { GenerateSchema } from './commands/generate-schema/index';
 import { InitCommand } from './commands/init/index';
-import { TurboCommand } from './commands/turbo/index';
 
 async function _main() {
   const cli = new Cli({
@@ -16,13 +12,27 @@ async function _main() {
     binaryName: 'gql.tada',
   });
 
-  cli.register(CheckCommand);
-  cli.register(DoctorCommand);
   cli.register(GenerateOutputCommand);
-  cli.register(GeneratePersisted);
   cli.register(GenerateSchema);
   cli.register(InitCommand);
-  cli.register(TurboCommand);
+
+  // The following commands require TypeScript's programmatic API.
+  // When TypeScript is not available (e.g. `@typescript/native-preview`),
+  // these commands are silently omitted and won't be registered.
+  for (const [path, exportName] of [
+    ['./commands/check/index.js', 'CheckCommand'],
+    ['./commands/doctor/index.js', 'DoctorCommand'],
+    ['./commands/generate-persisted/index.js', 'GeneratePersisted'],
+    ['./commands/turbo/index.js', 'TurboCommand'],
+  ] as const) {
+    try {
+      const mod = await import(path);
+      cli.register(mod[exportName]);
+    } catch {
+      // TypeScript's programmatic API is not available.
+      // This command requires it, so we skip registration.
+    }
+  }
 
   await cli.runExit(process.argv.slice(2));
 }

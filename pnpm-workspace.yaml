@@ -3,3 +3,6 @@ packages:
   - 'examples/*'
   - './website'
   - './'
+allowBuilds:
+  esbuild: true
+  vue-demi: true

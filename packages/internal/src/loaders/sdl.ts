@@ -1,4 +1,4 @@
-import ts from 'typescript';
+import type ts from 'typescript';
 import type { IntrospectionQuery } from 'graphql';
 import { buildSchema, buildClientSchema, executeSync } from 'graphql';
 import { CombinedError } from '@urql/core';
@@ -13,6 +13,20 @@ interface LoadFromSDLConfig {
   name?: string;
   assumeValid?: boolean;
   file: string;
+}
+
+let _ts: typeof ts | undefined;
+let _tsLoaded = false;
+
+async function getTS(): Promise<typeof ts | undefined> {
+  if (_tsLoaded) return _ts;
+  _tsLoaded = true;
+  try {
+    _ts = await import('typescript');
+  } catch {
+    _ts = undefined;
+  }
+  return _ts;
 }
 
 export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
@@ -61,7 +75,8 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
   };
 
   const watch = async () => {
-    if (ts.sys.watchFile) {
+    const ts = await getTS();
+    if (ts && ts.sys && ts.sys.watchFile) {
       const watcher = ts.sys.watchFile(
         config.file,
         async () => {
@@ -73,8 +88,6 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
         },
         250,
         {
-          // NOTE: Using `ts.WatchFileKind.UseFsEvents` causes missed events just like fs.watch
-          // as below on macOS, as of TypeScript 5.5 and is hence avoided here
           watchFile: ts.WatchFileKind.UseFsEventsOnParentDirectory,
           fallbackPolling: ts.PollingWatchKind.PriorityInterval,
         }
