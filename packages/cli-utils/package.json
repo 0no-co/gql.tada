@@ -55,7 +55,7 @@
   },
   "dependencies": {
     "@0no-co/graphqlsp": "^1.12.13",
-    "@gql.tada/internal": "workspace:*",
+    "@gql.tada/internal": "file:../internal",
     "graphql": "^15.5.0 || ^16.0.0 || ^17.0.0"
   },
   "peerDependenciesMeta": {

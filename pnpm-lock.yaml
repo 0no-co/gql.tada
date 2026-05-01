@@ -15,10 +15,10 @@ importers:
         specifier: ^1.12.13
         version: 1.12.13(graphql@16.9.0)(typescript@5.5.4)
       '@gql.tada/cli-utils':
-        specifier: workspace:*
+        specifier: file:./packages/cli-utils
         version: link:packages/cli-utils
       '@gql.tada/internal':
-        specifier: workspace:*
+        specifier: file:./packages/internal
         version: link:packages/internal
     devDependencies:
       '@0no-co/typescript.js':
@@ -220,7 +220,7 @@ importers:
         specifier: ^1.12.13
         version: 1.12.13(graphql@16.9.0)(typescript@5.5.4)
       '@gql.tada/internal':
-        specifier: workspace:*
+        specifier: file:../internal
         version: link:../internal
       '@gql.tada/svelte-support':
         specifier: workspace:*

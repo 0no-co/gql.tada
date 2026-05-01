@@ -50,8 +50,8 @@
   "dependencies": {
     "@0no-co/graphql.web": "^1.0.5",
     "@0no-co/graphqlsp": "^1.12.13",
-    "@gql.tada/cli-utils": "workspace:*",
-    "@gql.tada/internal": "workspace:*"
+    "@gql.tada/cli-utils": "file:./packages/cli-utils",
+    "@gql.tada/internal": "file:./packages/internal"
   },
   "peerDependencies": {
     "typescript": "^5.0.0 || ^6.0.0 || ^7.0.0"
@@ -101,8 +101,8 @@
   },
   "pnpm": {
     "overrides": {
-      "gql.tada": "workspace:*",
-      "@gql.tada/internal": "workspace:*",
+      "gql.tada": "file:.",
+      "@gql.tada/internal": "file:./packages/internal",
       "astro-expressive-code": "^0.31.0",
       "typescript": "^5.5.2",
       "@0no-co/graphqlsp": "^1.12.9"
