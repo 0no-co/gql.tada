@@ -1,12 +1,10 @@
 {
   "compilerOptions": {
-    "baseUrl": "./",
     "rootDir": ".",
     "paths": {
-      "@gql.tada/*": ["node_modules/@gql.tada/*/src", "packages/*/src"]
+      "@gql.tada/*": ["./node_modules/@gql.tada/*/src", "./packages/*/src"]
     },
     "forceConsistentCasingInFileNames": true,
-    "importsNotUsedAsValues": "remove",
     "noEmit": true,
     "esModuleInterop": true,
     "noUnusedLocals": true,
@@ -15,7 +13,7 @@
     "jsx": "react-jsx",
     "declaration": false,
     "module": "es2022",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "target": "esnext",
     "strict": true,

@@ -71,7 +71,7 @@
     "@gql.tada/svelte-support": "workspace:*",
     "@gql.tada/vue-support": "workspace:*",
     "graphql": "^15.5.0 || ^16.0.0 || ^17.0.0",
-    "typescript": "^5.0.0 || ^6.0.0"
+    "typescript": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0"
   },
   "publishConfig": {
     "access": "public",

@@ -54,7 +54,7 @@
     "@gql.tada/internal": "workspace:*"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0 || ^6.0.0"
+    "typescript": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0"
   },
   "public": true,
   "keywords": [
@@ -75,7 +75,9 @@
     "prepublishOnly": "run-s clean build check test",
     "prepare": "node ./scripts/prepare.js",
     "changeset:version": "changeset version && pnpm install --lockfile-only",
-    "changeset:publish": "changeset publish"
+    "changeset:publish": "changeset publish",
+    "check:ts-latest": "pnpm --package=typescript@latest dlx tsc --noEmit",
+    "check:tsgo": "pnpm --package=@typescript/native-preview dlx tsgo --noEmit"
   },
   "repository": "https://github.com/0no-co/gql.tada",
   "bugs": {

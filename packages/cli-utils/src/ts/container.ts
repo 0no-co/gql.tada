@@ -8,8 +8,10 @@ import type { VirtualMap, SourceMappedFile, FileSpan } from './mapping';
 import type { SourcePosition } from './utils';
 import { spanToFilePosition } from './utils';
 
-function maybeBind<T extends Function>(that: object, fn: T | undefined): T {
-  return fn ? fn.bind(that) : fn;
+function maybeBind<T extends Function>(that: object, fn: T): T;
+function maybeBind(that: object, fn: undefined): undefined;
+function maybeBind<T extends Function>(that: object, fn: T | undefined): T | undefined {
+  return fn ? (fn.bind(that) as T) : undefined;
 }
 
 export interface PluginCreateInfo<Config extends {} = GraphQLSPConfig>
