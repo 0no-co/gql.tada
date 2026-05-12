@@ -8,13 +8,11 @@ jobs:
     name: Release
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    outputs:
+      has_changesets: ${{ steps.changesets.outputs.hasChangesets }}
     permissions:
       contents: write
-      id-token: write
       issues: write
-      repository-projects: write
-      deployments: write
-      packages: write
       pull-requests: write
     steps:
       - name: Checkout Repo
@@ -22,44 +20,73 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+          run_install: false
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9
-          run_install: false
-
-      - name: Get pnpm store directory
-        id: pnpm-store
-        run: echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
-
-      - name: Use pnpm store
-        uses: actions/cache@v3
-        id: pnpm-cache
-        with:
-          path: ${{ steps.pnpm-store.outputs.pnpm_cache_dir }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
+          registry-url: "https://registry.npmjs.org"
 
       - name: Install Dependencies
-        run: pnpm install --frozen-lockfile --prefer-offline
+        run: pnpm install --frozen-lockfile
 
-      - name: Update npm
-        run: npm install -g npm@11.6
-
-      - name: PR or Publish
+      - name: Create Release Pull Request
         id: changesets
-        uses: changesets/action@v1.4.6
+        uses: changesets/action@v1.5.3
         with:
           version: pnpm changeset:version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    name: Publish
+    needs: release
+    if: needs.release.outputs.has_changesets == 'false'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/gql.tada
+    permissions:
+      contents: write
+      id-token: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Update npm
+        run: npm install -g npm@11.14.1
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Publish packages
+        id: changesets
+        uses: changesets/action@v1.5.3
+        with:
           publish: pnpm changeset:publish
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Notify discord
@@ -71,13 +98,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-
-      - name: Publish Prerelease
-        if: steps.changesets.outputs.published != 'true'
-        continue-on-error: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git reset --hard origin/main
-          pnpm changeset version --no-git-tag --snapshot canary
-          pnpm changeset publish --no-git-tag --snapshot canary --tag canary
