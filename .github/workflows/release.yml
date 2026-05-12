@@ -10,6 +10,7 @@ jobs:
     timeout-minutes: 20
     outputs:
       has_changesets: ${{ steps.changesets.outputs.hasChangesets }}
+      has_unpublished_packages: ${{ steps.unpublished.outputs.has_unpublished }}
     permissions:
       contents: write
       issues: write
@@ -32,6 +33,10 @@ jobs:
           node-version: 22
           registry-url: "https://registry.npmjs.org"
 
+      - name: Check for unpublished package versions
+        id: unpublished
+        run: node .github/scripts/has-unpublished-packages.mjs
+
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
@@ -46,7 +51,7 @@ jobs:
   publish:
     name: Publish
     needs: release
-    if: needs.release.outputs.has_changesets == 'false'
+    if: needs.release.outputs.has_changesets == 'false' && needs.release.outputs.has_unpublished_packages == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment:
