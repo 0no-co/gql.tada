@@ -13,33 +13,21 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
       - name: Setup pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v6
         with:
-          version: 9
+          version: 11
           run_install: false
 
-      - name: Get pnpm store directory
-        id: pnpm-store
-        run: echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
-
-      - name: Use pnpm store
-        uses: actions/cache@v4
-        id: pnpm-cache
+      - name: Setup Node
+        uses: actions/setup-node@v6
         with:
-          path: ${{ steps.pnpm-store.outputs.pnpm_cache_dir }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
+          node-version: 22
+          cache: pnpm
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
