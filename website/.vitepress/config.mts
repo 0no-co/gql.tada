@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitepress';
 import { defaultTwoslashOptions } from 'shikiji-twoslash';
 import { transformerTwoslash } from 'vitepress-plugin-twoslash';
+import llmstxt from 'vitepress-plugin-llms';
 import type { JsxEmit } from 'typescript';
 
 import { graphqlLanguage } from './graphql-textmate.mts';
@@ -195,5 +196,8 @@ export default defineConfig({
       { icon: 'github', link: 'https://github.com/0no-co/gql.tada' },
       { icon: 'discord', link: 'https://urql.dev/discord' },
     ]
-  }
+  },
+  vite: {
+    plugins: [llmstxt()],
+  },
 });
