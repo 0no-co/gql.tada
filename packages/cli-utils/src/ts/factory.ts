@@ -272,15 +272,31 @@ const resolveDefaultLibsPath = (params: ProgramFactoryParams): string => {
 };
 
 const resolveConfig = (params: ProgramFactoryParams, system: ts.System): ts.ParsedCommandLine => {
-  const text = system.readFile(params.configPath, 'utf8') || '{}';
-  const parseResult = ts.parseConfigFileTextToJson(params.configPath, text);
+  let configFile = params.configPath;
+  const basePath = params.rootPath || path.dirname(params.configPath);
+
+  // When the plugin config is found in a parent tsconfig (via `extends`), `loadConfig` returns
+  // configPath pointing to the parent (e.g. tsconfig.base.json at workspace root) while rootPath
+  // is the project directory. Parsing the parent config uses its directory as context, causing
+  // TypeScript to resolve `baseUrl: "."` against the workspace root and scan the entire monorepo.
+  // Fix: when configPath is in a different directory than rootPath, use the project's own
+  // tsconfig.json instead, which carries the correct `include` list and relative `baseUrl`.
+  // We use ts.sys (real TS sys) because the VFS blocks all tsconfig.json fileExists lookups.
+  if (params.rootPath && path.dirname(params.configPath) !== params.rootPath) {
+    const projectTsconfig = path.join(params.rootPath, 'tsconfig.json');
+    if (ts.sys.fileExists(projectTsconfig)) {
+      configFile = projectTsconfig;
+    }
+  }
+
+  const text = system.readFile(configFile, 'utf8') || '{}';
+  const parseResult = ts.parseConfigFileTextToJson(configFile, text);
   if (parseResult.error != null) throw new Error(parseResult.error.messageText.toString());
-  const projectRoot = path.dirname(params.configPath);
   return ts.parseJsonConfigFileContent(
     parseResult.config,
     system,
-    projectRoot,
+    basePath,
     ts.getDefaultCompilerOptions(),
-    params.configPath
+    configFile
   );
 };
