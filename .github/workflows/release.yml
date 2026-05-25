@@ -24,7 +24,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6
         with:
-          version: 11
+          version: 11.3.0
           run_install: false
 
       - name: Setup Node
@@ -72,7 +72,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6
         with:
-          version: 11
+          version: 11.3.0
           run_install: false
 
       - name: Setup Node
@@ -83,7 +83,7 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - name: Update npm
-        run: npm install -g npm@11.14.1
+        run: npm install -g npm@11.15.0
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
@@ -92,7 +92,8 @@ jobs:
         id: changesets
         uses: changesets/action@63a615b9cd06ba9a3e6d13796c7fbcb080a60a0b # v1.8.0
         with:
-          publish: pnpm changeset:publish
+          publish: node .github/scripts/stage-packages.mjs
+          createGithubReleases: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
