@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "@vue/compiler-dom": "^3.4.23",
-    "@vue/language-core": "~2.0.0"
+    "@vue/language-core": "^2.0.0 || ^3.0.0"
   },
   "peerDependencies": {
     "typescript": "^5.0.0 || ^6.0.0"
