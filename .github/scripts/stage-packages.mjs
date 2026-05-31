@@ -60,9 +60,14 @@ ${result.stderr}`;
   throw new Error(`Could not check npm version for ${name}@${version}`);
 }
 
-function distTag(version) {
-  const prerelease = version.match(/^[^-]+-([0-9A-Za-z-]+)/);
-  return prerelease ? prerelease[1] : "latest";
+function stableDistTag(version) {
+  if (version.includes("-")) {
+    throw new Error(
+      `Refusing to stage prerelease version ${version}; staged publishing is only enabled for stable releases.`
+    );
+  }
+
+  return "latest";
 }
 
 function runGit(args) {
@@ -103,13 +108,13 @@ const staged = [];
 for (const packageJsonPath of packageJsonPaths()) {
   const pkg = readJson(packageJsonPath);
   if (!pkg.name || !pkg.version || pkg.private || ignored.has(pkg.name)) continue;
+  const tag = stableDistTag(pkg.version);
   if (versionExists(pkg.name, pkg.version)) {
     console.log(`Skipping ${pkg.name}@${pkg.version}; already published.`);
     continue;
   }
 
   const packageDir = dirname(packageJsonPath);
-  const tag = distTag(pkg.version);
   const args = [
     "stage",
     "publish",
