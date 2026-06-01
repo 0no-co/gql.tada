@@ -83,7 +83,10 @@ if ('createPlugins' in vue) {
   createPlugins = (vue as any).getDefaultVueLanguagePlugins;
 }
 
-const vueCompilerOptions = vue.resolveVueCompilerOptions({});
+const vueCompilerOptions =
+  'resolveVueCompilerOptions' in vue
+    ? vue.resolveVueCompilerOptions({})
+    : (vue as any).getDefaultCompilerOptions();
 
 let plugins: ReturnType<typeof vue.createPlugins> | undefined;
 
