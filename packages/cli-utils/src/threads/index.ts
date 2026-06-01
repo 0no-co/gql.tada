@@ -73,7 +73,8 @@ export interface Generator<Args extends readonly any[], Next> {
 }
 
 function main<Args extends readonly any[], Next>(url: string | URL): Generator<Args, Next> {
-  let worker: Worker;
+  let worker: Worker | undefined;
+  let activeCalls = 0;
   let ids = 0;
   return (...args: Args) => {
     if (!worker) {
@@ -81,6 +82,7 @@ function main<Args extends readonly any[], Next>(url: string | URL): Generator<A
       worker.unref();
     }
 
+    const currentWorker = worker;
     const id = ++ids | 0;
     const buffer: ThreadMessage[] = [];
 
@@ -91,25 +93,43 @@ function main<Args extends readonly any[], Next>(url: string | URL): Generator<A
     let reject: ((error: any) => void) | void;
 
     function cleanup() {
+      if (ended) return;
       ended = true;
       resolve = undefined;
       reject = undefined;
-      worker.removeListener('message', receiveMessage);
-      worker.removeListener('error', receiveError);
+      currentWorker.removeListener('message', receiveMessage);
+      currentWorker.removeListener('error', receiveError);
+      currentWorker.removeListener('exit', receiveExit);
+      if (--activeCalls === 0) currentWorker.unref();
     }
 
     function sendMessage(kind: MainMessageCodes) {
-      worker.postMessage({ id, kind });
+      currentWorker.postMessage({ id, kind });
+    }
+
+    function fail(error: any) {
+      const pendingReject = reject;
+      cleanup();
+      if (pendingReject) {
+        pendingReject(error);
+      } else {
+        buffer.length = 1;
+        buffer[0] = {
+          id,
+          kind: ThreadMessageCodes.Throw,
+          data: error,
+        };
+      }
     }
 
     function receiveError(error: any) {
-      cleanup();
-      buffer.length = 1;
-      buffer[0] = {
-        id,
-        kind: ThreadMessageCodes.Throw,
-        data: error,
-      };
+      fail(error);
+    }
+
+    function receiveExit(code: number) {
+      if (ended) return;
+      if (worker === currentWorker) worker = undefined;
+      fail(new Error(`Worker stopped unexpectedly with exit code ${code}`));
     }
 
     function receiveMessage(data: unknown) {
@@ -142,9 +162,11 @@ function main<Args extends readonly any[], Next>(url: string | URL): Generator<A
       async next() {
         if (!started) {
           started = true;
-          worker.addListener('message', receiveMessage);
-          worker.addListener('error', receiveError);
-          worker.postMessage({
+          if (activeCalls++ === 0) currentWorker.ref();
+          currentWorker.addListener('message', receiveMessage);
+          currentWorker.addListener('error', receiveError);
+          currentWorker.addListener('exit', receiveExit);
+          currentWorker.postMessage({
             id,
             kind: MainMessageCodes.Start,
             data: args,
