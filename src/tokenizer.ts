@@ -34,13 +34,25 @@ type letter =
   | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm'
   | 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z';
 
+// PERF(@kitten): unions cause excessive instantiations
+// Expanded literals are cheaper if an early case is more likely, and whitespaces then newlines are
 type skipIgnored<In> = In extends `#${infer _}\n${infer In}`
   ? skipIgnored<In>
   : In extends `#${infer _}`
     ? ''
-    : In extends `${ignored}${infer In}`
+    : In extends ` ${infer In}`
       ? skipIgnored<In>
-      : In;
+      : In extends `\n${infer In}`
+        ? skipIgnored<In>
+        : In extends `\t${infer In}`
+          ? skipIgnored<In>
+          : In extends `\r${infer In}`
+            ? skipIgnored<In>
+            : In extends `,${infer In}`
+              ? skipIgnored<In>
+              : In extends `\ufeff${infer In}`
+                ? skipIgnored<In>
+                : In;
 
 type skipDigits<In> = In extends `${digit}${infer In}` ? skipDigits<In> : In;
 
