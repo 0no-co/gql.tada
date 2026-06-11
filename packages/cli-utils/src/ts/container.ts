@@ -38,6 +38,7 @@ export interface ContainerParams {
   rootNames: readonly string[];
   options: ts.CompilerOptions;
   system: ts.System;
+  documentRegistry?: ts.DocumentRegistry;
 }
 
 export const buildContainer = (params: ContainerParams): ProgramContainer => {
@@ -64,6 +65,7 @@ export const buildContainer = (params: ContainerParams): ProgramContainer => {
       options: params.options,
       projectRoot: params.projectRoot,
       languageServiceHost: getLanguageServiceHost(),
+      documentRegistry: params.documentRegistry,
     }));
 
   const getProgram = () => {
@@ -218,9 +220,13 @@ const buildLanguageService = (params: {
   rootNames: readonly string[];
   projectRoot: string;
   options: ts.CompilerOptions;
+  documentRegistry?: ts.DocumentRegistry;
 }): ts.LanguageService => {
   const { virtualMap } = params;
-  const languageService = ts.createLanguageService(params.languageServiceHost);
+  const languageService = ts.createLanguageService(
+    params.languageServiceHost,
+    params.documentRegistry
+  );
   const getProgram = maybeBind(languageService, languageService.getProgram);
 
   /** Remap filename to generated file if it's a mapped file */

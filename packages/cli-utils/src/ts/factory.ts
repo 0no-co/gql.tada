@@ -82,6 +82,7 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
   }
 
   const host = createVirtualCompilerHost(system, options, ts);
+  const documentRegistry = ts.createDocumentRegistry();
 
   const factory: ProgramFactory = {
     get projectPath() {
@@ -242,6 +243,7 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
         rootNames: [...rootNames],
         options,
         system,
+        documentRegistry,
       });
     },
   };
