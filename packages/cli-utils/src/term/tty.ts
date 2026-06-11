@@ -58,12 +58,12 @@ function fromReadStream(stream: ReadStream): Source<KeypressEvent> {
         case 'c':
         case 'd':
         case 'x':
-          if (event.ctrl) cleanup();
+          if (event.ctrl) return cleanup();
+          break;
         case 'escape':
-          cleanup();
-        default:
-          observer.next({ ...event, data });
+          return cleanup();
       }
+      observer.next({ ...event, data });
     }
 
     function cleanup() {
