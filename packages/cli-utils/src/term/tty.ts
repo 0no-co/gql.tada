@@ -99,15 +99,31 @@ export function initTTY(params: TTYParams = {}): TTY {
   const hasColorEnv = 'FORCE_COLOR' in process.env || (!process.env.NO_COLOR && !process.env.CI);
   _setColor((isTTY && hasColorEnv) || hasColorArg || isGithubCI);
 
+  function _restore() {
+    if (process.stdin.isTTY) process.stdin.setRawMode(false);
+    output.write(
+      cmd(CSI.Reset) + cmd(CSI.ResetPrivateMode) + cmd(CSI.SetPrivateMode, PrivateMode.ShowCursor)
+    );
+  }
+
+  function _signal(signal: NodeJS.Signals) {
+    _restore();
+    process.exit(signal === 'SIGINT' ? 130 : 143);
+  }
+
   function _start() {
     _setColor((isTTY && hasColorEnv) || hasColorArg);
     if (isTTY) {
       output.write(cmd(CSI.UnsetPrivateMode, PrivateMode.ShowCursor));
+      process.on('SIGINT', _signal);
+      process.on('SIGTERM', _signal);
     }
   }
 
   function _end() {
     if (isTTY) {
+      process.removeListener('SIGINT', _signal);
+      process.removeListener('SIGTERM', _signal);
       output.write(
         cmd(CSI.Reset) + cmd(CSI.ResetPrivateMode) + cmd(CSI.SetPrivateMode, PrivateMode.ShowCursor)
       );
