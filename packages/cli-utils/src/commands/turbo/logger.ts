@@ -1,4 +1,4 @@
-import { pipe, interval, map } from 'wonka';
+import { pipe, interval, map, concat, fromValue } from 'wonka';
 
 import * as path from 'node:path';
 import * as t from '../../term';
@@ -87,20 +87,23 @@ export function warningGithub(message: TurboWarning): void {
 
 export function runningTurbo(file?: number, ofFiles?: number) {
   const progress = file ? (ofFiles ? `(${file}/${ofFiles})` : `(${file})`) : '';
-  return pipe(
-    interval(150),
-    map((state) => {
-      return t.text([
-        t.cmd(t.CSI.Style, t.Style.Magenta),
-        t.dotSpinner[state % t.dotSpinner.length],
-        ' ',
-        t.cmd(t.CSI.Style, t.Style.Foreground),
-        `Scanning files${t.Chars.Ellipsis} `,
-        t.cmd(t.CSI.Style, t.Style.BrightBlack),
-        progress,
-      ]);
-    })
-  );
+  const frame = (state: number) =>
+    t.text([
+      t.cmd(t.CSI.Style, t.Style.Magenta),
+      t.dotSpinner[state % t.dotSpinner.length],
+      ' ',
+      t.cmd(t.CSI.Style, t.Style.Foreground),
+      `Scanning files${t.Chars.Ellipsis} `,
+      t.cmd(t.CSI.Style, t.Style.BrightBlack),
+      progress,
+    ]);
+  return concat([
+    fromValue(frame(0)),
+    pipe(
+      interval(150),
+      map((state) => frame(state + 1))
+    ),
+  ]);
 }
 
 export function hintMessage(message: string) {
