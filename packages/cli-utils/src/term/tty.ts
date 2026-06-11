@@ -51,14 +51,14 @@ export interface TTY {
   modeOff(...modes: readonly (Mode | PrivateMode)[]): void;
 }
 
-function fromReadStream(stream: ReadStream): Source<KeypressEvent> {
+function fromReadStream(stream: ReadStream, onTerminate: () => void): Source<KeypressEvent> {
   return make((observer) => {
     function onKeypress(data: string | undefined, event: KeypressEvent) {
       switch (event.name) {
         case 'c':
         case 'd':
         case 'x':
-          if (event.ctrl) return cleanup();
+          if (event.ctrl) return onTerminate();
           break;
         case 'escape':
           return cleanup();
@@ -106,9 +106,13 @@ export function initTTY(params: TTYParams = {}): TTY {
     );
   }
 
-  function _signal(signal: NodeJS.Signals) {
+  function _terminate(code: number) {
     _restore();
-    process.exit(signal === 'SIGINT' ? 130 : 143);
+    process.exit(code);
+  }
+
+  function _signal(signal: NodeJS.Signals) {
+    _terminate(signal === 'SIGINT' ? 130 : 143);
   }
 
   function _start() {
@@ -130,7 +134,12 @@ export function initTTY(params: TTYParams = {}): TTY {
     }
   }
 
-  const inputSource = pipe(fromReadStream(process.stdin), onStart(_start), onEnd(_end), share);
+  const inputSource = pipe(
+    fromReadStream(process.stdin, () => _terminate(130)),
+    onStart(_start),
+    onEnd(_end),
+    share
+  );
 
   const cancelSource = pipe(
     concat([
