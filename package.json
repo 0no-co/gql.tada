@@ -131,7 +131,7 @@
     "rollup-plugin-cjs-check": "^1.0.3",
     "rollup-plugin-dts": "^6.1.1",
     "terser": "^5.31.6",
-    "typescript": "^5.5.4",
+    "typescript": "^5.9.3",
     "vitest": "2.0.5"
   },
   "publishConfig": {

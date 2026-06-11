@@ -50,7 +50,7 @@
     "semiver": "^1.1.0",
     "typanion": "^3.14.0",
     "type-fest": "^4.10.2",
-    "typescript": "^5.5.2",
+    "typescript": "^5.9.3",
     "wonka": "^6.3.4"
   },
   "dependencies": {
