@@ -12,7 +12,10 @@ import {
   filter,
   share,
   scan,
-  map,
+  make,
+  onPush,
+  onEnd,
+  subscribe,
 } from 'wonka';
 
 import { cmd, CSI, EraseLine, Style } from './csi';
@@ -78,6 +81,25 @@ function clear(text: string) {
 
 type ComposeInput = undefined | string | CLIError | Source<string> | AsyncIterable<ComposeInput>;
 
+function commit(source: Source<string | CLIError>): Source<string | CLIError> {
+  return make((observer) => {
+    let last: string | CLIError | undefined;
+    const subscription = pipe(
+      source,
+      onPush((value) => {
+        last = value;
+        observer.next(value);
+      }),
+      onEnd(() => {
+        if (typeof last === 'string' && !last.endsWith('\n')) observer.next('');
+        observer.complete();
+      }),
+      subscribe(() => {})
+    );
+    return subscription.unsubscribe;
+  });
+}
+
 async function* convertError(outputs: AsyncIterable<ComposeInput>): AsyncIterable<ComposeInput> {
   try {
     yield* outputs;
@@ -117,14 +139,7 @@ function compose(outputs: AsyncIterable<ComposeInput>): Source<string | CLIError
         share
       );
       return pipe(
-        merge([
-          pipe(
-            output$,
-            takeLast(1),
-            map((output) => (typeof output === 'string' && !output.endsWith('\n') ? '' : output))
-          ),
-          output$,
-        ]),
+        commit(output$),
         scan((prev: CLIError | string, output) => {
           return typeof output === 'string'
             ? clear(typeof prev === 'string' ? prev : '') + output + reset
