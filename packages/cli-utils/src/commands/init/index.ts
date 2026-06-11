@@ -1,6 +1,5 @@
 import * as path from 'node:path';
 import { Command, Option } from 'clipanion';
-import { run } from './runner';
 
 export class InitCommand extends Command {
   static paths = [['init']];
@@ -8,6 +7,7 @@ export class InitCommand extends Command {
   input = Option.String({ name: 'dir' });
 
   async execute() {
+    const { run } = await import('./runner');
     const target = path.resolve(process.cwd(), this.input);
     await run(target);
   }
