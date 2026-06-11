@@ -106,49 +106,65 @@ interface _state<In extends string, Out extends TokenNode[]> {
   in: In;
 }
 
-// NOTE: This tokenizer is wrapped with the `_state` interface to facilitate it becoming tail-recursive
-// prettier-ignore
+interface _punctuator {
+  '!': Token.Exclam;
+  '=': Token.Equal;
+  ':': Token.Colon;
+  '{': Token.BraceOpen;
+  '}': Token.BraceClose;
+  '(': Token.ParenOpen;
+  ')': Token.ParenClose;
+  '[': Token.BracketOpen;
+  ']': Token.BracketClose;
+}
+
 type tokenizeRec<State> =
   State extends _state<'', any>
     ? State['out']
     : State extends _state<infer In, infer Out>
-    ? tokenizeRec<
-        In extends `#${string}` ? _state<skipIgnored<In>, Out>
-          : In extends `${ignored}${string}` ? _state<skipIgnored<In>, Out>
-          : In extends `...${infer In}` ? _state<In, [...Out, Token.Spread]>
-          : In extends `!${infer In}` ? _state<In, [...Out, Token.Exclam]>
-          : In extends `=${infer In}` ? _state<In, [...Out, Token.Equal]>
-          : In extends `:${infer In}` ? _state<In, [...Out, Token.Colon]>
-          : In extends `{${infer In}` ? _state<In, [...Out, Token.BraceOpen]>
-          : In extends `}${infer In}` ? _state<In, [...Out, Token.BraceClose]>
-          : In extends `(${infer In}` ? _state<In, [...Out, Token.ParenOpen]>
-          : In extends `)${infer In}` ? _state<In, [...Out, Token.ParenClose]>
-          : In extends `[${infer In}` ? _state<In, [...Out, Token.BracketOpen]>
-          : In extends `]${infer In}` ? _state<In, [...Out, Token.BracketClose]>
-          : In extends `"""${infer In}` ? _state<skipBlockString<In>, [...Out, Token.BlockString]>
-          : In extends `"${infer In}` ? _state<skipString<In>, [...Out, Token.String]>
-          : In extends `-${digit}${infer In}` ?
-            (skipFloat<skipDigits<In>> extends `${infer In}`
-              ? _state<In, [...Out, Token.Float]>
-              : _state<skipDigits<In>, [...Out, Token.Integer]>)
-          : In extends `${digit}${infer In}` ?
-            (skipFloat<skipDigits<In>> extends `${infer In}`
-              ? _state<In, [...Out, Token.Float]>
-              : _state<skipDigits<In>, [...Out, Token.Integer]>)
-          : In extends `$${infer In}` ?
-            (takeNameLiteralRec<'', In> extends _match<infer Match, infer In>
-              ? _state<In, [...Out, VarTokenNode<Match>]>
-              : void)
-          : In extends `@${infer In}` ?
-            (takeNameLiteralRec<'', In> extends _match<infer Match, infer In>
-              ? _state<In, [...Out, DirectiveTokenNode<Match>]>
-              : void)
-          : In extends `${letter | '_'}${string}` ?
-            (takeNameLiteralRec<'', In> extends _match<infer Match, infer In>
-              ? _state<In, [...Out, NameTokenNode<Match>]>
-              : void)
-          : void
-      >
-    : [];
+      ? tokenizeRec<
+          In extends `#${string}`
+            ? _state<skipIgnored<In>, Out>
+            : In extends `${infer Char}${infer Rest}`
+              ? Char extends ignored
+                ? _state<skipIgnored<In>, Out>
+                : Char extends keyof _punctuator
+                  ? _state<Rest, [...Out, _punctuator[Char]]>
+                  : Char extends '"'
+                    ? In extends `"""${infer In}`
+                      ? _state<skipBlockString<In>, [...Out, Token.BlockString]>
+                      : In extends `"${infer In}`
+                        ? _state<skipString<In>, [...Out, Token.String]>
+                        : void
+                    : Char extends '.'
+                      ? In extends `...${infer In}`
+                        ? _state<In, [...Out, Token.Spread]>
+                        : void
+                      : Char extends '$'
+                        ? takeNameLiteralRec<'', Rest> extends _match<infer Match, infer In>
+                          ? _state<In, [...Out, VarTokenNode<Match>]>
+                          : void
+                        : Char extends '@'
+                          ? takeNameLiteralRec<'', Rest> extends _match<infer Match, infer In>
+                            ? _state<In, [...Out, DirectiveTokenNode<Match>]>
+                            : void
+                          : Char extends '-' | digit
+                            ? In extends `-${digit}${infer In}`
+                              ? skipFloat<skipDigits<In>> extends `${infer In}`
+                                ? _state<In, [...Out, Token.Float]>
+                                : _state<skipDigits<In>, [...Out, Token.Integer]>
+                              : In extends `${digit}${infer In}`
+                                ? skipFloat<skipDigits<In>> extends `${infer In}`
+                                  ? _state<In, [...Out, Token.Float]>
+                                  : _state<skipDigits<In>, [...Out, Token.Integer]>
+                                : void
+                            : Char extends letter | '_'
+                              ? takeNameLiteralRec<Char, Rest> extends _match<infer Match, infer In>
+                                ? _state<In, [...Out, NameTokenNode<Match>]>
+                                : void
+                              : void
+              : void
+        >
+      : [];
 
 export type tokenize<In extends string> = tokenizeRec<_state<In, []>>;
