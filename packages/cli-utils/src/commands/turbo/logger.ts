@@ -34,14 +34,19 @@ export function warningMessage(message: TurboWarning) {
   ]);
 }
 
-const documentSummary = (documentCount: number | Record<string, number>) => {
+const documentSummary = (
+  documentCount: number | Record<string, number>,
+  cachedCount?: number | Record<string, number>
+) => {
   let out = '';
   if (typeof documentCount === 'number') {
+    const cachedLabel =
+      typeof cachedCount === 'number' && cachedCount > 0 ? `, ${cachedCount} reused` : '';
     out += t.text([
       t.cmd(t.CSI.Style, t.Style.BrightGreen),
       `${t.Icons.Tick} Type cache was generated successfully `,
       t.cmd(t.CSI.Style, t.Style.BrightBlack),
-      `(${documentCount} document types cached)\n`,
+      `(${documentCount} document types cached${cachedLabel})\n`,
     ]);
   } else {
     out += t.text([
@@ -49,11 +54,14 @@ const documentSummary = (documentCount: number | Record<string, number>) => {
       `${t.Icons.Tick} Type caches were generated successfully.\n`,
     ]);
     for (const schemaName in documentCount) {
+      const schemaCachedCount =
+        cachedCount && typeof cachedCount !== 'number' ? cachedCount[schemaName] : undefined;
+      const cachedLabel = schemaCachedCount ? `, ${schemaCachedCount} reused` : '';
       out += t.text([
         t.cmd(t.CSI.Style, t.Style.BrightBlack),
         `${t.HeavyBox.BottomLeft} `,
         t.cmd(t.CSI.Style, t.Style.BrightBlue),
-        `${documentCount[schemaName]} document types cached for the '${schemaName}' schema\n`,
+        `${documentCount[schemaName]} document types cached for the '${schemaName}' schema${cachedLabel}\n`,
       ]);
     }
   }
@@ -64,7 +72,11 @@ export function warningSummary(warningCount: number) {
   return t.error([t.cmd(t.CSI.Style, t.Style.Red), `${t.Icons.Cross} ${warningCount} warnings\n`]);
 }
 
-export function infoSummary(warningCount: number, documentCount: number | Record<string, number>) {
+export function infoSummary(
+  warningCount: number,
+  documentCount: number | Record<string, number>,
+  cachedCount?: number | Record<string, number>
+) {
   let out = '';
   if (warningCount) {
     out += t.text([
@@ -73,7 +85,7 @@ export function infoSummary(warningCount: number, documentCount: number | Record
       ` ${warningCount} warnings\n`,
     ]);
   }
-  out += documentSummary(documentCount);
+  out += documentSummary(documentCount, cachedCount);
   return out;
 }
 

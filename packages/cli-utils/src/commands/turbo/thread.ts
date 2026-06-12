@@ -19,6 +19,8 @@ import type {
   GraphQLSourceImport,
   TurboPath,
 } from './types';
+import { readCachedTurboDocuments, type CachedTurboDocuments } from './cache';
+import { createDocumentHasher } from './hash';
 
 export interface TurboParams {
   rootPath: string;
@@ -182,6 +184,24 @@ function isTadaImport(
 async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSignal> {
   const schemaNames = getSchemaNamesFromConfig(params.pluginConfig);
   const factory = programFactory(params);
+  const cachedDocumentsByPath = new Map<string, CachedTurboDocuments>();
+
+  const getTurboOutputPath = (schemaName: string | null): string | undefined => {
+    if (typeof params.turboOutputPath === 'string') return params.turboOutputPath;
+    return params.turboOutputPath.find((cfg) => cfg.schemaName === schemaName)?.path;
+  };
+
+  const getCachedDocuments = (schemaName: string | null): CachedTurboDocuments => {
+    const turboOutputPath = getTurboOutputPath(schemaName);
+    if (!turboOutputPath) return new Map();
+
+    let cachedDocuments = cachedDocumentsByPath.get(turboOutputPath);
+    if (!cachedDocuments) {
+      cachedDocuments = readCachedTurboDocuments(turboOutputPath);
+      cachedDocumentsByPath.set(turboOutputPath, cachedDocuments);
+    }
+    return cachedDocuments;
+  };
 
   // NOTE: We add our override declaration here before loading all files
   // This sets `__cacheDisabled` on the turbo cache, which disables the cache temporarily
@@ -253,9 +273,7 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
       if (graphqlSourcePath && !uniqueGraphQLSources.has(graphqlSourcePath)) {
         const graphqlSourceFile = container.program.getSourceFile(graphqlSourcePath);
         if (graphqlSourceFile) {
-          const turboPath = Array.isArray(params.turboOutputPath)
-            ? params.turboOutputPath.find((cfg) => cfg.schemaName === call.schema)?.path
-            : params.turboOutputPath;
+          const turboPath = getTurboOutputPath(call.schema);
           const imports = collectImportsFromSourceFile(
             graphqlSourceFile,
             params.pluginConfig,
@@ -270,34 +288,55 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
         }
       }
 
-      const returnType = checker.getTypeAtLocation(callExpression);
       const argumentType = checker.getTypeAtLocation(call.node);
-      // NOTE: `returnType.symbol` is incorrectly typed and is in fact
-      // optional and not always present
-      if (!returnType.symbol || returnType.symbol.getEscapedName() !== 'TadaDocumentNode') {
-        warnings.push({
-          message:
-            `The discovered document is not of type "TadaDocumentNode".\n` +
-            'If this is unexpected, please file an issue describing your case.',
-          file: position.fileName,
-          line: position.line,
-          col: position.col,
-        });
-        continue;
-      }
-
       const argumentKey: string =
         'value' in argumentType &&
         typeof argumentType.value === 'string' &&
         (argumentType.flags & ts.TypeFlags.StringLiteral) === 0
           ? JSON.stringify(argumentType.value)
           : checker.typeToString(argumentType, callExpression, BUILDER_FLAGS);
-      const documentType = checker.typeToString(returnType, callExpression, BUILDER_FLAGS);
+
+      const documentHash = documentHasher.hashCallExpression(callExpression, call.schema);
+      const cachedDocument =
+        documentHash.hashable && documentHash.documentHash
+          ? getCachedDocuments(call.schema).get(argumentKey)
+          : undefined;
+
+      let documentType: string;
+      if (cachedDocument && cachedDocument.documentHash === documentHash.documentHash) {
+        documentType = cachedDocument.documentType;
+        documents.push({
+          schemaName: call.schema,
+          argumentKey,
+          documentType,
+          documentHash: documentHash.documentHash,
+          isCached: true,
+        });
+        continue;
+      } else {
+        const returnType = checker.getTypeAtLocation(callExpression);
+        // NOTE: `returnType.symbol` is incorrectly typed and is in fact
+        // optional and not always present
+        if (!returnType.symbol || returnType.symbol.getEscapedName() !== 'TadaDocumentNode') {
+          warnings.push({
+            message:
+              `The discovered document is not of type "TadaDocumentNode".\n` +
+              'If this is unexpected, please file an issue describing your case.',
+            file: position.fileName,
+            line: position.line,
+            col: position.col,
+          });
+          continue;
+        }
+
+        documentType = checker.typeToString(returnType, callExpression, BUILDER_FLAGS);
+      }
 
       documents.push({
         schemaName: call.schema,
         argumentKey,
         documentType,
+        documentHash: documentHash.documentHash,
       });
     }
 
@@ -311,6 +350,12 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
   };
 
   let checker = container.program.getTypeChecker();
+  const documentHasher = createDocumentHasher({
+    get checker() {
+      return checker;
+    },
+    pluginConfig: params.pluginConfig,
+  });
   let filesInBatch = 0;
 
   for (const fileName of fileNames) {
