@@ -1,5 +1,26 @@
 # @gql.tada/cli-utils
 
+## 1.7.4
+
+### Patch Changes
+
+- ⚠️ Fix turbo false warnings for subpath imports when moduleResolution is inherited from an extended tsconfig
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#516](https://github.com/0no-co/gql.tada/pull/516))
+- Prepare TypeScript compatibility checks for TS 6 latest and the native `tsgo` preview by modernizing tsconfig module resolution and widening TypeScript peer ranges through TS 8
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#522](https://github.com/0no-co/gql.tada/pull/522))
+- Prevent OOM on `turbo` run of TypeScript evaluations, by reinstantiating the type checker and program when the heap is close to reaching a memory limit
+  Submitted by [@kitten](https://github.com/kitten) (See [#531](https://github.com/0no-co/gql.tada/pull/531))
+- ⚠️ Fix SIGTERM/SIGINT being ignored
+  Submitted by [@kitten](https://github.com/kitten) (See [#534](https://github.com/0no-co/gql.tada/pull/534))
+- Surface worker thread errors and unexpected exits during turbo generation instead of allowing pending work to resolve silently
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#529](https://github.com/0no-co/gql.tada/pull/529))
+- ⚠️ Fix spinner flicker in CLI commands
+  Submitted by [@kitten](https://github.com/kitten) (See [#533](https://github.com/0no-co/gql.tada/pull/533))
+- Updated dependencies (See [#525](https://github.com/0no-co/gql.tada/pull/525) and [#522](https://github.com/0no-co/gql.tada/pull/522))
+  - @gql.tada/vue-support@1.0.3
+  - @gql.tada/internal@1.0.10
+  - @gql.tada/svelte-support@1.0.3
+
 ## 1.7.3
 
 ### Patch Changes
