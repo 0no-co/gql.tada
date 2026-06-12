@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 
 const root = process.cwd();
@@ -12,36 +12,27 @@ function readJson(path) {
   return JSON.parse(readFileSync(path, "utf8"));
 }
 
-function packageJsonPathsFromWorkspace() {
-  const paths = [];
+// Resolve packages via pnpm so we only ever stage real workspace members.
+// A filesystem walk would also pick up stray manifests (fixtures, vendored
+// copies, examples) that live outside the pnpm-workspace.yaml globs and must
+// never be published.
+function packageJsonPaths() {
+  const result = spawnSync(
+    "pnpm",
+    ["list", "--recursive", "--depth", "-1", "--json"],
+    { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }
+  );
 
-  function visit(dir) {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (
-        entry.name === ".git" ||
-        entry.name === "node_modules" ||
-        entry.name === ".pnpm" ||
-        entry.name === "dist" ||
-        entry.name === "coverage"
-      ) {
-        continue;
-      }
-
-      const path = join(dir, entry.name);
-      if (entry.isDirectory()) {
-        visit(path);
-      } else if (entry.isFile() && entry.name === "package.json") {
-        paths.push(path);
-      }
-    }
+  if (result.status !== 0) {
+    process.stdout.write(result.stdout);
+    process.stderr.write(result.stderr);
+    throw new Error("Failed to resolve workspace packages with pnpm.");
   }
 
-  visit(root);
-  return paths;
-}
-
-function packageJsonPaths() {
-  return [...new Set(packageJsonPathsFromWorkspace())].filter(existsSync);
+  const projects = JSON.parse(result.stdout);
+  return [
+    ...new Set(projects.map((project) => join(project.path, "package.json"))),
+  ].filter(existsSync);
 }
 
 function versionExists(name, version) {

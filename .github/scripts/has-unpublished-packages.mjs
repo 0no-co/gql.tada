@@ -1,30 +1,25 @@
 import { appendFileSync } from 'node:fs';
-import { readdir, readFile } from 'node:fs/promises';
-import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 
-const ignoredDirectories = new Set(['.git', 'dist', 'node_modules']);
+// Resolve packages via pnpm so we only ever consider real workspace members.
+// A filesystem walk would also pick up stray manifests (fixtures, vendored
+// copies, examples) that live outside the pnpm-workspace.yaml globs.
+function findPackageManifests(directory) {
+  const result = spawnSync(
+    'pnpm',
+    ['list', '--recursive', '--depth', '-1', '--json'],
+    { cwd: directory, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
+  );
 
-async function findPackageManifests(directory) {
-  const entries = await readdir(directory, { withFileTypes: true });
-  const manifests = [];
-
-  for (const entry of entries) {
-    const fullPath = path.join(directory, entry.name);
-
-    if (entry.isDirectory()) {
-      if (!ignoredDirectories.has(entry.name)) {
-        manifests.push(...(await findPackageManifests(fullPath)));
-      }
-    } else if (entry.isFile() && entry.name === 'package.json') {
-      const pkg = JSON.parse(await readFile(fullPath, 'utf8'));
-
-      if (!pkg.private && pkg.name && pkg.version) {
-        manifests.push({ name: pkg.name, version: pkg.version });
-      }
-    }
+  if (result.status !== 0) {
+    process.stdout.write(result.stdout);
+    process.stderr.write(result.stderr);
+    throw new Error('Failed to resolve workspace packages with pnpm.');
   }
 
-  return manifests;
+  return JSON.parse(result.stdout)
+    .filter(pkg => !pkg.private && pkg.name && pkg.version)
+    .map(pkg => ({ name: pkg.name, version: pkg.version }));
 }
 
 async function hasPublishedVersion(pkg) {
@@ -45,7 +40,7 @@ async function hasPublishedVersion(pkg) {
 }
 
 async function main() {
-  const packages = (await findPackageManifests(process.cwd())).sort((a, b) =>
+  const packages = findPackageManifests(process.cwd()).sort((a, b) =>
     a.name.localeCompare(b.name)
   );
   let hasUnpublished = false;
