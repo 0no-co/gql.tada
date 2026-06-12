@@ -131,12 +131,6 @@ export function createDocumentHasher(context: HashContext): DocumentHasher {
     expression = unwrapExpression(expression);
     if (ts.isCallExpression(expression)) return expression;
 
-    let initializer = resolveDeclarationInitializer(expression);
-    if (initializer) {
-      initializer = unwrapExpression(initializer);
-      if (ts.isCallExpression(initializer)) return initializer;
-    }
-
     const symbol = getSymbol(expression);
     if (!symbol) return null;
 
