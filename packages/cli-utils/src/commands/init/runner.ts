@@ -148,24 +148,64 @@ export async function run(target: string) {
   }
 
   s.start('Writing to tsconfig.json.');
+  let tsConfigName = 'tsconfig.json';
   try {
-    const tsConfigPath = path.resolve(target, 'tsconfig.json');
-    const tsConfig = await readTSConfigFile(tsConfigPath);
+    let tsConfigPath = path.resolve(target, 'tsconfig.json');
+    let tsConfig = await readTSConfigFile(tsConfigPath);
+
+    // Solution-style configs (e.g. Vite/Vue templates) contain no files of their
+    // own, so the plugin must be added to a referenced project config instead
+    const isSolutionStyle =
+      Array.isArray(tsConfig.references) &&
+      Array.isArray(tsConfig.files) &&
+      !tsConfig.files.length &&
+      !tsConfig.include;
+    if (isSolutionStyle) {
+      let fallbackPath: string | undefined;
+      let preferredPath: string | undefined;
+      for (const reference of tsConfig.references!) {
+        if (!reference || typeof reference.path !== 'string') continue;
+        let referencePath = path.resolve(target, reference.path);
+        if (path.extname(referencePath) !== '.json')
+          referencePath = path.join(referencePath, 'tsconfig.json');
+        try {
+          await fs.access(referencePath);
+        } catch (_error) {
+          continue;
+        }
+        if (path.basename(referencePath) === 'tsconfig.app.json') {
+          preferredPath = referencePath;
+          break;
+        } else if (!fallbackPath) {
+          fallbackPath = referencePath;
+        }
+      }
+      const referencePath = preferredPath || fallbackPath;
+      if (referencePath) {
+        tsConfigPath = referencePath;
+        tsConfig = await readTSConfigFile(tsConfigPath);
+        tsConfigName = path.relative(target, tsConfigPath);
+      }
+    }
+
     // TODO: do we need to ensure that include contains the tadaOutputLocation?
     const isFile = schemaLocation.endsWith('.json') || schemaLocation.endsWith('.graphql');
+    const tsConfigDir = path.dirname(tsConfigPath);
     tsConfig.compilerOptions = {
       ...tsConfig.compilerOptions,
       plugins: [
         {
           name: supportsEmbeddedLsp ? 'gql.tada/ts-plugin' : '@0no-co/graphqlsp',
-          schema: isFile ? path.relative(target, schemaLocation) : schemaLocation,
-          tadaOutputLocation: path.relative(target, tadaLocation),
+          schema: isFile
+            ? path.relative(tsConfigDir, path.resolve(target, schemaLocation))
+            : schemaLocation,
+          tadaOutputLocation: path.relative(tsConfigDir, tadaLocation),
         } as any,
       ],
     };
     await fs.writeFile(tsConfigPath, JSON.stringify(tsConfig, null, 2));
   } catch (e) {}
-  s.stop('Written to tsconfig.json.');
+  s.stop(`Written to ${tsConfigName}.`);
 
   outro(`Off to the races!`);
 }

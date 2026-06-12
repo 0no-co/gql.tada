@@ -1,10 +1,16 @@
 import type ts from 'typescript';
 import path from 'node:path';
 
-import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
-import { loadRef, loadConfig, parseConfig } from '@gql.tada/internal';
+import type { LoadConfigResult } from '@gql.tada/internal';
+import {
+  loadRef,
+  loadConfigs,
+  parseConfig,
+  validateUniqueOutputLocations,
+} from '@gql.tada/internal';
 
 import type { ComposeInput } from '../../term';
+import type { ProjectContext } from '../shared';
 import { MINIMUM_VERSIONS, semverComply } from '../../utils/semver';
 import { programFactory } from '../../ts';
 import { findGraphQLConfig } from './helpers/graphqlConfig';
@@ -122,9 +128,9 @@ export async function* run(): AsyncIterable<ComposeInput> {
   yield logger.runningTask(Messages.CHECK_TSCONFIG);
   await delay();
 
-  let configResult: LoadConfigResult;
+  let configResults: LoadConfigResult[];
   try {
-    configResult = await loadConfig();
+    configResults = await loadConfigs();
   } catch (error) {
     yield logger.failedTask(Messages.CHECK_TSCONFIG);
     throw logger.externalError(
@@ -133,33 +139,69 @@ export async function* run(): AsyncIterable<ComposeInput> {
     );
   }
 
-  let pluginConfig: GraphQLSPConfig;
+  const projects: ProjectContext[] = [];
+  for (const configResult of configResults) {
+    const label =
+      path.relative(process.cwd(), configResult.tsconfigPath) || configResult.tsconfigPath;
+    try {
+      projects.push({
+        configResult,
+        pluginConfig: parseConfig(configResult.pluginConfig, configResult.rootPath),
+        projectPath: path.dirname(configResult.tsconfigPath),
+        label,
+      });
+    } catch (error) {
+      yield logger.failedTask(Messages.CHECK_TSCONFIG);
+      throw logger.externalError(
+        `The plugin configuration for ${logger.code(
+          supportsEmbeddedLsp ? '"gql.tada/ts-plugin"' : '"@0no-co/graphqlsp"'
+        )} in ${logger.code(label)} seems to be invalid.`,
+        error
+      );
+    }
+  }
+
   try {
-    pluginConfig = parseConfig(configResult.pluginConfig, configResult.rootPath);
+    validateUniqueOutputLocations(
+      projects.map((project) => ({
+        projectPath: project.projectPath,
+        config: project.pluginConfig,
+        label: project.label,
+      }))
+    );
   } catch (error) {
     yield logger.failedTask(Messages.CHECK_TSCONFIG);
-    throw logger.externalError(
-      `The plugin configuration for ${logger.code(
-        supportsEmbeddedLsp ? '"gql.tada/ts-plugin"' : '"@0no-co/graphqlsp"'
-      )} seems to be invalid.`,
-      error
-    );
+    throw logger.externalError('The output locations of your configured projects overlap.', error);
   }
 
   yield logger.completedTask(Messages.CHECK_TSCONFIG);
+  if (projects.length > 1) {
+    yield logger.hintMessage(
+      `Found ${projects.length} ${logger.code('gql.tada')} projects through ${logger.code(
+        '"references"'
+      )} in your ${logger.code('tsconfig.json')} files.\n`
+    );
+  }
 
-  yield* runExternalFilesChecks(configResult, packageJson);
+  yield* runExternalFilesChecks(projects, packageJson);
 
   yield* runVSCodeChecks();
 
   yield logger.runningTask(Messages.CHECK_SCHEMA);
   await delay();
 
-  try {
-    await loadRef(pluginConfig).load({ rootPath: path.dirname(configResult.configPath) });
-  } catch (error) {
-    yield logger.failedTask(Messages.CHECK_SCHEMA);
-    throw logger.externalError('Failed to load schema.', error);
+  for (const project of projects) {
+    try {
+      await loadRef(project.pluginConfig).load({ rootPath: project.projectPath });
+    } catch (error) {
+      yield logger.failedTask(Messages.CHECK_SCHEMA);
+      throw logger.externalError(
+        projects.length > 1
+          ? `Failed to load schema for project ${logger.code(project.label)}.`
+          : 'Failed to load schema.',
+        error
+      );
+    }
   }
 
   yield logger.completedTask(Messages.CHECK_SCHEMA, true);
@@ -223,16 +265,20 @@ async function* runVSCodeChecks(): AsyncIterable<ComposeInput> {
 }
 
 async function* runExternalFilesChecks(
-  configResult: LoadConfigResult,
+  projects: readonly ProjectContext[],
   packageJson: versions.PackageJson
 ): AsyncIterable<ComposeInput> {
-  let externalFiles: readonly ts.SourceFile[] = [];
-  try {
-    const factory = programFactory(configResult);
-    externalFiles = factory.createExternalFiles();
-  } catch (_error) {
-    // NOTE: If the project fails to load, we currently just ignore this check and move on
-    return;
+  const externalFiles: ts.SourceFile[] = [];
+  for (const project of projects) {
+    try {
+      const factory = programFactory({
+        rootPath: project.configResult.rootPath,
+        configPath: project.configResult.tsconfigPath,
+      });
+      externalFiles.push(...factory.createExternalFiles());
+    } catch (_error) {
+      // NOTE: If a project fails to load, we currently just ignore this check and move on
+    }
   }
 
   if (externalFiles.length) {

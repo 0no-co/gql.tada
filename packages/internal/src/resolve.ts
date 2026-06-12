@@ -69,14 +69,67 @@ const getPluginConfig = (tsconfig: TsConfigJson | null): Record<string, unknown>
     )) ||
   null;
 
+/** Mirrors `ts.resolveProjectReferencePath`: a reference path that isn't a
+ * `.json` file points at a directory containing a `tsconfig.json` file. */
+const resolveReferencePath = (referencePath: string, fromDir: string): string => {
+  const resolved = path.resolve(fromDir, referencePath);
+  return path.extname(resolved) === '.json' ? resolved : path.join(resolved, TSCONFIG);
+};
+
+const toProjectKey = (filePath: string): string => {
+  const normalized = path.normalize(filePath);
+  return process.platform === 'win32' ? normalized.toLowerCase() : normalized;
+};
+
+/** A "solution-style" tsconfig only groups referenced projects and contains
+ * no files of its own (e.g. the root tsconfig.json of Vite/Vue templates). */
+const isSolutionStyleConfig = (tsconfig: TsConfigJson): boolean =>
+  Array.isArray(tsconfig.references) &&
+  Array.isArray(tsconfig.files) &&
+  tsconfig.files.length === 0 &&
+  !tsconfig.include;
+
+interface PluginEntryResult {
+  pluginConfig: Record<string, unknown>;
+  configPath: string;
+}
+
+const resolvePluginEntry = async (
+  tsconfigPath: string,
+  tsconfig: TsConfigJson
+): Promise<PluginEntryResult | null> => {
+  const pluginConfig = getPluginConfig(tsconfig);
+  if (pluginConfig) return { pluginConfig, configPath: tsconfigPath };
+
+  const extendsList = Array.isArray(tsconfig.extends)
+    ? tsconfig.extends
+    : tsconfig.extends
+      ? [tsconfig.extends]
+      : [];
+  for (let extend of extendsList) {
+    if (path.extname(extend) !== '.json') extend += '.json';
+    try {
+      const extendPath = await resolveExtend(extend, path.dirname(tsconfigPath));
+      if (!extendPath) continue;
+      const extendConfig = await readTSConfigFile(extendPath);
+      const result = await resolvePluginEntry(extendPath, extendConfig);
+      if (result) return result;
+    } catch (_error) {}
+  }
+
+  return null;
+};
+
 export interface LoadConfigResult {
   pluginConfig: Record<string, unknown>;
-  tsconfigPath: string;
+  /** The config file in which the plugin entry was found (may be an `extends` base file). */
   configPath: string;
+  /** The project's own tsconfig.json file, before `extends` resolution. */
+  tsconfigPath: string;
   rootPath: string;
 }
 
-export const loadConfig = async (targetPath?: string): Promise<LoadConfigResult> => {
+export const loadConfigs = async (targetPath?: string): Promise<LoadConfigResult[]> => {
   const rootTsconfigPath = await findTSConfigFile(targetPath);
   if (!rootTsconfigPath) {
     throw new TadaError(
@@ -86,41 +139,70 @@ export const loadConfig = async (targetPath?: string): Promise<LoadConfigResult>
     );
   }
 
-  const load = async (targetPath: string): Promise<LoadConfigResult> => {
-    const tsconfig = await readTSConfigFile(targetPath);
-    const pluginConfig = getPluginConfig(tsconfig);
+  const visited = new Set<string>();
+  const seenEntries = new Set<string>();
+  const results: LoadConfigResult[] = [];
+  // A solution-style config carrying a plugin entry has no files of its own, so
+  // it's only used when no referenced project provides a plugin entry instead
+  let solutionFallback: LoadConfigResult | null = null;
+  let hasReferences = false;
 
-    if (pluginConfig) {
-      return {
-        pluginConfig,
-        tsconfigPath: rootTsconfigPath,
-        configPath: targetPath,
-        rootPath: path.dirname(rootTsconfigPath),
+  const visit = async (tsconfigPath: string, isRoot: boolean): Promise<void> => {
+    const projectKey = toProjectKey(tsconfigPath);
+    if (visited.has(projectKey)) return;
+    visited.add(projectKey);
+
+    let tsconfig: TsConfigJson;
+    try {
+      tsconfig = await readTSConfigFile(tsconfigPath);
+    } catch (error) {
+      if (isRoot) throw error;
+      return;
+    }
+
+    const entry = await resolvePluginEntry(tsconfigPath, tsconfig);
+    if (entry) {
+      const result: LoadConfigResult = {
+        pluginConfig: entry.pluginConfig,
+        configPath: entry.configPath,
+        tsconfigPath,
+        rootPath: path.dirname(tsconfigPath),
       };
-    }
-
-    if (Array.isArray(tsconfig.extends)) {
-      for (let extend of tsconfig.extends) {
-        if (path.extname(extend) !== '.json') extend += '.json';
-        try {
-          const tsconfigPath = await resolveExtend(extend, path.dirname(rootTsconfigPath));
-          if (tsconfigPath) return await load(tsconfigPath);
-        } catch (_error) {}
+      if (isSolutionStyleConfig(tsconfig)) {
+        if (!solutionFallback) solutionFallback = result;
+      } else {
+        const entryKey = `${toProjectKey(entry.configPath)}\0${toProjectKey(result.rootPath)}`;
+        if (!seenEntries.has(entryKey)) {
+          seenEntries.add(entryKey);
+          results.push(result);
+        }
       }
-    } else if (tsconfig.extends) {
-      try {
-        const tsconfigPath = await resolveExtend(tsconfig.extends, path.dirname(rootTsconfigPath));
-        if (tsconfigPath) return await load(tsconfigPath);
-      } catch (_error) {}
     }
 
-    throw new TadaError(
-      `Could not find a valid GraphQLSP plugin entry in: ${maybeRelative(rootTsconfigPath)}`
-    );
+    if (Array.isArray(tsconfig.references)) {
+      hasReferences = true;
+      for (const reference of tsconfig.references) {
+        if (!reference || typeof reference.path !== 'string') continue;
+        await visit(resolveReferencePath(reference.path, path.dirname(tsconfigPath)), false);
+      }
+    }
   };
 
-  return await load(rootTsconfigPath);
+  await visit(rootTsconfigPath, true);
+
+  if (!results.length && solutionFallback) results.push(solutionFallback);
+  if (!results.length) {
+    throw new TadaError(
+      `Could not find a valid GraphQLSP plugin entry in: ${maybeRelative(rootTsconfigPath)}` +
+        (hasReferences ? ' or any of its referenced projects' : '')
+    );
+  }
+
+  return results;
 };
+
+export const loadConfig = async (targetPath?: string): Promise<LoadConfigResult> =>
+  (await loadConfigs(targetPath))[0];
 
 /** @deprecated Use {@link loadConfig} instead */
 export const resolveTypeScriptRootDir = async (

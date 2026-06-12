@@ -191,6 +191,43 @@ export const parseConfig = (
   }
 };
 
+export interface ProjectConfig {
+  /** Directory that relative output locations resolve against. */
+  projectPath: string;
+  config: GraphQLSPConfig;
+  /** Display name for error messages, e.g. a relative tsconfig path. */
+  label?: string;
+}
+
+const LOCATION_PROPS = [
+  'tadaOutputLocation',
+  'tadaTurboLocation',
+  'tadaPersistedLocation',
+] as const;
+
+export const validateUniqueOutputLocations = (projects: readonly ProjectConfig[]): void => {
+  for (const prop of LOCATION_PROPS) {
+    const seen = new Map<string, string>();
+    for (const project of projects) {
+      const label = project.label || project.projectPath;
+      const schemas = 'schemas' in project.config ? project.config.schemas : [project.config];
+      for (const schema of schemas) {
+        const location = schema[prop];
+        if (!location) continue;
+        let resolved = path.resolve(project.projectPath, location);
+        if (process.platform === 'win32') resolved = resolved.toLowerCase();
+        const previous = seen.get(resolved);
+        if (previous && previous !== label) {
+          throw new TadaError(
+            `Projects '${previous}' and '${label}' resolve '${prop}' to the same file: ${location}`
+          );
+        }
+        seen.set(resolved, label);
+      }
+    }
+  }
+};
+
 export const getSchemaNamesFromConfig = (config: GraphQLSPConfig): Set<null | string> => {
   return new Set<null | string>([
     ...('schema' in config ? [null] : []),
