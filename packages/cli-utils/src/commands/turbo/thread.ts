@@ -35,12 +35,25 @@ export interface TurboParams {
 const HEAP_SOFT_LIMIT_BYTES = 2_500 * 1_024 * 1_024;
 const TURBO_MAX_BATCH = 1_000;
 
+interface ImportTraceCache {
+  /** Resolved import source per `fileName\0identifier` key */
+  traces: Map<string, string | undefined>;
+  host: ts.CompilerHost | undefined;
+  resolutionCache: ts.ModuleResolutionCache | undefined;
+}
+
+const createImportTraceCache = (): ImportTraceCache => ({
+  traces: new Map(),
+  host: undefined,
+  resolutionCache: undefined,
+});
+
 function traceCallToImportSource(
   callExpression: ts.CallExpression,
   sourceFile: ts.SourceFile,
-  program: ts.Program
+  program: ts.Program,
+  cache: ImportTraceCache
 ): string | undefined {
-  const typeChecker = program.getTypeChecker();
   const expression = callExpression.expression;
 
   let identifier: ts.Identifier | undefined;
@@ -52,18 +65,27 @@ function traceCallToImportSource(
 
   if (!identifier) return undefined;
 
-  const symbol = typeChecker.getSymbolAtLocation(identifier);
-  if (!symbol || !symbol.declarations) return undefined;
+  // NOTE: All calls of the same identifier in a file resolve to the same import
+  // source, so the resolution is cached per file and identifier name
+  const traceKey = `${sourceFile.fileName}\0${identifier.text}`;
+  if (cache.traces.has(traceKey)) return cache.traces.get(traceKey);
 
-  for (const declaration of symbol.declarations) {
-    const importDeclaration = findImportDeclaration(declaration);
-    if (importDeclaration && ts.isStringLiteral(importDeclaration.moduleSpecifier)) {
-      const moduleName = importDeclaration.moduleSpecifier.text;
-      return resolveModulePath(moduleName, sourceFile, program);
+  let result: string | undefined;
+  const typeChecker = program.getTypeChecker();
+  const symbol = typeChecker.getSymbolAtLocation(identifier);
+  if (symbol && symbol.declarations) {
+    for (const declaration of symbol.declarations) {
+      const importDeclaration = findImportDeclaration(declaration);
+      if (importDeclaration && ts.isStringLiteral(importDeclaration.moduleSpecifier)) {
+        const moduleName = importDeclaration.moduleSpecifier.text;
+        result = resolveModulePath(moduleName, sourceFile, program, cache);
+        break;
+      }
     }
   }
 
-  return undefined;
+  cache.traces.set(traceKey, result);
+  return result;
 }
 
 function findImportDeclaration(node: ts.Node): ts.ImportDeclaration | undefined {
@@ -82,12 +104,26 @@ function findImportDeclaration(node: ts.Node): ts.ImportDeclaration | undefined 
 function resolveModulePath(
   moduleName: string,
   containingFile: ts.SourceFile,
-  program: ts.Program
+  program: ts.Program,
+  cache: ImportTraceCache
 ): string | undefined {
   const compilerOptions = program.getCompilerOptions();
-  const host = ts.createCompilerHost(compilerOptions);
+  const host = cache.host || (cache.host = ts.createCompilerHost(compilerOptions));
+  const resolutionCache =
+    cache.resolutionCache ||
+    (cache.resolutionCache = ts.createModuleResolutionCache(
+      host.getCurrentDirectory(),
+      host.getCanonicalFileName.bind(host),
+      compilerOptions
+    ));
 
-  const resolved = ts.resolveModuleName(moduleName, containingFile.fileName, compilerOptions, host);
+  const resolved = ts.resolveModuleName(
+    moduleName,
+    containingFile.fileName,
+    compilerOptions,
+    host,
+    resolutionCache
+  );
 
   if (resolved.resolvedModule) {
     return resolved.resolvedModule.resolvedFileName;
@@ -107,7 +143,8 @@ function collectImportsFromSourceFile(
 
   const tadaImportPaths = getTadaOutputPaths(pluginConfig);
 
-  function visit(node: ts.Node) {
+  // NOTE: Import declarations may only appear as top-level statements
+  for (const node of sourceFile.statements) {
     if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
       const specifier = node.moduleSpecifier.text;
 
@@ -142,10 +179,8 @@ function collectImportsFromSourceFile(
         }
       }
     }
-    ts.forEachChild(node, visit);
   }
 
-  visit(sourceFile);
   return imports;
 }
 
@@ -184,7 +219,42 @@ function isTadaImport(
   );
 }
 
-async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSignal> {
+/** Wraps plugin info to disable definition lookups for `findAllCallExpressions`.
+ *
+ * @remarks
+ * `findAllCallExpressions` resolves every fragment reference in `graphql(doc, [fragments])`
+ * calls to fragment definitions via `getDefinitionAtPosition`, which is expensive.
+ * Turbo only consumes the discovered call nodes and discards the fragment definitions,
+ * so the lookups are wasted work here. Returning `undefined` makes the fragment
+ * unrolling bail out early without affecting the discovered call nodes.
+ */
+const wrapPluginInfoForTurbo = (info: PluginCreateInfo): PluginCreateInfo => {
+  let languageService: ts.LanguageService | undefined;
+  return {
+    get config() {
+      return info.config;
+    },
+    get languageService(): ts.LanguageService {
+      return (
+        languageService ||
+        (languageService = Object.assign(Object.create(info.languageService), {
+          getDefinitionAtPosition: () => undefined,
+        }))
+      );
+    },
+    get languageServiceHost() {
+      return info.languageServiceHost;
+    },
+    get project() {
+      return info.project;
+    },
+    get serverHost() {
+      return info.serverHost;
+    },
+  } as PluginCreateInfo;
+};
+
+export async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSignal> {
   const schemaNames = getSchemaNamesFromConfig(params.pluginConfig);
   const factory = programFactory(params);
   const cachedDocumentsByPath = new Map<string, CachedTurboDocuments>();
@@ -219,7 +289,7 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
   // Initially, we only build the program to count files
   // Later, we may reinstantiate to free up memory between batches
   let container = factory.build();
-  let pluginInfo = container.buildPluginInfo(params.pluginConfig);
+  let pluginInfo = wrapPluginInfoForTurbo(container.buildPluginInfo(params.pluginConfig));
   const turboOutputPaths = new Set(
     getTurboOutputPaths(params.turboOutputPath).map((fileName) => path.resolve(fileName))
   );
@@ -233,6 +303,7 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
   };
 
   const uniqueGraphQLSources = new Map<string, GraphQLSourceFile>();
+  const importTraceCache = createImportTraceCache();
 
   const processSourceFile = (
     sourceFile: ts.SourceFile,
@@ -270,7 +341,8 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
       const graphqlSourcePath = traceCallToImportSource(
         callExpression,
         sourceFile,
-        container.program
+        container.program,
+        importTraceCache
       );
 
       if (graphqlSourcePath && !uniqueGraphQLSources.has(graphqlSourcePath)) {
@@ -361,7 +433,7 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
     // When heap or batch limit is reached, rotate out the type checker
     if (filesInBatch > 0 && (filesInBatch >= TURBO_MAX_BATCH || isHeapOverSoftLimit())) {
       container = factory.build();
-      pluginInfo = container.buildPluginInfo(params.pluginConfig);
+      pluginInfo = wrapPluginInfoForTurbo(container.buildPluginInfo(params.pluginConfig));
       forceGc();
       checker = container.program.getTypeChecker();
       filesInBatch = 0;
