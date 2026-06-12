@@ -21,6 +21,7 @@ import type {
 } from './types';
 import { readCachedTurboDocuments, type CachedTurboDocuments } from './cache';
 import { createDocumentHasher } from './hash';
+import { shouldScanTurboFile } from './scan';
 
 export interface TurboParams {
   rootPath: string;
@@ -225,8 +226,8 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
   const turboOutputPaths = new Set(
     getTurboOutputPaths(params.turboOutputPath).map((fileName) => path.resolve(fileName))
   );
-  const fileNames = factory.rootFileNames.filter(
-    (fileName) => !turboOutputPaths.has(path.resolve(fileName))
+  const fileNames = factory.rootFileNames.filter((fileName) =>
+    shouldScanTurboFile(fileName, turboOutputPaths)
   );
 
   yield {
