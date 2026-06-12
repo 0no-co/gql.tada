@@ -51,19 +51,19 @@ export interface TTY {
   modeOff(...modes: readonly (Mode | PrivateMode)[]): void;
 }
 
-function fromReadStream(stream: ReadStream): Source<KeypressEvent> {
+function fromReadStream(stream: ReadStream, onTerminate: () => void): Source<KeypressEvent> {
   return make((observer) => {
     function onKeypress(data: string | undefined, event: KeypressEvent) {
       switch (event.name) {
         case 'c':
         case 'd':
         case 'x':
-          if (event.ctrl) cleanup();
+          if (event.ctrl) return onTerminate();
+          break;
         case 'escape':
-          cleanup();
-        default:
-          observer.next({ ...event, data });
+          return cleanup();
       }
+      observer.next({ ...event, data });
     }
 
     function cleanup() {
@@ -99,22 +99,47 @@ export function initTTY(params: TTYParams = {}): TTY {
   const hasColorEnv = 'FORCE_COLOR' in process.env || (!process.env.NO_COLOR && !process.env.CI);
   _setColor((isTTY && hasColorEnv) || hasColorArg || isGithubCI);
 
+  function _restore() {
+    if (process.stdin.isTTY) process.stdin.setRawMode(false);
+    output.write(
+      cmd(CSI.Reset) + cmd(CSI.ResetPrivateMode) + cmd(CSI.SetPrivateMode, PrivateMode.ShowCursor)
+    );
+  }
+
+  function _terminate(code: number) {
+    _restore();
+    process.exit(code);
+  }
+
+  function _signal(signal: NodeJS.Signals) {
+    _terminate(signal === 'SIGINT' ? 130 : 143);
+  }
+
   function _start() {
     _setColor((isTTY && hasColorEnv) || hasColorArg);
     if (isTTY) {
       output.write(cmd(CSI.UnsetPrivateMode, PrivateMode.ShowCursor));
+      process.on('SIGINT', _signal);
+      process.on('SIGTERM', _signal);
     }
   }
 
   function _end() {
     if (isTTY) {
+      process.removeListener('SIGINT', _signal);
+      process.removeListener('SIGTERM', _signal);
       output.write(
         cmd(CSI.Reset) + cmd(CSI.ResetPrivateMode) + cmd(CSI.SetPrivateMode, PrivateMode.ShowCursor)
       );
     }
   }
 
-  const inputSource = pipe(fromReadStream(process.stdin), onStart(_start), onEnd(_end), share);
+  const inputSource = pipe(
+    fromReadStream(process.stdin, () => _terminate(130)),
+    onStart(_start),
+    onEnd(_end),
+    share
+  );
 
   const cancelSource = pipe(
     concat([

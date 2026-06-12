@@ -6,12 +6,12 @@ import { execa } from 'execa';
 import { MINIMUM_VERSIONS, semverComply } from '../../utils/semver';
 import { readTSConfigFile } from '@gql.tada/internal';
 
-const s = spinner();
-
 const TADA_VERSION = '^1.4.3';
 const LSP_VERSION = '^1.8.0';
 
 export async function run(target: string) {
+  const s = spinner();
+
   intro(`GQL.Tada`);
 
   const schemaLocation = await question(
