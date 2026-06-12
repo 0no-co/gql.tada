@@ -1,5 +1,12 @@
 # @gql.tada/website-vitepress
 
+## 0.0.46
+
+### Patch Changes
+
+- Updated dependencies (See [#522](https://github.com/0no-co/gql.tada/pull/522) and [#532](https://github.com/0no-co/gql.tada/pull/532))
+  - gql.tada@1.9.3
+
 ## 0.0.45
 
 ### Patch Changes

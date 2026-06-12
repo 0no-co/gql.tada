@@ -1,5 +1,17 @@
 # gql.tada
 
+## 1.9.3
+
+### Patch Changes
+
+- Prepare TypeScript compatibility checks for TS 6 latest and the native `tsgo` preview by modernizing tsconfig module resolution and widening TypeScript peer ranges through TS 8
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#522](https://github.com/0no-co/gql.tada/pull/522))
+- Reduce type instantiations in tokenizer types
+  Submitted by [@kitten](https://github.com/kitten) (See [#532](https://github.com/0no-co/gql.tada/pull/532))
+- Updated dependencies (See [#516](https://github.com/0no-co/gql.tada/pull/516), [#522](https://github.com/0no-co/gql.tada/pull/522), [#531](https://github.com/0no-co/gql.tada/pull/531), [#534](https://github.com/0no-co/gql.tada/pull/534), [#529](https://github.com/0no-co/gql.tada/pull/529), and [#533](https://github.com/0no-co/gql.tada/pull/533))
+  - @gql.tada/cli-utils@1.7.4
+  - @gql.tada/internal@1.0.10
+
 ## 1.9.2
 
 ### Patch Changes
