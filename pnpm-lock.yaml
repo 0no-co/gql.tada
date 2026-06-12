@@ -9,7 +9,7 @@ overrides:
   '@gql.tada/internal': workspace:*
   astro-expressive-code: ^0.31.0
   typescript: ^5.9.3
-  '@0no-co/graphqlsp': ^1.12.9
+  '@0no-co/graphqlsp': ^1.16.0
 
 importers:
 
@@ -19,8 +19,8 @@ importers:
         specifier: ^1.0.5
         version: 1.0.7(graphql@16.9.0)
       '@0no-co/graphqlsp':
-        specifier: ^1.12.9
-        version: 1.12.13(graphql@16.9.0)(typescript@5.9.3)
+        specifier: ^1.16.0
+        version: 1.16.0(graphql@16.9.0)(typescript@5.9.3)
       '@gql.tada/cli-utils':
         specifier: workspace:*
         version: link:packages/cli-utils
@@ -141,8 +141,8 @@ importers:
         version: 4.1.0(@urql/core@5.0.6(graphql@16.9.0))(react@18.3.1)
     devDependencies:
       '@0no-co/graphqlsp':
-        specifier: ^1.12.9
-        version: 1.12.13(graphql@16.9.0)(typescript@5.9.3)
+        specifier: ^1.16.0
+        version: 1.16.0(graphql@16.9.0)(typescript@5.9.3)
       '@types/react':
         specifier: ^18.2.79
         version: 18.3.3
@@ -175,8 +175,8 @@ importers:
         version: 4.2.18
     devDependencies:
       '@0no-co/graphqlsp':
-        specifier: ^1.12.9
-        version: 1.12.13(graphql@16.9.0)(typescript@5.9.3)
+        specifier: ^1.16.0
+        version: 1.16.0(graphql@16.9.0)(typescript@5.9.3)
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.1.0
         version: 3.1.1(svelte@4.2.18)(vite@5.4.1(@types/node@22.4.0)(terser@5.31.6))
@@ -206,8 +206,8 @@ importers:
         version: 3.4.38(typescript@5.9.3)
     devDependencies:
       '@0no-co/graphqlsp':
-        specifier: ^1.12.9
-        version: 1.12.13(graphql@16.9.0)(typescript@5.9.3)
+        specifier: ^1.16.0
+        version: 1.16.0(graphql@16.9.0)(typescript@5.9.3)
       '@vitejs/plugin-vue':
         specifier: ^5.0.4
         version: 5.1.2(vite@5.4.1(@types/node@22.4.0)(terser@5.31.6))(vue@3.4.38(typescript@5.9.3))
@@ -224,8 +224,8 @@ importers:
   packages/cli-utils:
     dependencies:
       '@0no-co/graphqlsp':
-        specifier: ^1.12.9
-        version: 1.12.13(graphql@16.9.0)(typescript@5.9.3)
+        specifier: ^1.16.0
+        version: 1.16.0(graphql@16.9.0)(typescript@5.9.3)
       '@gql.tada/internal':
         specifier: workspace:*
         version: link:../internal
@@ -400,8 +400,8 @@ packages:
       graphql:
         optional: true
 
-  '@0no-co/graphqlsp@1.12.13':
-    resolution: {integrity: sha512-/C9yXft+mq+VdoniBgWvA+iK5X6cB50KKThg1je4bFIhhBNccLJlNbWFxOglXseKuisq+h5oIY4ELTVKs6GhRQ==}
+  '@0no-co/graphqlsp@1.16.0':
+    resolution: {integrity: sha512-LysXpfIIjU3tEwhfNP0pMyvQY2pZ6C7Pfi/+LBwnO0qInoEeC/4YcwwUYcbZGS4dfR5+QCFjADENb4mHfeGZjg==}
     peerDependencies:
       graphql: ^15.5.0 || ^16.0.0 || ^17.0.0
       typescript: ^5.9.3
@@ -1137,55 +1137,46 @@ packages:
     resolution: {integrity: sha512-pWJsfQjNWNGsoCq53KjMtwdJDmh/6NubwQcz52aEwLEuvx08bzcy6tOUuawAOncPnxz/3siRtd8hiQ32G1y8VA==}
     cpu: [arm]
     os: [linux]
-    libc: [glibc]
 
   '@rollup/rollup-linux-arm-musleabihf@4.21.0':
     resolution: {integrity: sha512-efRIANsz3UHZrnZXuEvxS9LoCOWMGD1rweciD6uJQIx2myN3a8Im1FafZBzh7zk1RJ6oKcR16dU3UPldaKd83w==}
     cpu: [arm]
     os: [linux]
-    libc: [musl]
 
   '@rollup/rollup-linux-arm64-gnu@4.21.0':
     resolution: {integrity: sha512-ZrPhydkTVhyeGTW94WJ8pnl1uroqVHM3j3hjdquwAcWnmivjAwOYjTEAuEDeJvGX7xv3Z9GAvrBkEzCgHq9U1w==}
     cpu: [arm64]
     os: [linux]
-    libc: [glibc]
 
   '@rollup/rollup-linux-arm64-musl@4.21.0':
     resolution: {integrity: sha512-cfaupqd+UEFeURmqNP2eEvXqgbSox/LHOyN9/d2pSdV8xTrjdg3NgOFJCtc1vQ/jEke1qD0IejbBfxleBPHnPw==}
     cpu: [arm64]
     os: [linux]
-    libc: [musl]
 
   '@rollup/rollup-linux-powerpc64le-gnu@4.21.0':
     resolution: {integrity: sha512-ZKPan1/RvAhrUylwBXC9t7B2hXdpb/ufeu22pG2psV7RN8roOfGurEghw1ySmX/CmDDHNTDDjY3lo9hRlgtaHg==}
     cpu: [ppc64]
     os: [linux]
-    libc: [glibc]
 
   '@rollup/rollup-linux-riscv64-gnu@4.21.0':
     resolution: {integrity: sha512-H1eRaCwd5E8eS8leiS+o/NqMdljkcb1d6r2h4fKSsCXQilLKArq6WS7XBLDu80Yz+nMqHVFDquwcVrQmGr28rg==}
     cpu: [riscv64]
     os: [linux]
-    libc: [glibc]
 
   '@rollup/rollup-linux-s390x-gnu@4.21.0':
     resolution: {integrity: sha512-zJ4hA+3b5tu8u7L58CCSI0A9N1vkfwPhWd/puGXwtZlsB5bTkwDNW/+JCU84+3QYmKpLi+XvHdmrlwUwDA6kqw==}
     cpu: [s390x]
     os: [linux]
-    libc: [glibc]
 
   '@rollup/rollup-linux-x64-gnu@4.21.0':
     resolution: {integrity: sha512-e2hrvElFIh6kW/UNBQK/kzqMNY5mO+67YtEh9OA65RM5IJXYTWiXjX6fjIiPaqOkBthYF1EqgiZ6OXKcQsM0hg==}
     cpu: [x64]
     os: [linux]
-    libc: [glibc]
 
   '@rollup/rollup-linux-x64-musl@4.21.0':
     resolution: {integrity: sha512-1vvmgDdUSebVGXWX2lIcgRebqfQSff0hMEkLJyakQ9JQUbLDkEaMsPTLOmyccyC6IJ/l3FZuJbmrBw/u0A0uCQ==}
     cpu: [x64]
     os: [linux]
-    libc: [musl]
 
   '@rollup/rollup-win32-arm64-msvc@4.21.0':
     resolution: {integrity: sha512-s5oFkZ/hFcrlAyBTONFY1TWndfyre1wOMwU+6KCpm/iatybvrRgmZVM+vCFwxmC5ZhdlgfE0N4XorsDpi7/4XQ==}
@@ -3609,7 +3600,7 @@ snapshots:
     optionalDependencies:
       graphql: 16.9.0
 
-  '@0no-co/graphqlsp@1.12.13(graphql@16.9.0)(typescript@5.9.3)':
+  '@0no-co/graphqlsp@1.16.0(graphql@16.9.0)(typescript@5.9.3)':
     dependencies:
       '@gql.tada/internal': link:packages/internal
       graphql: 16.9.0

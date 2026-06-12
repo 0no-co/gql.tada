@@ -219,41 +219,6 @@ function isTadaImport(
   );
 }
 
-/** Wraps plugin info to disable definition lookups for `findAllCallExpressions`.
- *
- * @remarks
- * `findAllCallExpressions` resolves every fragment reference in `graphql(doc, [fragments])`
- * calls to fragment definitions via `getDefinitionAtPosition`, which is expensive.
- * Turbo only consumes the discovered call nodes and discards the fragment definitions,
- * so the lookups are wasted work here. Returning `undefined` makes the fragment
- * unrolling bail out early without affecting the discovered call nodes.
- */
-const wrapPluginInfoForTurbo = (info: PluginCreateInfo): PluginCreateInfo => {
-  let languageService: ts.LanguageService | undefined;
-  return {
-    get config() {
-      return info.config;
-    },
-    get languageService(): ts.LanguageService {
-      return (
-        languageService ||
-        (languageService = Object.assign(Object.create(info.languageService), {
-          getDefinitionAtPosition: () => undefined,
-        }))
-      );
-    },
-    get languageServiceHost() {
-      return info.languageServiceHost;
-    },
-    get project() {
-      return info.project;
-    },
-    get serverHost() {
-      return info.serverHost;
-    },
-  } as PluginCreateInfo;
-};
-
 export async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSignal> {
   const schemaNames = getSchemaNamesFromConfig(params.pluginConfig);
   const factory = programFactory(params);
@@ -289,7 +254,7 @@ export async function* _runTurbo(params: TurboParams): AsyncIterableIterator<Tur
   // Initially, we only build the program to count files
   // Later, we may reinstantiate to free up memory between batches
   let container = factory.build();
-  let pluginInfo = wrapPluginInfoForTurbo(container.buildPluginInfo(params.pluginConfig));
+  let pluginInfo = container.buildPluginInfo(params.pluginConfig);
   const turboOutputPaths = new Set(
     getTurboOutputPaths(params.turboOutputPath).map((fileName) => path.resolve(fileName))
   );
@@ -315,7 +280,12 @@ export async function* _runTurbo(params: TurboParams): AsyncIterableIterator<Tur
     const documents: TurboDocument[] = [];
     const warnings: TurboWarning[] = [];
 
-    const calls = findAllCallExpressions(sourceFile, pluginInfo, false).nodes;
+    // NOTE: Turbo only consumes the discovered call nodes, so fragment definitions
+    // aren't collected and external fragment documents aren't searched for
+    const calls = findAllCallExpressions(sourceFile, pluginInfo, {
+      searchExternal: false,
+      collectFragments: false,
+    }).nodes;
     for (const call of calls) {
       const callExpression = call.node.parent;
       if (!ts.isCallExpression(callExpression)) {
@@ -433,7 +403,7 @@ export async function* _runTurbo(params: TurboParams): AsyncIterableIterator<Tur
     // When heap or batch limit is reached, rotate out the type checker
     if (filesInBatch > 0 && (filesInBatch >= TURBO_MAX_BATCH || isHeapOverSoftLimit())) {
       container = factory.build();
-      pluginInfo = wrapPluginInfoForTurbo(container.buildPluginInfo(params.pluginConfig));
+      pluginInfo = container.buildPluginInfo(params.pluginConfig);
       forceGc();
       checker = container.program.getTypeChecker();
       filesInBatch = 0;
