@@ -8,6 +8,11 @@ allowBuilds:
   esbuild: true
   vue-demi: true
 
+# NOTE: First-party packages are exempt from the minimum release age
+# policy so freshly published versions can be adopted immediately
+minimumReleaseAgeExclude:
+  - '@0no-co/graphqlsp'
+
 overrides:
   gql.tada: workspace:*
   '@gql.tada/internal': workspace:*
