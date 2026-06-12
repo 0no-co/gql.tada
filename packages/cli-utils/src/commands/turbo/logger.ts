@@ -34,14 +34,15 @@ export function warningMessage(message: TurboWarning) {
   ]);
 }
 
+const reusedLabel = (count: number | undefined) => (count ? `, ${count} reused` : '');
+
 const documentSummary = (
   documentCount: number | Record<string, number>,
   cachedCount?: number | Record<string, number>
 ) => {
   let out = '';
   if (typeof documentCount === 'number') {
-    const cachedLabel =
-      typeof cachedCount === 'number' && cachedCount > 0 ? `, ${cachedCount} reused` : '';
+    const cachedLabel = reusedLabel(typeof cachedCount === 'number' ? cachedCount : undefined);
     out += t.text([
       t.cmd(t.CSI.Style, t.Style.BrightGreen),
       `${t.Icons.Tick} Type cache was generated successfully `,
@@ -54,9 +55,9 @@ const documentSummary = (
       `${t.Icons.Tick} Type caches were generated successfully.\n`,
     ]);
     for (const schemaName in documentCount) {
-      const schemaCachedCount =
-        cachedCount && typeof cachedCount !== 'number' ? cachedCount[schemaName] : undefined;
-      const cachedLabel = schemaCachedCount ? `, ${schemaCachedCount} reused` : '';
+      const cachedLabel = reusedLabel(
+        cachedCount && typeof cachedCount !== 'number' ? cachedCount[schemaName] : undefined
+      );
       out += t.text([
         t.cmd(t.CSI.Style, t.Style.BrightBlack),
         `${t.HeavyBox.BottomLeft} `,
