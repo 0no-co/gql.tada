@@ -1,6 +1,7 @@
 export type * from './types';
 
 import path from 'node:path';
+import { toError } from '../helpers';
 import { loadFromSDL } from './sdl';
 import { loadFromURL } from './url';
 
@@ -86,7 +87,7 @@ export function loadRef(
       return acc;
     }, {}),
 
-    autoupdate(config: BaseLoadConfig, onUpdate) {
+    autoupdate(config: BaseLoadConfig, onUpdate, onError) {
       const loaders = getLoaders(config);
       teardowns.push(
         ...loaders.map(({ input, loader }) => {
@@ -100,18 +101,21 @@ export function loadRef(
                 ref.current = { ...input, ...result };
               }
             })
-            .catch((_error) => {
-              /*noop*/
+            .catch((error) => {
+              if (onError) onError(toError(error), input);
             });
-          return loader.notifyOnUpdate((result) => {
-            ref.version++;
-            if (input.name) {
-              ref.multi[input.name] = { ...input, ...result };
-            } else {
-              ref.current = { ...input, ...result };
-            }
-            onUpdate(ref, input);
-          });
+          return loader.notifyOnUpdate(
+            (result) => {
+              ref.version++;
+              if (input.name) {
+                ref.multi[input.name] = { ...input, ...result };
+              } else {
+                ref.current = { ...input, ...result };
+              }
+              onUpdate(ref, input);
+            },
+            onError && ((error) => onError(toError(error), input))
+          );
         })
       );
       return () => {
@@ -119,11 +123,11 @@ export function loadRef(
         while ((teardown = teardowns.pop()) != null) teardown();
       };
     },
-    async load(config: BaseLoadConfig) {
+    async load(config: BaseLoadConfig & { reload?: boolean }) {
       const loaders = getLoaders(config);
       await Promise.all(
         loaders.map(async ({ input, loader }) => {
-          const result = await loader.load();
+          const result = await loader.load(config.reload);
           ref.version++;
           if (input.name) {
             ref.multi[input.name] = { ...input, ...result };
