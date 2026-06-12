@@ -105,7 +105,9 @@ const _sourceFolderCache: Record<string, Files> = {};
 const _fileCache: Record<string, FileData> = {};
 
 export function readFileFromRoot(name: string): FileData {
-  return _fileCache[name] || (_fileCache[name] = fs.readFileSync(path.join(virtualRoot, name)));
+  return (
+    _fileCache[name] || (_fileCache[name] = fs.readFileSync(path.join(virtualRoot, name), 'utf8'))
+  );
 }
 
 export function readVirtualModule(moduleName: string): Files {

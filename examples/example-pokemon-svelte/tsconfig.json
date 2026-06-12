@@ -10,7 +10,7 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "target": "es2016",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
