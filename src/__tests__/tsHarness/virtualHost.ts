@@ -41,7 +41,7 @@ export const compilerOptions: CompilerOptions = {
   disableSolutionSearching: true,
 };
 
-export type FileData = Uint8Array | string;
+export type FileData = Buffer | string;
 export type Files = Record<string, FileData>;
 
 class File {
@@ -197,7 +197,7 @@ export function createVirtualHost(files: Files) {
     const parts = split(name);
     let directory = root;
     for (let i = 0; i < parts.length - 1; i++) directory = directory.dir(parts[i]);
-    directory.set(parts[parts.length - 1], new File(name, data));
+    directory.set(parts[parts.length - 1], new File(name, data as any));
   }
 
   return {

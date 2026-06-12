@@ -1,10 +1,13 @@
 import ts from 'typescript';
+import v8 from 'node:v8';
+import vm from 'node:vm';
 import * as path from 'node:path';
 import type { GraphQLSPConfig } from '@gql.tada/internal';
 
 import { getSchemaNamesFromConfig } from '@gql.tada/internal';
 import { findAllCallExpressions } from '@0no-co/graphqlsp/api';
 
+import type { ProgramContainer, PluginCreateInfo } from '../../ts';
 import { programFactory } from '../../ts';
 import { expose } from '../../threads';
 
@@ -23,6 +26,9 @@ export interface TurboParams {
   pluginConfig: GraphQLSPConfig;
   turboOutputPath: string | TurboPath[];
 }
+
+const HEAP_SOFT_LIMIT_BYTES = 2_500 * 1_024 * 1_024;
+const TURBO_MAX_BATCH = 1_000;
 
 function traceCallToImportSource(
   callExpression: ts.CallExpression,
@@ -192,19 +198,25 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
     await factory.addVirtualFiles(externalFiles);
   }
 
-  const container = factory.build();
-  const pluginInfo = container.buildPluginInfo(params.pluginConfig);
-  const sourceFiles = container.getSourceFiles();
+  // Initially, we only build the program to count files
+  // Later, we may reinstantiate to free up memory between batches
+  let container = factory.build();
+  let pluginInfo = container.buildPluginInfo(params.pluginConfig);
+  const fileNames = container.getSourceFiles().map((sourceFile) => sourceFile.fileName);
 
   yield {
     kind: 'FILE_COUNT',
-    fileCount: sourceFiles.length,
+    fileCount: fileNames.length,
   };
 
-  const checker = container.program.getTypeChecker();
   const uniqueGraphQLSources = new Map<string, GraphQLSourceFile>();
 
-  for (const sourceFile of sourceFiles) {
+  const processSourceFile = (
+    sourceFile: ts.SourceFile,
+    container: ProgramContainer,
+    pluginInfo: PluginCreateInfo,
+    checker: ts.TypeChecker
+  ): { filePath: string; documents: TurboDocument[]; warnings: TurboWarning[] } => {
     let filePath = sourceFile.fileName;
     const documents: TurboDocument[] = [];
     const warnings: TurboWarning[] = [];
@@ -289,6 +301,39 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
       });
     }
 
+    return { filePath, documents, warnings };
+  };
+
+  const isHeapOverSoftLimit = (): boolean => {
+    if (process.memoryUsage().heapUsed < HEAP_SOFT_LIMIT_BYTES) return false;
+    forceGc();
+    return process.memoryUsage().heapUsed >= HEAP_SOFT_LIMIT_BYTES;
+  };
+
+  let checker = container.program.getTypeChecker();
+  let filesInBatch = 0;
+
+  for (const fileName of fileNames) {
+    // When heap or batch limit is reached, rotate out the type checker
+    if (filesInBatch > 0 && (filesInBatch >= TURBO_MAX_BATCH || isHeapOverSoftLimit())) {
+      container = factory.build();
+      pluginInfo = container.buildPluginInfo(params.pluginConfig);
+      forceGc();
+      checker = container.program.getTypeChecker();
+      filesInBatch = 0;
+    }
+
+    const sourceFile = container.getSourceFile(fileName);
+    if (!sourceFile) continue;
+
+    const { filePath, documents, warnings } = processSourceFile(
+      sourceFile,
+      container,
+      pluginInfo,
+      checker
+    );
+    filesInBatch++;
+
     yield {
       kind: 'FILE_TURBO',
       filePath,
@@ -303,6 +348,27 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
       sources: Array.from(uniqueGraphQLSources.values()),
     };
   }
+}
+
+let cachedGc: (() => void) | null | undefined;
+
+function forceGc(): void {
+  if (cachedGc === undefined) {
+    const existing = (globalThis as { gc?: () => void }).gc;
+    if (typeof existing === 'function') {
+      cachedGc = existing;
+    } else {
+      // NOTE: If gc isn't available, try to retrieve it via `node:vm`
+      try {
+        v8.setFlagsFromString('--expose-gc');
+        cachedGc = vm.runInNewContext('gc') as () => void;
+        v8.setFlagsFromString('--no-expose-gc');
+      } catch {
+        cachedGc = null;
+      }
+    }
+  }
+  if (cachedGc) cachedGc();
 }
 
 export const runTurbo = expose(_runTurbo);
