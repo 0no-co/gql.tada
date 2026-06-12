@@ -310,16 +310,10 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
           : undefined;
 
       let documentType: string;
+      let isCached = false;
       if (cachedDocument && cachedDocument.documentHash === documentHash.documentHash) {
         documentType = cachedDocument.documentType;
-        documents.push({
-          schemaName: call.schema,
-          argumentKey,
-          documentType,
-          documentHash: documentHash.documentHash,
-          isCached: true,
-        });
-        continue;
+        isCached = true;
       } else {
         const returnType = checker.getTypeAtLocation(callExpression);
         // NOTE: `returnType.symbol` is incorrectly typed and is in fact
@@ -344,6 +338,7 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
         argumentKey,
         documentType,
         documentHash: documentHash.documentHash,
+        isCached,
       });
     }
 
