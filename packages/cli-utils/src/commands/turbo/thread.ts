@@ -222,7 +222,12 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
   // Later, we may reinstantiate to free up memory between batches
   let container = factory.build();
   let pluginInfo = container.buildPluginInfo(params.pluginConfig);
-  const fileNames = container.getSourceFiles().map((sourceFile) => sourceFile.fileName);
+  const turboOutputPaths = new Set(
+    getTurboOutputPaths(params.turboOutputPath).map((fileName) => path.resolve(fileName))
+  );
+  const fileNames = factory.rootFileNames.filter(
+    (fileName) => !turboOutputPaths.has(path.resolve(fileName))
+  );
 
   yield {
     kind: 'FILE_COUNT',
@@ -394,6 +399,12 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
       sources: Array.from(uniqueGraphQLSources.values()),
     };
   }
+}
+
+function getTurboOutputPaths(turboOutputPath: string | TurboPath[]): string[] {
+  return typeof turboOutputPath === 'string'
+    ? [turboOutputPath]
+    : turboOutputPath.map((cfg) => cfg.path);
 }
 
 let cachedGc: (() => void) | null | undefined;
