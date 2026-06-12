@@ -20,21 +20,28 @@ type takeOptionalName<In extends any[]> = In extends [
   : _match<undefined, In>;
 
 // prettier-ignore
-export type takeValue<In extends any[], Const extends boolean> =
-  In extends [Token.Float, ...infer In] ? _match<{ kind: Kind.FLOAT; value: string }, In>
-  : In extends [Token.Integer, ...infer In] ? _match<{ kind: Kind.INT; value: string }, In>
-  : In extends [Token.String, ...infer In] ? _match<{ kind: Kind.STRING; value: string, block: false }, In>
-  : In extends [Token.BlockString, ...infer In] ? _match<{ kind: Kind.STRING; value: string, block: true }, In>
-  : In extends [{ kind: Token.Name, name: 'null' }, ...infer In] ? _match<{ kind: Kind.NULL }, In>
-  : In extends [{ kind: Token.Name, name: 'true' | 'false' }, ...infer In] ? _match<{ kind: Kind.BOOLEAN; value: boolean }, In>
-  : In extends [{ kind: Token.Name, name: infer Name }, ...infer In] ? _match<{ kind: Kind.ENUM; value: Name }, In>
-  : In extends [Token.BracketOpen, ...infer In] ? takeListRec<[], In, Const>
-  : In extends [Token.BraceOpen, ...infer In] ? takeObjectRec<[], In, Const>
-  : Const extends false
-    ? In extends [{ kind: Token.Var, name: infer Name }, ...infer In]
-      ? _match<{ kind: Kind.VARIABLE; name: { kind: Kind.NAME; value: Name } }, In>
+export type takeValue<In extends any[], Const extends boolean> = In extends [
+  infer Head,
+  ...infer In,
+]
+  ? Head extends Token.Float ? _match<{ kind: Kind.FLOAT; value: string }, In>
+    : Head extends Token.Integer ? _match<{ kind: Kind.INT; value: string }, In>
+    : Head extends Token.String ? _match<{ kind: Kind.STRING; value: string, block: false }, In>
+    : Head extends Token.BlockString ? _match<{ kind: Kind.STRING; value: string, block: true }, In>
+    : Head extends { kind: Token.Name, name: infer Name }
+      ? Name extends 'null'
+        ? _match<{ kind: Kind.NULL }, In>
+        : Name extends 'true' | 'false'
+          ? _match<{ kind: Kind.BOOLEAN; value: boolean }, In>
+          : _match<{ kind: Kind.ENUM; value: Name }, In>
+    : Head extends Token.BracketOpen ? takeListRec<[], In, Const>
+    : Head extends Token.BraceOpen ? takeObjectRec<[], In, Const>
+    : Const extends false
+      ? Head extends { kind: Token.Var, name: infer Name }
+        ? _match<{ kind: Kind.VARIABLE; name: { kind: Kind.NAME; value: Name } }, In>
+        : void
       : void
-    : void;
+  : void;
 
 export type takeString<In extends any[]> = In extends [Token.String, ...infer In]
   ? _match<{ kind: Kind.STRING; value: string; block: false }, In>
@@ -116,10 +123,15 @@ export type takeDirective<In extends any[], Const extends boolean> = In extends 
     : void
   : void;
 
-export type takeDirectives<In extends any[], Const extends boolean, Directives extends any[] = []> =
-  takeDirective<In, Const> extends _match<infer Directive, infer In>
+export type takeDirectives<
+  In extends any[],
+  Const extends boolean,
+  Directives extends any[] = [],
+> = In extends [{ kind: Token.Directive }, ...any[]]
+  ? takeDirective<In, Const> extends _match<infer Directive, infer In>
     ? takeDirectives<In, Const, [...Directives, Directive]>
-    : _match<Directives, In>;
+    : _match<Directives, In>
+  : _match<Directives, In>;
 
 type _takeFieldName<In extends any[]> = In extends [
   { kind: Token.Name; name: infer MaybeAlias },
@@ -134,18 +146,20 @@ type _takeField<In extends any[]> =
   _takeFieldName<In> extends _match2<infer Alias, infer Name, infer In>
     ? takeArguments<In, false> extends _match<infer Arguments, infer In>
       ? takeDirectives<In, false> extends _match<infer Directives, infer In>
-        ? takeSelectionSet<In> extends _match<infer SelectionSet, infer In>
-          ? _match<
-              {
-                kind: Kind.FIELD;
-                alias: Alias;
-                name: Name;
-                arguments: Arguments;
-                directives: Directives;
-                selectionSet: SelectionSet;
-              },
-              In
-            >
+        ? In extends [Token.BraceOpen, ...any[]]
+          ? takeSelectionSet<In> extends _match<infer SelectionSet, infer In>
+            ? _match<
+                {
+                  kind: Kind.FIELD;
+                  alias: Alias;
+                  name: Name;
+                  arguments: Arguments;
+                  directives: Directives;
+                  selectionSet: SelectionSet;
+                },
+                In
+              >
+            : void
           : _match<
               {
                 kind: Kind.FIELD;
@@ -160,6 +174,51 @@ type _takeField<In extends any[]> =
         : void
       : void
     : void;
+
+type _takeFragmentSpread<In extends any[]> = In extends [Token.Spread, ...infer In]
+  ? In extends [
+      { kind: Token.Name; name: 'on' },
+      { kind: Token.Name; name: infer Type },
+      ...infer In,
+    ]
+    ? takeDirectives<In, false> extends _match<infer Directives, infer In>
+      ? takeSelectionSet<In> extends _match<infer SelectionSet, infer In>
+        ? _match<
+            {
+              kind: Kind.INLINE_FRAGMENT;
+              typeCondition: { kind: Kind.NAMED_TYPE; name: { kind: Kind.NAME; value: Type } };
+              directives: Directives;
+              selectionSet: SelectionSet;
+            },
+            In
+          >
+        : void
+      : void
+    : In extends [{ kind: Token.Name; name: infer Name }, ...infer In]
+      ? takeDirectives<In, false> extends _match<infer Directives, infer In>
+        ? _match<
+            {
+              kind: Kind.FRAGMENT_SPREAD;
+              name: { kind: Kind.NAME; value: Name };
+              directives: Directives;
+            },
+            In
+          >
+        : void
+      : takeDirectives<In, false> extends _match<infer Directives, infer In>
+        ? takeSelectionSet<In> extends _match<infer SelectionSet, infer In>
+          ? _match<
+              {
+                kind: Kind.INLINE_FRAGMENT;
+                typeCondition: undefined;
+                directives: Directives;
+                selectionSet: SelectionSet;
+              },
+              In
+            >
+          : void
+        : void
+  : void;
 
 export type takeType<In extends any[]> = In extends [Token.BracketOpen, ...infer In]
   ? takeType<In> extends _match<infer Subtype, infer In>
@@ -181,60 +240,20 @@ export type takeType<In extends any[]> = In extends [Token.BracketOpen, ...infer
       : _match<{ kind: Kind.NAMED_TYPE; name: { kind: Kind.NAME; value: Name } }, In>
     : void;
 
-type _takeFragmentSpread<In extends any[]> = In extends [
-  Token.Spread,
-  { kind: Token.Name; name: 'on' },
-  { kind: Token.Name; name: infer Type },
-  ...infer In,
+type _takeSelectionRec<Selections extends any[], In extends any[]> = In extends [
+  { kind: Token.Name },
+  ...any[],
 ]
-  ? takeDirectives<In, false> extends _match<infer Directives, infer In>
-    ? takeSelectionSet<In> extends _match<infer SelectionSet, infer In>
-      ? _match<
-          {
-            kind: Kind.INLINE_FRAGMENT;
-            typeCondition: { kind: Kind.NAMED_TYPE; name: { kind: Kind.NAME; value: Type } };
-            directives: Directives;
-            selectionSet: SelectionSet;
-          },
-          In
-        >
-      : void
-    : void
-  : In extends [Token.Spread, { kind: Token.Name; name: infer Name }, ...infer In]
-    ? takeDirectives<In, false> extends _match<infer Directives, infer In>
-      ? _match<
-          {
-            kind: Kind.FRAGMENT_SPREAD;
-            name: { kind: Kind.NAME; value: Name };
-            directives: Directives;
-          },
-          In
-        >
-      : void
-    : In extends [Token.Spread, ...infer In]
-      ? takeDirectives<In, false> extends _match<infer Directives, infer In>
-        ? takeSelectionSet<In> extends _match<infer SelectionSet, infer In>
-          ? _match<
-              {
-                kind: Kind.INLINE_FRAGMENT;
-                typeCondition: undefined;
-                directives: Directives;
-                selectionSet: SelectionSet;
-              },
-              In
-            >
-          : void
-        : void
-      : void;
-
-type _takeSelectionRec<Selections extends any[], In extends any[]> =
-  _takeField<In> extends _match<infer Selection, infer In>
+  ? _takeField<In> extends _match<infer Selection, infer In>
     ? _takeSelectionRec<[...Selections, Selection], In>
-    : _takeFragmentSpread<In> extends _match<infer Selection, infer In>
+    : void
+  : In extends [Token.Spread, ...any[]]
+    ? _takeFragmentSpread<In> extends _match<infer Selection, infer In>
       ? _takeSelectionRec<[...Selections, Selection], In>
-      : In extends [Token.BraceClose, ...infer In]
-        ? _match<{ kind: Kind.SELECTION_SET; selections: Selections }, In>
-        : void;
+      : void
+    : In extends [Token.BraceClose, ...infer In]
+      ? _match<{ kind: Kind.SELECTION_SET; selections: Selections }, In>
+      : void;
 
 export type takeSelectionSet<In extends any[]> = In extends [Token.BraceOpen, ...infer In]
   ? _takeSelectionRec<[], In>
@@ -281,9 +300,11 @@ type _takeVarDefinitionRec<Definitions extends any[], In extends any[]> = In ext
   ...infer In,
 ]
   ? _match<Definitions, In>
-  : takeVarDefinition<In> extends _match<infer Definition, infer In>
-    ? _takeVarDefinitionRec<[...Definitions, Definition], In>
-    : takeString<In> extends _match<infer _, infer In>
+  : In extends [{ kind: Token.Var }, ...any[]]
+    ? takeVarDefinition<In> extends _match<infer Definition, infer In>
+      ? _takeVarDefinitionRec<[...Definitions, Definition], In>
+      : _match<Definitions, In>
+    : In extends [Token.String | Token.BlockString, ...infer In]
       ? _takeVarDefinitionRec<[...Definitions], In>
       : _match<Definitions, In>;
 
@@ -314,13 +335,18 @@ export type takeFragmentDefinition<In extends any[]> = In extends [
     : void
   : void;
 
-type takeOperation<In extends any[]> = In extends [{ kind: Token.Name; name: 'query' }, ...infer In]
-  ? _match<OperationTypeNode.QUERY, In>
-  : In extends [{ kind: Token.Name; name: 'mutation' }, ...infer In]
-    ? _match<OperationTypeNode.MUTATION, In>
-    : In extends [{ kind: Token.Name; name: 'subscription' }, ...infer In]
-      ? _match<OperationTypeNode.SUBSCRIPTION, In>
-      : void;
+type takeOperation<In extends any[]> = In extends [
+  { kind: Token.Name; name: infer Operation },
+  ...infer In,
+]
+  ? Operation extends 'query'
+    ? _match<OperationTypeNode.QUERY, In>
+    : Operation extends 'mutation'
+      ? _match<OperationTypeNode.MUTATION, In>
+      : Operation extends 'subscription'
+        ? _match<OperationTypeNode.SUBSCRIPTION, In>
+        : void
+  : void;
 
 export type takeOperationDefinition<In extends any[]> =
   takeOperation<In> extends _match<infer Operation, infer In>
@@ -357,12 +383,22 @@ export type takeOperationDefinition<In extends any[]> =
         >
       : void;
 
-type _takeDocumentRec<Definitions extends any[], In extends any[]> =
-  takeFragmentDefinition<In> extends _match<infer Definition, infer In>
+type _takeDocumentRec<Definitions extends any[], In extends any[]> = In extends [
+  { kind: Token.Name; name: 'fragment' },
+  ...any[],
+]
+  ? takeFragmentDefinition<In> extends _match<infer Definition, infer In>
     ? _takeDocumentRec<[...Definitions, Definition], In>
-    : takeOperationDefinition<In> extends _match<infer Definition, infer In>
+    : _match<Definitions, In>
+  : In extends [{ kind: Token.Name; name: 'query' | 'mutation' | 'subscription' }, ...any[]]
+    ? takeOperationDefinition<In> extends _match<infer Definition, infer In>
       ? _takeDocumentRec<[...Definitions, Definition], In>
-      : takeString<In> extends _match<infer _, infer In>
+      : _match<Definitions, In>
+    : In extends [Token.BraceOpen, ...any[]]
+      ? takeOperationDefinition<In> extends _match<infer Definition, infer In>
+        ? _takeDocumentRec<[...Definitions, Definition], In>
+        : _match<Definitions, In>
+      : In extends [Token.String | Token.BlockString, ...infer In]
         ? _takeDocumentRec<[...Definitions], In>
         : _match<Definitions, In>;
 
