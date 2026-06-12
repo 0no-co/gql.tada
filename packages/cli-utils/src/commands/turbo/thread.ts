@@ -187,13 +187,8 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
   const factory = programFactory(params);
   const cachedDocumentsByPath = new Map<string, CachedTurboDocuments>();
 
-  const getTurboOutputPath = (schemaName: string | null): string | undefined => {
-    if (typeof params.turboOutputPath === 'string') return params.turboOutputPath;
-    return params.turboOutputPath.find((cfg) => cfg.schemaName === schemaName)?.path;
-  };
-
   const getCachedDocuments = (schemaName: string | null): CachedTurboDocuments => {
-    const turboOutputPath = getTurboOutputPath(schemaName);
+    const turboOutputPath = getTurboOutputPath(params.turboOutputPath, schemaName);
     if (!turboOutputPath) return new Map();
 
     let cachedDocuments = cachedDocumentsByPath.get(turboOutputPath);
@@ -279,7 +274,7 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
       if (graphqlSourcePath && !uniqueGraphQLSources.has(graphqlSourcePath)) {
         const graphqlSourceFile = container.program.getSourceFile(graphqlSourcePath);
         if (graphqlSourceFile) {
-          const turboPath = getTurboOutputPath(call.schema);
+          const turboPath = getTurboOutputPath(params.turboOutputPath, call.schema);
           const imports = collectImportsFromSourceFile(
             graphqlSourceFile,
             params.pluginConfig,
@@ -395,6 +390,14 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
       sources: Array.from(uniqueGraphQLSources.values()),
     };
   }
+}
+
+function getTurboOutputPath(
+  turboOutputPath: string | TurboPath[],
+  schemaName: string | null
+): string | undefined {
+  if (typeof turboOutputPath === 'string') return turboOutputPath;
+  return turboOutputPath.find((cfg) => cfg.schemaName === schemaName)?.path;
 }
 
 function getTurboOutputPaths(turboOutputPath: string | TurboPath[]): string[] {
