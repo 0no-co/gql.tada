@@ -23,7 +23,7 @@ import type {
 } from './types';
 import { readCachedTurboDocuments, type CachedTurboDocuments } from './cache';
 import { createDocumentHasher } from './hash';
-import { shouldScanTurboFile } from './scan';
+import { hasGraphQLDocumentCandidate, shouldScanTurboFile } from './scan';
 
 export interface TurboParams {
   rootPath: string;
@@ -279,6 +279,10 @@ export async function* _runTurbo(params: TurboParams): AsyncIterableIterator<Tur
     let filePath = sourceFile.fileName;
     const documents: TurboDocument[] = [];
     const warnings: TurboWarning[] = [];
+
+    if (!hasGraphQLDocumentCandidate(sourceFile)) {
+      return { filePath, documents, warnings };
+    }
 
     // NOTE: Turbo only consumes the discovered call nodes, so fragment definitions
     // aren't collected and external fragment documents aren't searched for
