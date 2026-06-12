@@ -288,13 +288,14 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
         }
       }
 
-      const argumentType = checker.getTypeAtLocation(call.node);
       const argumentKey: string =
-        'value' in argumentType &&
-        typeof argumentType.value === 'string' &&
-        (argumentType.flags & ts.TypeFlags.StringLiteral) === 0
-          ? JSON.stringify(argumentType.value)
-          : checker.typeToString(argumentType, callExpression, BUILDER_FLAGS);
+        ts.isStringLiteral(call.node) || ts.isNoSubstitutionTemplateLiteral(call.node)
+          ? JSON.stringify(call.node.text)
+          : checker.typeToString(
+              checker.getTypeAtLocation(call.node),
+              callExpression,
+              BUILDER_FLAGS
+            );
 
       const documentHash = documentHasher.hashCallExpression(callExpression, call.schema);
       const cachedDocument =
