@@ -141,7 +141,13 @@ describe.skipIf(!process.env.BENCH)('turbo performance', () => {
     'runs turbo end-to-end on a synthetic project',
     async () => {
       const { _runTurbo } = await import('../thread');
-      const { loadConfig, parseConfig } = await import('@gql.tada/internal');
+      // NOTE: The non-literal specifier defers resolution to runtime; this package
+      // resolves to its built dist, which isn't available in CI, where this suite
+      // is skipped before this import runs
+      const internalPackageId = '@gql.tada/internal';
+      const { loadConfig, parseConfig } = (await import(
+        internalPackageId
+      )) as typeof import('@gql.tada/internal');
 
       const { rootPath, configPath } = await createFixture();
       try {
