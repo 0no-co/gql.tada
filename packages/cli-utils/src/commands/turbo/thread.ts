@@ -333,14 +333,7 @@ export async function* _runTurbo(params: TurboParams): AsyncIterableIterator<Tur
         }
       }
 
-      const argumentKey: string =
-        ts.isStringLiteral(call.node) || ts.isNoSubstitutionTemplateLiteral(call.node)
-          ? JSON.stringify(call.node.text)
-          : checker.typeToString(
-              checker.getTypeAtLocation(call.node),
-              callExpression,
-              BUILDER_FLAGS
-            );
+      const argumentKey = JSON.stringify(call.node.text);
 
       const documentHash = documentHasher.hashCallExpression(callExpression, call.schema);
       const cachedDocument =
