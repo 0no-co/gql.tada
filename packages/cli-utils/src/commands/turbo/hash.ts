@@ -1,6 +1,5 @@
 import ts from 'typescript';
 import * as crypto from 'node:crypto';
-import type { GraphQLSPConfig } from '@gql.tada/internal';
 
 // NOTE(@kitten): Change if document type input or output changes
 const CACHE_BUSTER = 'turbo-document-hash-v1';
@@ -19,21 +18,13 @@ export interface DocumentHasher {
 
 interface HashContext {
   readonly checker: ts.TypeChecker;
-  pluginConfig: GraphQLSPConfig;
+  schemaFingerprints: ReadonlyMap<string | null, string>;
 }
 
 export function createDocumentHasher(context: HashContext): DocumentHasher {
   const callExpressionCache = new WeakMap<ts.CallExpression, Map<string, DocumentHashResult>>();
   const symbolCallCache = new Map<ts.Symbol, ts.CallExpression | null>();
   const activeCalls = new WeakSet<ts.CallExpression>();
-
-  let _pluginConfigKey: string | null;
-  const computePluginConfigKey = () => {
-    if (_pluginConfigKey == null) {
-      _pluginConfigKey = stableStringify(context.pluginConfig);
-    }
-    return _pluginConfigKey;
-  };
 
   const hashCallExpression = (
     callExpression: ts.CallExpression,
@@ -79,7 +70,7 @@ export function createDocumentHasher(context: HashContext): DocumentHasher {
 
     addHashPart(hash, CACHE_BUSTER);
     addHashPart(hash, schemaName || '');
-    addHashPart(hash, computePluginConfigKey());
+    addHashPart(hash, context.schemaFingerprints.get(schemaName) || '');
     addHashPart(hash, documentText);
     for (const fragmentHash of fragmentHashes) {
       addHashPart(hash, fragmentHash);
@@ -204,15 +195,4 @@ function addHashPart(hash: crypto.Hash, part: string): void {
   hash.update(`${part.length}:`);
   hash.update(part);
   hash.update('\0');
-}
-
-function stableStringify(input: unknown): string {
-  if (input === null || typeof input !== 'object') return JSON.stringify(input) ?? 'undefined';
-  if (Array.isArray(input)) return `[${input.map(stableStringify).join(',')}]`;
-
-  const record = input as Record<string, unknown>;
-  return `{${Object.keys(record)
-    .sort()
-    .map((key) => `${JSON.stringify(key)}:${stableStringify(record[key])}`)
-    .join(',')}}`;
 }

@@ -1,10 +1,12 @@
 import ts from 'typescript';
 import v8 from 'node:v8';
 import vm from 'node:vm';
+import * as fs from 'node:fs';
 import * as path from 'node:path';
+import * as crypto from 'node:crypto';
 import type { GraphQLSPConfig } from '@gql.tada/internal';
 
-import { getSchemaNamesFromConfig } from '@gql.tada/internal';
+import { getSchemaNamesFromConfig, getSchemaConfigForName } from '@gql.tada/internal';
 import { findAllCallExpressions } from '@0no-co/graphqlsp/api';
 
 import type { ProgramContainer, PluginCreateInfo } from '../../ts';
@@ -351,7 +353,7 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
     get checker() {
       return checker;
     },
-    pluginConfig: params.pluginConfig,
+    schemaFingerprints: computeSchemaFingerprints(params),
   });
   let filesInBatch = 0;
 
@@ -390,6 +392,27 @@ async function* _runTurbo(params: TurboParams): AsyncIterableIterator<TurboSigna
       sources: Array.from(uniqueGraphQLSources.values()),
     };
   }
+}
+
+function computeSchemaFingerprints(params: TurboParams): Map<string | null, string> {
+  const fingerprints = new Map<string | null, string>();
+  const configDir = path.dirname(params.configPath);
+  for (const schemaName of getSchemaNamesFromConfig(params.pluginConfig)) {
+    const schemaConfig = getSchemaConfigForName(params.pluginConfig, schemaName || undefined);
+    const outputLocation = schemaConfig && schemaConfig.tadaOutputLocation;
+    if (!outputLocation) continue;
+
+    let contents: string;
+    try {
+      contents = fs.readFileSync(path.resolve(configDir, outputLocation), 'utf8');
+    } catch {
+      continue;
+    }
+
+    const hash = crypto.createHash('sha256').update(contents).digest('hex');
+    fingerprints.set(schemaName, `sha256:${hash.slice(0, 32)}`);
+  }
+  return fingerprints;
 }
 
 function getTurboOutputPath(

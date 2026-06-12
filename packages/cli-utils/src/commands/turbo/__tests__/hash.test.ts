@@ -33,6 +33,27 @@ describe('createDocumentHasher', () => {
     expect(a.documentHash).not.toBe(b.documentHash);
   });
 
+  it('salts hashes by schema fingerprint', () => {
+    const before = createFixture(
+      `
+        declare const graphql: any;
+        export const query = graphql(\`query Todos { todos { id } }\`);
+      `,
+      new Map([[null, 'sha256:schema-a']])
+    );
+    const after = createFixture(
+      `
+        declare const graphql: any;
+        export const query = graphql(\`query Todos { todos { id } }\`);
+      `,
+      new Map([[null, 'sha256:schema-b']])
+    );
+
+    expect(before.hashes.query.hashable).toBe(true);
+    expect(after.hashes.query.hashable).toBe(true);
+    expect(before.hashes.query.documentHash).not.toBe(after.hashes.query.documentHash);
+  });
+
   it('does not hash dynamic fragment lists', () => {
     const fixture = createFixture(`
       declare const graphql: any;
@@ -44,7 +65,10 @@ describe('createDocumentHasher', () => {
   });
 });
 
-function createFixture(sourceText: string) {
+function createFixture(
+  sourceText: string,
+  schemaFingerprints: ReadonlyMap<string | null, string> = new Map()
+) {
   const fileName = '/fixture.ts';
   const sourceFile = ts.createSourceFile(
     fileName,
@@ -73,7 +97,7 @@ function createFixture(sourceText: string) {
   const calls = getExportedCalls(sourceFile);
   const hasher = createDocumentHasher({
     checker,
-    pluginConfig: { schema: undefined } as any,
+    schemaFingerprints,
   });
   const hashes = Object.fromEntries(
     Object.entries(calls).map(([name, call]) => [name, hasher.hashCallExpression(call, null)])
