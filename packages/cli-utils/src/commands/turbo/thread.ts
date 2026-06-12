@@ -23,7 +23,7 @@ import type {
 } from './types';
 import { readCachedTurboDocuments, type CachedTurboDocuments } from './cache';
 import { createDocumentHasher } from './hash';
-import { shouldScanTurboFile } from './scan';
+import { hasGraphQLDocumentCandidate, shouldScanTurboFile } from './scan';
 
 export interface TurboParams {
   rootPath: string;
@@ -280,6 +280,10 @@ export async function* _runTurbo(params: TurboParams): AsyncIterableIterator<Tur
     const documents: TurboDocument[] = [];
     const warnings: TurboWarning[] = [];
 
+    if (!hasGraphQLDocumentCandidate(sourceFile)) {
+      return { filePath, documents, warnings };
+    }
+
     // NOTE: Turbo only consumes the discovered call nodes, so fragment definitions
     // aren't collected and external fragment documents aren't searched for
     const calls = findAllCallExpressions(sourceFile, pluginInfo, {
@@ -333,14 +337,7 @@ export async function* _runTurbo(params: TurboParams): AsyncIterableIterator<Tur
         }
       }
 
-      const argumentKey: string =
-        ts.isStringLiteral(call.node) || ts.isNoSubstitutionTemplateLiteral(call.node)
-          ? JSON.stringify(call.node.text)
-          : checker.typeToString(
-              checker.getTypeAtLocation(call.node),
-              callExpression,
-              BUILDER_FLAGS
-            );
+      const argumentKey = JSON.stringify(call.node.text);
 
       const documentHash = documentHasher.hashCallExpression(callExpression, call.schema);
       const cachedDocument =
