@@ -76,4 +76,55 @@ describe('programFactory', () => {
       await fs.rm(rootPath, { recursive: true, force: true });
     }
   });
+
+  it('keeps root file names scoped to the parsed tsconfig inputs', async () => {
+    const rootPath = await fs.mkdtemp(path.join(os.tmpdir(), 'gql-tada-factory-'));
+
+    try {
+      const { programFactory } = await import('../factory');
+      const configPath = path.join(rootPath, 'tsconfig.json');
+      const entryPath = path.join(rootPath, 'src', 'entry.ts');
+      const importedPath = path.join(rootPath, 'src', 'imported.ts');
+      const outsidePath = path.join(rootPath, 'outside-rootdir', 'outside.ts');
+
+      await fs.mkdir(path.join(rootPath, 'src'), { recursive: true });
+      await fs.mkdir(path.join(rootPath, 'outside-rootdir'), { recursive: true });
+
+      await Promise.all([
+        fs.writeFile(
+          configPath,
+          JSON.stringify(
+            {
+              compilerOptions: {
+                rootDir: 'src',
+                module: 'esnext',
+                moduleResolution: 'bundler',
+              },
+              include: ['src/entry.ts'],
+            },
+            null,
+            2
+          )
+        ),
+        fs.writeFile(
+          entryPath,
+          "import './imported';\nimport '../outside-rootdir/outside';\nexport const entry = 1;\n"
+        ),
+        fs.writeFile(importedPath, 'export const imported = 1;\n'),
+        fs.writeFile(outsidePath, 'export const outside = 1;\n'),
+      ]);
+
+      const factory = programFactory({ rootPath, configPath });
+      const container = factory.build();
+      const programFileNames = container.getSourceFiles().map((file) => file.fileName);
+
+      expect(factory.rootFileNames).toContain(entryPath);
+      expect(factory.rootFileNames).not.toContain(importedPath);
+      expect(factory.rootFileNames).not.toContain(outsidePath);
+      expect(programFileNames).toContain(importedPath);
+      expect(programFileNames).toContain(outsidePath);
+    } finally {
+      await fs.rm(rootPath, { recursive: true, force: true });
+    }
+  });
 });

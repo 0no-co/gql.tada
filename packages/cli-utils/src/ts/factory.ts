@@ -33,6 +33,7 @@ export interface ProgramFactory {
   readonly projectPath: string;
   readonly wasOriginallyNodeNext: boolean;
   readonly projectDirectories: readonly string[];
+  readonly rootFileNames: readonly string[];
 
   createSourceFile(params: SourceFileParams, scriptKind?: ts.ScriptKind): ts.SourceFile;
   createExternalFiles(exts?: readonly VirtualExtension[]): readonly ts.SourceFile[];
@@ -97,6 +98,10 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
       const directories = new Set([params.rootPath]);
       for (const rootName of rootNames) directories.add(path.dirname(rootName));
       return [...directories];
+    },
+
+    get rootFileNames() {
+      return [...rootNames];
     },
 
     createSourceFile(params, scriptKind) {

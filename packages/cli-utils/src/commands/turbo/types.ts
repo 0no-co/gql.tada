@@ -14,6 +14,8 @@ export interface TurboDocument {
   schemaName: string | null;
   argumentKey: string;
   documentType: string;
+  documentHash?: string | undefined;
+  isCached?: boolean | undefined;
 }
 
 export interface GraphQLSourceImport {

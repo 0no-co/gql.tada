@@ -92,6 +92,7 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
   let warnings = 0;
   let totalFileCount = 0;
   let fileCount = 0;
+  let cachedDocumentCount = 0;
 
   try {
     if (tty.isInteractive) yield logger.runningTurbo();
@@ -108,6 +109,7 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
       } else {
         fileCount++;
         documents.push(...signal.documents);
+        cachedDocumentCount += signal.documents.filter((document) => document.isCached).length;
         warnings += signal.warnings.length;
         if (signal.warnings.length) {
           let buffer = logger.warningFile(signal.filePath);
@@ -131,15 +133,13 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
     }
 
     try {
-      const cache: Record<string, string> = {};
-      for (const item of documents) cache[item.argumentKey] = item.documentType;
-      const contents = createCacheContents(cache, graphqlSources, destination!);
+      const contents = createCacheContents(documents, graphqlSources, destination!);
       await writeOutput(destination!, contents);
     } catch (error) {
       throw logger.externalError('Something went wrong while writing the type cache file', error);
     }
 
-    yield logger.infoSummary(warnings, documents.length);
+    yield logger.infoSummary(warnings, documents.length, cachedDocumentCount);
   } else {
     if (opts.output) {
       throw logger.errorMessage(
@@ -153,6 +153,7 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
     }
 
     const documentCount: Record<string, number> = {};
+    const cachedCount: Record<string, number> = {};
     for (const schemaConfig of pluginConfig.schemas) {
       const { name, tadaTurboLocation } = schemaConfig;
       if (!tadaTurboLocation) {
@@ -166,11 +167,13 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
 
       try {
         documentCount[name] = 0;
-        const cache: Record<string, string> = {};
+        cachedCount[name] = 0;
+        const cache: TurboDocument[] = [];
         for (const item of documents) {
           if (item.schemaName === name) {
-            cache[item.argumentKey] = item.documentType;
+            cache.push(item);
             documentCount[name]++;
+            if (item.isCached) cachedCount[name]++;
           }
         }
         const destination = path.resolve(projectPath, tadaTurboLocation);
@@ -187,20 +190,24 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
     if (warnings && opts.failOnWarn) {
       throw logger.warningSummary(warnings);
     } else {
-      yield logger.infoSummary(warnings, documentCount);
+      yield logger.infoSummary(warnings, documentCount, cachedCount);
     }
   }
 }
 
 function createCacheContents(
-  cache: Record<string, string>,
+  cache: TurboDocument[],
   graphqlSources: GraphQLSourceFile[],
   turboDestination: WriteTarget
 ): string {
+  const documentsByKey = new Map<string, TurboDocument>();
+  for (const document of cache) documentsByKey.set(document.argumentKey, document);
+
   let output = '';
-  for (const key in cache) {
+  for (const document of documentsByKey.values()) {
     if (output) output += '\n';
-    output += `    ${key}:\n      ${cache[key]};`;
+    if (document.documentHash) output += `    /** @gql.tada/hash ${document.documentHash} */\n`;
+    output += `    ${document.argumentKey}:\n      ${document.documentType};`;
   }
 
   let imports = "import type { TadaDocumentNode, $tada } from 'gql.tada';\n";
