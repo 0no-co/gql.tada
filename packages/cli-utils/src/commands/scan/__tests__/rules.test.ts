@@ -64,6 +64,17 @@ describe('default rules', () => {
     expect((hotspots[0].data as { spreadCount: number }).spreadCount).toBe(2);
   });
 
+  it('operation-footprint includes fields reached through fragments', () => {
+    const a = rules['operation-footprint'].find(
+      (d) => d.ref.kind === 'operation' && d.ref.id === ':operation:A'
+    );
+    expect((a?.data as { fields: string[] }).fields).toEqual([
+      'Pokemon.id',
+      'Pokemon.name',
+      'Query.pokemons',
+    ]);
+  });
+
   it('directive-usage counts directive applications', () => {
     const result = analyze({
       documents: [doc('query C { viewer @skip(if: true) { id @include(if: false) } }', '/p/c.ts')],
