@@ -30,14 +30,6 @@ export class ScanCommand extends Command {
     description: 'Triggers an error and a non-zero exit code if any warnings have been reported',
   });
 
-  field = Option.String('--field', {
-    description: 'Show where a schema coordinate (`Type.field`) is used, then exit.',
-  });
-
-  module = Option.String('--module', {
-    description: 'Show the schema surface a module depends on, then exit.',
-  });
-
   async execute() {
     const tty = initTTY();
     const result = await tty.start(
@@ -47,8 +39,6 @@ export class ScanCommand extends Command {
         output: this.output,
         annotation: this.annotation === 'description' ? 'description' : 'comment',
         failOnWarn: this.failOnWarn,
-        field: this.field,
-        module: this.module,
       })
     );
     return exitCode() || (typeof result === 'object' ? result.exit : 0);

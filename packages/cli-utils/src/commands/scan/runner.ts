@@ -11,7 +11,6 @@ import { analyze } from './analyze';
 import { renderJson } from './output/json';
 import { renderAnnotatedSchema, type AnnotationStyle } from './output/schema';
 import { renderTerminalReport } from './output/terminal';
-import { renderFieldQuery, renderModuleQuery } from './output/query';
 import * as logger from './logger';
 
 export type ScanFormat = 'json' | 'schema';
@@ -27,10 +26,6 @@ export interface ScanOptions {
   annotation: AnnotationStyle;
   /** Whether to fail with a non-zero exit code if any warnings are reported. */
   failOnWarn: boolean;
-  /** Reverse-index query: show where a `Type.field` coordinate is used. */
-  field: string | undefined;
-  /** Forward query: show the schema surface a module depends on. */
-  module: string | undefined;
 }
 
 async function loadSchemas(project: ProjectContext): Promise<Map<SchemaName, GraphQLSchema>> {
@@ -59,9 +54,7 @@ export async function* run(tty: TTY, opts: ScanOptions): AsyncIterable<ComposeIn
     throw logger.externalError('Failed to load configuration.', error);
   }
 
-  const isQuery = !!(opts.field || opts.module);
-  const writesFile = !!opts.format && !isQuery;
-  if (projects.length > 1 && writesFile && (opts.output || tty.pipeTo)) {
+  if (projects.length > 1 && opts.format && (opts.output || tty.pipeTo)) {
     throw logger.errorMessage(
       'Output path was specified, while multiple projects are configured.\n' +
         logger.hint(
@@ -142,14 +135,6 @@ async function* runProject(
 
   const { context, rules } = analyze({ documents, schemas, imports, warnings });
   const corpus = context.toCorpus();
-
-  if (opts.field) {
-    yield renderFieldQuery(corpus, rules, opts.field);
-    return corpus.warnings.length;
-  } else if (opts.module) {
-    yield renderModuleQuery(corpus, rules, opts.module);
-    return corpus.warnings.length;
-  }
 
   if (opts.format === 'json') {
     yield* writeArtifact(tty, opts, 'JSON report', () => renderJson(corpus, rules));
