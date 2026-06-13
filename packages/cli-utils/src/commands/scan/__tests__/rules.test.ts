@@ -86,8 +86,11 @@ describe('default rules', () => {
     expect(scores).toEqual([...scores].sort((a, b) => b - a));
   });
 
-  it('has no standalone type-size rule (folded into operation-complexity)', () => {
+  it('operation-complexity reports structural metrics only (no type size)', () => {
     expect(rules['type-size-hotspots']).toBeUndefined();
-    expect(rules['operation-complexity'][0].data).toHaveProperty('typeSize');
+    const data = rules['operation-complexity'][0].data;
+    expect(data).toHaveProperty('depth');
+    expect(data).toHaveProperty('fieldCount');
+    expect(data).not.toHaveProperty('typeSize');
   });
 });

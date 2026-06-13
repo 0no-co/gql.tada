@@ -25,9 +25,6 @@ export interface RawScanDocument {
   filePath: string;
   line: number;
   col: number;
-  /** The raw inferred `TadaDocumentNode` type. Always measured; consumed by
-   * rules that derive type-level metrics (kept internal, never serialised). */
-  typeString?: string | undefined;
 }
 
 export interface FileCountSignal {

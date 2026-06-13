@@ -5,8 +5,6 @@ export interface ComplexityData {
   fieldCount: number;
   /** Structural score from depth and field count. */
   score: number;
-  /** Size of the inferred TypeScript type (type-level cost). */
-  typeSize?: number | undefined;
 }
 
 /** Structural complexity score from depth and field count. */
@@ -17,16 +15,12 @@ interface Result {
   name: string | null;
   depth: number;
   fieldCount: number;
-  typeSize?: number | undefined;
 }
 
-/** Operations ranked by cost: GraphQL selection depth and field count, plus the
- * inferred TypeScript type size (always measured). Ranks by type size when known
- * — the truest proxy for both server and type-inference cost — otherwise by the
- * structural score. */
+/** Operations ranked by selection complexity: depth and field count. */
 export const operationComplexity: ScanRule<ComplexityData> = {
   name: 'operation-complexity',
-  description: 'Operations ranked by selection complexity and inferred type size.',
+  description: 'Operations ranked by selection depth and field count.',
   create(context) {
     const results: Result[] = [];
     let current: { id: string; name: string | null } | null = null;
@@ -48,16 +42,7 @@ export const operationComplexity: ScanRule<ComplexityData> = {
             fieldCount = 0;
           },
           leave() {
-            if (current) {
-              // Derive the type-level cost from the raw inferred type itself.
-              const typeString = context.getInferredType(current.id);
-              results.push({
-                ...current,
-                depth: maxDepth,
-                fieldCount,
-                typeSize: typeString != null ? typeString.length : undefined,
-              });
-            }
+            if (current) results.push({ ...current, depth: maxDepth, fieldCount });
             current = null;
           },
         },
@@ -79,26 +64,12 @@ export const operationComplexity: ScanRule<ComplexityData> = {
       collect() {
         const datapoints: RuleDatapoint<ComplexityData>[] = results
           .map((result) => ({ result, score: scoreOf(result.depth, result.fieldCount) }))
-          .sort((a, b) => {
-            // Prefer the type-level cost when both are measured.
-            if (a.result.typeSize != null && b.result.typeSize != null) {
-              return b.result.typeSize - a.result.typeSize;
-            }
-            return b.score - a.score;
-          })
-          .map(({ result, score }) => {
-            const typeSuffix = result.typeSize != null ? `, type ${result.typeSize} chars` : '';
-            return {
-              ref: { kind: 'operation', id: result.id },
-              message: `${result.name || '(anonymous)'}: depth ${result.depth}, ${result.fieldCount} fields${typeSuffix}`,
-              data: {
-                depth: result.depth,
-                fieldCount: result.fieldCount,
-                score,
-                typeSize: result.typeSize,
-              },
-            };
-          });
+          .sort((a, b) => b.score - a.score)
+          .map(({ result, score }) => ({
+            ref: { kind: 'operation', id: result.id },
+            message: `${result.name || '(anonymous)'}: depth ${result.depth}, ${result.fieldCount} fields`,
+            data: { depth: result.depth, fieldCount: result.fieldCount, score },
+          }));
         return datapoints;
       },
     };

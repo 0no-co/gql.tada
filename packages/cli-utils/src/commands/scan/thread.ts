@@ -39,14 +39,6 @@ async function* _runScan(params: ScanParams): AsyncIterableIterator<ScanSignal> 
   const schemaNames = getSchemaNamesFromConfig(params.pluginConfig);
   const factory = programFactory(params);
 
-  // NOTE: As in turbo, this disables the turbo cache so that, when measuring
-  // types, we evaluate the actual inferred document types rather than cached ones.
-  factory.addSourceFile({
-    fileId: '__gql-tada-override__.d.ts',
-    sourceText: DECLARATION_OVERRIDE,
-    scriptKind: ts.ScriptKind.TS,
-  });
-
   const externalFiles = factory.createExternalFiles();
   if (externalFiles.length) {
     yield { kind: 'EXTERNAL_WARNING' };
@@ -62,8 +54,7 @@ async function* _runScan(params: ScanParams): AsyncIterableIterator<ScanSignal> 
   const processSourceFile = (
     sourceFile: ts.SourceFile,
     container: ProgramContainer,
-    pluginInfo: PluginCreateInfo,
-    checker: ts.TypeChecker
+    pluginInfo: PluginCreateInfo
   ): {
     filePath: string;
     documents: RawScanDocument[];
@@ -108,21 +99,12 @@ async function* _runScan(params: ScanParams): AsyncIterableIterator<ScanSignal> 
         continue;
       }
 
-      let typeString: string | undefined;
-      const returnType = checker.getTypeAtLocation(callExpression);
-      // NOTE: `returnType.symbol` is incorrectly typed and is in fact
-      // optional and not always present
-      if (returnType.symbol && returnType.symbol.getEscapedName() === 'TadaDocumentNode') {
-        typeString = checker.typeToString(returnType, callExpression, BUILDER_FLAGS);
-      }
-
       documents.push({
         schemaName: call.schema,
         document: call.node.text,
         filePath: position.fileName,
         line: position.line,
         col: position.col,
-        typeString,
       });
     }
 
@@ -135,16 +117,14 @@ async function* _runScan(params: ScanParams): AsyncIterableIterator<ScanSignal> 
     return process.memoryUsage().heapUsed >= HEAP_SOFT_LIMIT_BYTES;
   };
 
-  let checker = container.program.getTypeChecker();
   let filesInBatch = 0;
 
   for (const fileName of fileNames) {
-    // When heap or batch limit is reached, rotate out the type checker
+    // When heap or batch limit is reached, rotate the program to free source files.
     if (filesInBatch > 0 && (filesInBatch >= SCAN_MAX_BATCH || isHeapOverSoftLimit())) {
       container = factory.build();
       pluginInfo = container.buildPluginInfo(params.pluginConfig);
       forceGc();
-      checker = container.program.getTypeChecker();
       filesInBatch = 0;
     }
 
@@ -154,8 +134,7 @@ async function* _runScan(params: ScanParams): AsyncIterableIterator<ScanSignal> 
     const { filePath, documents, imports, warnings } = processSourceFile(
       sourceFile,
       container,
-      pluginInfo,
-      checker
+      pluginInfo
     );
     filesInBatch++;
 
@@ -184,22 +163,3 @@ function forceGc(): void {
 }
 
 export const runScan = expose(_runScan);
-
-const BUILDER_FLAGS: ts.TypeFormatFlags =
-  ts.TypeFormatFlags.NoTruncation |
-  ts.TypeFormatFlags.NoTypeReduction |
-  ts.TypeFormatFlags.InTypeAlias |
-  ts.TypeFormatFlags.UseFullyQualifiedType |
-  ts.TypeFormatFlags.GenerateNamesForShadowedTypeParams |
-  ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope |
-  ts.TypeFormatFlags.AllowUniqueESSymbolType |
-  ts.TypeFormatFlags.WriteTypeArgumentsOfSignature;
-
-const DECLARATION_OVERRIDE = `
-import * as _gqlTada from 'gql.tada';
-declare module 'gql.tada' {
-  interface setupCache {
-    readonly __cacheDisabled: true;
-  }
-}
-`.trim();

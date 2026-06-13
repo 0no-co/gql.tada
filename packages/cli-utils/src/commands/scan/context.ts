@@ -79,9 +79,6 @@ export class ScanContext {
   private _moduleGraph: ModuleGraph | undefined;
   private _fragmentGraph: FragmentGraph | undefined;
 
-  // Raw inferred type per definition id (kept internal, not serialised).
-  private readonly _inferredTypeById = new Map<string, string>();
-
   constructor(params: ScanContextParams) {
     this._schemas = params.schemas;
     this._warnings = [...params.warnings];
@@ -178,13 +175,6 @@ export class ScanContext {
     return this._recordById.get(id);
   }
 
-  /** The raw inferred `TadaDocumentNode` type for a definition, if it was
-   * resolved. Exposed raw so rules can derive whatever metric they need (size,
-   * shape, …) — it is never serialised into the corpus. */
-  getInferredType(definitionId: string): string | undefined {
-    return this._inferredTypeById.get(definitionId);
-  }
-
   /** The project's static module dependency graph, as a reusable structure.
    * All reachability/area analysis lives on it, so graph rules need no bespoke
    * context methods. */
@@ -278,7 +268,6 @@ export class ScanContext {
           const id = this._uniqueId(
             `${doc.schemaName ?? ''}:operation:${name ?? `anonymous-${++anonCount}`}`
           );
-          if (doc.typeString) this._inferredTypeById.set(id, doc.typeString);
           this._register({
             defKind: 'operation',
             node: op,
@@ -295,7 +284,6 @@ export class ScanContext {
         } else if (definition.kind === Kind.FRAGMENT_DEFINITION) {
           const fragment = definition as FragmentDefinitionNode;
           const id = this._uniqueId(`${doc.schemaName ?? ''}:fragment:${fragment.name.value}`);
-          if (doc.typeString) this._inferredTypeById.set(id, doc.typeString);
           this._register({
             defKind: 'fragment',
             node: fragment,
