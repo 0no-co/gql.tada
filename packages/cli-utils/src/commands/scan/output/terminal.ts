@@ -8,8 +8,6 @@ import type { CoverageData } from '../rules/schema-coverage';
 const CWD = process.cwd();
 /** Maximum datapoints shown per rule in the terminal report. */
 const MAX_PER_RULE = 8;
-/** Rules whose datapoints are substrate, not findings to list in the report. */
-const HIDDEN_RULES = new Set(['field-usage']);
 
 const relative = (filePath: string): string => {
   const rel = path.relative(CWD, filePath);
@@ -57,7 +55,7 @@ export function renderTerminalReport(context: ScanContext, rules: RuleResults): 
   let out = '\n' + coverageLine(rules);
 
   for (const [name, datapoints] of Object.entries(rules)) {
-    if (HIDDEN_RULES.has(name) || !datapoints.length) continue;
+    if (!datapoints.length) continue;
 
     out += t.text([
       '\n',
