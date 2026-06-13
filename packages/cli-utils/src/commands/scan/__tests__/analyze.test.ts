@@ -83,14 +83,15 @@ describe('analyze', () => {
     expect(name?.operations).toEqual([':operation:GetPokemons']);
   });
 
-  it('represents unused and deprecated schema fields', () => {
+  it('indexes only used fields, and records deprecation', () => {
     const { rules } = run([
       doc('query GetPokemons { pokemons { id } }', '/p/a.ts'),
       doc('fragment Unused on Pokemon { legacy }', '/p/c.ts'),
     ]);
     const usage = fieldUsageMap(rules);
 
-    expect(usage.get('Query.viewer')?.count).toBe(0);
+    // Never-selected fields are absent (derive "unused" from the schema instead).
+    expect(usage.get('Query.viewer')).toBeUndefined();
     const legacy = usage.get('Pokemon.legacy');
     expect(legacy?.deprecated).toBe(true);
     expect(legacy?.count).toBe(1);

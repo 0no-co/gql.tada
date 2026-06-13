@@ -1,7 +1,6 @@
 import type { ScanRule } from '../types';
 
 import { fieldUsage } from './field-usage';
-import { unusedFields } from './unused-fields';
 import { deprecatedUsage } from './deprecated-usage';
 import { schemaCoverage } from './schema-coverage';
 import { orphanFragments } from './orphan-fragments';
@@ -20,7 +19,6 @@ export const DEFAULT_RULES: ScanRule[] = [
   // The per-field usage index (reverse lookup + blast radius).
   fieldUsage,
   // Schema evolution & safety
-  unusedFields,
   deprecatedUsage,
   schemaCoverage,
   // Code navigation & refactoring

@@ -13,7 +13,6 @@ const schema = buildSchema(`
   type Pokemon {
     id: ID!
     name: String!
-    height: Int
     legacy: String @deprecated(reason: "old")
   }
 `);
@@ -47,12 +46,6 @@ const idOf = (ref: DatapointRef) =>
   ref.kind === 'operation' || ref.kind === 'fragment' ? ref.id : undefined;
 
 describe('default rules', () => {
-  it('unused-fields reports fields never selected', () => {
-    const coordinates = rules['unused-fields'].map((d) => coordinateOf(d.ref));
-    expect(coordinates).toContain('Pokemon.height');
-    expect(coordinates).not.toContain('Pokemon.id');
-  });
-
   it('deprecated-usage reports used deprecated fields', () => {
     const data = rules['deprecated-usage'];
     expect(data).toHaveLength(1);

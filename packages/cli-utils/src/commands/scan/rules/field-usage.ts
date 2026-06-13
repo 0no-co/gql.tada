@@ -1,5 +1,4 @@
 import type { ScanRule, RuleDatapoint } from '../types';
-import { allSchemaFields } from '../schema-util';
 
 export interface FieldUsageData {
   typeName: string;
@@ -18,20 +17,21 @@ export interface FieldUsageData {
 interface Accumulated {
   typeName: string;
   fieldName: string;
-  fieldType?: string;
+  fieldType: string;
   deprecationReason?: string;
   directUsages: { defId: string; module: string }[];
 }
 
-/** Builds the per-field usage index: which operations/fragments select each
- * schema coordinate, the operations that reach it, and its blast radius. */
+/** Indexes every field that is actually selected: which operations/fragments
+ * select each schema coordinate, the operations that reach it, and its blast
+ * radius. Fields the schema declares but no document selects are absent (derive
+ * them from the schema if needed; `schema-coverage` has the per-type totals). */
 export const fieldUsage: ScanRule<FieldUsageData> = {
   name: 'field-usage',
-  description: 'Per-field usage index keyed by schema coordinate.',
+  description: 'Used fields, keyed by schema coordinate, with their reach.',
   create(context) {
     const byCoordinate = new Map<string, Accumulated>();
     let seen = new Set<string>();
-
     const resetSeen = () => void (seen = new Set());
 
     return {
@@ -66,40 +66,23 @@ export const fieldUsage: ScanRule<FieldUsageData> = {
       },
 
       collect() {
-        // Reconcile against the schema so unused fields (count 0) appear too.
-        for (const field of allSchemaFields(context.getSchemas())) {
-          if (!byCoordinate.has(field.coordinate)) {
-            byCoordinate.set(field.coordinate, {
-              typeName: field.typeName,
-              fieldName: field.fieldName,
-              fieldType: field.fieldType,
-              deprecationReason: field.deprecationReason,
-              directUsages: [],
-            });
-          }
-        }
-
         const operationIds = new Set(context.operations.map((op) => op.id));
         const moduleById = new Map(context.operations.map((op) => [op.id, op.module] as const));
         const graph = context.getModuleGraph();
         const fragments = context.getFragmentGraph();
         const hasEntryPoints = graph.entryPoints().size > 0;
+
         const datapoints: RuleDatapoint<FieldUsageData>[] = [];
         for (const [coordinate, entry] of byCoordinate) {
           const operations = new Set<string>();
           for (const usage of entry.directUsages) {
-            if (operationIds.has(usage.defId)) {
-              operations.add(usage.defId);
-            } else {
-              for (const id of fragments.operationsReaching(usage.defId)) {
-                operations.add(id);
-              }
-            }
+            if (operationIds.has(usage.defId)) operations.add(usage.defId);
+            else for (const id of fragments.operationsReaching(usage.defId)) operations.add(id);
           }
 
           // Blast radius: every module that selects the field, plus the modules
           // of the operations that reach it, expanded by who depends on them.
-          const sourceModules = new Set<string>(entry.directUsages.map((usage) => usage.module));
+          const sourceModules = new Set<string>(entry.directUsages.map((u) => u.module));
           for (const id of operations) {
             const module = moduleById.get(id);
             if (module) sourceModules.add(module);
@@ -113,16 +96,15 @@ export const fieldUsage: ScanRule<FieldUsageData> = {
             for (const a of reach.areas) reachAreas.add(a);
             for (const e of reach.entryPoints) reachEntries.add(e);
           }
-          const weight = hasEntryPoints ? reachEntries.size : reachModules.size;
 
           datapoints.push({
             ref: { kind: 'field', coordinate },
             message: `${coordinate} selected ${entry.directUsages.length} time(s)`,
-            weight,
+            weight: hasEntryPoints ? reachEntries.size : reachModules.size,
             data: {
               typeName: entry.typeName,
               fieldName: entry.fieldName,
-              fieldType: entry.fieldType || '',
+              fieldType: entry.fieldType,
               deprecated: entry.deprecationReason != null,
               deprecationReason: entry.deprecationReason,
               count: entry.directUsages.length,
@@ -136,6 +118,7 @@ export const fieldUsage: ScanRule<FieldUsageData> = {
             },
           });
         }
+
         const coordinateOf = (d: FieldUsageData) => `${d.typeName}.${d.fieldName}`;
         return datapoints.sort((a, b) => coordinateOf(a.data).localeCompare(coordinateOf(b.data)));
       },
