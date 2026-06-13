@@ -77,6 +77,9 @@ export function renderTerminalReport(corpus: ScanCorpus, rules: RuleResults): st
         `  ${t.HeavyBox.BottomLeft} `,
         t.cmd(t.CSI.Style, t.Style.Foreground),
         datapoint.message,
+        ...(datapoint.weight != null
+          ? [t.cmd(t.CSI.Style, t.Style.BrightBlue), `  ~${datapoint.weight}`]
+          : []),
         ...(where ? [t.cmd(t.CSI.Style, t.Style.BrightBlack), `  ${where}`] : []),
         '\n',
       ]);

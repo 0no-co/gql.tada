@@ -6,8 +6,10 @@ import { deprecatedUsage } from './deprecated-usage';
 import { schemaCoverage } from './schema-coverage';
 import { orphanFragments } from './orphan-fragments';
 import { couplingHotspots } from './coupling-hotspots';
+import { crossFeatureFragments } from './cross-feature-fragments';
 import { duplicateDocuments } from './duplicate-documents';
 import { operationComplexity } from './operation-complexity';
+import { fetchDepth } from './fetch-depth';
 
 export { FIELD_USAGE_RULE };
 export type { FieldUsageData } from './field-usage';
@@ -25,7 +27,10 @@ export const DEFAULT_RULES: ScanRule[] = [
   // Code navigation & refactoring
   orphanFragments,
   couplingHotspots,
+  crossFeatureFragments,
   duplicateDocuments,
   // Performance & DX
   operationComplexity,
+  // Code-structure (dependency graph)
+  fetchDepth,
 ];

@@ -78,9 +78,17 @@ export class ScanContext {
   private _typeInfo: TypeInfo | null = null;
   private _currentDefinition: DefinitionRecord | null = null;
 
+  // Static module dependency graph (every scanned file → its project imports).
+  private readonly _importGraph: Map<string, string[]>;
+  private _reverseGraph: Map<string, Set<string>> | undefined;
+  private _entryPoints: Set<string> | undefined;
+  private _distanceFromEntry: Map<string, number> | undefined;
+  private readonly _dependents = new Map<string, Set<string>>();
+
   constructor(params: ScanContextParams) {
     this._schemas = params.schemas;
     this._warnings = [...params.warnings];
+    this._importGraph = params.imports;
     this._buildCorpus(params.documents);
     this._modules = this._buildModules(params.imports);
   }
@@ -212,6 +220,108 @@ export class ScanContext {
       this._operationsReachingFragment = map;
     }
     return this._operationsReachingFragment.get(fragmentId) || new Set();
+  }
+
+  /* -- Module dependency graph (static imports) -- */
+
+  /** The "area" a module belongs to: its directory, relative to the cwd. Used
+   * to group insights by feature/area of the codebase. */
+  areaOf(modulePath: string): string {
+    const rel = path.relative(CWD, modulePath);
+    const dir = path.dirname(!rel.startsWith('..') ? rel : modulePath);
+    return dir === '.' ? '(root)' : dir;
+  }
+
+  /** Modules that nothing else imports — the roots of the dependency graph
+   * (routes, entry files, dead leaves). */
+  getEntryPoints(): Set<string> {
+    if (this._entryPoints) return this._entryPoints;
+    const nodes = new Set<string>();
+    const targets = new Set<string>();
+    for (const [from, tos] of this._importGraph) {
+      nodes.add(from);
+      for (const to of tos) {
+        nodes.add(to);
+        targets.add(to);
+      }
+    }
+    this._entryPoints = new Set([...nodes].filter((node) => !targets.has(node)));
+    return this._entryPoints;
+  }
+
+  /** Modules that transitively import the given module (its reverse closure). */
+  getDependents(modulePath: string): Set<string> {
+    const cached = this._dependents.get(modulePath);
+    if (cached) return cached;
+
+    if (!this._reverseGraph) {
+      const reverse = new Map<string, Set<string>>();
+      for (const [from, tos] of this._importGraph) {
+        for (const to of tos) {
+          let importers = reverse.get(to);
+          if (!importers) reverse.set(to, (importers = new Set()));
+          importers.add(from);
+        }
+      }
+      this._reverseGraph = reverse;
+    }
+
+    const result = new Set<string>();
+    const stack = [...(this._reverseGraph.get(modulePath) || [])];
+    let node: string | undefined;
+    while ((node = stack.pop())) {
+      if (result.has(node)) continue;
+      result.add(node);
+      stack.push(...(this._reverseGraph.get(node) || []));
+    }
+
+    this._dependents.set(modulePath, result);
+    return result;
+  }
+
+  /** Shortest distance from any entry point to the module (entry points are 0). */
+  getDistanceFromEntry(modulePath: string): number | undefined {
+    if (!this._distanceFromEntry) {
+      const distance = new Map<string, number>();
+      let frontier = [...this.getEntryPoints()];
+      let depth = 0;
+      while (frontier.length) {
+        const next: string[] = [];
+        for (const node of frontier) {
+          if (distance.has(node)) continue;
+          distance.set(node, depth);
+          for (const to of this._importGraph.get(node) || []) {
+            if (!distance.has(to)) next.push(to);
+          }
+        }
+        frontier = next;
+        depth++;
+      }
+      this._distanceFromEntry = distance;
+    }
+    return this._distanceFromEntry.get(modulePath);
+  }
+
+  /** The blast radius of a module: itself plus everything that depends on it,
+   * with the areas and entry points covered. */
+  getModuleReach(modulePath: string): {
+    modules: string[];
+    areas: string[];
+    entryPoints: string[];
+  } {
+    const entryPoints = this.getEntryPoints();
+    const modules = new Set<string>([modulePath, ...this.getDependents(modulePath)]);
+    const areas = new Set<string>();
+    const reachedEntries = new Set<string>();
+    for (const module of modules) {
+      areas.add(this.areaOf(module));
+      if (entryPoints.has(module)) reachedEntries.add(module);
+    }
+    return {
+      modules: [...modules],
+      areas: [...areas].sort(),
+      entryPoints: [...reachedEntries],
+    };
   }
 
   /* -- Construction -- */

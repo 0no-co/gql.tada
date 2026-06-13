@@ -58,6 +58,7 @@ export const deprecatedUsage: ScanRule<DeprecatedUsageData> = {
           .map(({ coordinate, reason, operations }) => ({
             ref: { kind: 'field', coordinate },
             message: `${coordinate} is deprecated but used by ${operations.length} operation(s)`,
+            weight: operations.length,
             data: { reason, count: operations.length, operations },
           }));
       },

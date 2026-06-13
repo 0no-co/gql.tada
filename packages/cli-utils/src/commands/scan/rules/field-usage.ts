@@ -14,6 +14,8 @@ export interface FieldUsageData {
   directUsages: { defId: string; module: string }[];
   /** Operation ids that reach this field directly or transitively. */
   operations: string[];
+  /** Blast radius: how much of the codebase transitively depends on this field. */
+  reach: { modules: number; areas: string[]; entryPoints: number };
 }
 
 interface Accumulated {
@@ -82,6 +84,8 @@ export const fieldUsage: ScanRule<FieldUsageData> = {
         }
 
         const operationIds = new Set(context.operations.map((op) => op.id));
+        const moduleById = new Map(context.operations.map((op) => [op.id, op.module] as const));
+        const hasEntryPoints = context.getEntryPoints().size > 0;
         const datapoints: RuleDatapoint<FieldUsageData>[] = [];
         for (const [coordinate, entry] of byCoordinate) {
           const operations = new Set<string>();
@@ -95,9 +99,28 @@ export const fieldUsage: ScanRule<FieldUsageData> = {
             }
           }
 
+          // Blast radius: every module that selects the field, plus the modules
+          // of the operations that reach it, expanded by who depends on them.
+          const sourceModules = new Set<string>(entry.directUsages.map((usage) => usage.module));
+          for (const id of operations) {
+            const module = moduleById.get(id);
+            if (module) sourceModules.add(module);
+          }
+          const reachModules = new Set<string>();
+          const reachAreas = new Set<string>();
+          const reachEntries = new Set<string>();
+          for (const module of sourceModules) {
+            const reach = context.getModuleReach(module);
+            for (const m of reach.modules) reachModules.add(m);
+            for (const a of reach.areas) reachAreas.add(a);
+            for (const e of reach.entryPoints) reachEntries.add(e);
+          }
+          const weight = hasEntryPoints ? reachEntries.size : reachModules.size;
+
           datapoints.push({
             ref: { kind: 'field', coordinate },
             message: `${coordinate} selected ${entry.directUsages.length} time(s)`,
+            weight,
             data: {
               typeName: entry.typeName,
               fieldName: entry.fieldName,
@@ -107,6 +130,11 @@ export const fieldUsage: ScanRule<FieldUsageData> = {
               count: entry.directUsages.length,
               directUsages: entry.directUsages,
               operations: [...operations],
+              reach: {
+                modules: reachModules.size,
+                areas: [...reachAreas].sort(),
+                entryPoints: reachEntries.size,
+              },
             },
           });
         }

@@ -39,6 +39,7 @@ export const couplingHotspots: ScanRule<CouplingData> = {
               {
                 ref: { kind: 'fragment' as const, id },
                 message: `Fragment '${fragment.name}' is spread by ${spreadCount} definitions`,
+                weight: spreadCount,
                 data: { spreadCount, typeCondition: fragment.typeCondition },
               },
             ];
