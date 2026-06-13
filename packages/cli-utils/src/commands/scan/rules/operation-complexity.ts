@@ -29,9 +29,6 @@ export const operationComplexity: ScanRule<ComplexityData> = {
   description: 'Operations ranked by selection complexity and inferred type size.',
   create(context) {
     const results: Result[] = [];
-    const typeSizeById = new Map<string, number | undefined>();
-    for (const op of context.operations) typeSizeById.set(op.id, op.typeSize);
-
     let current: { id: string; name: string | null } | null = null;
     let depth = 0;
     let maxDepth = 0;
@@ -52,11 +49,13 @@ export const operationComplexity: ScanRule<ComplexityData> = {
           },
           leave() {
             if (current) {
+              // Derive the type-level cost from the raw inferred type itself.
+              const typeString = context.getInferredType(current.id);
               results.push({
                 ...current,
                 depth: maxDepth,
                 fieldCount,
-                typeSize: typeSizeById.get(current.id),
+                typeSize: typeString != null ? typeString.length : undefined,
               });
             }
             current = null;

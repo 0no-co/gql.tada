@@ -21,10 +21,11 @@ export const fetchDepth: ScanRule<FetchDepthData> = {
     return {
       visitor: {},
       collect() {
+        const graph = context.getModuleGraph();
         return context.operations
           .filter((op) => op.kind === 'query')
           .map((op) => {
-            const depth = context.getDistanceFromEntry(op.module);
+            const depth = graph.distanceFromEntry(op.module);
             return { op, depth: depth ?? null };
           })
           .sort((a, b) => (b.depth ?? -1) - (a.depth ?? -1))
@@ -36,7 +37,7 @@ export const fetchDepth: ScanRule<FetchDepthData> = {
                 : `${depth} hop(s) from an entry point`
             }`,
             weight: depth ?? undefined,
-            data: { depth, area: context.areaOf(op.module), module: op.module },
+            data: { depth, area: graph.areaOf(op.module), module: op.module },
           }));
       },
     };

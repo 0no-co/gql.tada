@@ -109,13 +109,11 @@ async function* _runScan(params: ScanParams): AsyncIterableIterator<ScanSignal> 
       }
 
       let typeString: string | undefined;
-      let typeSize: number | undefined;
       const returnType = checker.getTypeAtLocation(callExpression);
       // NOTE: `returnType.symbol` is incorrectly typed and is in fact
       // optional and not always present
       if (returnType.symbol && returnType.symbol.getEscapedName() === 'TadaDocumentNode') {
         typeString = checker.typeToString(returnType, callExpression, BUILDER_FLAGS);
-        typeSize = typeString.length;
       }
 
       documents.push({
@@ -125,7 +123,6 @@ async function* _runScan(params: ScanParams): AsyncIterableIterator<ScanSignal> 
         line: position.line,
         col: position.col,
         typeString,
-        typeSize,
       });
     }
 

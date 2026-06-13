@@ -25,10 +25,9 @@ export interface RawScanDocument {
   filePath: string;
   line: number;
   col: number;
-  /** The inferred `TadaDocumentNode` type, when `--measure-types` is set. */
+  /** The raw inferred `TadaDocumentNode` type. Always measured; consumed by
+   * rules that derive type-level metrics (kept internal, never serialised). */
   typeString?: string | undefined;
-  /** Length of {@link typeString}, used as a proxy for type-inference cost. */
-  typeSize?: number | undefined;
 }
 
 export interface FileCountSignal {
@@ -97,8 +96,6 @@ export interface OperationInfo {
   fragmentSpreads: string[];
   /** Hash of the normalised document, used to detect duplicates. */
   hash: string;
-  /** Size of the inferred TypeScript type, when measured. */
-  typeSize?: number | undefined;
 }
 
 export interface FragmentInfo {

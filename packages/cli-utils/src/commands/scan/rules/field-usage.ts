@@ -85,7 +85,8 @@ export const fieldUsage: ScanRule<FieldUsageData> = {
 
         const operationIds = new Set(context.operations.map((op) => op.id));
         const moduleById = new Map(context.operations.map((op) => [op.id, op.module] as const));
-        const hasEntryPoints = context.getEntryPoints().size > 0;
+        const graph = context.getModuleGraph();
+        const hasEntryPoints = graph.entryPoints().size > 0;
         const datapoints: RuleDatapoint<FieldUsageData>[] = [];
         for (const [coordinate, entry] of byCoordinate) {
           const operations = new Set<string>();
@@ -110,7 +111,7 @@ export const fieldUsage: ScanRule<FieldUsageData> = {
           const reachAreas = new Set<string>();
           const reachEntries = new Set<string>();
           for (const module of sourceModules) {
-            const reach = context.getModuleReach(module);
+            const reach = graph.reach(module);
             for (const m of reach.modules) reachModules.add(m);
             for (const a of reach.areas) reachAreas.add(a);
             for (const e of reach.entryPoints) reachEntries.add(e);

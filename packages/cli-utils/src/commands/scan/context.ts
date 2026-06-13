@@ -24,6 +24,7 @@ import type {
   DefinitionRecord,
   ScanCorpus,
 } from './types';
+import { ModuleGraph } from './module-graph';
 
 const CWD = process.cwd();
 
@@ -80,10 +81,10 @@ export class ScanContext {
 
   // Static module dependency graph (every scanned file → its project imports).
   private readonly _importGraph: Map<string, string[]>;
-  private _reverseGraph: Map<string, Set<string>> | undefined;
-  private _entryPoints: Set<string> | undefined;
-  private _distanceFromEntry: Map<string, number> | undefined;
-  private readonly _dependents = new Map<string, Set<string>>();
+  private _moduleGraph: ModuleGraph | undefined;
+
+  // Raw inferred type per definition id (kept internal, not serialised).
+  private readonly _inferredTypeById = new Map<string, string>();
 
   constructor(params: ScanContextParams) {
     this._schemas = params.schemas;
@@ -222,106 +223,20 @@ export class ScanContext {
     return this._operationsReachingFragment.get(fragmentId) || new Set();
   }
 
-  /* -- Module dependency graph (static imports) -- */
+  /* -- Generic primitives for type- and graph-level rules -- */
 
-  /** The "area" a module belongs to: its directory, relative to the cwd. Used
-   * to group insights by feature/area of the codebase. */
-  areaOf(modulePath: string): string {
-    const rel = path.relative(CWD, modulePath);
-    const dir = path.dirname(!rel.startsWith('..') ? rel : modulePath);
-    return dir === '.' ? '(root)' : dir;
+  /** The raw inferred `TadaDocumentNode` type for a definition, if it was
+   * resolved. Exposed raw so rules can derive whatever metric they need (size,
+   * shape, …) — it is never serialised into the corpus. */
+  getInferredType(definitionId: string): string | undefined {
+    return this._inferredTypeById.get(definitionId);
   }
 
-  /** Modules that nothing else imports — the roots of the dependency graph
-   * (routes, entry files, dead leaves). */
-  getEntryPoints(): Set<string> {
-    if (this._entryPoints) return this._entryPoints;
-    const nodes = new Set<string>();
-    const targets = new Set<string>();
-    for (const [from, tos] of this._importGraph) {
-      nodes.add(from);
-      for (const to of tos) {
-        nodes.add(to);
-        targets.add(to);
-      }
-    }
-    this._entryPoints = new Set([...nodes].filter((node) => !targets.has(node)));
-    return this._entryPoints;
-  }
-
-  /** Modules that transitively import the given module (its reverse closure). */
-  getDependents(modulePath: string): Set<string> {
-    const cached = this._dependents.get(modulePath);
-    if (cached) return cached;
-
-    if (!this._reverseGraph) {
-      const reverse = new Map<string, Set<string>>();
-      for (const [from, tos] of this._importGraph) {
-        for (const to of tos) {
-          let importers = reverse.get(to);
-          if (!importers) reverse.set(to, (importers = new Set()));
-          importers.add(from);
-        }
-      }
-      this._reverseGraph = reverse;
-    }
-
-    const result = new Set<string>();
-    const stack = [...(this._reverseGraph.get(modulePath) || [])];
-    let node: string | undefined;
-    while ((node = stack.pop())) {
-      if (result.has(node)) continue;
-      result.add(node);
-      stack.push(...(this._reverseGraph.get(node) || []));
-    }
-
-    this._dependents.set(modulePath, result);
-    return result;
-  }
-
-  /** Shortest distance from any entry point to the module (entry points are 0). */
-  getDistanceFromEntry(modulePath: string): number | undefined {
-    if (!this._distanceFromEntry) {
-      const distance = new Map<string, number>();
-      let frontier = [...this.getEntryPoints()];
-      let depth = 0;
-      while (frontier.length) {
-        const next: string[] = [];
-        for (const node of frontier) {
-          if (distance.has(node)) continue;
-          distance.set(node, depth);
-          for (const to of this._importGraph.get(node) || []) {
-            if (!distance.has(to)) next.push(to);
-          }
-        }
-        frontier = next;
-        depth++;
-      }
-      this._distanceFromEntry = distance;
-    }
-    return this._distanceFromEntry.get(modulePath);
-  }
-
-  /** The blast radius of a module: itself plus everything that depends on it,
-   * with the areas and entry points covered. */
-  getModuleReach(modulePath: string): {
-    modules: string[];
-    areas: string[];
-    entryPoints: string[];
-  } {
-    const entryPoints = this.getEntryPoints();
-    const modules = new Set<string>([modulePath, ...this.getDependents(modulePath)]);
-    const areas = new Set<string>();
-    const reachedEntries = new Set<string>();
-    for (const module of modules) {
-      areas.add(this.areaOf(module));
-      if (entryPoints.has(module)) reachedEntries.add(module);
-    }
-    return {
-      modules: [...modules],
-      areas: [...areas].sort(),
-      entryPoints: [...reachedEntries],
-    };
+  /** The project's static module dependency graph, as a reusable structure.
+   * All reachability/area analysis lives on it, so graph rules need no bespoke
+   * context methods. */
+  getModuleGraph(): ModuleGraph {
+    return (this._moduleGraph ??= new ModuleGraph(this._importGraph, CWD));
   }
 
   /* -- Construction -- */
@@ -383,6 +298,7 @@ export class ScanContext {
           const id = this._uniqueId(
             `${doc.schemaName ?? ''}:operation:${name ?? `anonymous-${++anonCount}`}`
           );
+          if (doc.typeString) this._inferredTypeById.set(id, doc.typeString);
           this._register({
             defKind: 'operation',
             node: op,
@@ -395,11 +311,11 @@ export class ScanContext {
             variables: (op.variableDefinitions || []).map((v) => v.variable.name.value),
             fragmentSpreads: collectFragmentSpreads(op),
             hash: hashOf(print(op)),
-            typeSize: doc.typeSize,
           });
         } else if (definition.kind === Kind.FRAGMENT_DEFINITION) {
           const fragment = definition as FragmentDefinitionNode;
           const id = this._uniqueId(`${doc.schemaName ?? ''}:fragment:${fragment.name.value}`);
+          if (doc.typeString) this._inferredTypeById.set(id, doc.typeString);
           this._register({
             defKind: 'fragment',
             node: fragment,

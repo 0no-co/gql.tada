@@ -39,15 +39,16 @@ const documents = [
 const idOf = (ref: DatapointRef) =>
   ref.kind === 'operation' || ref.kind === 'fragment' ? ref.id : undefined;
 
-describe('ScanContext dependency graph', () => {
+describe('ModuleGraph (via ScanContext)', () => {
   const context = new ScanContext({ documents, schemas, imports, warnings: [] });
+  const graph = context.getModuleGraph();
 
   it('identifies entry points (modules nothing imports)', () => {
-    expect([...context.getEntryPoints()]).toEqual(['/p/app.ts']);
+    expect([...graph.entryPoints()]).toEqual(['/p/app.ts']);
   });
 
   it('computes transitive dependents', () => {
-    expect([...context.getDependents('/p/shared/frag.ts')].sort()).toEqual([
+    expect([...graph.dependents('/p/shared/frag.ts')].sort()).toEqual([
       '/p/app.ts',
       '/p/featureA/list.ts',
       '/p/featureB/card.ts',
@@ -55,13 +56,13 @@ describe('ScanContext dependency graph', () => {
   });
 
   it('measures distance from an entry point', () => {
-    expect(context.getDistanceFromEntry('/p/app.ts')).toBe(0);
-    expect(context.getDistanceFromEntry('/p/featureA/list.ts')).toBe(1);
-    expect(context.getDistanceFromEntry('/p/shared/frag.ts')).toBe(2);
+    expect(graph.distanceFromEntry('/p/app.ts')).toBe(0);
+    expect(graph.distanceFromEntry('/p/featureA/list.ts')).toBe(1);
+    expect(graph.distanceFromEntry('/p/shared/frag.ts')).toBe(2);
   });
 
   it('derives areas from module directories', () => {
-    expect(context.areaOf('/p/shared/frag.ts')).toBe('/p/shared');
+    expect(graph.areaOf('/p/shared/frag.ts')).toBe('/p/shared');
   });
 });
 

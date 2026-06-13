@@ -16,6 +16,8 @@ export const crossFeatureFragments: ScanRule<CrossFeatureData> = {
     const consumerAreas = new Map<string, Set<string>>();
     const spreadCount = new Map<string, number>();
 
+    const graph = context.getModuleGraph();
+
     return {
       visitor: {
         FragmentSpread: {
@@ -26,7 +28,7 @@ export const crossFeatureFragments: ScanRule<CrossFeatureData> = {
             if (!fragment) return;
             let areas = consumerAreas.get(fragment.id);
             if (!areas) consumerAreas.set(fragment.id, (areas = new Set()));
-            areas.add(context.areaOf(definition.module));
+            areas.add(graph.areaOf(definition.module));
             spreadCount.set(fragment.id, (spreadCount.get(fragment.id) || 0) + 1);
           },
         },
@@ -38,7 +40,7 @@ export const crossFeatureFragments: ScanRule<CrossFeatureData> = {
         for (const [id, areas] of consumerAreas) {
           const fragment = byId.get(id);
           if (!fragment) continue;
-          const definingArea = context.areaOf(fragment.module);
+          const definingArea = graph.areaOf(fragment.module);
           // Areas other than where the fragment itself lives.
           const externalAreas = [...areas].filter((area) => area !== definingArea).sort();
           if (!externalAreas.length) continue;
