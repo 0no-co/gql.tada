@@ -29,7 +29,21 @@ async function* _runDiagnostics(
     await factory.addVirtualFiles(externalFiles);
   }
 
-  const schemaRef = await loadRef(params.pluginConfig).load({ rootPath: projectPath });
+  const loadedRef = await loadRef(params.pluginConfig).load({ rootPath: projectPath });
+
+  // TODO(@kitten): Align `SchemaRef` in `@0no-co/graphqlsp` back with `@gql.tada/internal`
+  const schemaRef = {
+    current: loadedRef.current,
+    multi: loadedRef.multi,
+    version: loadedRef.version,
+    errors: {
+      config: null,
+      load: new Map<string | null, string>(),
+      write: new Map<string, string>(),
+    },
+    outputLocations: new Map<string, number>(),
+    checkStale() {},
+  };
 
   const container = factory.build();
   const pluginInfo = container.buildPluginInfo(params.pluginConfig);
