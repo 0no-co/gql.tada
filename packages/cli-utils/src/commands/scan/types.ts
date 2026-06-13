@@ -55,8 +55,6 @@ export interface ScanParams {
   tsconfigPath?: string;
   configPath: string;
   pluginConfig: GraphQLSPConfig;
-  /** When set, the worker evaluates each document's inferred type to record its size. */
-  measureTypes: boolean;
 }
 
 /* -- Corpus (base facts) -------------------------------------------------- */
@@ -168,6 +166,9 @@ export interface RuleDatapoint<T = unknown> {
   ref: DatapointRef;
   message: string;
   data: T;
+  /** Optional relative importance, e.g. how much of the codebase depends on the
+   * referenced thing. Used to rank and to weight the graph. */
+  weight?: number;
 }
 
 /** A running instance of a rule, bound to a {@link ScanContext}.

@@ -63,7 +63,7 @@ async function* _runScan(params: ScanParams): AsyncIterableIterator<ScanSignal> 
     sourceFile: ts.SourceFile,
     container: ProgramContainer,
     pluginInfo: PluginCreateInfo,
-    checker: ts.TypeChecker | undefined
+    checker: ts.TypeChecker
   ): {
     filePath: string;
     documents: RawScanDocument[];
@@ -74,8 +74,12 @@ async function* _runScan(params: ScanParams): AsyncIterableIterator<ScanSignal> 
     const documents: RawScanDocument[] = [];
     const warnings: ScanWarning[] = [];
 
+    // The full import graph is emitted for every project file (not just those
+    // with documents), so the analysis layer can compute reachability.
+    const imports = collectModuleImports(sourceFile, factory.resolveModulePath.bind(factory));
+
     if (!hasGraphQLDocumentCandidate(sourceFile)) {
-      return { filePath, documents, imports: [], warnings };
+      return { filePath, documents, imports, warnings };
     }
 
     const calls = findAllCallExpressions(sourceFile, pluginInfo, {
@@ -106,14 +110,12 @@ async function* _runScan(params: ScanParams): AsyncIterableIterator<ScanSignal> 
 
       let typeString: string | undefined;
       let typeSize: number | undefined;
-      if (checker) {
-        const returnType = checker.getTypeAtLocation(callExpression);
-        // NOTE: `returnType.symbol` is incorrectly typed and is in fact
-        // optional and not always present
-        if (returnType.symbol && returnType.symbol.getEscapedName() === 'TadaDocumentNode') {
-          typeString = checker.typeToString(returnType, callExpression, BUILDER_FLAGS);
-          typeSize = typeString.length;
-        }
+      const returnType = checker.getTypeAtLocation(callExpression);
+      // NOTE: `returnType.symbol` is incorrectly typed and is in fact
+      // optional and not always present
+      if (returnType.symbol && returnType.symbol.getEscapedName() === 'TadaDocumentNode') {
+        typeString = checker.typeToString(returnType, callExpression, BUILDER_FLAGS);
+        typeSize = typeString.length;
       }
 
       documents.push({
@@ -127,10 +129,6 @@ async function* _runScan(params: ScanParams): AsyncIterableIterator<ScanSignal> 
       });
     }
 
-    const imports = documents.length
-      ? collectModuleImports(sourceFile, factory.resolveModulePath.bind(factory))
-      : [];
-
     return { filePath, documents, imports, warnings };
   };
 
@@ -140,7 +138,7 @@ async function* _runScan(params: ScanParams): AsyncIterableIterator<ScanSignal> 
     return process.memoryUsage().heapUsed >= HEAP_SOFT_LIMIT_BYTES;
   };
 
-  let checker = params.measureTypes ? container.program.getTypeChecker() : undefined;
+  let checker = container.program.getTypeChecker();
   let filesInBatch = 0;
 
   for (const fileName of fileNames) {
@@ -149,7 +147,7 @@ async function* _runScan(params: ScanParams): AsyncIterableIterator<ScanSignal> 
       container = factory.build();
       pluginInfo = container.buildPluginInfo(params.pluginConfig);
       forceGc();
-      checker = params.measureTypes ? container.program.getTypeChecker() : undefined;
+      checker = container.program.getTypeChecker();
       filesInBatch = 0;
     }
 

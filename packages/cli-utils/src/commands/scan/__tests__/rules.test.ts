@@ -86,7 +86,8 @@ describe('default rules', () => {
     expect(scores).toEqual([...scores].sort((a, b) => b - a));
   });
 
-  it('type-size-hotspots is empty without --measure-types', () => {
-    expect(rules['type-size-hotspots']).toHaveLength(0);
+  it('has no standalone type-size rule (folded into operation-complexity)', () => {
+    expect(rules['type-size-hotspots']).toBeUndefined();
+    expect(rules['operation-complexity'][0].data).toHaveProperty('typeSize');
   });
 });

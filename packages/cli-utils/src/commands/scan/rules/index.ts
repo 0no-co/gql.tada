@@ -8,7 +8,6 @@ import { orphanFragments } from './orphan-fragments';
 import { couplingHotspots } from './coupling-hotspots';
 import { duplicateDocuments } from './duplicate-documents';
 import { operationComplexity } from './operation-complexity';
-import { typeSizeHotspots } from './type-size-hotspots';
 
 export { FIELD_USAGE_RULE };
 export type { FieldUsageData } from './field-usage';
@@ -29,5 +28,4 @@ export const DEFAULT_RULES: ScanRule[] = [
   duplicateDocuments,
   // Performance & DX
   operationComplexity,
-  typeSizeHotspots,
 ];

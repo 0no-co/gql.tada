@@ -26,10 +26,6 @@ export class ScanCommand extends Command {
       'How `--format schema` embeds field metadata: `comment` or `description`.\tDefault: comment',
   });
 
-  measureTypes = Option.Boolean('--measure-types', false, {
-    description: 'Evaluate inferred document types to record their size (slower).',
-  });
-
   failOnWarn = Option.Boolean('--fail-on-warn,-w', false, {
     description: 'Triggers an error and a non-zero exit code if any warnings have been reported',
   });
@@ -50,7 +46,6 @@ export class ScanCommand extends Command {
         format: this.format as ScanFormat | undefined,
         output: this.output,
         annotation: this.annotation === 'description' ? 'description' : 'comment',
-        measureTypes: this.measureTypes,
         failOnWarn: this.failOnWarn,
         field: this.field,
         module: this.module,

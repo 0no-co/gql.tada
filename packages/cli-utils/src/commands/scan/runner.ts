@@ -25,8 +25,6 @@ export interface ScanOptions {
   format: ScanFormat | undefined;
   /** How field metadata is embedded in the annotated schema. */
   annotation: AnnotationStyle;
-  /** Whether to evaluate inferred document types to record their size. */
-  measureTypes: boolean;
   /** Whether to fail with a non-zero exit code if any warnings are reported. */
   failOnWarn: boolean;
   /** Reverse-index query: show where a `Type.field` coordinate is used. */
@@ -103,7 +101,6 @@ async function* runProject(
     tsconfigPath: project.configResult.tsconfigPath,
     configPath: project.configResult.configPath,
     pluginConfig: project.pluginConfig,
-    measureTypes: opts.measureTypes,
   });
 
   const documents: RawScanDocument[] = [];
