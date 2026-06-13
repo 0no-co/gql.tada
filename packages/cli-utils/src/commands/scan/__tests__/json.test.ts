@@ -23,7 +23,7 @@ const doc = (document: string, filePath: string): RawScanDocument => ({
 describe('renderJson', () => {
   const { context, rules } = analyze({
     documents: [
-      doc('query GetPokemons($limit: Int) { pokemons(limit: $limit) { id } }', '/p/list.ts'),
+      doc('query GetPokemons($limit: Int = 10) { pokemons(limit: $limit) { id } }', '/p/list.ts'),
       doc('mutation Touch { touch { id } }', '/p/touch.ts'),
     ],
     schemas,
@@ -46,7 +46,8 @@ describe('renderJson', () => {
     const op = output.operations.find((o: { name: string }) => o.name === 'GetPokemons');
     expect(op.kind).toBe('query'); // per-operation kind
     expect(op.loc).toEqual({ file: '/p/list.ts', line: 7, col: 3 }); // location
-    expect(op.variables).toEqual(['limit']); // declared variables
+    // declared variables, with type and default
+    expect(op.variables).toEqual([{ name: 'limit', type: 'Int', defaultValue: '10' }]);
     expect(typeof op.hash).toBe('string'); // hash → exact-duplicate detection
 
     const mutation = output.operations.find((o: { name: string }) => o.name === 'Touch');

@@ -52,7 +52,7 @@ describe('analyze', () => {
     const [op] = context.operations;
     expect(op.id).toBe(':operation:GetPokemons');
     expect(op.kind).toBe('query');
-    expect(op.variables).toEqual(['limit']);
+    expect(op.variables).toEqual([{ name: 'limit', type: 'Int' }]);
     expect(op.fragmentSpreads).toEqual(['Item']);
 
     expect(context.fragments).toHaveLength(1);

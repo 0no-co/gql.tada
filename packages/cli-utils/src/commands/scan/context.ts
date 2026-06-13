@@ -279,7 +279,11 @@ export class ScanContext {
             schemaName: doc.schemaName,
             module: doc.filePath,
             loc,
-            variables: (op.variableDefinitions || []).map((v) => v.variable.name.value),
+            variables: (op.variableDefinitions || []).map((v) => ({
+              name: v.variable.name.value,
+              type: print(v.type),
+              defaultValue: v.defaultValue ? print(v.defaultValue) : undefined,
+            })),
             fragmentSpreads: collectFragmentSpreads(op),
             hash: hashOf(print(op)),
           });

@@ -76,6 +76,14 @@ export interface ModuleInfo {
 
 export type OperationKind = 'query' | 'mutation' | 'subscription';
 
+/** A variable declared by an operation. `type` is the printed GraphQL type
+ * (e.g. `Int`, `[ID!]!`), from which required/optional and list-ness derive. */
+export interface OperationVariable {
+  name: string;
+  type: string;
+  defaultValue?: string | undefined;
+}
+
 /** Identity and syntactic facts about a discovered operation. Derived analysis
  * (field usage, depth, …) is owned by rules, not stored here. */
 export interface OperationInfo {
@@ -87,8 +95,8 @@ export interface OperationInfo {
   /** Absolute path of the defining module. */
   module: string;
   loc: SourceLocation;
-  /** Names of the operation's variables. */
-  variables: string[];
+  /** The operation's declared variables, with their types and defaults. */
+  variables: OperationVariable[];
   /** Names of fragments spread directly by the operation. */
   fragmentSpreads: string[];
   /** Hash of the normalised document, used to detect duplicates. */
