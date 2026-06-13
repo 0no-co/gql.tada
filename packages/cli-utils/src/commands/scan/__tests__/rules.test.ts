@@ -133,11 +133,13 @@ describe('default rules', () => {
     expect(scores).toEqual([...scores].sort((a, b) => b - a));
   });
 
-  it('operation-complexity reports structural metrics only (no type size)', () => {
-    expect(rules['type-size-hotspots']).toBeUndefined();
-    const data = rules['operation-complexity'][0].data;
-    expect(data).toHaveProperty('depth');
-    expect(data).toHaveProperty('fieldCount');
-    expect(data).not.toHaveProperty('typeSize');
+  it('operation-complexity counts fields through fragments', () => {
+    // A = `query A { pokemons { ...Item } }`, Item = `{ id name }` → 3 fields.
+    const a = rules['operation-complexity'].find(
+      (d) => d.ref.kind === 'operation' && d.ref.id === ':operation:A'
+    );
+    expect((a?.data as { fieldCount: number }).fieldCount).toBe(3);
+    // Query.pokemons returns a list.
+    expect((a?.data as { listFields: number }).listFields).toBe(1);
   });
 });
