@@ -1,5 +1,24 @@
 # gql.tada
 
+## 1.10.0
+
+### Minor Changes
+
+- Bump minor version
+  Submitted by [@kitten](https://github.com/kitten) (See [`97cc2c7`](https://github.com/0no-co/gql.tada/commit/97cc2c79830ba3651bc585d67e03e1c7361da76e))
+
+### Patch Changes
+
+- Upgrade `@0no-co/graphqlsp` to `^1.16.0` and use `findAllCallExpressions`' new `collectFragments: false` option in the `turbo` command, replacing the plugin-info proxy that previously disabled fragment definition lookups. This also picks up graphqlsp's memoized gql.tada type probe, which reduces type checker work for non-GraphQL calls during call discovery
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#539](https://github.com/0no-co/gql.tada/pull/539))
+- Upgrade graphql.web
+  Submitted by [@kitten](https://github.com/kitten) (See [#548](https://github.com/0no-co/gql.tada/pull/548))
+- Improve the type-level GraphQL parser's TypeScript checker performance by dispatching from leading tokens and skipping parser branches that cannot match
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#542](https://github.com/0no-co/gql.tada/pull/542))
+- Updated dependencies (See [#535](https://github.com/0no-co/gql.tada/pull/535), [#539](https://github.com/0no-co/gql.tada/pull/539), [#538](https://github.com/0no-co/gql.tada/pull/538), [#541](https://github.com/0no-co/gql.tada/pull/541), [#546](https://github.com/0no-co/gql.tada/pull/546), [#548](https://github.com/0no-co/gql.tada/pull/548), [`97cc2c7`](https://github.com/0no-co/gql.tada/commit/97cc2c79830ba3651bc585d67e03e1c7361da76e), [#537](https://github.com/0no-co/gql.tada/pull/537), [#545](https://github.com/0no-co/gql.tada/pull/545), [#547](https://github.com/0no-co/gql.tada/pull/547), and [#540](https://github.com/0no-co/gql.tada/pull/540))
+  - @gql.tada/cli-utils@1.8.0
+  - @gql.tada/internal@1.1.0
+
 ## 1.9.3
 
 ### Patch Changes

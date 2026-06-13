@@ -1,5 +1,23 @@
 # @gql.tada/internal
 
+## 1.1.0
+
+### Minor Changes
+
+- Support TypeScript project `references` in `tsconfig.json` files across `check`, `turbo`, `generate-output`, `generate-persisted`, `generate-schema`, `doctor`, and `init`, running for every resolved project
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#538](https://github.com/0no-co/gql.tada/pull/538))
+- Propagate schema loader errors instead of swallowing them. `SchemaLoader.notifyOnUpdate` and `SchemaRef.autoupdate` accept an optional `onError` callback that's called with per-schema attribution when a watched SDL file fails to reload (e.g. it's temporarily invalid mid-edit), when a URL schema fails to re-poll, or when a loader's initial load fails during `autoupdate` setup. Failing SDL reloads no longer kill the `fs.watch` fallback watcher, and reset the loader's cached result so subsequent loads retry. `SchemaRef.load` additionally accepts a `reload` option to force re-reading schemas, e.g. when a file watcher may have missed events
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#541](https://github.com/0no-co/gql.tada/pull/541))
+- Bump minor version
+  Submitted by [@kitten](https://github.com/kitten) (See [`97cc2c7`](https://github.com/0no-co/gql.tada/commit/97cc2c79830ba3651bc585d67e03e1c7361da76e))
+
+### Patch Changes
+
+- Upgrade graphql.web
+  Submitted by [@kitten](https://github.com/kitten) (See [#548](https://github.com/0no-co/gql.tada/pull/548))
+- Scope TypeScript program creation to the originally requested project tsconfig when the GraphQLSP plugin is inherited from a shared monorepo config
+  Submitted by [@kitten](https://github.com/kitten) (See [#545](https://github.com/0no-co/gql.tada/pull/545))
+
 ## 1.0.10
 
 ### Patch Changes
