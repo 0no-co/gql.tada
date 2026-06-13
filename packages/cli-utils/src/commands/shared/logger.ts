@@ -34,6 +34,17 @@ export function hint(text: string) {
   ]);
 }
 
+export function projectHeader(label: string) {
+  return t.text([
+    '\n',
+    t.cmd(t.CSI.Style, t.Style.Magenta),
+    `${t.SmallTriangle.Right} `,
+    t.cmd(t.CSI.Style, t.Style.Foreground),
+    bold(label),
+    '\n',
+  ]);
+}
+
 export function errorMessage(message: string) {
   return t.error([
     '\n',

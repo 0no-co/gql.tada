@@ -1,12 +1,11 @@
 import path from 'node:path';
 import { printSchema } from 'graphql';
 import type { GraphQLSchema } from 'graphql';
-import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
-import { load, loadConfig, parseConfig } from '@gql.tada/internal';
+import { load } from '@gql.tada/internal';
 
 import type { TTY, ComposeInput } from '../../term';
-import type { WriteTarget } from '../shared';
-import { writeOutput } from '../shared';
+import type { ProjectContext, WriteTarget } from '../shared';
+import { loadProjects, writeOutput } from '../shared';
 import * as logger from './logger';
 
 export interface SchemaOptions {
@@ -40,21 +39,32 @@ export async function* run(tty: TTY, opts: SchemaOptions): AsyncIterable<Compose
   } else if (opts.output) {
     destination = path.resolve(process.cwd(), opts.output);
   } else {
-    let configResult: LoadConfigResult;
-    let pluginConfig: GraphQLSPConfig;
+    let projects: ProjectContext[];
     try {
-      configResult = await loadConfig(opts.tsconfig);
-      pluginConfig = parseConfig(configResult.pluginConfig, configResult.rootPath);
+      projects = await loadProjects(opts.tsconfig);
     } catch (error) {
       throw logger.externalError('Failed to load configuration.', error);
     }
 
+    if (projects.length > 1) {
+      throw logger.errorMessage(
+        `Output path cannot be automatically determined when multiple projects are configured,\n` +
+          `because multiple projects are set up through ${logger.code('"references"')}.` +
+          logger.hint(
+            `You have to explicitly pass an ${logger.code(
+              '--output'
+            )} argument to this command,\n` + 'or pipe this command to an output file.'
+          )
+      );
+    }
+
+    const { pluginConfig, projectPath } = projects[0];
     if (
       'schema' in pluginConfig &&
       typeof pluginConfig.schema === 'string' &&
       path.extname(pluginConfig.schema) === '.graphql'
     ) {
-      destination = path.resolve(path.dirname(configResult.configPath), pluginConfig.schema);
+      destination = path.resolve(projectPath, pluginConfig.schema);
     } else if (!('schema' in pluginConfig)) {
       throw logger.errorMessage(
         `Output path cannot be automatically determined when multiple schemas are configured,\n` +

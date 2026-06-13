@@ -1,11 +1,8 @@
 import * as path from 'node:path';
-import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
-
-import { loadConfig, parseConfig } from '@gql.tada/internal';
 
 import type { TTY, ComposeInput } from '../../term';
-import type { WriteTarget } from '../shared';
-import { writeOutput } from '../shared';
+import type { ProjectContext, WriteTarget } from '../shared';
+import { loadProjects, writeOutput } from '../shared';
 import type { TurboDocument, GraphQLSourceFile, TurboPath } from './types';
 import * as logger from './logger';
 
@@ -23,17 +20,54 @@ export interface TurboOptions {
 }
 
 export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeInput> {
-  const { runTurbo } = await import('./thread');
-
-  let configResult: LoadConfigResult;
-  let pluginConfig: GraphQLSPConfig;
+  let projects: ProjectContext[];
   try {
-    configResult = await loadConfig(opts.tsconfig);
-    pluginConfig = parseConfig(configResult.pluginConfig, configResult.rootPath);
+    projects = await loadProjects(opts.tsconfig);
   } catch (error) {
     throw logger.externalError('Failed to load configuration.', error);
   }
-  const projectPath = path.dirname(configResult.configPath);
+
+  if (projects.length > 1 && (opts.output || tty.pipeTo)) {
+    throw logger.errorMessage(
+      'Output path was specified, while multiple projects are configured.\n' +
+        logger.hint(
+          `You can only output all projects to their ${logger.code(
+            '"tadaTurboLocation"'
+          )} options\n` +
+            `when multiple projects are set up through ${logger.code('"references"')}.`
+        )
+    );
+  }
+
+  let totalWarnings = 0;
+  let failedProjects = false;
+  for (const project of projects) {
+    if (projects.length > 1) yield logger.projectHeader(project.label);
+    const result = yield* runProject(tty, opts, project, projects.length > 1);
+    totalWarnings += result.warnings;
+    failedProjects = failedProjects || result.failed;
+  }
+
+  if (failedProjects) {
+    throw logger.warningSummary(totalWarnings);
+  }
+}
+
+interface ProjectResult {
+  warnings: number;
+  failed: boolean;
+}
+
+/** Runs the turbo cache generation for a single project. */
+async function* runProject(
+  tty: TTY,
+  opts: TurboOptions,
+  project: ProjectContext,
+  deferWarnings: boolean
+): AsyncGenerator<ComposeInput, ProjectResult> {
+  const { runTurbo } = await import('./thread');
+
+  const { pluginConfig, projectPath } = project;
 
   let destination: WriteTarget;
   const destinations: TurboPath[] = [];
@@ -81,9 +115,9 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
   }
 
   const generator = runTurbo({
-    rootPath: configResult.rootPath,
-    tsconfigPath: configResult.tsconfigPath,
-    configPath: configResult.configPath,
+    rootPath: project.configResult.rootPath,
+    tsconfigPath: project.configResult.tsconfigPath,
+    configPath: project.configResult.configPath,
     pluginConfig,
     turboOutputPath: typeof destination! === 'string' ? destination : destinations,
   });
@@ -130,7 +164,8 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
 
   if ('schema' in pluginConfig) {
     if (warnings && opts.failOnWarn) {
-      throw logger.warningSummary(warnings);
+      if (!deferWarnings) throw logger.warningSummary(warnings);
+      return { warnings, failed: true };
     }
 
     try {
@@ -189,11 +224,14 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
     }
 
     if (warnings && opts.failOnWarn) {
-      throw logger.warningSummary(warnings);
+      if (!deferWarnings) throw logger.warningSummary(warnings);
+      return { warnings, failed: true };
     } else {
       yield logger.infoSummary(warnings, documentCount, cachedCount);
     }
   }
+
+  return { warnings, failed: false };
 }
 
 function createCacheContents(

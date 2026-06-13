@@ -1,11 +1,8 @@
 import * as path from 'node:path';
-import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
-
-import { loadConfig, parseConfig } from '@gql.tada/internal';
 
 import type { TTY, ComposeInput } from '../../term';
-import type { WriteTarget } from '../shared';
-import { writeOutput } from '../shared';
+import type { ProjectContext, WriteTarget } from '../shared';
+import { loadProjects, writeOutput } from '../shared';
 import type { PersistedDocument } from './types';
 import * as logger from './logger';
 
@@ -28,24 +25,62 @@ export interface PersistedOptions {
 }
 
 export async function* run(tty: TTY, opts: PersistedOptions): AsyncIterable<ComposeInput> {
-  const { runPersisted } = await import('./thread');
-
-  let configResult: LoadConfigResult;
-  let pluginConfig: GraphQLSPConfig;
+  let projects: ProjectContext[];
   try {
-    configResult = await loadConfig(opts.tsconfig);
-    pluginConfig = parseConfig(configResult.pluginConfig, configResult.rootPath);
+    projects = await loadProjects(opts.tsconfig);
   } catch (error) {
     throw logger.externalError('Failed to load configuration.', error);
   }
+
+  if (projects.length > 1 && (opts.output || tty.pipeTo)) {
+    throw logger.errorMessage(
+      'Output path was specified, while multiple projects are configured.\n' +
+        logger.hint(
+          `You can only output all projects to their ${logger.code(
+            '"tadaPersistedLocation"'
+          )} options\n` +
+            `when multiple projects are set up through ${logger.code('"references"')}.`
+        )
+    );
+  }
+
+  let totalWarnings = 0;
+  let failedProjects = false;
+  for (const project of projects) {
+    if (projects.length > 1) yield logger.projectHeader(project.label);
+    const result = yield* runProject(tty, opts, project, projects.length > 1);
+    totalWarnings += result.warnings;
+    failedProjects = failedProjects || result.failed;
+  }
+
+  if (failedProjects) {
+    throw logger.warningSummary(totalWarnings);
+  }
+}
+
+interface ProjectResult {
+  warnings: number;
+  failed: boolean;
+}
+
+/** Generates the persisted manifest for a single project. */
+async function* runProject(
+  tty: TTY,
+  opts: PersistedOptions,
+  project: ProjectContext,
+  deferWarnings: boolean
+): AsyncGenerator<ComposeInput, ProjectResult> {
+  const { runPersisted } = await import('./thread');
+
+  const { pluginConfig, projectPath } = project;
 
   if (tty.isInteractive) yield logger.runningPersisted();
 
   const generator = runPersisted({
     disableNormalization: !!opts.disableNormalization,
-    rootPath: configResult.rootPath,
-    tsconfigPath: configResult.tsconfigPath,
-    configPath: configResult.configPath,
+    rootPath: project.configResult.rootPath,
+    tsconfigPath: project.configResult.tsconfigPath,
+    configPath: project.configResult.configPath,
     pluginConfig,
   });
 
@@ -84,7 +119,6 @@ export async function* run(tty: TTY, opts: PersistedOptions): AsyncIterable<Comp
     throw logger.externalError('Could not generate persisted manifest file', error);
   }
 
-  const projectPath = path.dirname(configResult.configPath);
   if ('schema' in pluginConfig) {
     let destination: WriteTarget;
     if (!opts.output && tty.pipeTo) {
@@ -92,10 +126,7 @@ export async function* run(tty: TTY, opts: PersistedOptions): AsyncIterable<Comp
     } else if (opts.output) {
       destination = path.resolve(process.cwd(), opts.output);
     } else if (pluginConfig.tadaPersistedLocation) {
-      destination = path.resolve(
-        path.dirname(configResult.configPath),
-        pluginConfig.tadaPersistedLocation
-      );
+      destination = path.resolve(projectPath, pluginConfig.tadaPersistedLocation);
     } else {
       throw logger.errorMessage(
         'No output path was specified to write the persisted manifest file to.\n' +
@@ -110,7 +141,8 @@ export async function* run(tty: TTY, opts: PersistedOptions): AsyncIterable<Comp
     }
 
     if (warnings && opts.failOnWarn) {
-      throw logger.warningSummary(warnings);
+      if (!deferWarnings) throw logger.warningSummary(warnings);
+      return { warnings, failed: true };
     } else if (documents.length) {
       try {
         const json: Record<string, string> = {};
@@ -174,9 +206,12 @@ export async function* run(tty: TTY, opts: PersistedOptions): AsyncIterable<Comp
     }
 
     if (warnings && opts.failOnWarn) {
-      throw logger.warningSummary(warnings);
+      if (!deferWarnings) throw logger.warningSummary(warnings);
+      return { warnings, failed: true };
     } else {
       yield logger.infoSummary(warnings, documentCount);
     }
   }
+
+  return { warnings, failed: false };
 }

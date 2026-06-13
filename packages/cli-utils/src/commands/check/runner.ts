@@ -1,8 +1,7 @@
-import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
-import { loadConfig, parseConfig } from '@gql.tada/internal';
-
 import * as logger from './logger';
 import type { TTY, ComposeInput } from '../../term';
+import type { ProjectContext } from '../shared';
+import { loadProjects } from '../shared';
 import type { Severity, SeveritySummary } from './types';
 
 const isMinSeverity = (severity: Severity, minSeverity: Severity) => {
@@ -33,56 +32,63 @@ export interface Options {
 export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput> {
   const { runDiagnostics } = await import('./thread');
 
-  let configResult: LoadConfigResult;
-  let pluginConfig: GraphQLSPConfig;
+  let projects: ProjectContext[];
   try {
-    configResult = await loadConfig(opts.tsconfig);
-    pluginConfig = parseConfig(configResult.pluginConfig, configResult.rootPath);
+    projects = await loadProjects(opts.tsconfig);
   } catch (error) {
     throw logger.externalError('Failed to load configuration.', error);
   }
 
   const summary: SeveritySummary = { warn: 0, error: 0, info: 0 };
   const minSeverity = opts.minSeverity;
-  const generator = runDiagnostics({
-    rootPath: configResult.rootPath,
-    tsconfigPath: configResult.tsconfigPath,
-    configPath: configResult.configPath,
-    pluginConfig,
-  });
+  let warnedAboutExternalFiles = false;
 
-  let totalFileCount = 0;
-  let fileCount = 0;
+  for (const project of projects) {
+    if (projects.length > 1) yield logger.projectHeader(project.label);
 
-  try {
-    if (tty.isInteractive) yield logger.runningDiagnostics();
+    const generator = runDiagnostics({
+      rootPath: project.configResult.rootPath,
+      tsconfigPath: project.configResult.tsconfigPath,
+      configPath: project.configResult.configPath,
+      pluginConfig: project.pluginConfig,
+    });
 
-    for await (const signal of generator) {
-      if (signal.kind === 'EXTERNAL_WARNING') {
-        yield logger.experimentMessage(
-          `${logger.code('.vue')} and ${logger.code('.svelte')} file support is experimental.`
-        );
-      } else if (signal.kind === 'FILE_COUNT') {
-        totalFileCount = signal.fileCount;
-      } else {
-        fileCount++;
-        let buffer = '';
-        for (const message of signal.messages) {
-          summary[message.severity]++;
-          if (isMinSeverity(message.severity, minSeverity)) {
-            buffer += logger.diagnosticMessage(message);
-            logger.diagnosticMessageGithub(message);
+    let totalFileCount = 0;
+    let fileCount = 0;
+
+    try {
+      if (tty.isInteractive) yield logger.runningDiagnostics();
+
+      for await (const signal of generator) {
+        if (signal.kind === 'EXTERNAL_WARNING') {
+          if (!warnedAboutExternalFiles) {
+            warnedAboutExternalFiles = true;
+            yield logger.experimentMessage(
+              `${logger.code('.vue')} and ${logger.code('.svelte')} file support is experimental.`
+            );
+          }
+        } else if (signal.kind === 'FILE_COUNT') {
+          totalFileCount = signal.fileCount;
+        } else {
+          fileCount++;
+          let buffer = '';
+          for (const message of signal.messages) {
+            summary[message.severity]++;
+            if (isMinSeverity(message.severity, minSeverity)) {
+              buffer += logger.diagnosticMessage(message);
+              logger.diagnosticMessageGithub(message);
+            }
+          }
+          if (buffer) {
+            yield logger.diagnosticFile(signal.filePath) + buffer + '\n';
           }
         }
-        if (buffer) {
-          yield logger.diagnosticFile(signal.filePath) + buffer + '\n';
-        }
-      }
 
-      if (tty.isInteractive) yield logger.runningDiagnostics(fileCount, totalFileCount);
+        if (tty.isInteractive) yield logger.runningDiagnostics(fileCount, totalFileCount);
+      }
+    } catch (error: any) {
+      throw logger.externalError('Could not check files', error);
     }
-  } catch (error: any) {
-    throw logger.externalError('Could not check files', error);
   }
 
   // Reset notice count if it's outside of min severity

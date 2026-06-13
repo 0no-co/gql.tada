@@ -1,17 +1,10 @@
 import * as path from 'node:path';
-import type { GraphQLSPConfig, LoadConfigResult } from '@gql.tada/internal';
 
-import {
-  loadRef,
-  loadConfig,
-  parseConfig,
-  minifyIntrospection,
-  outputIntrospectionFile,
-} from '@gql.tada/internal';
+import { loadRef, minifyIntrospection, outputIntrospectionFile } from '@gql.tada/internal';
 
 import type { TTY, ComposeInput } from '../../term';
-import type { WriteTarget } from '../shared';
-import { writeOutput } from '../shared';
+import type { ProjectContext, WriteTarget } from '../shared';
+import { loadProjects, writeOutput } from '../shared';
 import * as logger from './logger';
 
 export interface OutputOptions {
@@ -30,23 +23,46 @@ export interface OutputOptions {
 }
 
 export async function* run(tty: TTY, opts: OutputOptions): AsyncIterable<ComposeInput> {
-  let configResult: LoadConfigResult;
-  let pluginConfig: GraphQLSPConfig;
+  let projects: ProjectContext[];
   try {
-    configResult = await loadConfig(opts.tsconfig);
-    pluginConfig = parseConfig(configResult.pluginConfig, configResult.rootPath);
+    projects = await loadProjects(opts.tsconfig);
   } catch (error) {
     throw logger.externalError('Failed to load configuration.', error);
   }
 
+  if (projects.length > 1 && (opts.output || tty.pipeTo)) {
+    throw logger.errorMessage(
+      'Output path was specified, while multiple projects are configured.\n' +
+        logger.hint(
+          `You can only output all projects to their ${logger.code(
+            '"tadaOutputLocation"'
+          )} options\n` +
+            `when multiple projects are set up through ${logger.code('"references"')}.`
+        )
+    );
+  }
+
+  for (const project of projects) {
+    if (projects.length > 1) yield logger.projectHeader(project.label);
+    yield* runProject(tty, opts, project);
+  }
+}
+
+/** Generates the introspection output for a single project. */
+async function* runProject(
+  tty: TTY,
+  opts: OutputOptions,
+  project: ProjectContext
+): AsyncIterable<ComposeInput> {
+  const { pluginConfig, projectPath } = project;
+
   let schemaRef = loadRef(pluginConfig);
   try {
-    schemaRef = await schemaRef.load({ rootPath: path.dirname(configResult.configPath) });
+    schemaRef = await schemaRef.load({ rootPath: projectPath });
   } catch (error) {
     throw logger.externalError('Failed to load schema(s).', error);
   }
 
-  const projectPath = path.dirname(configResult.configPath);
   if ('schema' in pluginConfig) {
     const schema = schemaRef.current!;
 
@@ -56,7 +72,7 @@ export async function* run(tty: TTY, opts: OutputOptions): AsyncIterable<Compose
     } else if (opts.output) {
       destination = path.resolve(process.cwd(), opts.output);
     } else if (pluginConfig.tadaOutputLocation) {
-      destination = pluginConfig.tadaOutputLocation;
+      destination = path.resolve(projectPath, pluginConfig.tadaOutputLocation);
     } else {
       throw logger.errorMessage(
         'No output path was specified to write the output file to.\n' +
