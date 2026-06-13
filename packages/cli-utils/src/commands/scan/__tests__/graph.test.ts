@@ -51,4 +51,34 @@ describe('buildGraph', () => {
     const fieldNodes = graph.nodes.filter((n) => n.kind === 'schemaField').map((n) => n.label);
     expect(fieldNodes.sort()).toEqual(['Pokemon.id', 'Pokemon.name', 'Query.pokemons']);
   });
+
+  it('emits the full module import graph, including non-document modules', () => {
+    // /p/a.ts imports /p/util.ts (no documents) which imports /p/item.ts.
+    const { context: ctx, rules: r } = analyze({
+      documents: [
+        doc('query A { pokemons { ...Item } }', '/p/a.ts'),
+        doc('fragment Item on Pokemon { name }', '/p/item.ts'),
+      ],
+      schemas,
+      imports: new Map([
+        ['/p/a.ts', ['/p/util.ts']],
+        ['/p/util.ts', ['/p/item.ts']],
+      ]),
+      warnings: [],
+    });
+    const g = buildGraph(ctx, r);
+    // The intermediate non-document module appears as a node...
+    expect(g.nodes.some((n) => n.id === 'module:/p/util.ts')).toBe(true);
+    // ...and its import edges are present.
+    expect(g.edges).toContainEqual({
+      from: 'module:/p/a.ts',
+      to: 'module:/p/util.ts',
+      kind: 'imports',
+    });
+    expect(g.edges).toContainEqual({
+      from: 'module:/p/util.ts',
+      to: 'module:/p/item.ts',
+      kind: 'imports',
+    });
+  });
 });

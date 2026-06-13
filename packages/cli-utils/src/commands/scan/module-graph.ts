@@ -29,6 +29,11 @@ export class ModuleGraph {
     this._cwd = cwd;
   }
 
+  /** All import edges (module → the project modules it imports). */
+  importMap(): ReadonlyMap<string, readonly string[]> {
+    return this._edges;
+  }
+
   /** The "area" a module belongs to: its directory, relative to the cwd. */
   areaOf(modulePath: string): string {
     const rel = path.relative(this._cwd, modulePath);

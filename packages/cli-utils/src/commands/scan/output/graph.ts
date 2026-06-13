@@ -1,6 +1,11 @@
+import * as path from 'node:path';
+
 import type { ScanContext } from '../context';
 import type { RuleResults, ScanGraph, ScanGraphNode, ScanGraphEdge, SchemaName } from '../types';
 import type { FieldUsageData } from '../rules';
+
+const CWD = process.cwd();
+const relative = (modulePath: string): string => path.relative(CWD, modulePath) || modulePath;
 
 const moduleNodeId = (modulePath: string): string => `module:${modulePath}`;
 const fieldNodeId = (coordinate: string): string => `field:${coordinate}`;
@@ -28,10 +33,17 @@ export function buildGraph(context: ScanContext, rules: RuleResults): ScanGraph 
     fragmentIdByName.set(fragmentKey(fragment.schemaName, fragment.name), fragment.id);
   }
 
-  for (const module of context.modules) {
-    addNode({ id: moduleNodeId(module.path), kind: 'module', label: module.relativePath });
-    for (const target of module.imports) {
-      edges.push({ from: moduleNodeId(module.path), to: moduleNodeId(target), kind: 'imports' });
+  const moduleNode = (modulePath: string): void => {
+    addNode({ id: moduleNodeId(modulePath), kind: 'module', label: relative(modulePath) });
+  };
+
+  // The full project import graph (not just GraphQL-bearing modules), so the
+  // emitted `imports` edges match what reachability/fetch-depth actually use.
+  for (const [from, tos] of context.getModuleGraph().importMap()) {
+    moduleNode(from);
+    for (const target of tos) {
+      moduleNode(target);
+      edges.push({ from: moduleNodeId(from), to: moduleNodeId(target), kind: 'imports' });
     }
   }
 
@@ -58,6 +70,7 @@ export function buildGraph(context: ScanContext, rules: RuleResults): ScanGraph 
     schemaName: SchemaName
   ): void => {
     addNode({ id, kind, label });
+    moduleNode(module); // ensure the defining module is a node even if it has no imports
     edges.push({ from: moduleNodeId(module), to: id, kind: 'defines' });
     for (const spreadName of spreads) {
       const target = fragmentIdByName.get(fragmentKey(schemaName, spreadName));
