@@ -7,7 +7,8 @@ import path from 'node:path';
 
 import { makeIntrospectionQuery, getPeerSupportedFeatures } from './introspection';
 
-import type { SchemaLoader, SchemaLoaderResult, OnSchemaUpdate } from './types';
+import { toError } from '../helpers';
+import type { SchemaLoader, SchemaLoaderResult, OnSchemaUpdate, OnSchemaError } from './types';
 
 interface LoadFromSDLConfig {
   name?: string;
@@ -17,6 +18,7 @@ interface LoadFromSDLConfig {
 
 export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
   const subscriptions = new Set<OnSchemaUpdate>();
+  const errorSubscriptions = new Set<OnSchemaError>();
 
   let abort: (() => void) | null = null;
   let result: SchemaLoaderResult | null = null;
@@ -60,25 +62,28 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
     }
   };
 
+  // On reload failures the cached result is reset, so the next `load()` call
+  // retries instead of returning the last successful result, and subscribers
+  // are notified of the error rather than failing silently
+  const reload = async () => {
+    try {
+      if ((result = await load())) {
+        for (const subscriber of subscriptions) subscriber(result);
+      }
+    } catch (error) {
+      result = null;
+      for (const subscriber of errorSubscriptions) subscriber(toError(error));
+    }
+  };
+
   const watch = async () => {
     if (ts.sys.watchFile) {
-      const watcher = ts.sys.watchFile(
-        config.file,
-        async () => {
-          try {
-            if ((result = await load())) {
-              for (const subscriber of subscriptions) subscriber(result);
-            }
-          } catch (_error) {}
-        },
-        250,
-        {
-          // NOTE: Using `ts.WatchFileKind.UseFsEvents` causes missed events just like fs.watch
-          // as below on macOS, as of TypeScript 5.5 and is hence avoided here
-          watchFile: ts.WatchFileKind.UseFsEventsOnParentDirectory,
-          fallbackPolling: ts.PollingWatchKind.PriorityInterval,
-        }
-      );
+      const watcher = ts.sys.watchFile(config.file, reload, 250, {
+        // NOTE: Using `ts.WatchFileKind.UseFsEvents` causes missed events just like fs.watch
+        // as below on macOS, as of TypeScript 5.5 and is hence avoided here
+        watchFile: ts.WatchFileKind.UseFsEventsOnParentDirectory,
+        fallbackPolling: ts.PollingWatchKind.PriorityInterval,
+      });
       abort = () => watcher.close();
     } else {
       const controller = new AbortController();
@@ -88,11 +93,10 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
         persistent: false,
       });
       try {
-        for await (const _event of watcher) {
-          if ((result = await load())) {
-            for (const subscriber of subscriptions) subscriber(result);
-          }
-        }
+        // A failing reload previously threw out of this loop, which silently
+        // killed the watcher for the rest of the session; `reload` contains
+        // load errors so watching continues
+        for await (const _event of watcher) await reload();
       } catch (error: any) {
         if (error.name !== 'AbortError') throw error;
       } finally {
@@ -108,11 +112,13 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
     async load(reload?: boolean) {
       return reload || !result ? (result = await load()) : result;
     },
-    notifyOnUpdate(onUpdate) {
+    notifyOnUpdate(onUpdate, onError) {
       if (!subscriptions.size) watch();
       subscriptions.add(onUpdate);
+      if (onError) errorSubscriptions.add(onError);
       return () => {
         subscriptions.delete(onUpdate);
+        if (onError) errorSubscriptions.delete(onError);
         if (!subscriptions.size && abort) abort();
       };
     },

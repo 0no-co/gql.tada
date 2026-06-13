@@ -8,5 +8,9 @@ const hook = `
 pnpm exec lint-staged --quiet --relative
 `.trim();
 
-fs.writeFileSync(precommit, hook);
-fs.chmodSync(precommit, '755');
+// In git worktrees `.git` is a file rather than a directory and hooks are
+// shared from the main checkout, so there's nothing to write here
+if (fs.existsSync(path.dirname(precommit))) {
+  fs.writeFileSync(precommit, hook);
+  fs.chmodSync(precommit, '755');
+}

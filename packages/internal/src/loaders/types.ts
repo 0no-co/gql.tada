@@ -13,11 +13,12 @@ export interface SchemaLoaderResult {
 }
 
 export type OnSchemaUpdate = (result: SchemaLoaderResult) => void;
+export type OnSchemaError = (error: Error) => void;
 
 export interface SchemaLoader {
   readonly name: string | undefined;
   load(reload?: boolean): Promise<SchemaLoaderResult>;
-  notifyOnUpdate(onUpdate: OnSchemaUpdate): () => void;
+  notifyOnUpdate(onUpdate: OnSchemaUpdate, onError?: OnSchemaError): () => void;
 
   /** @internal */
   loadIntrospection(): Promise<IntrospectionResult | null>;
@@ -45,10 +46,13 @@ export interface SchemaRef<Result = SchemaLoaderResult | null> {
   /** Starts automatically updating the ref */
   autoupdate(
     config: BaseLoadConfig,
-    onUpdate: (ref: SchemaRef<Result>, input: SingleSchemaInput) => void
+    onUpdate: (ref: SchemaRef<Result>, input: SingleSchemaInput) => void,
+    onError?: (error: Error, input: SingleSchemaInput) => void
   ): () => void;
-  /** Loads the initial result for the schema */
-  load(config: BaseLoadConfig): Promise<SchemaRef<SchemaLoaderResult>>;
+  /** Loads the initial result for the schema.
+   * Loaders cache their last successful result; pass `reload` to force
+   * re-reading schemas, e.g. when a file watcher may have missed events. */
+  load(config: BaseLoadConfig & { reload?: boolean }): Promise<SchemaRef<SchemaLoaderResult>>;
   current: Result;
   multi: { [name: string]: Result };
   version: number;

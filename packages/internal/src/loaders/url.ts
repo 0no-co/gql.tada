@@ -12,7 +12,9 @@ import {
 } from './introspection';
 
 import type { SupportedFeatures, IntrospectSupportQueryData } from './introspection';
-import type { SchemaLoader, SchemaLoaderResult, OnSchemaUpdate } from './types';
+
+import { toError } from '../helpers';
+import type { SchemaLoader, SchemaLoaderResult, OnSchemaUpdate, OnSchemaError } from './types';
 
 interface LoadFromURLConfig {
   name?: string;
@@ -24,6 +26,7 @@ interface LoadFromURLConfig {
 export function loadFromURL(config: LoadFromURLConfig): SchemaLoader {
   const interval = config.interval || 60_000;
   const subscriptions = new Set<OnSchemaUpdate>();
+  const errorSubscriptions = new Set<OnSchemaError>();
 
   let timeoutID: NodeJS.Timeout | null = null;
   let supportedFeatures: SupportedFeatures | null = null;
@@ -52,8 +55,9 @@ export function loadFromURL(config: LoadFromURLConfig): SchemaLoader {
         timeoutID = null;
         try {
           result = await load();
-        } catch (_error) {
+        } catch (error) {
           result = null;
+          for (const subscriber of errorSubscriptions) subscriber(toError(error));
         }
         if (result) for (const subscriber of subscriptions) subscriber(result);
       }, interval);
@@ -121,10 +125,12 @@ export function loadFromURL(config: LoadFromURLConfig): SchemaLoader {
     async load(reload?: boolean) {
       return reload || !result ? (result = await load()) : result;
     },
-    notifyOnUpdate(onUpdate) {
+    notifyOnUpdate(onUpdate, onError) {
       subscriptions.add(onUpdate);
+      if (onError) errorSubscriptions.add(onError);
       return () => {
         subscriptions.delete(onUpdate);
+        if (onError) errorSubscriptions.delete(onError);
         if (!subscriptions.size && timeoutID) {
           clearTimeout(timeoutID);
           timeoutID = null;
