@@ -194,6 +194,21 @@ describe('loadConfigs', () => {
     );
   });
 
+  it('rejects malformed referenced config files', () => {
+    return inFixture(
+      {
+        'tsconfig.json': {
+          files: [],
+          references: [{ path: './tsconfig.app.json' }],
+        },
+        'tsconfig.app.json': '{',
+      },
+      async (root) => {
+        await expect(loadConfigs(root)).rejects.toThrow(/tsconfig\.app\.json/);
+      }
+    );
+  });
+
   it('resolves a non-solution root config with plugin-less references', () => {
     return inFixture(
       {

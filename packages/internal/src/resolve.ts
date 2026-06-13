@@ -18,6 +18,12 @@ const stat = (file: string, predicate = isFile): Promise<boolean> =>
     .then(predicate)
     .catch(() => false);
 
+const isMissingFileError = (error: unknown): boolean =>
+  typeof error === 'object' &&
+  error !== null &&
+  'code' in error &&
+  (error.code === 'ENOENT' || error.code === 'ENOTDIR');
+
 const _resolve =
   typeof require !== 'undefined'
     ? require.resolve.bind(require)
@@ -156,7 +162,7 @@ export const loadConfigs = async (targetPath?: string): Promise<LoadConfigResult
     try {
       tsconfig = await readTSConfigFile(tsconfigPath);
     } catch (error) {
-      if (isRoot) throw error;
+      if (isRoot || !isMissingFileError(error)) throw error;
       return;
     }
 
