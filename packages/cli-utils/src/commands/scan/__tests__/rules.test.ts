@@ -86,17 +86,6 @@ describe('default rules', () => {
     );
   });
 
-  it('operation-footprint includes fields reached through fragments', () => {
-    const a = rules['operation-footprint'].find(
-      (d) => d.ref.kind === 'operation' && d.ref.id === ':operation:A'
-    );
-    expect((a?.data as { fields: string[] }).fields).toEqual([
-      'Pokemon.id',
-      'Pokemon.name',
-      'Query.pokemons',
-    ]);
-  });
-
   it('directive-usage counts directive applications', () => {
     const result = analyze({
       documents: [doc('query C { viewer @skip(if: true) { id @include(if: false) } }', '/p/c.ts')],
@@ -118,13 +107,15 @@ describe('default rules', () => {
     expect(scores).toEqual([...scores].sort((a, b) => b - a));
   });
 
-  it('operation-complexity counts fields through fragments', () => {
-    // A = `query A { pokemons { ...Item } }`, Item = `{ id name }` → 3 fields.
+  it('operation-complexity reports the transitive footprint through fragments', () => {
+    // A = `query A { pokemons { ...Item } }`, Item = `{ id name }`.
     const a = rules['operation-complexity'].find(
       (d) => d.ref.kind === 'operation' && d.ref.id === ':operation:A'
     );
-    expect((a?.data as { fieldCount: number }).fieldCount).toBe(3);
+    const data = a?.data as { fieldCount: number; listFields: number; fields: string[] };
+    expect(data.fields).toEqual(['Pokemon.id', 'Pokemon.name', 'Query.pokemons']);
+    expect(data.fieldCount).toBe(3);
     // Query.pokemons returns a list.
-    expect((a?.data as { listFields: number }).listFields).toBe(1);
+    expect(data.listFields).toBe(1);
   });
 });

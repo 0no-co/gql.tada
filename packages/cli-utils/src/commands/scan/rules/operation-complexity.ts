@@ -8,10 +8,12 @@ const LIST_WEIGHT = 3;
 export interface ComplexityData {
   /** Selection depth, expanded through fragment spreads. */
   depth: number;
-  /** Field selections, expanded through fragment spreads. */
+  /** Number of distinct fields selected, expanded through fragment spreads. */
   fieldCount: number;
-  /** How many of those selections return a list. */
+  /** How many of those distinct fields return a list. */
   listFields: number;
+  /** The distinct schema coordinates selected (the operation's footprint). */
+  fields: string[];
   /** Combined cost score. */
   score: number;
 }
@@ -20,18 +22,22 @@ export interface ComplexityData {
 interface DefMetrics {
   schemaName: string | null;
   ownDepth: number;
-  ownFieldCount: number;
-  ownListFields: number;
+  /** Distinct coordinates selected directly in this definition. */
+  fields: Set<string>;
+  /** Subset of {@link fields} whose field returns a list. */
+  listFields: Set<string>;
   /** Fragment spreads with the selection-set depth they occur at. */
   spreads: { name: string; depth: number }[];
 }
 
 /** Operations ranked by cost, expanded through fragment spreads (an operation
- * that delegates to a big fragment is correctly counted as large). List fields
- * are weighted more heavily as a proxy for response size / N+1 risk. */
+ * that delegates to a big fragment is correctly counted as large). Reports the
+ * operation's full field footprint, its transitive depth, and how many of its
+ * fields return lists (weighted more heavily as a proxy for response size /
+ * N+1 risk). */
 export const operationComplexity: ScanRule<ComplexityData> = {
   name: 'operation-complexity',
-  description: 'Operations ranked by transitive selection depth, field count, and list fan-out.',
+  description: 'Operations ranked by transitive footprint, depth, and list fan-out.',
   create(context) {
     const byDef = new Map<string, DefMetrics>();
     let current: DefMetrics | null = null;
@@ -46,8 +52,8 @@ export const operationComplexity: ScanRule<ComplexityData> = {
       current = {
         schemaName: definition.schemaName,
         ownDepth: 0,
-        ownFieldCount: 0,
-        ownListFields: 0,
+        fields: new Set(),
+        listFields: new Set(),
         spreads: [],
       };
       byDef.set(definition.id, current);
@@ -68,10 +74,12 @@ export const operationComplexity: ScanRule<ComplexityData> = {
         },
         Field: {
           enter() {
+            const parentType = context.getParentType();
             const fieldDef = context.getFieldDef();
-            if (!current || !fieldDef || fieldDef.name.startsWith('__')) return;
-            current.ownFieldCount++;
-            if (isListType(getNullableType(fieldDef.type))) current.ownListFields++;
+            if (!current || !parentType || !fieldDef || fieldDef.name.startsWith('__')) return;
+            const coordinate = `${parentType.name}.${fieldDef.name}`;
+            current.fields.add(coordinate);
+            if (isListType(getNullableType(fieldDef.type))) current.listFields.add(coordinate);
           },
         },
         FragmentSpread: {
@@ -104,24 +112,29 @@ export const operationComplexity: ScanRule<ComplexityData> = {
         };
 
         const datapoints: RuleDatapoint<ComplexityData>[] = context.operations.map((op) => {
-          const own = byDef.get(op.id);
-          let fieldCount = own?.ownFieldCount ?? 0;
-          let listFields = own?.ownListFields ?? 0;
+          const fields = new Set<string>(byDef.get(op.id)?.fields);
+          const listFields = new Set<string>(byDef.get(op.id)?.listFields);
           for (const fragmentId of fragments.reachableFragments(op.id)) {
             const metrics = byDef.get(fragmentId);
-            if (metrics) {
-              fieldCount += metrics.ownFieldCount;
-              listFields += metrics.ownListFields;
-            }
+            if (!metrics) continue;
+            for (const coordinate of metrics.fields) fields.add(coordinate);
+            for (const coordinate of metrics.listFields) listFields.add(coordinate);
           }
           const operationDepth = effectiveDepth(op.id, new Set());
-          const score = fieldCount + operationDepth * operationDepth + listFields * LIST_WEIGHT;
+          const score =
+            fields.size + operationDepth * operationDepth + listFields.size * LIST_WEIGHT;
 
           return {
             ref: { kind: 'operation', id: op.id },
-            message: `${op.name || '(anonymous)'}: depth ${operationDepth}, ${fieldCount} fields (${listFields} list)`,
+            message: `${op.name || '(anonymous)'}: depth ${operationDepth}, ${fields.size} fields (${listFields.size} list)`,
             weight: score,
-            data: { depth: operationDepth, fieldCount, listFields, score },
+            data: {
+              depth: operationDepth,
+              fieldCount: fields.size,
+              listFields: listFields.size,
+              fields: [...fields].sort(),
+              score,
+            },
           };
         });
 
