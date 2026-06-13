@@ -1,8 +1,14 @@
 import * as path from 'node:path';
 import ts from 'typescript';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+vi.mock('../../../ts/transformers', () => ({
+  transformExtensions: [] as const,
+  transform: vi.fn(),
+}));
 
 import { hasGraphQLDocumentCandidate, shouldScanTurboFile } from '../scan';
+import { collectImportsFromSourceFile } from '../thread';
 
 describe('shouldScanTurboFile', () => {
   it('excludes generated cache, declarations, and node_modules files', () => {
@@ -68,6 +74,55 @@ describe('hasGraphQLDocumentCandidate', () => {
         `)
       )
     ).toBe(false);
+  });
+});
+
+describe('collectImportsFromSourceFile', () => {
+  it('excludes generated tada output imports for multi-schema projects', () => {
+    const sourceFile = ts.createSourceFile(
+      '/project/graphql/pokemon.ts',
+      `
+        import { initGraphQLTada } from 'gql.tada';
+        import type { introspection } from './pokemon-env.d';
+        import type { CountrySchema } from './countries-env.d';
+        import type { UserScalar } from './types';
+      `,
+      ts.ScriptTarget.Latest,
+      true
+    );
+
+    const imports = collectImportsFromSourceFile(
+      sourceFile,
+      {
+        schemas: [
+          {
+            name: 'pokemon',
+            schema: './graphql/pokemon.graphql',
+            tadaOutputLocation: '/project/graphql/pokemon-env.d.ts',
+          },
+          {
+            name: 'countries',
+            schema: './graphql/countries.graphql',
+            tadaOutputLocation: '/project/graphql/countries-env.d.ts',
+          },
+        ],
+      },
+      (specifier) => specifier,
+      (specifier, fromPath) => {
+        if (specifier === './pokemon-env.d') return '/project/graphql/pokemon-env.d.ts';
+        if (specifier === './countries-env.d') return '/project/graphql/countries-env.d.ts';
+        return path.resolve(path.dirname(fromPath), specifier);
+      },
+      '/project',
+      '/project/graphql/pokemon-cache.d.ts'
+    );
+
+    expect(imports).toEqual([
+      {
+        specifier: './types',
+        importClause: "import type { UserScalar } from './types';",
+      },
+    ]);
   });
 });
 
