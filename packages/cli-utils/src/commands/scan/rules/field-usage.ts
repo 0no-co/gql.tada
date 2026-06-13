@@ -44,6 +44,8 @@ export const fieldUsage: ScanRule<FieldUsageData> = {
             const fieldDef = context.getFieldDef();
             const definition = context.getCurrentDefinition();
             if (!parentType || !fieldDef || !definition) return;
+            // Skip reserved introspection meta-fields (__typename, __schema, __type).
+            if (fieldDef.name.startsWith('__')) return;
 
             const coordinate = `${parentType.name}.${fieldDef.name}`;
             if (seen.has(coordinate)) return;
@@ -119,8 +121,15 @@ export const fieldUsage: ScanRule<FieldUsageData> = {
           });
         }
 
+        // Rank by selection count, then reach, then coordinate for stable ties —
+        // so the terminal's top-N shows the most-used fields first.
         const coordinateOf = (d: FieldUsageData) => `${d.typeName}.${d.fieldName}`;
-        return datapoints.sort((a, b) => coordinateOf(a.data).localeCompare(coordinateOf(b.data)));
+        return datapoints.sort(
+          (a, b) =>
+            b.data.count - a.data.count ||
+            (b.weight ?? 0) - (a.weight ?? 0) ||
+            coordinateOf(a.data).localeCompare(coordinateOf(b.data))
+        );
       },
     };
   },

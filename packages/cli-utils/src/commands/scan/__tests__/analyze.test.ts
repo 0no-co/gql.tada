@@ -99,6 +99,14 @@ describe('analyze', () => {
     expect(legacy?.operations).toEqual([]);
   });
 
+  it('excludes reserved introspection meta-fields', () => {
+    const { rules } = run([doc('query Q { pokemons { __typename id } }', '/p/a.ts')]);
+    const usage = fieldUsageMap(rules);
+
+    expect(usage.has('Pokemon.id')).toBe(true);
+    expect(usage.has('Pokemon.__typename')).toBe(false);
+  });
+
   it('collects a warning when a document cannot be parsed', () => {
     const { context } = run([doc('query Broken { pokemons {', '/p/a.ts')]);
     expect(context.operations).toHaveLength(0);
