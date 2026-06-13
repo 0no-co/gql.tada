@@ -44,6 +44,21 @@ const idOf = (ref: DatapointRef) =>
   ref.kind === 'operation' || ref.kind === 'fragment' ? ref.id : undefined;
 
 describe('default rules', () => {
+  it('unused-fields reports schema fields never selected', () => {
+    const s = buildSchema(`type Query { used: String  unused: String }`);
+    const result = analyze({
+      documents: [doc('query Q { used }', '/p/q.ts')],
+      schemas: new Map([[null, s]]),
+      imports: new Map(),
+      warnings: [],
+    });
+    const coords = result.rules['unused-fields'].map((d) =>
+      d.ref.kind === 'field' ? d.ref.coordinate : undefined
+    );
+    expect(coords).toContain('Query.unused');
+    expect(coords).not.toContain('Query.used');
+  });
+
   it('deprecated-usage reports used deprecated fields', () => {
     const data = rules['deprecated-usage'];
     expect(data).toHaveLength(1);
