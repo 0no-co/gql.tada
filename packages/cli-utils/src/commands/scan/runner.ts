@@ -135,7 +135,7 @@ async function* runProject(
   const { context, rules } = analyze({ documents, schemas, imports, warnings });
 
   if (opts.format === 'json') {
-    yield* writeJson(tty, opts, () => renderJson(rules));
+    yield* writeJson(tty, opts, () => renderJson(context, rules));
   } else {
     yield renderTerminalReport(context, rules);
   }

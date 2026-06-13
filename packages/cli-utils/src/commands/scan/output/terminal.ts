@@ -3,7 +3,7 @@ import * as t from '../../../term';
 
 import type { ScanContext } from '../context';
 import type { RuleResults, DatapointRef } from '../types';
-import type { CoverageData } from '../rules/schema-coverage';
+import { buildOverview } from './overview';
 
 const CWD = process.cwd();
 /** Maximum datapoints shown per rule in the terminal report. */
@@ -30,29 +30,22 @@ function locator(ref: DatapointRef, context: ScanContext): string | undefined {
   }
 }
 
-function coverageLine(rules: RuleResults): string {
-  let used = 0;
-  let total = 0;
-  for (const datapoint of rules['schema-coverage'] || []) {
-    const data = datapoint.data as CoverageData;
-    used += data.usedFields;
-    total += data.totalFields;
-  }
-  const percent = total ? Math.round((used / total) * 100) : 100;
+function coverageLine(context: ScanContext, rules: RuleResults): string {
+  const { usedFields, totalFields, percent } = buildOverview(context, rules).coverage;
   return t.text([
     t.cmd(t.CSI.Style, t.Style.Foreground),
     'Schema coverage: ',
     t.cmd(t.CSI.Style, t.Style.BrightBlue),
     `${percent}% `,
     t.cmd(t.CSI.Style, t.Style.BrightBlack),
-    `(${used}/${total} fields used)\n`,
+    `(${usedFields}/${totalFields} fields used)\n`,
   ]);
 }
 
 /** Renders the default human-facing report: coverage plus the top datapoints of
  * each rule that produced findings. */
 export function renderTerminalReport(context: ScanContext, rules: RuleResults): string {
-  let out = '\n' + coverageLine(rules);
+  let out = '\n' + coverageLine(context, rules);
 
   for (const [name, datapoints] of Object.entries(rules)) {
     if (!datapoints.length) continue;

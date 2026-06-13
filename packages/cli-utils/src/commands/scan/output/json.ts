@@ -1,14 +1,18 @@
+import type { ScanContext } from '../context';
 import type { RuleResults } from '../types';
+import { buildOverview, type ScanOverview } from './overview';
 
 export interface ScanJsonOutput {
   version: number;
+  /** Project-level totals (same numbers the terminal header shows). */
+  overview: ScanOverview;
   /** Each rule's datapoints, keyed by rule name. */
   rules: RuleResults;
 }
 
-/** Serialises the rule datapoints — the same insights the terminal report
- * renders — to the stable JSON substrate. */
-export function renderJson(rules: RuleResults): string {
-  const output: ScanJsonOutput = { version: 1, rules };
+/** Serialises the analysis result — the project overview and the rule
+ * datapoints the terminal report renders — to the stable JSON substrate. */
+export function renderJson(context: ScanContext, rules: RuleResults): string {
+  const output: ScanJsonOutput = { version: 1, overview: buildOverview(context, rules), rules };
   return JSON.stringify(output, null, 2) + '\n';
 }
