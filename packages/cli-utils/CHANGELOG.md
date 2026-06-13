@@ -1,5 +1,33 @@
 # @gql.tada/cli-utils
 
+## 1.8.0
+
+### Minor Changes
+
+- Implement `turbo` change hashing and skip re-computing types of documents that haven't changed
+  Submitted by [@kitten](https://github.com/kitten) (See [#535](https://github.com/0no-co/gql.tada/pull/535))
+- Support TypeScript project `references` in `tsconfig.json` files across `check`, `turbo`, `generate-output`, `generate-persisted`, `generate-schema`, `doctor`, and `init`, running for every resolved project
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#538](https://github.com/0no-co/gql.tada/pull/538))
+- Add `silent` option to public API functions
+  Submitted by [@kitten](https://github.com/kitten) (See [#546](https://github.com/0no-co/gql.tada/pull/546))
+- Bump minor version
+  Submitted by [@kitten](https://github.com/kitten) (See [`97cc2c7`](https://github.com/0no-co/gql.tada/commit/97cc2c79830ba3651bc585d67e03e1c7361da76e))
+
+### Patch Changes
+
+- Upgrade `@0no-co/graphqlsp` to `^1.16.0` and use `findAllCallExpressions`' new `collectFragments: false` option in the `turbo` command, replacing the plugin-info proxy that previously disabled fragment definition lookups. This also picks up graphqlsp's memoized gql.tada type probe, which reduces type checker work for non-GraphQL calls during call discovery
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#539](https://github.com/0no-co/gql.tada/pull/539))
+- Speed up `turbo` call discovery by caching module resolution for `graphql()` import-source tracing (one compiler host and resolution cache per run, memoized per file and identifier) and by skipping fragment definition lookups in `findAllCallExpressions`, whose output the `turbo` command discards
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#537](https://github.com/0no-co/gql.tada/pull/537))
+- Scope TypeScript program creation to the originally requested project tsconfig when the GraphQLSP plugin is inherited from a shared monorepo config
+  Submitted by [@kitten](https://github.com/kitten) (See [#545](https://github.com/0no-co/gql.tada/pull/545))
+- ⚠️ Fix multi-schema introspections being confused in turbo output, leading to multiple introspection outputs being referenced in the turbo output
+  Submitted by [@kitten](https://github.com/kitten) (See [#547](https://github.com/0no-co/gql.tada/pull/547))
+- In `turbo`, skip TypeScript files whose ASTs don't contain calls with string literal arguments that vaguely resemble GraphQL
+  Submitted by [@kitten](https://github.com/kitten) (See [#540](https://github.com/0no-co/gql.tada/pull/540))
+- Updated dependencies (See [#538](https://github.com/0no-co/gql.tada/pull/538), [#541](https://github.com/0no-co/gql.tada/pull/541), [#548](https://github.com/0no-co/gql.tada/pull/548), [`97cc2c7`](https://github.com/0no-co/gql.tada/commit/97cc2c79830ba3651bc585d67e03e1c7361da76e), and [#545](https://github.com/0no-co/gql.tada/pull/545))
+  - @gql.tada/internal@1.1.0
+
 ## 1.7.4
 
 ### Patch Changes
