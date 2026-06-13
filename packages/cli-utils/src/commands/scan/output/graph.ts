@@ -8,6 +8,11 @@ const typeNodeId = (typeName: string): string => `type:${typeName}`;
 const fragmentKey = (schemaName: SchemaName, name: string): string =>
   `${schemaName ?? ''}\0${name}`;
 
+/** Serialises the pure relationship graph (emitted via `--graph`). */
+export function renderGraph(context: ScanContext, rules: RuleResults): string {
+  return JSON.stringify(buildGraph(context, rules), null, 2) + '\n';
+}
+
 /** Composes the module ↔ document ↔ fragment ↔ schema relationship graph from
  * the corpus (identities, spreads, imports) and the field-usage rule (the
  * field selections). A derived view assembled at output time. */

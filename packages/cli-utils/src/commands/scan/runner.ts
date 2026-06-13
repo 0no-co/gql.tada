@@ -9,6 +9,7 @@ import { loadProjects, writeOutput } from '../shared';
 import type { SchemaName, RawScanDocument, ScanWarning } from './types';
 import { analyze } from './analyze';
 import { renderJson } from './output/json';
+import { renderGraph } from './output/graph';
 import { renderTerminalReport } from './output/terminal';
 import * as logger from './logger';
 
@@ -19,7 +20,9 @@ export interface ScanOptions {
   tsconfig: string | undefined;
   /** When `json`, write the JSON report; otherwise show the terminal report. */
   format: ScanFormat | undefined;
-  /** Where to write the JSON report to. Defaults to standard output. */
+  /** When set, output the pure relationship graph (implies machine output). */
+  graph: boolean;
+  /** Where to write machine output to. Defaults to standard output. */
   output: string | undefined;
   /** Whether to fail with a non-zero exit code if any warnings are reported. */
   failOnWarn: boolean;
@@ -52,9 +55,9 @@ export async function* run(tty: TTY, opts: ScanOptions): AsyncIterable<ComposeIn
   }
 
   // Machine output goes to a single destination, so it can't span projects.
-  if (projects.length > 1 && !!opts.format) {
+  if (projects.length > 1 && (opts.format || opts.graph)) {
     throw logger.errorMessage(
-      'The JSON report can only target a single project.\n' +
+      'Machine output can only target a single project.\n' +
         logger.hint(`Run scan per-project with an explicit ${logger.code('--tsconfig')}.`)
     );
   }
@@ -77,9 +80,10 @@ async function* runProject(
 ): AsyncGenerator<ComposeInput, number> {
   const { runScan } = await import('./thread');
 
-  const machine = !!opts.format;
-  // When the JSON shares the (single) stdout stream, human chatter would corrupt
-  // it — so suppress progress/warnings/summary in that case.
+  // `--graph` implies machine output (the pure relationship graph).
+  const machine = !!opts.format || opts.graph;
+  // When machine output shares the (single) stdout stream, human chatter would
+  // corrupt it — so suppress progress/warnings/summary in that case.
   const quiet = machine && !opts.output && !tty.pipeTo;
 
   let schemas: Map<SchemaName, GraphQLSchema>;
@@ -142,17 +146,19 @@ async function* runProject(
   const { context, rules } = analyze({ documents, schemas, imports, warnings });
 
   if (machine) {
+    const label = opts.graph ? 'graph' : 'JSON report';
+    const render = opts.graph ? renderGraph : renderJson;
     // Default to stdout; `--output` writes a file instead.
     const destination: WriteTarget = opts.output
       ? path.resolve(process.cwd(), opts.output)
       : (tty.pipeTo ?? process.stdout);
     try {
-      await writeOutput(destination, renderJson(context, rules));
+      await writeOutput(destination, render(context, rules));
     } catch (error) {
-      throw logger.externalError('Something went wrong while writing the JSON report', error);
+      throw logger.externalError(`Something went wrong while writing the ${label}`, error);
     }
     if (!quiet && typeof destination === 'string') {
-      yield logger.wroteOutput('JSON report', destination);
+      yield logger.wroteOutput(label, destination);
     }
   } else {
     yield renderTerminalReport(context, rules);

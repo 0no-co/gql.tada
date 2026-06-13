@@ -16,8 +16,12 @@ export class ScanCommand extends Command {
     description: 'Emit the machine-readable `json` report.\tDefault: a terminal report',
   });
 
+  graph = Option.Boolean('--graph', false, {
+    description: 'Emit only the relationship graph as JSON (implies machine output).',
+  });
+
   output = Option.String('--output,-o', {
-    description: 'Where to write the `--format json` report to.\tDefault: the piped output',
+    description: 'Write machine output to this file.\tDefault: standard output',
   });
 
   failOnWarn = Option.Boolean('--fail-on-warn,-w', false, {
@@ -30,6 +34,7 @@ export class ScanCommand extends Command {
       run(tty, {
         tsconfig: this.tsconfig,
         format: this.format as ScanFormat | undefined,
+        graph: this.graph,
         output: this.output,
         failOnWarn: this.failOnWarn,
       })
