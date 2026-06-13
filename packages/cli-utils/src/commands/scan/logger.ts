@@ -69,7 +69,7 @@ export function summary(args: {
   fragments: number;
   modules: number;
 }) {
-  let out = '';
+  let out = '\n';
   if (args.warnings) {
     out += t.text([
       t.cmd(t.CSI.Style, t.Style.BrightYellow),

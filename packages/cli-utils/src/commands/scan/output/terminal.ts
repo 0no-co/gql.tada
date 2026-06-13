@@ -3,11 +3,14 @@ import * as t from '../../../term';
 
 import type { ScanContext } from '../context';
 import type { RuleResults, DatapointRef } from '../types';
+import { DEFAULT_RULES } from '../rules';
 import { buildOverview } from './overview';
 
 const CWD = process.cwd();
 /** Maximum datapoints shown per rule in the terminal report. */
 const MAX_PER_RULE = 8;
+
+const RULE_DESCRIPTIONS = new Map(DEFAULT_RULES.map((rule) => [rule.name, rule.description]));
 
 const relative = (filePath: string): string => {
   const rel = path.relative(CWD, filePath);
@@ -60,11 +63,19 @@ export function renderTerminalReport(context: ScanContext, rules: RuleResults): 
       ` (${datapoints.length})\n`,
     ]);
 
-    for (const datapoint of datapoints.slice(0, MAX_PER_RULE)) {
+    const description = RULE_DESCRIPTIONS.get(name);
+    if (description) {
+      out += t.text([t.cmd(t.CSI.Style, t.Style.BrightBlack), `  ${description}\n`]);
+    }
+
+    const shown = datapoints.slice(0, MAX_PER_RULE);
+    const truncated = datapoints.length > shown.length;
+    shown.forEach((datapoint, index) => {
+      const isLast = !truncated && index === shown.length - 1;
       const where = locator(datapoint.ref, context);
       out += t.text([
         t.cmd(t.CSI.Style, t.Style.BrightBlack),
-        `  ${t.HeavyBox.BottomLeft} `,
+        `  ${isLast ? t.Box.BottomLeft : t.Box.VerticalRight} `,
         t.cmd(t.CSI.Style, t.Style.Foreground),
         datapoint.message,
         ...(datapoint.weight != null
@@ -73,12 +84,12 @@ export function renderTerminalReport(context: ScanContext, rules: RuleResults): 
         ...(where ? [t.cmd(t.CSI.Style, t.Style.BrightBlack), `  ${where}`] : []),
         '\n',
       ]);
-    }
+    });
 
-    if (datapoints.length > MAX_PER_RULE) {
+    if (truncated) {
       out += t.text([
         t.cmd(t.CSI.Style, t.Style.BrightBlack),
-        `    ${t.Chars.Ellipsis} and ${datapoints.length - MAX_PER_RULE} more\n`,
+        `  ${t.Box.BottomLeft} ${t.Chars.Ellipsis} and ${datapoints.length - shown.length} more\n`,
       ]);
     }
   }
