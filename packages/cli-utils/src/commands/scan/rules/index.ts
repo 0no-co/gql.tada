@@ -4,7 +4,6 @@ import { fieldUsage } from './field-usage';
 import { inputUsage } from './input-usage';
 import { deprecatedUsage } from './deprecated-usage';
 import { orphanFragments } from './orphan-fragments';
-import { couplingHotspots } from './coupling-hotspots';
 import { crossFeatureFragments } from './cross-feature-fragments';
 import { operationComplexity } from './operation-complexity';
 import { fetchDepth } from './fetch-depth';
@@ -24,7 +23,6 @@ export const DEFAULT_RULES: ScanRule[] = [
   deprecatedUsage,
   // Code navigation & refactoring
   orphanFragments,
-  couplingHotspots,
   crossFeatureFragments,
   // Performance & DX
   operationComplexity,

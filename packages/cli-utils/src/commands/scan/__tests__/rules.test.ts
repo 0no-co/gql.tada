@@ -56,14 +56,6 @@ describe('default rules', () => {
     expect(ids).not.toContain(':fragment:Item');
   });
 
-  it('coupling-hotspots reports widely-shared fragments', () => {
-    const hotspots = rules['coupling-hotspots'];
-    // Item is spread by both A and B.
-    expect(hotspots).toHaveLength(1);
-    expect(idOf(hotspots[0].ref)).toBe(':fragment:Item');
-    expect((hotspots[0].data as { spreadCount: number }).spreadCount).toBe(2);
-  });
-
   it('input-usage counts enum values and input-object fields', () => {
     const inputSchema = buildSchema(`
       enum Sort { NEWEST  OLDEST }
