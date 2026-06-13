@@ -3,7 +3,6 @@ import type { ScanRule } from '../types';
 import { fieldUsage } from './field-usage';
 import { operationFootprint } from './operation-footprint';
 import { inputUsage } from './input-usage';
-import { unusedFields } from './unused-fields';
 import { deprecatedUsage } from './deprecated-usage';
 import { schemaCoverage } from './schema-coverage';
 import { orphanFragments } from './orphan-fragments';
@@ -26,7 +25,6 @@ export const DEFAULT_RULES: ScanRule[] = [
   // Input-side usage: enum values and input-object fields.
   inputUsage,
   // Schema evolution & safety
-  unusedFields,
   deprecatedUsage,
   schemaCoverage,
   // Code navigation & refactoring
