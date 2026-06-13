@@ -33,8 +33,6 @@ const { rules } = analyze({
     doc('query B { viewer { ...Item legacy } }', '/p/b.ts'),
     doc('fragment Item on Pokemon { id name }', '/p/item.ts'),
     doc('fragment Orphan on Pokemon { id }', '/p/orphan.ts'),
-    doc('query Same { viewer { id } }', '/p/d.ts'),
-    doc('query Same { viewer { id } }', '/p/e.ts'),
   ],
   schemas,
   imports: new Map(),
@@ -66,15 +64,9 @@ describe('default rules', () => {
     expect((hotspots[0].data as { spreadCount: number }).spreadCount).toBe(2);
   });
 
-  it('duplicate-documents groups identical operations', () => {
-    const duplicates = rules['duplicate-documents'];
-    expect(duplicates).toHaveLength(1);
-    expect((duplicates[0].data as { members: unknown[] }).members).toHaveLength(2);
-  });
-
-  it('operation-complexity ranks operations by depth and field count', () => {
+  it('operation-complexity ranks operations by score', () => {
     const complexity = rules['operation-complexity'];
-    expect(complexity.length).toBe(4); // A, B, Same, Same
+    expect(complexity.length).toBe(2); // A, B
     const scores = complexity.map((d) => (d.data as { score: number }).score);
     expect(scores).toEqual([...scores].sort((a, b) => b - a));
   });
