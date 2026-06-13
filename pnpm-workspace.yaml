@@ -12,6 +12,7 @@ allowBuilds:
 # policy so freshly published versions can be adopted immediately
 minimumReleaseAgeExclude:
   - '@0no-co/graphqlsp'
+  - '@0no-co/graphql.web'
 
 overrides:
   gql.tada: workspace:*
