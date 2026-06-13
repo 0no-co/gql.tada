@@ -130,24 +130,24 @@ async function* runProject(
     throw logger.externalError('Could not scan files', error);
   }
 
-  // Both outputs render from the same analysis result (corpus + rule datapoints).
+  // Both outputs render from the same analysis result (the rule datapoints, plus
+  // the context's identities for resolving locators).
   const { context, rules } = analyze({ documents, schemas, imports, warnings });
-  const corpus = context.toCorpus();
 
   if (opts.format === 'json') {
     yield* writeJson(tty, opts, () => renderJson(rules));
   } else {
-    yield renderTerminalReport(corpus, rules);
+    yield renderTerminalReport(context, rules);
   }
 
   yield logger.summary({
-    warnings: corpus.warnings.length,
-    operations: corpus.operations.length,
-    fragments: corpus.fragments.length,
-    modules: corpus.modules.length,
+    warnings: context.warnings.length,
+    operations: context.operations.length,
+    fragments: context.fragments.length,
+    modules: context.modules.length,
   });
 
-  return corpus.warnings.length;
+  return context.warnings.length;
 }
 
 async function* writeJson(

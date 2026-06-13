@@ -1,7 +1,8 @@
 import * as path from 'node:path';
 import * as t from '../../../term';
 
-import type { ScanCorpus, RuleResults, DatapointRef } from '../types';
+import type { ScanContext } from '../context';
+import type { RuleResults, DatapointRef } from '../types';
 import type { CoverageData } from '../rules/schema-coverage';
 
 const CWD = process.cwd();
@@ -16,18 +17,16 @@ const relative = (filePath: string): string => {
 };
 
 /** Resolves a datapoint's `ref` to a short `file:line` locator, where one exists. */
-function locator(ref: DatapointRef, corpus: ScanCorpus): string | undefined {
+function locator(ref: DatapointRef, context: ScanContext): string | undefined {
   switch (ref.kind) {
     case 'operation': {
-      const op = corpus.operations.find((item) => item.id === ref.id);
+      const op = context.operations.find((item) => item.id === ref.id);
       return op ? `${relative(op.loc.file)}:${op.loc.line}` : undefined;
     }
     case 'fragment': {
-      const fragment = corpus.fragments.find((item) => item.id === ref.id);
+      const fragment = context.fragments.find((item) => item.id === ref.id);
       return fragment ? `${relative(fragment.loc.file)}:${fragment.loc.line}` : undefined;
     }
-    case 'module':
-      return ref.line ? `${relative(ref.path)}:${ref.line}` : relative(ref.path);
     default:
       return undefined;
   }
@@ -54,7 +53,7 @@ function coverageLine(rules: RuleResults): string {
 
 /** Renders the default human-facing report: coverage plus the top datapoints of
  * each rule that produced findings. */
-export function renderTerminalReport(corpus: ScanCorpus, rules: RuleResults): string {
+export function renderTerminalReport(context: ScanContext, rules: RuleResults): string {
   let out = '\n' + coverageLine(rules);
 
   for (const [name, datapoints] of Object.entries(rules)) {
@@ -71,7 +70,7 @@ export function renderTerminalReport(corpus: ScanCorpus, rules: RuleResults): st
     ]);
 
     for (const datapoint of datapoints.slice(0, MAX_PER_RULE)) {
-      const where = locator(datapoint.ref, corpus);
+      const where = locator(datapoint.ref, context);
       out += t.text([
         t.cmd(t.CSI.Style, t.Style.BrightBlack),
         `  ${t.HeavyBox.BottomLeft} `,

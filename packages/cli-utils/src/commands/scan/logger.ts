@@ -63,15 +63,6 @@ export function runningScan(file?: number, ofFiles?: number) {
   ]);
 }
 
-export function analysing() {
-  return t.text([
-    t.cmd(t.CSI.Style, t.Style.Magenta),
-    `${t.dotSpinner[0]} `,
-    t.cmd(t.CSI.Style, t.Style.Foreground),
-    `Analysing documents${t.Chars.Ellipsis}`,
-  ]);
-}
-
 export function summary(args: {
   warnings: number;
   operations: number;

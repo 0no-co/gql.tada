@@ -47,17 +47,16 @@ describe('analyze', () => {
       doc('query GetPokemons($limit: Int) { pokemons(limit: $limit) { id ...Item } }', '/p/a.ts'),
       doc('fragment Item on Pokemon { id name }', '/p/b.ts'),
     ]);
-    const corpus = context.toCorpus();
 
-    expect(corpus.operations).toHaveLength(1);
-    const [op] = corpus.operations;
+    expect(context.operations).toHaveLength(1);
+    const [op] = context.operations;
     expect(op.id).toBe(':operation:GetPokemons');
     expect(op.kind).toBe('query');
     expect(op.variables).toEqual(['limit']);
     expect(op.fragmentSpreads).toEqual(['Item']);
 
-    expect(corpus.fragments).toHaveLength(1);
-    expect(corpus.fragments[0].typeCondition).toBe('Pokemon');
+    expect(context.fragments).toHaveLength(1);
+    expect(context.fragments[0].typeCondition).toBe('Pokemon');
   });
 
   it('keys field selections to schema coordinates via the field-usage rule', () => {

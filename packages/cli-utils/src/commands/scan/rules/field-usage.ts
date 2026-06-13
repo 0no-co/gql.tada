@@ -24,8 +24,7 @@ interface Accumulated {
 }
 
 /** Builds the per-field usage index: which operations/fragments select each
- * schema coordinate. This is the substrate the annotated schema and the
- * `--field`/`--module` queries are rendered from. */
+ * schema coordinate, the operations that reach it, and its blast radius. */
 export const fieldUsage: ScanRule<FieldUsageData> = {
   name: 'field-usage',
   description: 'Per-field usage index keyed by schema coordinate.',
@@ -137,11 +136,8 @@ export const fieldUsage: ScanRule<FieldUsageData> = {
             },
           });
         }
-        return datapoints.sort((a, b) =>
-          (a.ref as { coordinate: string }).coordinate.localeCompare(
-            (b.ref as { coordinate: string }).coordinate
-          )
-        );
+        const coordinateOf = (d: FieldUsageData) => `${d.typeName}.${d.fieldName}`;
+        return datapoints.sort((a, b) => coordinateOf(a.data).localeCompare(coordinateOf(b.data)));
       },
     };
   },

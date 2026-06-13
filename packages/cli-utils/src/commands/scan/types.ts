@@ -115,30 +115,20 @@ export type DefinitionRecord =
   | ({ defKind: 'operation'; node: OperationDefinitionNode } & OperationInfo)
   | ({ defKind: 'fragment'; node: FragmentDefinitionNode } & FragmentInfo);
 
-/** The base facts of a scan: identities only, no derived analysis. */
-export interface ScanCorpus {
-  schemas: SchemaName[];
-  modules: ModuleInfo[];
-  operations: OperationInfo[];
-  fragments: FragmentInfo[];
-  warnings: ScanWarning[];
-}
-
 /* -- Rules layer ---------------------------------------------------------- */
 
 export type DatapointRef =
   | { kind: 'field'; coordinate: string }
   | { kind: 'type'; name: string }
   | { kind: 'operation'; id: string }
-  | { kind: 'fragment'; id: string }
-  | { kind: 'module'; path: string; line?: number; col?: number };
+  | { kind: 'fragment'; id: string };
 
 export interface RuleDatapoint<T = unknown> {
   ref: DatapointRef;
   message: string;
   data: T;
   /** Optional relative importance, e.g. how much of the codebase depends on the
-   * referenced thing. Used to rank and to weight the graph. */
+   * referenced thing. Used to rank datapoints. */
   weight?: number;
 }
 

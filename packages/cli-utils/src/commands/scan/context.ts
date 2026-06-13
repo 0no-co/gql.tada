@@ -22,7 +22,6 @@ import type {
   OperationInfo,
   FragmentInfo,
   DefinitionRecord,
-  ScanCorpus,
 } from './types';
 import { ModuleGraph } from './module-graph';
 import { FragmentGraph } from './fragment-graph';
@@ -89,10 +88,6 @@ export class ScanContext {
 
   /* -- Corpus accessors (base facts) -- */
 
-  get schemaNames(): SchemaName[] {
-    return [...this._schemas.keys()];
-  }
-
   get operations(): readonly OperationInfo[] {
     return this._operations;
   }
@@ -120,16 +115,6 @@ export class ScanContext {
       if (record.schemaName === schemaName) nodes.push(record.node);
     }
     return nodes;
-  }
-
-  toCorpus(): ScanCorpus {
-    return {
-      schemas: this.schemaNames,
-      modules: this._modules,
-      operations: this._operations,
-      fragments: this._fragments,
-      warnings: this._warnings,
-    };
   }
 
   /* -- Traversal primitives (set by the driver) -- */
@@ -161,6 +146,10 @@ export class ScanContext {
     return this._typeInfo?.getParentType();
   }
 
+  /** The current output type at this traversal position — the third TypeInfo
+   * accessor alongside {@link getParentType} and {@link getFieldDef}. Unused
+   * today, but kept as a generic primitive for rules that inspect return types
+   * (e.g. list/non-null wrapping) without the context having to grow. */
   getType(): GraphQLOutputType | null | undefined {
     return this._typeInfo?.getType();
   }
@@ -169,11 +158,7 @@ export class ScanContext {
     return this._typeInfo?.getFieldDef();
   }
 
-  /* -- Generic primitives for type- and graph-level rules -- */
-
-  getDefinition(id: string): DefinitionRecord | undefined {
-    return this._recordById.get(id);
-  }
+  /* -- Generic primitives for graph-level rules -- */
 
   /** The project's static module dependency graph, as a reusable structure.
    * All reachability/area analysis lives on it, so graph rules need no bespoke
