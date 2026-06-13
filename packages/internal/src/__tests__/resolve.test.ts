@@ -10,7 +10,7 @@ const PLUGIN = { name: '@0no-co/graphqlsp', schema: './schema.graphql' };
 type Fixture = Record<string, unknown>;
 
 const inFixture = async (files: Fixture, fn: (root: string) => Promise<void>): Promise<void> => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'gql-tada-resolve-'));
+  const root = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'gql-tada-resolve-')));
   try {
     for (const name of Object.keys(files)) {
       const filePath = path.join(root, name);
