@@ -1,5 +1,12 @@
 # @gql.tada/cli-utils
 
+## 1.8.2
+
+### Patch Changes
+
+- Update to `@0no-co/graphqlsp@^1.17.1`
+  Submitted by [@kitten](https://github.com/kitten) (See [#553](https://github.com/0no-co/gql.tada/pull/553))
+
 ## 1.8.1
 
 ### Patch Changes
