@@ -1,5 +1,16 @@
 # gql.tada
 
+## 1.10.2
+
+### Patch Changes
+
+- Unroll tokenizer type into batch of 4 steps, which extends its range. This allows us to parse slightly longer documents with a very slight impact on parser performance. This means we're now bound by the parser/selection type depth, instead of by the tokenizer
+  Submitted by [@kitten](https://github.com/kitten) (See [#551](https://github.com/0no-co/gql.tada/pull/551))
+- Update to `@0no-co/graphqlsp@^1.17.1`
+  Submitted by [@kitten](https://github.com/kitten) (See [#553](https://github.com/0no-co/gql.tada/pull/553))
+- Updated dependencies (See [#553](https://github.com/0no-co/gql.tada/pull/553))
+  - @gql.tada/cli-utils@1.8.2
+
 ## 1.10.1
 
 ### Patch Changes
