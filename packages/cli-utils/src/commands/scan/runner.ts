@@ -135,7 +135,7 @@ async function* runProject(
   const corpus = context.toCorpus();
 
   if (opts.format === 'json') {
-    yield* writeJson(tty, opts, () => renderJson(corpus, rules));
+    yield* writeJson(tty, opts, () => renderJson(rules));
   } else {
     yield renderTerminalReport(corpus, rules);
   }
