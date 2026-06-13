@@ -1,9 +1,6 @@
 import type { ScanRule, RuleDatapoint } from '../types';
 import { allSchemaFields } from '../schema-util';
 
-/** Name of the field-usage rule, used by output renderers to read its index. */
-export const FIELD_USAGE_RULE = 'field-usage';
-
 export interface FieldUsageData {
   typeName: string;
   fieldName: string;

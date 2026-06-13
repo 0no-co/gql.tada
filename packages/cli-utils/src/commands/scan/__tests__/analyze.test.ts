@@ -2,8 +2,18 @@ import { buildSchema } from 'graphql';
 import { describe, it, expect } from 'vitest';
 
 import { analyze } from '../analyze';
-import { fieldUsageMap } from '../output/util';
-import type { RawScanDocument, SchemaName } from '../types';
+import type { RawScanDocument, SchemaName, RuleResults } from '../types';
+import type { FieldUsageData } from '../rules';
+
+/** Reads the field-usage rule's datapoints into a coordinate → data map. */
+const fieldUsageMap = (rules: RuleResults): Map<string, FieldUsageData> => {
+  const map = new Map<string, FieldUsageData>();
+  for (const datapoint of rules['field-usage']) {
+    if (datapoint.ref.kind === 'field')
+      map.set(datapoint.ref.coordinate, datapoint.data as FieldUsageData);
+  }
+  return map;
+};
 
 const schema = buildSchema(`
   type Query {

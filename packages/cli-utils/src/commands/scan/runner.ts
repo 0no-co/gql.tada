@@ -9,21 +9,18 @@ import { loadProjects, writeOutput } from '../shared';
 import type { SchemaName, RawScanDocument, ScanWarning } from './types';
 import { analyze } from './analyze';
 import { renderJson } from './output/json';
-import { renderAnnotatedSchema, type AnnotationStyle } from './output/schema';
 import { renderTerminalReport } from './output/terminal';
 import * as logger from './logger';
 
-export type ScanFormat = 'json' | 'schema';
+export type ScanFormat = 'json';
 
 export interface ScanOptions {
   /** The `tsconfig.json` to use for configurations and the TypeScript program. */
   tsconfig: string | undefined;
-  /** Where to write `--format` output to. Defaults to the piped output. */
-  output: string | undefined;
-  /** Which artifact to emit. When unset, the terminal report is shown. */
+  /** When `json`, write the JSON report; otherwise show the terminal report. */
   format: ScanFormat | undefined;
-  /** How field metadata is embedded in the annotated schema. */
-  annotation: AnnotationStyle;
+  /** Where to write the JSON report to. Defaults to the piped output. */
+  output: string | undefined;
   /** Whether to fail with a non-zero exit code if any warnings are reported. */
   failOnWarn: boolean;
 }
@@ -40,10 +37,10 @@ async function loadSchemas(project: ProjectContext): Promise<Map<SchemaName, Gra
 }
 
 export async function* run(tty: TTY, opts: ScanOptions): AsyncIterable<ComposeInput> {
-  if (opts.format && opts.format !== 'json' && opts.format !== 'schema') {
+  if (opts.format && opts.format !== 'json') {
     throw logger.errorMessage(
       `Unknown ${logger.code('--format')} '${opts.format}'.\n` +
-        logger.hint(`Valid formats are ${logger.code('json')} and ${logger.code('schema')}.`)
+        logger.hint(`The only supported format is ${logger.code('json')}.`)
     );
   }
 
@@ -58,7 +55,7 @@ export async function* run(tty: TTY, opts: ScanOptions): AsyncIterable<ComposeIn
     throw logger.errorMessage(
       'Output path was specified, while multiple projects are configured.\n' +
         logger.hint(
-          `${logger.code('--format')} output can only target a single project.\n` +
+          'The JSON report can only target a single project.\n' +
             `Run scan per-project with an explicit ${logger.code('--tsconfig')}.`
         )
     );
@@ -133,22 +130,12 @@ async function* runProject(
     throw logger.externalError('Could not scan files', error);
   }
 
+  // Both outputs render from the same analysis result (corpus + rule datapoints).
   const { context, rules } = analyze({ documents, schemas, imports, warnings });
   const corpus = context.toCorpus();
 
   if (opts.format === 'json') {
-    yield* writeArtifact(tty, opts, 'JSON report', () => renderJson(corpus, rules));
-  } else if (opts.format === 'schema') {
-    yield* writeArtifact(tty, opts, 'annotated schema', () => {
-      const sections: string[] = [];
-      for (const [name, schema] of schemas) {
-        const annotated = renderAnnotatedSchema(schema, corpus, rules, opts.annotation);
-        sections.push(
-          schemas.size > 1 ? `# --- schema: ${name ?? 'default'} ---\n${annotated}` : annotated
-        );
-      }
-      return sections.join('\n\n');
-    });
+    yield* writeJson(tty, opts, () => renderJson(corpus, rules));
   } else {
     yield renderTerminalReport(corpus, rules);
   }
@@ -163,10 +150,9 @@ async function* runProject(
   return corpus.warnings.length;
 }
 
-async function* writeArtifact(
+async function* writeJson(
   tty: TTY,
   opts: ScanOptions,
-  label: string,
   render: () => string
 ): AsyncGenerator<ComposeInput, void> {
   let destination: WriteTarget;
@@ -176,7 +162,7 @@ async function* writeArtifact(
     destination = tty.pipeTo;
   } else {
     throw logger.errorMessage(
-      `No output path was specified to write the ${label} to.\n` +
+      'No output path was specified to write the JSON report to.\n' +
         logger.hint(
           `Pass an ${logger.code('--output')} argument to this command,\n` +
             'or pipe this command to an output file.'
@@ -187,8 +173,8 @@ async function* writeArtifact(
   try {
     await writeOutput(destination, render());
   } catch (error) {
-    throw logger.externalError(`Something went wrong while writing the ${label}`, error);
+    throw logger.externalError('Something went wrong while writing the JSON report', error);
   }
 
-  if (typeof destination === 'string') yield logger.wroteOutput(label, destination);
+  if (typeof destination === 'string') yield logger.wroteOutput('JSON report', destination);
 }

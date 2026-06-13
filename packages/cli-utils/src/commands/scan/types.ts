@@ -127,29 +127,6 @@ export interface ScanCorpus {
   warnings: ScanWarning[];
 }
 
-/* -- Graph (composed from corpus + the field-usage rule at output time) --- */
-
-export type ScanGraphNodeKind = 'module' | 'operation' | 'fragment' | 'schemaType' | 'schemaField';
-
-export interface ScanGraphNode {
-  id: string;
-  kind: ScanGraphNodeKind;
-  label: string;
-}
-
-export type ScanGraphEdgeKind = 'defines' | 'spreads' | 'selects' | 'onType' | 'imports';
-
-export interface ScanGraphEdge {
-  from: string;
-  to: string;
-  kind: ScanGraphEdgeKind;
-}
-
-export interface ScanGraph {
-  nodes: ScanGraphNode[];
-  edges: ScanGraphEdge[];
-}
-
 /* -- Rules layer ---------------------------------------------------------- */
 
 export type DatapointRef =

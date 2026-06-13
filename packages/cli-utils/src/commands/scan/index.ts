@@ -13,17 +13,11 @@ export class ScanCommand extends Command {
   });
 
   format = Option.String('--format,-f', {
-    description:
-      'Which artifact to emit: `json` (metadata + insights) or `schema` (annotated SDL).\tDefault: a terminal report',
+    description: 'Emit the machine-readable `json` report.\tDefault: a terminal report',
   });
 
   output = Option.String('--output,-o', {
-    description: 'Specifies where to write `--format` output to.\tDefault: the piped output',
-  });
-
-  annotation = Option.String('--annotation', 'comment', {
-    description:
-      'How `--format schema` embeds field metadata: `comment` or `description`.\tDefault: comment',
+    description: 'Where to write the `--format json` report to.\tDefault: the piped output',
   });
 
   failOnWarn = Option.Boolean('--fail-on-warn,-w', false, {
@@ -37,7 +31,6 @@ export class ScanCommand extends Command {
         tsconfig: this.tsconfig,
         format: this.format as ScanFormat | undefined,
         output: this.output,
-        annotation: this.annotation === 'description' ? 'description' : 'comment',
         failOnWarn: this.failOnWarn,
       })
     );
@@ -46,7 +39,8 @@ export class ScanCommand extends Command {
 }
 
 /** Scans a project for all GraphQL documents and fragments, keys them to the
- * schema, and emits metadata, insights, an annotated schema, or a report.
+ * schema, and emits a JSON report (when piped or given `--output`) or a
+ * human-readable terminal report.
  *
  * @see {@link https://gql-tada.0no.co/reference/gql-tada-cli#scan}
  */
