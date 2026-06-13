@@ -1,4 +1,6 @@
-import type { ScanMetadata, RuleResults } from '../types';
+import type { ScanCorpus, RuleResults, ScanGraph } from '../types';
+import { buildGraph } from './graph';
+import { fieldUsageMap } from './util';
 
 export interface ScanJsonOutput {
   version: number;
@@ -8,21 +10,24 @@ export interface ScanJsonOutput {
     operations: number;
     fragments: number;
   };
-  metadata: ScanMetadata;
+  corpus: ScanCorpus;
+  graph: ScanGraph;
   rules: RuleResults;
 }
 
-/** Serialises the metadata layer and rule datapoints to the stable JSON substrate. */
-export function renderJson(metadata: ScanMetadata, rules: RuleResults): string {
+/** Serialises the corpus, composed graph, and rule datapoints to the stable
+ * JSON substrate. */
+export function renderJson(corpus: ScanCorpus, rules: RuleResults): string {
   const output: ScanJsonOutput = {
     version: 1,
     generatedFrom: {
-      schemas: metadata.schemas,
-      modules: metadata.modules.length,
-      operations: metadata.operations.length,
-      fragments: metadata.fragments.length,
+      schemas: corpus.schemas,
+      modules: corpus.modules.length,
+      operations: corpus.operations.length,
+      fragments: corpus.fragments.length,
     },
-    metadata,
+    corpus,
+    graph: buildGraph(corpus, fieldUsageMap(rules)),
     rules,
   };
   return JSON.stringify(output, null, 2) + '\n';

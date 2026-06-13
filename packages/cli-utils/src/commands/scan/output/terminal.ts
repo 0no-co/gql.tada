@@ -1,11 +1,14 @@
 import * as path from 'node:path';
 import * as t from '../../../term';
 
-import type { ScanMetadata, RuleResults, DatapointRef } from '../types';
+import type { ScanCorpus, RuleResults, DatapointRef } from '../types';
+import type { CoverageData } from '../rules/schema-coverage';
 
 const CWD = process.cwd();
 /** Maximum datapoints shown per rule in the terminal report. */
 const MAX_PER_RULE = 8;
+/** Rules whose datapoints are substrate, not findings to list in the report. */
+const HIDDEN_RULES = new Set(['field-usage']);
 
 const relative = (filePath: string): string => {
   const rel = path.relative(CWD, filePath);
@@ -13,14 +16,14 @@ const relative = (filePath: string): string => {
 };
 
 /** Resolves a datapoint's `ref` to a short `file:line` locator, where one exists. */
-function locator(ref: DatapointRef, metadata: ScanMetadata): string | undefined {
+function locator(ref: DatapointRef, corpus: ScanCorpus): string | undefined {
   switch (ref.kind) {
     case 'operation': {
-      const op = metadata.operations.find((item) => item.id === ref.id);
+      const op = corpus.operations.find((item) => item.id === ref.id);
       return op ? `${relative(op.loc.file)}:${op.loc.line}` : undefined;
     }
     case 'fragment': {
-      const fragment = metadata.fragments.find((item) => item.id === ref.id);
+      const fragment = corpus.fragments.find((item) => item.id === ref.id);
       return fragment ? `${relative(fragment.loc.file)}:${fragment.loc.line}` : undefined;
     }
     case 'module':
@@ -30,26 +33,32 @@ function locator(ref: DatapointRef, metadata: ScanMetadata): string | undefined 
   }
 }
 
-function coverageLine(metadata: ScanMetadata): string {
-  const { usedFields, totalFields } = metadata.coverage;
-  const percent = totalFields ? Math.round((usedFields / totalFields) * 100) : 100;
+function coverageLine(rules: RuleResults): string {
+  let used = 0;
+  let total = 0;
+  for (const datapoint of rules['schema-coverage'] || []) {
+    const data = datapoint.data as CoverageData;
+    used += data.usedFields;
+    total += data.totalFields;
+  }
+  const percent = total ? Math.round((used / total) * 100) : 100;
   return t.text([
     t.cmd(t.CSI.Style, t.Style.Foreground),
     'Schema coverage: ',
     t.cmd(t.CSI.Style, t.Style.BrightBlue),
     `${percent}% `,
     t.cmd(t.CSI.Style, t.Style.BrightBlack),
-    `(${usedFields}/${totalFields} fields used)\n`,
+    `(${used}/${total} fields used)\n`,
   ]);
 }
 
 /** Renders the default human-facing report: coverage plus the top datapoints of
  * each rule that produced findings. */
-export function renderTerminalReport(metadata: ScanMetadata, rules: RuleResults): string {
-  let out = '\n' + coverageLine(metadata);
+export function renderTerminalReport(corpus: ScanCorpus, rules: RuleResults): string {
+  let out = '\n' + coverageLine(rules);
 
   for (const [name, datapoints] of Object.entries(rules)) {
-    if (!datapoints.length) continue;
+    if (HIDDEN_RULES.has(name) || !datapoints.length) continue;
 
     out += t.text([
       '\n',
@@ -62,7 +71,7 @@ export function renderTerminalReport(metadata: ScanMetadata, rules: RuleResults)
     ]);
 
     for (const datapoint of datapoints.slice(0, MAX_PER_RULE)) {
-      const where = locator(datapoint.ref, metadata);
+      const where = locator(datapoint.ref, corpus);
       out += t.text([
         t.cmd(t.CSI.Style, t.Style.BrightBlack),
         `  ${t.HeavyBox.BottomLeft} `,

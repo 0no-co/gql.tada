@@ -7,8 +7,7 @@ import type { ProjectContext, WriteTarget } from '../shared';
 import { loadProjects, writeOutput } from '../shared';
 
 import type { SchemaName, RawScanDocument, ScanWarning } from './types';
-import { buildMetadata } from './metadata';
-import { runRules } from './rules';
+import { analyze } from './analyze';
 import { renderJson } from './output/json';
 import { renderAnnotatedSchema, type AnnotationStyle } from './output/schema';
 import { renderTerminalReport } from './output/terminal';
@@ -144,24 +143,24 @@ async function* runProject(
     throw logger.externalError('Could not scan files', error);
   }
 
-  const metadata = buildMetadata({ documents, schemas, imports, warnings });
-  const rules = runRules(metadata);
+  const { context, rules } = analyze({ documents, schemas, imports, warnings });
+  const corpus = context.toCorpus();
 
   if (opts.field) {
-    yield renderFieldQuery(metadata, opts.field);
-    return metadata.warnings.length;
+    yield renderFieldQuery(corpus, rules, opts.field);
+    return corpus.warnings.length;
   } else if (opts.module) {
-    yield renderModuleQuery(metadata, opts.module);
-    return metadata.warnings.length;
+    yield renderModuleQuery(corpus, rules, opts.module);
+    return corpus.warnings.length;
   }
 
   if (opts.format === 'json') {
-    yield* writeArtifact(tty, opts, 'JSON report', () => renderJson(metadata, rules));
+    yield* writeArtifact(tty, opts, 'JSON report', () => renderJson(corpus, rules));
   } else if (opts.format === 'schema') {
     yield* writeArtifact(tty, opts, 'annotated schema', () => {
       const sections: string[] = [];
       for (const [name, schema] of schemas) {
-        const annotated = renderAnnotatedSchema(schema, metadata, opts.annotation);
+        const annotated = renderAnnotatedSchema(schema, corpus, rules, opts.annotation);
         sections.push(
           schemas.size > 1 ? `# --- schema: ${name ?? 'default'} ---\n${annotated}` : annotated
         );
@@ -169,17 +168,17 @@ async function* runProject(
       return sections.join('\n\n');
     });
   } else {
-    yield renderTerminalReport(metadata, rules);
+    yield renderTerminalReport(corpus, rules);
   }
 
   yield logger.summary({
-    warnings: metadata.warnings.length,
-    operations: metadata.operations.length,
-    fragments: metadata.fragments.length,
-    modules: metadata.modules.length,
+    warnings: corpus.warnings.length,
+    operations: corpus.operations.length,
+    fragments: corpus.fragments.length,
+    modules: corpus.modules.length,
   });
 
-  return metadata.warnings.length;
+  return corpus.warnings.length;
 }
 
 async function* writeArtifact(

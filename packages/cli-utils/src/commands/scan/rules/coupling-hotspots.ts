@@ -1,5 +1,4 @@
 import type { ScanRule } from '../types';
-import { buildSpreadCounts } from './helpers';
 
 /** Fragments shared by at least this many definitions count as a hotspot. */
 const MIN_SPREADS = 2;
@@ -13,16 +12,38 @@ export interface CouplingData {
 export const couplingHotspots: ScanRule<CouplingData> = {
   name: 'coupling-hotspots',
   description: 'Fragments shared across many operations/fragments.',
-  run(metadata) {
-    const spreadCounts = buildSpreadCounts(metadata);
-    return metadata.fragments
-      .map((fragment) => ({ fragment, spreadCount: spreadCounts.get(fragment.id) || 0 }))
-      .filter(({ spreadCount }) => spreadCount >= MIN_SPREADS)
-      .sort((a, b) => b.spreadCount - a.spreadCount)
-      .map(({ fragment, spreadCount }) => ({
-        ref: { kind: 'fragment' as const, id: fragment.id },
-        message: `Fragment '${fragment.name}' is spread by ${spreadCount} definitions`,
-        data: { spreadCount, typeCondition: fragment.typeCondition },
-      }));
+  create(context) {
+    const counts = new Map<string, number>();
+
+    return {
+      visitor: {
+        FragmentSpread: {
+          enter(node) {
+            const definition = context.getCurrentDefinition();
+            if (!definition) return;
+            const fragment = context.getFragment(definition.schemaName, node.name.value);
+            if (fragment) counts.set(fragment.id, (counts.get(fragment.id) || 0) + 1);
+          },
+        },
+      },
+
+      collect() {
+        const byId = new Map(context.fragments.map((fragment) => [fragment.id, fragment]));
+        return [...counts.entries()]
+          .filter(([, spreadCount]) => spreadCount >= MIN_SPREADS)
+          .sort((a, b) => b[1] - a[1])
+          .flatMap(([id, spreadCount]) => {
+            const fragment = byId.get(id);
+            if (!fragment) return [];
+            return [
+              {
+                ref: { kind: 'fragment' as const, id },
+                message: `Fragment '${fragment.name}' is spread by ${spreadCount} definitions`,
+                data: { spreadCount, typeCondition: fragment.typeCondition },
+              },
+            ];
+          });
+      },
+    };
   },
 };

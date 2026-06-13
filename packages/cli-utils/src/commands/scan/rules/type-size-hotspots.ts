@@ -9,14 +9,21 @@ export interface TypeSizeData {
 export const typeSizeHotspots: ScanRule<TypeSizeData> = {
   name: 'type-size-hotspots',
   description: 'Operations with the largest inferred TypeScript types.',
-  run(metadata) {
-    return metadata.operations
-      .filter((op) => op.typeSize != null)
-      .sort((a, b) => (b.typeSize || 0) - (a.typeSize || 0))
-      .map((op) => ({
-        ref: { kind: 'operation' as const, id: op.id },
-        message: `${op.name || '(anonymous)'}: inferred type is ${op.typeSize} chars`,
-        data: { typeSize: op.typeSize! },
-      }));
+  create(context) {
+    // Type sizes are a base fact carried on the corpus, so this rule needs no
+    // traversal state — it reads and ranks them in `collect()`.
+    return {
+      visitor: {},
+      collect() {
+        return context.operations
+          .filter((op) => op.typeSize != null)
+          .sort((a, b) => (b.typeSize || 0) - (a.typeSize || 0))
+          .map((op) => ({
+            ref: { kind: 'operation', id: op.id },
+            message: `${op.name || '(anonymous)'}: inferred type is ${op.typeSize} chars`,
+            data: { typeSize: op.typeSize! },
+          }));
+      },
+    };
   },
 };

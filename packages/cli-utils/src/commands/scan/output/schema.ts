@@ -1,34 +1,35 @@
 import { printSchema, parse, print, visit, Kind } from 'graphql';
 import type { GraphQLSchema, FieldDefinitionNode } from 'graphql';
 
-import type { ScanMetadata } from '../types';
+import type { ScanCorpus, RuleResults } from '../types';
+import { fieldUsageMap } from './util';
 
 export type AnnotationStyle = 'comment' | 'description';
 
 /** Maximum number of operation names listed in a field annotation. */
 const MAX_OPS = 5;
 
-/** Builds the annotation text (without any comment/description syntax) for each
- * schema coordinate, from the field-usage index. */
-function buildAnnotations(metadata: ScanMetadata): Map<string, string> {
+/** Builds the annotation text (without comment/description syntax) for each
+ * schema coordinate, from the field-usage rule's index. */
+function buildAnnotations(corpus: ScanCorpus, rules: RuleResults): Map<string, string> {
   const operationName = new Map<string, string>();
-  for (const op of metadata.operations) operationName.set(op.id, op.name || '(anonymous)');
+  for (const op of corpus.operations) operationName.set(op.id, op.name || '(anonymous)');
 
   const annotations = new Map<string, string>();
-  for (const entry of Object.values(metadata.fieldIndex)) {
-    const parts: string[] = [`usage: ${entry.count}`];
-    if (entry.count === 0) {
+  for (const [coordinate, usage] of fieldUsageMap(rules)) {
+    const parts: string[] = [`usage: ${usage.count}`];
+    if (usage.count === 0) {
       parts.push('UNUSED');
     } else {
-      const names = [...new Set(entry.operations.map((id) => operationName.get(id) || id))];
+      const names = [...new Set(usage.operations.map((id) => operationName.get(id) || id))];
       const shown = names.slice(0, MAX_OPS);
       if (shown.length) {
         const more = names.length > shown.length ? `, +${names.length - shown.length} more` : '';
         parts.push(`ops: ${shown.join(', ')}${more}`);
       }
     }
-    if (entry.deprecated) parts.push('deprecated');
-    annotations.set(entry.coordinate, parts.join(' · '));
+    if (usage.deprecated) parts.push('deprecated');
+    annotations.set(coordinate, parts.join(' · '));
   }
   return annotations;
 }
@@ -39,10 +40,11 @@ function buildAnnotations(metadata: ScanMetadata): Map<string, string> {
  *                `description` folds the metadata into block-string descriptions. */
 export function renderAnnotatedSchema(
   schema: GraphQLSchema,
-  metadata: ScanMetadata,
+  corpus: ScanCorpus,
+  rules: RuleResults,
   style: AnnotationStyle
 ): string {
-  const annotations = buildAnnotations(metadata);
+  const annotations = buildAnnotations(corpus, rules);
   return style === 'description'
     ? renderWithDescriptions(schema, annotations)
     : renderWithComments(schema, annotations);

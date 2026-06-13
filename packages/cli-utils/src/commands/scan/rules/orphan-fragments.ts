@@ -1,5 +1,4 @@
 import type { ScanRule } from '../types';
-import { buildSpreadCounts } from './helpers';
 
 export interface OrphanFragmentData {
   typeCondition: string;
@@ -10,17 +9,30 @@ export interface OrphanFragmentData {
 export const orphanFragments: ScanRule<OrphanFragmentData> = {
   name: 'orphan-fragments',
   description: 'Fragments that are defined but never used.',
-  run(metadata) {
-    const spreadCounts = buildSpreadCounts(metadata);
-    return metadata.fragments
-      .filter((fragment) => !spreadCounts.get(fragment.id))
-      .map((fragment) => ({
-        ref: {
-          kind: 'fragment' as const,
-          id: fragment.id,
+  create(context) {
+    const spreadIds = new Set<string>();
+
+    return {
+      visitor: {
+        FragmentSpread: {
+          enter(node) {
+            const definition = context.getCurrentDefinition();
+            if (!definition) return;
+            const fragment = context.getFragment(definition.schemaName, node.name.value);
+            if (fragment) spreadIds.add(fragment.id);
+          },
         },
-        message: `Fragment '${fragment.name}' is never spread`,
-        data: { typeCondition: fragment.typeCondition, module: fragment.module },
-      }));
+      },
+
+      collect() {
+        return context.fragments
+          .filter((fragment) => !spreadIds.has(fragment.id))
+          .map((fragment) => ({
+            ref: { kind: 'fragment', id: fragment.id },
+            message: `Fragment '${fragment.name}' is never spread`,
+            data: { typeCondition: fragment.typeCondition, module: fragment.module },
+          }));
+      },
+    };
   },
 };

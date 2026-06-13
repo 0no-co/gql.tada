@@ -1,3 +1,4 @@
+import type { OperationDefinitionNode, FragmentDefinitionNode } from 'graphql';
 import type { GraphQLSPConfig } from '@gql.tada/internal';
 
 export type SchemaName = string | null;
@@ -14,8 +15,8 @@ export interface ScanWarning {
  *
  * @remarks
  * This is the unit of data passed from the discovery worker ({@link _runScan})
- * to the metadata layer. It carries the unparsed document text alongside the
- * position it was found at, so the metadata layer can attribute it to a module. */
+ * to the analysis layer. It carries the unparsed document text alongside the
+ * position it was found at, so the analysis layer can attribute it to a module. */
 export interface RawScanDocument {
   schemaName: SchemaName;
   /** The raw GraphQL document text (the string passed to `graphql()`). */
@@ -58,7 +59,7 @@ export interface ScanParams {
   measureTypes: boolean;
 }
 
-/* -- Metadata layer ------------------------------------------------------- */
+/* -- Corpus (base facts) -------------------------------------------------- */
 
 export interface SourceLocation {
   file: string;
@@ -81,6 +82,8 @@ export interface ModuleInfo {
 
 export type OperationKind = 'query' | 'mutation' | 'subscription';
 
+/** Identity and syntactic facts about a discovered operation. Derived analysis
+ * (field usage, depth, …) is owned by rules, not stored here. */
 export interface OperationInfo {
   /** Stable id, e.g. `pokemon:operation:GetPokemon`. */
   id: string;
@@ -94,12 +97,6 @@ export interface OperationInfo {
   variables: string[];
   /** Names of fragments spread directly by the operation. */
   fragmentSpreads: string[];
-  /** Schema coordinates (`Type.field`) selected directly by the operation. */
-  fields: string[];
-  /** Maximum selection-set nesting depth. */
-  depth: number;
-  /** Total number of field selections. */
-  fieldCount: number;
   /** Hash of the normalised document, used to detect duplicates. */
   hash: string;
   /** Size of the inferred TypeScript type, when measured. */
@@ -116,45 +113,26 @@ export interface FragmentInfo {
   module: string;
   loc: SourceLocation;
   fragmentSpreads: string[];
-  fields: string[];
   hash: string;
 }
 
-export interface FieldUsage {
-  /** Id of the operation or fragment that selects the field. */
-  defId: string;
-  /** Absolute path of the module the selection lives in. */
-  module: string;
+/** A discovered operation or fragment, paired with its AST node. Held by the
+ * {@link ScanContext} and traversed by rules. `defKind` discriminates the union
+ * (distinct from `OperationInfo.kind`, which is the GraphQL operation kind). */
+export type DefinitionRecord =
+  | ({ defKind: 'operation'; node: OperationDefinitionNode } & OperationInfo)
+  | ({ defKind: 'fragment'; node: FragmentDefinitionNode } & FragmentInfo);
+
+/** The base facts of a scan: identities only, no derived analysis. */
+export interface ScanCorpus {
+  schemas: SchemaName[];
+  modules: ModuleInfo[];
+  operations: OperationInfo[];
+  fragments: FragmentInfo[];
+  warnings: ScanWarning[];
 }
 
-export interface FieldIndexEntry {
-  /** `Type.field`. */
-  coordinate: string;
-  typeName: string;
-  fieldName: string;
-  /** String representation of the field's return type. */
-  fieldType: string;
-  deprecated: boolean;
-  deprecationReason?: string | undefined;
-  /** Direct selections of this field, one per operation/fragment definition. */
-  directUsages: FieldUsage[];
-  /** `directUsages.length`. */
-  count: number;
-  /** Operation ids that reach this field directly or transitively via fragments. */
-  operations: string[];
-}
-
-export interface TypeCoverage {
-  typeName: string;
-  totalFields: number;
-  usedFields: number;
-}
-
-export interface SchemaCoverage {
-  totalFields: number;
-  usedFields: number;
-  perType: TypeCoverage[];
-}
+/* -- Graph (composed from corpus + the field-usage rule at output time) --- */
 
 export type ScanGraphNodeKind = 'module' | 'operation' | 'fragment' | 'schemaType' | 'schemaField';
 
@@ -177,23 +155,6 @@ export interface ScanGraph {
   edges: ScanGraphEdge[];
 }
 
-/** The full set of facts collected by a scan.
- *
- * @remarks
- * This is the "metadata layer". It is built purely from discovered documents
- * and the schema, and passes through to the JSON output unchanged. The "rules
- * layer" derives insights from it, and the "output layer" renders it. */
-export interface ScanMetadata {
-  schemas: SchemaName[];
-  modules: ModuleInfo[];
-  operations: OperationInfo[];
-  fragments: FragmentInfo[];
-  fieldIndex: Record<string, FieldIndexEntry>;
-  coverage: SchemaCoverage;
-  graph: ScanGraph;
-  warnings: ScanWarning[];
-}
-
 /* -- Rules layer ---------------------------------------------------------- */
 
 export type DatapointRef =
@@ -209,17 +170,25 @@ export interface RuleDatapoint<T = unknown> {
   data: T;
 }
 
-/** A named insight derived purely from {@link ScanMetadata}.
+/** A running instance of a rule, bound to a {@link ScanContext}.
  *
  * @remarks
- * Each rule emits a list of datapoints. A datapoint declares what it refers to
- * (a schema field/type, a module + line, a fragment, an operation) via its
- * `ref`, so the rule itself carries no grouping/family. Adding an insight is a
- * matter of writing one rule and registering it in `DEFAULT_RULES`. */
+ * Modelled on graphql-js validation rules: the rule owns its state in a
+ * closure, accumulates it through its `visitor` during a single shared
+ * traversal, and converts that state to datapoints in `collect()`. A rule
+ * never reads another rule's output or a shared derived structure — only the
+ * primitives the context exposes. */
+export interface ScanRuleInstance<T = unknown> {
+  /** AST visitor merged into the shared parallel traversal. */
+  readonly visitor: import('graphql').ASTVisitor;
+  /** Converts the accumulated state into datapoints once traversal completes. */
+  collect(): RuleDatapoint<T>[];
+}
+
 export interface ScanRule<T = unknown> {
   name: string;
   description: string;
-  run(metadata: ScanMetadata): RuleDatapoint<T>[];
+  create(context: import('./context').ScanContext): ScanRuleInstance<T>;
 }
 
 export type RuleResults = Record<string, RuleDatapoint[]>;

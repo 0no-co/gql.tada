@@ -1,4 +1,5 @@
 import type { ScanRule } from '../types';
+import { allSchemaFields } from '../schema-util';
 
 export interface UnusedFieldData {
   fieldType: string;
@@ -9,14 +10,32 @@ export interface UnusedFieldData {
 export const unusedFields: ScanRule<UnusedFieldData> = {
   name: 'unused-fields',
   description: 'Schema fields that are never selected by any document.',
-  run(metadata) {
-    return Object.values(metadata.fieldIndex)
-      .filter((entry) => entry.count === 0)
-      .sort((a, b) => a.coordinate.localeCompare(b.coordinate))
-      .map((entry) => ({
-        ref: { kind: 'field', coordinate: entry.coordinate },
-        message: `${entry.coordinate} is never selected`,
-        data: { fieldType: entry.fieldType, deprecated: entry.deprecated },
-      }));
+  create(context) {
+    const selected = new Set<string>();
+
+    return {
+      visitor: {
+        Field: {
+          enter() {
+            const parentType = context.getParentType();
+            const fieldDef = context.getFieldDef();
+            if (parentType && fieldDef) selected.add(`${parentType.name}.${fieldDef.name}`);
+          },
+        },
+      },
+
+      collect() {
+        return allSchemaFields(context.getSchemas())
+          .filter((field) => !selected.has(field.coordinate))
+          .map((field) => ({
+            ref: { kind: 'field', coordinate: field.coordinate },
+            message: `${field.coordinate} is never selected`,
+            data: {
+              fieldType: field.fieldType,
+              deprecated: field.deprecationReason != null,
+            },
+          }));
+      },
+    };
   },
 };

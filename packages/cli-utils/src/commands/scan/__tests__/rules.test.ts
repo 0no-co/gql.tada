@@ -1,9 +1,8 @@
 import { buildSchema } from 'graphql';
 import { describe, it, expect } from 'vitest';
 
-import { buildMetadata } from '../metadata';
-import { runRules } from '../rules';
-import type { RawScanDocument, SchemaName, ScanMetadata } from '../types';
+import { analyze } from '../analyze';
+import type { RawScanDocument, SchemaName, DatapointRef } from '../types';
 
 const schema = buildSchema(`
   type Query {
@@ -29,7 +28,7 @@ const doc = (document: string, filePath: string): RawScanDocument => ({
   col: 1,
 });
 
-const fixture: ScanMetadata = buildMetadata({
+const { rules } = analyze({
   documents: [
     doc('query A { pokemons { ...Item } }', '/p/a.ts'),
     doc('query B { viewer { ...Item legacy } }', '/p/b.ts'),
@@ -43,13 +42,13 @@ const fixture: ScanMetadata = buildMetadata({
   warnings: [],
 });
 
-describe('default rules', () => {
-  const rules = runRules(fixture);
+const coordinateOf = (ref: DatapointRef) => (ref.kind === 'field' ? ref.coordinate : undefined);
+const idOf = (ref: DatapointRef) =>
+  ref.kind === 'operation' || ref.kind === 'fragment' ? ref.id : undefined;
 
+describe('default rules', () => {
   it('unused-fields reports fields never selected', () => {
-    const coordinates = rules['unused-fields'].map(
-      (d) => (d.ref as { coordinate: string }).coordinate
-    );
+    const coordinates = rules['unused-fields'].map((d) => coordinateOf(d.ref));
     expect(coordinates).toContain('Pokemon.height');
     expect(coordinates).not.toContain('Pokemon.id');
   });
@@ -57,11 +56,11 @@ describe('default rules', () => {
   it('deprecated-usage reports used deprecated fields', () => {
     const data = rules['deprecated-usage'];
     expect(data).toHaveLength(1);
-    expect((data[0].ref as { coordinate: string }).coordinate).toBe('Pokemon.legacy');
+    expect(coordinateOf(data[0].ref)).toBe('Pokemon.legacy');
   });
 
   it('orphan-fragments reports fragments that are never spread', () => {
-    const ids = rules['orphan-fragments'].map((d) => (d.ref as { id: string }).id);
+    const ids = rules['orphan-fragments'].map((d) => idOf(d.ref));
     expect(ids).toContain(':fragment:Orphan');
     expect(ids).not.toContain(':fragment:Item');
   });
@@ -70,7 +69,7 @@ describe('default rules', () => {
     const hotspots = rules['coupling-hotspots'];
     // Item is spread by both A and B.
     expect(hotspots).toHaveLength(1);
-    expect((hotspots[0].ref as { id: string }).id).toBe(':fragment:Item');
+    expect(idOf(hotspots[0].ref)).toBe(':fragment:Item');
     expect((hotspots[0].data as { spreadCount: number }).spreadCount).toBe(2);
   });
 
@@ -82,8 +81,7 @@ describe('default rules', () => {
 
   it('operation-complexity ranks operations by depth and field count', () => {
     const complexity = rules['operation-complexity'];
-    expect(complexity.length).toBe(fixture.operations.length);
-    // Sorted descending by score.
+    expect(complexity.length).toBe(4); // A, B, Same, Same
     const scores = complexity.map((d) => (d.data as { score: number }).score);
     expect(scores).toEqual([...scores].sort((a, b) => b - a));
   });
