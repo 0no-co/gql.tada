@@ -64,6 +64,28 @@ describe('default rules', () => {
     expect((hotspots[0].data as { spreadCount: number }).spreadCount).toBe(2);
   });
 
+  it('input-usage counts enum values and input-object fields', () => {
+    const inputSchema = buildSchema(`
+      enum Sort { NEWEST  OLDEST }
+      input Filter { sort: Sort  limit: Int }
+      type Query { items(filter: Filter, sort: Sort): [String] }
+    `);
+    const result = analyze({
+      documents: [
+        doc('query Q { items(filter: { sort: NEWEST, limit: 5 }, sort: OLDEST) }', '/p/q.ts'),
+      ],
+      schemas: new Map([[null, inputSchema]]),
+      imports: new Map(),
+      warnings: [],
+    });
+    const coords = result.rules['input-usage'].map((d) =>
+      d.ref.kind === 'field' ? d.ref.coordinate : undefined
+    );
+    expect(coords).toEqual(
+      expect.arrayContaining(['Sort.NEWEST', 'Sort.OLDEST', 'Filter.sort', 'Filter.limit'])
+    );
+  });
+
   it('operation-footprint includes fields reached through fragments', () => {
     const a = rules['operation-footprint'].find(
       (d) => d.ref.kind === 'operation' && d.ref.id === ':operation:A'

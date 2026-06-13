@@ -6,6 +6,8 @@ import type {
   GraphQLCompositeType,
   GraphQLField,
   GraphQLOutputType,
+  GraphQLInputType,
+  GraphQLEnumValue,
   TypeInfo,
   ASTNode,
   ASTVisitor,
@@ -156,6 +158,21 @@ export class ScanContext {
 
   getFieldDef(): GraphQLField<unknown, unknown> | null | undefined {
     return this._typeInfo?.getFieldDef();
+  }
+
+  /** The input type expected at this position (argument / input-field / list value). */
+  getInputType(): GraphQLInputType | null | undefined {
+    return this._typeInfo?.getInputType();
+  }
+
+  /** The enclosing input-object type when inside an input object literal. */
+  getParentInputType(): GraphQLInputType | null | undefined {
+    return this._typeInfo?.getParentInputType();
+  }
+
+  /** The enum value definition at the current position, if any. */
+  getEnumValue(): GraphQLEnumValue | null | undefined {
+    return this._typeInfo?.getEnumValue();
   }
 
   /* -- Generic primitives for graph-level rules -- */
