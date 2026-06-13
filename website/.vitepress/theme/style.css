@@ -39,6 +39,8 @@
 
   --vp-c-divider: var(--vp-c-gray-soft);
   --vp-local-search-bg: var(--vp-nav-bg-color);
+  --vp-local-search-highlight-bg: var(--vp-c-indigo-2);
+  --vp-local-search-highlight-text: #fff;
 
   --vp-c-tip-1: var(--vp-c-brand-1);
   --vp-c-tip-2: var(--vp-c-brand-2);
