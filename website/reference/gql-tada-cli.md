@@ -155,6 +155,7 @@ use the functions it exports directly.
 | `output` option               | The filename to write the output file to (Default: the `tadaOutputLocation` configuration option) |
 | `tsconfig` option             | The `tsconfig.json` to use instead of an automatically discovered one.                            |
 | `disablePreprocessing` option | Whether to disable the optimized output format for `.d.ts` files.                                 |
+| `silent` option               | Whether to disable terminal output when using the programmatic API.                               |
 | returns                       | A `Promise` that resolves when the task completes.                                                |
 
 The `generateOutput()` function outputs the `gql.tada` output file manually. It will load the schema from the specified `schema` configuration option and write the output file.
@@ -169,6 +170,7 @@ await generateOutput({
   output: './src/graphql-env.d.ts',
   disablePreprocessing: false,
   tsconfig: undefined,
+  silent: false,
 });
 ```
 
@@ -211,6 +213,7 @@ await generatePersisted({
 | `headers` option  | Optionally, an object of headers to send when introspecting a GraphQL API.                             |
 | `output` option   | The filename to write the persisted JSON manifest file to (Default: the `schema` configuration option) |
 | `tsconfig` option | The `tsconfig.json` to use instead of an automatically discovered one.                                 |
+| `silent` option   | Whether to disable terminal output when using the programmatic API.                                    |
 | returns           | A `Promise` that resolves when the task completes.                                                     |
 
 The `generateSchema()` function introspects a targeted GraphQL API by URL, a `.graphql` SDL
@@ -228,6 +231,7 @@ await generateSchema({
   output: './schema.graphql',
   headers: undefined,
   tsconfig: undefined,
+  silent: false,
 });
 ```
 

@@ -67,7 +67,7 @@ export class GenerateSchema extends Command {
  * @see {@link https://gql-tada.0no.co/reference/gql-tada-cli#generateschema}
  */
 export async function generateSchema(opts: SchemaOptions) {
-  const tty = initTTY({ disableTTY: true });
+  const tty = initTTY({ disableTTY: true, silent: opts.silent });
   const result = await tty.start(run(tty, opts));
   if (result instanceof Error) {
     throw result;

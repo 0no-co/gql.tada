@@ -1,9 +1,11 @@
 import * as os from 'node:os';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
-import { describe, it, expect } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 
 import type { TTY } from '../../../term';
+import { generateOutput } from '../../generate-output';
+import { generateSchema } from '../../generate-schema';
 import { loadProjects } from '../projects';
 import { run as runGenerateOutput } from '../../generate-output/runner';
 
@@ -36,6 +38,25 @@ const inFixture = async (files: Fixture, fn: (root: string) => Promise<void>): P
     await fs.rm(root, { recursive: true, force: true });
   }
 };
+
+const mockTerminalOutput = () => {
+  const write = (_chunk: unknown, encoding?: unknown, callback?: unknown) => {
+    if (typeof encoding === 'function') {
+      encoding();
+    } else if (typeof callback === 'function') {
+      callback();
+    }
+    return true;
+  };
+
+  const stdout = vi.spyOn(process.stdout, 'write').mockImplementation(write as never);
+  const stderr = vi.spyOn(process.stderr, 'write').mockImplementation(write as never);
+  return { stdout, stderr };
+};
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('loadProjects', () => {
   it('loads a referenced project from a solution-style root config', () => {
@@ -132,6 +153,55 @@ describe('generate-output', () => {
           );
           expect(output).toContain("declare module 'gql.tada'");
         }
+      }
+    );
+  });
+
+  it('does not write terminal output when silent is set', () => {
+    return inFixture(
+      {
+        'tsconfig.json': { compilerOptions: { plugins: [PLUGIN] }, include: ['src'] },
+        'schema.graphql': SCHEMA,
+      },
+      async (root) => {
+        const terminal = mockTerminalOutput();
+
+        await generateOutput({
+          output: undefined,
+          tsconfig: root,
+          silent: true,
+        });
+
+        const output = await fs.readFile(path.join(root, 'src', 'graphql-env.d.ts'), 'utf8');
+        expect(output).toContain("declare module 'gql.tada'");
+        expect(terminal.stdout).not.toHaveBeenCalled();
+        expect(terminal.stderr).not.toHaveBeenCalled();
+      }
+    );
+  });
+});
+
+describe('generate-schema', () => {
+  it('does not write terminal output when silent is set', () => {
+    return inFixture(
+      {
+        'input.graphql': SCHEMA,
+      },
+      async (root) => {
+        const terminal = mockTerminalOutput();
+        const output = path.join(root, 'output.graphql');
+
+        await generateSchema({
+          input: path.join(root, 'input.graphql'),
+          output,
+          headers: undefined,
+          tsconfig: undefined,
+          silent: true,
+        });
+
+        await expect(fs.readFile(output, 'utf8')).resolves.toContain('type Query');
+        expect(terminal.stdout).not.toHaveBeenCalled();
+        expect(terminal.stderr).not.toHaveBeenCalled();
       }
     );
   });
