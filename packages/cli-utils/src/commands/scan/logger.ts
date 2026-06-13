@@ -95,6 +95,10 @@ export function summary(args: {
   return out;
 }
 
+export function warningSummary(warningCount: number) {
+  return t.error([t.cmd(t.CSI.Style, t.Style.Red), `${t.Icons.Cross} ${warningCount} warnings\n`]);
+}
+
 export function wroteOutput(label: string, filePath: string) {
   const relativePath = path.relative(CWD, filePath);
   return t.text([

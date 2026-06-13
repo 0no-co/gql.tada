@@ -1,4 +1,4 @@
-import type { ScanRule, OperationInfo } from '../types';
+import type { ScanRule, RuleDatapoint, OperationInfo } from '../types';
 
 export interface DuplicateData {
   hash: string;
@@ -19,7 +19,7 @@ export const duplicateDocuments: ScanRule<DuplicateData> = {
       else groups.set(key, [op]);
     }
 
-    const datapoints = [];
+    const datapoints: RuleDatapoint<DuplicateData>[] = [];
     for (const group of groups.values()) {
       if (group.length < 2) continue;
       const [first] = group;

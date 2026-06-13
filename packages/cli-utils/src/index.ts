@@ -7,6 +7,7 @@ import { GenerateOutputCommand } from './commands/generate-output/index';
 import { GeneratePersisted } from './commands/generate-persisted/index';
 import { GenerateSchema } from './commands/generate-schema/index';
 import { InitCommand } from './commands/init/index';
+import { ScanCommand } from './commands/scan/index';
 import { TurboCommand } from './commands/turbo/index';
 
 async function _main() {
@@ -22,6 +23,7 @@ async function _main() {
   cli.register(GeneratePersisted);
   cli.register(GenerateSchema);
   cli.register(InitCommand);
+  cli.register(ScanCommand);
   cli.register(TurboCommand);
 
   await cli.runExit(process.argv.slice(2));
