@@ -2,7 +2,7 @@
 title: gql-tada CLI
 ---
 
-# `gql-tada` CLI <Badge type="warning" text="beta" />
+# `gql-tada` CLI
 
 ## Commands
 
@@ -141,6 +141,36 @@ The manifest file will be written to the location specified by the `tadaPersiste
 option, which can be overridden using the `--output` argument.
 
 When this command is run inside a GitHub Action, [workflow commands](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions) are used to annotate errors within the GitHub UI.
+
+### `scan` <Badge type="warning" text="experimental" />
+
+> [!NOTE]
+>
+> The `gql-tada scan` command is experimental, and its rules and output may still change.
+> If you run into any trouble or have ideas for insights you’d like to see, feel free to let us know.
+
+| Option              | Description                                                                            |
+| ------------------- | -------------------------------------------------------------------------------------- |
+| `--tsconfig,-c`     | Optionally, a `tsconfig.json` file to use instead of an automatically discovered one.  |
+| `--format,-f`       | Emit the machine-readable `json` report instead of the terminal report.                |
+| `--graph`           | Emit only the relationship graph as JSON. Implies machine output.                      |
+| `--output,-o`       | Specify where to write machine output to. (Default: standard output)                   |
+| `--fail-on-warn,-w` | Triggers an error and a non-zero exit code if any warnings have been reported.         |
+
+The `gql-tada scan` command analyzes all GraphQL documents and fragments across your project and
+keys every field selection back to the schema, producing project-level insights into how your
+schema is used.
+
+By default, it prints a human-readable report to the terminal. Each insight is produced by a rule,
+covering field usage and reach, input (enum value and input-object field) usage, deprecated-field
+usage, orphan and cross-feature fragments, operation complexity, fetch depth, and directive usage.
+
+Passing `--format json` writes a machine-readable report — a project overview, operation and
+fragment identities, and every rule’s datapoints — to standard output, or to the file given by
+`--output`. Passing `--graph` instead emits the module ↔ document ↔ fragment ↔ schema relationship
+graph on its own, for feeding into other tooling or visualizations.
+
+When this command is run inside a GitHub Action, [workflow commands](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions) are used to annotate warnings within the GitHub UI.
 
 ## Functions
 
