@@ -161,7 +161,10 @@ async function* runProject(
       yield logger.wroteOutput(label, destination);
     }
   } else {
-    yield renderTerminalReport(context, rules);
+    // Bound item lines to the terminal width so they don't wrap; unbounded when
+    // not writing to an interactive terminal.
+    const width = tty.isInteractive ? tty.output.columns || 80 : undefined;
+    yield renderTerminalReport(context, rules, width);
   }
 
   if (!quiet) {
