@@ -7,18 +7,22 @@ export interface FetchDepthData {
   module: string;
 }
 
-/** Where each operation sits in the module graph: how far its defining module
- * is from an entry point. As a distribution this describes data-fetching
- * placement (concentrated at route boundaries vs. scattered deep in the tree). */
+/** Where each query sits in the module graph: how far its defining module is
+ * from an entry point. As a distribution this describes data-fetching placement
+ * (hoisted to route boundaries vs. scattered deep in the tree, i.e. waterfalls).
+ *
+ * Restricted to queries: mutations and subscriptions are naturally triggered
+ * deep in the tree (event handlers, forms), so their depth carries no signal. */
 export const fetchDepth: ScanRule<FetchDepthData> = {
   name: 'fetch-depth',
-  description: 'Distance from an entry point to where each operation is defined.',
+  description: 'Distance from an entry point to where each query is defined.',
   create(context) {
     // Reads the static module graph in collect(); no traversal state needed.
     return {
       visitor: {},
       collect() {
         return context.operations
+          .filter((op) => op.kind === 'query')
           .map((op) => {
             const depth = context.getDistanceFromEntry(op.module);
             return { op, depth: depth ?? null };

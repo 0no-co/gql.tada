@@ -8,6 +8,7 @@ import type { RawScanDocument, SchemaName, DatapointRef } from '../types';
 
 const schema = buildSchema(`
   type Query { a: Thing  b: Thing }
+  type Mutation { touch: Thing }
   type Thing { id: ID!  name: String! }
 `);
 const schemas = new Map<SchemaName, ReturnType<typeof buildSchema>>([[null, schema]]);
@@ -31,6 +32,7 @@ const imports = new Map<string, string[]>([
 const documents = [
   doc('query A { a { ...Shared } }', '/p/featureA/list.ts'),
   doc('query B { b { ...Shared } }', '/p/featureB/card.ts'),
+  doc('mutation M { touch { id } }', '/p/featureA/list.ts'),
   doc('fragment Shared on Thing { id name }', '/p/shared/frag.ts'),
 ];
 
@@ -80,6 +82,12 @@ describe('dependency-graph rules', () => {
         .depth;
     expect(depthOf(':operation:A')).toBe(1);
     expect(depthOf(':operation:B')).toBe(1);
+  });
+
+  it('fetch-depth ignores mutations (only queries carry the signal)', () => {
+    const ids = rules['fetch-depth'].map((d) => idOf(d.ref));
+    expect(ids).toContain(':operation:A');
+    expect(ids).not.toContain(':operation:M');
   });
 
   it('field-usage records blast radius (reach) and weight', () => {
