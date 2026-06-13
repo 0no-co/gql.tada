@@ -20,6 +20,7 @@ import type { PersistedSignal, PersistedWarning, PersistedDocument } from './typ
 export interface PersistedParams {
   disableNormalization: boolean;
   rootPath: string;
+  tsconfigPath?: string;
   configPath: string;
   pluginConfig: GraphQLSPConfig;
 }

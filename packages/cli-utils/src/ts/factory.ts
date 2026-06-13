@@ -15,6 +15,7 @@ export type VirtualExtension = (typeof transformExtensions)[number];
 
 export interface ProgramFactoryParams {
   rootPath: string;
+  tsconfigPath?: string;
   configPath: string;
 }
 
@@ -280,15 +281,16 @@ const resolveDefaultLibsPath = (params: ProgramFactoryParams): string => {
 };
 
 const resolveConfig = (params: ProgramFactoryParams): ts.ParsedCommandLine => {
-  const text = ts.sys.readFile(params.configPath, 'utf8') || '{}';
-  const parseResult = ts.parseConfigFileTextToJson(params.configPath, text);
+  const configPath = params.tsconfigPath || params.configPath;
+  const text = ts.sys.readFile(configPath, 'utf8') || '{}';
+  const parseResult = ts.parseConfigFileTextToJson(configPath, text);
   if (parseResult.error != null) throw new Error(parseResult.error.messageText.toString());
-  const projectRoot = path.dirname(params.configPath);
+  const projectRoot = path.dirname(configPath);
   return ts.parseJsonConfigFileContent(
     parseResult.config,
     ts.sys,
     projectRoot,
     ts.getDefaultCompilerOptions(),
-    params.configPath
+    configPath
   );
 };
