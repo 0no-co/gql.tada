@@ -121,7 +121,8 @@ export type DatapointRef =
   | { kind: 'field'; coordinate: string }
   | { kind: 'type'; name: string }
   | { kind: 'operation'; id: string }
-  | { kind: 'fragment'; id: string };
+  | { kind: 'fragment'; id: string }
+  | { kind: 'directive'; name: string };
 
 export interface RuleDatapoint<T = unknown> {
   ref: DatapointRef;

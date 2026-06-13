@@ -64,6 +64,20 @@ describe('default rules', () => {
     expect((hotspots[0].data as { spreadCount: number }).spreadCount).toBe(2);
   });
 
+  it('directive-usage counts directive applications', () => {
+    const result = analyze({
+      documents: [doc('query C { viewer @skip(if: true) { id @include(if: false) } }', '/p/c.ts')],
+      schemas,
+      imports: new Map(),
+      warnings: [],
+    });
+    const names = result.rules['directive-usage'].map((d) =>
+      d.ref.kind === 'directive' ? d.ref.name : undefined
+    );
+    expect(names).toContain('skip');
+    expect(names).toContain('include');
+  });
+
   it('operation-complexity ranks operations by score', () => {
     const complexity = rules['operation-complexity'];
     expect(complexity.length).toBe(2); // A, B

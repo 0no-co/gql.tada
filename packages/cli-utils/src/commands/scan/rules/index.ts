@@ -8,6 +8,7 @@ import { couplingHotspots } from './coupling-hotspots';
 import { crossFeatureFragments } from './cross-feature-fragments';
 import { operationComplexity } from './operation-complexity';
 import { fetchDepth } from './fetch-depth';
+import { directiveUsage } from './directive-usage';
 
 export type { FieldUsageData } from './field-usage';
 
@@ -28,4 +29,6 @@ export const DEFAULT_RULES: ScanRule[] = [
   operationComplexity,
   // Code-structure (dependency graph)
   fetchDepth,
+  // Conventions
+  directiveUsage,
 ];
