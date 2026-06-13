@@ -23,6 +23,7 @@ import { isGithubCI } from './github';
 
 export interface TTYParams {
   disableTTY?: boolean;
+  silent?: boolean;
 }
 
 export interface KeypressEvent {
@@ -153,11 +154,13 @@ export function initTTY(params: TTYParams = {}): TTY {
   );
 
   function write(...input: any[]) {
-    output.write(text(...input));
+    if (!params.silent) output.write(text(...input));
   }
 
   function start(outputs: AsyncIterable<ComposeInput>): Promise<string | CLIError> {
-    const write = (input: string | CLIError) => output.write('' + input);
+    const write = (input: string | CLIError) => {
+      if (!params.silent) output.write('' + input);
+    };
     if (params.disableTTY) {
       return pipe(compose(outputs), onPush(write), toPromise);
     } else {

@@ -20,6 +20,9 @@ export interface OutputOptions {
   /** The `tsconfig.json` to use for configurations and the TypeScript program.
    * @defaultValue A `tsconfig.json` in the current or any parent directory. */
   tsconfig: string | undefined;
+  /** Whether to disable terminal output when using the programmatic API.
+   * @defaultValue `false` */
+  silent?: boolean;
 }
 
 export async function* run(tty: TTY, opts: OutputOptions): AsyncIterable<ComposeInput> {

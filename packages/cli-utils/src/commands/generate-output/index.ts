@@ -50,7 +50,7 @@ export class GenerateOutputCommand extends Command {
  * @see {@link https://gql-tada.0no.co/reference/gql-tada-cli#generateoutput}
  */
 export async function generateOutput(opts: OutputOptions): Promise<void> {
-  const tty = initTTY({ disableTTY: true });
+  const tty = initTTY({ disableTTY: true, silent: opts.silent });
   const result = await tty.start(run(tty, opts));
   if (result instanceof Error) {
     throw result;
