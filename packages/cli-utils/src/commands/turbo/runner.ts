@@ -82,6 +82,7 @@ export async function* run(tty: TTY, opts: TurboOptions): AsyncIterable<ComposeI
 
   const generator = runTurbo({
     rootPath: configResult.rootPath,
+    tsconfigPath: configResult.tsconfigPath,
     configPath: configResult.configPath,
     pluginConfig,
     turboOutputPath: typeof destination! === 'string' ? destination : destinations,

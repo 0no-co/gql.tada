@@ -71,6 +71,7 @@ const getPluginConfig = (tsconfig: TsConfigJson | null): Record<string, unknown>
 
 export interface LoadConfigResult {
   pluginConfig: Record<string, unknown>;
+  tsconfigPath: string;
   configPath: string;
   rootPath: string;
 }
@@ -92,6 +93,7 @@ export const loadConfig = async (targetPath?: string): Promise<LoadConfigResult>
     if (pluginConfig) {
       return {
         pluginConfig,
+        tsconfigPath: rootTsconfigPath,
         configPath: targetPath,
         rootPath: path.dirname(rootTsconfigPath),
       };

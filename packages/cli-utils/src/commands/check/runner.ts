@@ -46,6 +46,7 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
   const minSeverity = opts.minSeverity;
   const generator = runDiagnostics({
     rootPath: configResult.rootPath,
+    tsconfigPath: configResult.tsconfigPath,
     configPath: configResult.configPath,
     pluginConfig,
   });

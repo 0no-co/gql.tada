@@ -44,6 +44,7 @@ export async function* run(tty: TTY, opts: PersistedOptions): AsyncIterable<Comp
   const generator = runPersisted({
     disableNormalization: !!opts.disableNormalization,
     rootPath: configResult.rootPath,
+    tsconfigPath: configResult.tsconfigPath,
     configPath: configResult.configPath,
     pluginConfig,
   });

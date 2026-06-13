@@ -27,6 +27,7 @@ import { hasGraphQLDocumentCandidate, shouldScanTurboFile } from './scan';
 
 export interface TurboParams {
   rootPath: string;
+  tsconfigPath?: string;
   configPath: string;
   pluginConfig: GraphQLSPConfig;
   turboOutputPath: string | TurboPath[];

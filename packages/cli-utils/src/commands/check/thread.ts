@@ -12,6 +12,7 @@ import type { Severity, DiagnosticMessage, DiagnosticSignal } from './types';
 
 export interface DiagnosticsParams {
   rootPath: string;
+  tsconfigPath?: string;
   configPath: string;
   pluginConfig: GraphQLSPConfig;
 }

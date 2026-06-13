@@ -164,6 +164,7 @@ describe.skipIf(!process.env.BENCH)('turbo performance', () => {
           const start = process.hrtime.bigint();
           for await (const signal of _runTurbo({
             rootPath: configResult.rootPath,
+            tsconfigPath: configResult.tsconfigPath,
             configPath: configResult.configPath,
             pluginConfig,
             turboOutputPath: path.join(rootPath, 'src', 'graphql-cache.d.ts'),

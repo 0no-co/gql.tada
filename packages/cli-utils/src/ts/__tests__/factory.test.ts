@@ -10,6 +10,71 @@ vi.mock('../transformers', () => ({
 }));
 
 describe('programFactory', () => {
+  it('uses the requested project tsconfig when the plugin is declared in an extended config', async () => {
+    const workspacePath = await fs.realpath(
+      await fs.mkdtemp(path.join(os.tmpdir(), 'gql-tada-factory-'))
+    );
+
+    try {
+      const { loadConfig } = await import('../../../../internal/src/resolve');
+      const { programFactory } = await import('../factory');
+      const baseConfigPath = path.join(workspacePath, 'tsconfig.base.json');
+      const projectPath = path.join(workspacePath, 'packages', 'project');
+      const projectConfigPath = path.join(projectPath, 'tsconfig.app.json');
+      const projectEntryPath = path.join(projectPath, 'src', 'index.ts');
+      const otherPackagePath = path.join(workspacePath, 'packages', 'other', 'src', 'index.ts');
+
+      await fs.mkdir(path.dirname(projectEntryPath), { recursive: true });
+      await fs.mkdir(path.dirname(otherPackagePath), { recursive: true });
+
+      await Promise.all([
+        fs.writeFile(
+          baseConfigPath,
+          JSON.stringify(
+            {
+              compilerOptions: {
+                baseUrl: '.',
+                plugins: [
+                  {
+                    name: '@0no-co/graphqlsp',
+                    schema: './schema.graphql',
+                    tadaOutputLocation: './src/graphql-env.d.ts',
+                  },
+                ],
+              },
+            },
+            null,
+            2
+          )
+        ),
+        fs.writeFile(
+          projectConfigPath,
+          JSON.stringify(
+            {
+              extends: '../../tsconfig.base.json',
+              include: ['src/index.ts'],
+            },
+            null,
+            2
+          )
+        ),
+        fs.writeFile(projectEntryPath, 'export const project = 1;\n'),
+        fs.writeFile(otherPackagePath, 'export const other = 1;\n'),
+      ]);
+
+      const configResult = await loadConfig(projectConfigPath);
+      const factory = programFactory(configResult);
+
+      expect(configResult.configPath).toBe(baseConfigPath);
+      expect(configResult.tsconfigPath).toBe(projectConfigPath);
+      expect(configResult.rootPath).toBe(projectPath);
+      expect(factory.rootFileNames).toEqual([projectEntryPath]);
+      expect(factory.projectDirectories).toEqual([projectPath, path.dirname(projectEntryPath)]);
+    } finally {
+      await fs.rm(workspacePath, { recursive: true, force: true });
+    }
+  });
+
   it('inherits module resolution from extended tsconfig files', async () => {
     const rootPath = await fs.mkdtemp(path.join(os.tmpdir(), 'gql-tada-factory-'));
 
