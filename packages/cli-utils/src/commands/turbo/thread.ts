@@ -133,23 +133,25 @@ function resolveModulePath(
   return undefined;
 }
 
-function collectImportsFromSourceFile(
+export function collectImportsFromSourceFile(
   sourceFile: ts.SourceFile,
   pluginConfig: GraphQLSPConfig,
   resolveModuleName: (importSpecifier: string, fromPath: string, toPath: string) => string,
+  resolveModulePath: (importSpecifier: string, fromPath: string) => string | undefined,
+  rootPath: string,
   turboOutputPath?: string,
   shouldTreatImportsAsNodeNext?: boolean
 ): GraphQLSourceImport[] {
   const imports: GraphQLSourceImport[] = [];
 
-  const tadaImportPaths = getTadaOutputPaths(pluginConfig);
+  const tadaImportPaths = getTadaOutputPaths(pluginConfig, rootPath);
 
   // NOTE: Import declarations may only appear as top-level statements
   for (const node of sourceFile.statements) {
     if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
       const specifier = node.moduleSpecifier.text;
 
-      if (!isTadaImport(specifier, sourceFile.fileName, tadaImportPaths)) {
+      if (!isTadaImport(specifier, sourceFile.fileName, tadaImportPaths, resolveModulePath)) {
         const importClause = node.getFullText().trim();
         if (turboOutputPath) {
           // Adjust the import specifier to point to the turbo output path
@@ -185,13 +187,17 @@ function collectImportsFromSourceFile(
   return imports;
 }
 
-function getTadaOutputPaths(pluginConfig: GraphQLSPConfig): string[] {
+function getTadaOutputPaths(pluginConfig: GraphQLSPConfig, rootPath: string): string[] {
   const paths: string[] = [];
 
   if ('schema' in pluginConfig && pluginConfig.tadaOutputLocation) {
-    paths.push(pluginConfig.tadaOutputLocation);
-  } else {
-    // Multiple schemas aren't supported in this context
+    paths.push(path.resolve(rootPath, pluginConfig.tadaOutputLocation));
+  } else if ('schemas' in pluginConfig) {
+    for (const schemaConfig of pluginConfig.schemas) {
+      if (schemaConfig.tadaOutputLocation) {
+        paths.push(path.resolve(rootPath, schemaConfig.tadaOutputLocation));
+      }
+    }
   }
 
   return paths;
@@ -200,18 +206,22 @@ function getTadaOutputPaths(pluginConfig: GraphQLSPConfig): string[] {
 function isTadaImport(
   importSpecifier: string,
   sourceFilePath: string,
-  tadaOutputLocationPaths: string[]
+  tadaOutputLocationPaths: string[],
+  resolveModulePath: (importSpecifier: string, fromPath: string) => string | undefined
 ): boolean {
+  const resolvedImportPath = resolveModulePath(importSpecifier, sourceFilePath);
+  if (resolvedImportPath) {
+    return tadaOutputLocationPaths.some(
+      (tadaOutputLocationPath) => resolvedImportPath === tadaOutputLocationPath
+    );
+  }
+
   if (importSpecifier.startsWith('.')) {
     const sourceDir = path.dirname(sourceFilePath);
     const absoluteImportPath = path.resolve(sourceDir, importSpecifier);
 
     return tadaOutputLocationPaths.some((tadaOutputLocationPath) => {
-      const absoluteTadaPath = path.resolve(tadaOutputLocationPath);
-      return (
-        absoluteImportPath === absoluteTadaPath ||
-        absoluteImportPath.startsWith(absoluteTadaPath + path.sep)
-      );
+      return absoluteImportPath === tadaOutputLocationPath;
     });
   }
 
@@ -328,6 +338,8 @@ export async function* _runTurbo(params: TurboParams): AsyncIterableIterator<Tur
             graphqlSourceFile,
             params.pluginConfig,
             factory.resolveModuleName.bind(factory),
+            factory.resolveModulePath.bind(factory),
+            params.rootPath,
             turboPath,
             !!factory.wasOriginallyNodeNext
           );
