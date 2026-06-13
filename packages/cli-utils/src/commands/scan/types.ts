@@ -30,14 +30,6 @@ export interface RawScanDocument {
   typeSize?: number | undefined;
 }
 
-/** An import edge between modules, used to build the module import graph. */
-export interface ScanModuleImports {
-  /** Absolute path of the importing module. */
-  filePath: string;
-  /** Resolved absolute paths of imported modules. */
-  resolved: string[];
-}
-
 export interface FileCountSignal {
   kind: 'FILE_COUNT';
   fileCount: number;
