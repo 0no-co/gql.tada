@@ -25,7 +25,7 @@ interface Accumulated {
 /** Indexes every field that is actually selected: which operations/fragments
  * select each schema coordinate, the operations that reach it, and its blast
  * radius. Fields the schema declares but no document selects are absent (derive
- * them from the schema if needed; `schema-coverage` has the per-type totals). */
+ * them from the schema if needed; the overview carries aggregate coverage). */
 export const fieldUsage: ScanRule<FieldUsageData> = {
   name: 'field-usage',
   description: 'Used fields, keyed by schema coordinate, with their reach.',

@@ -1,6 +1,6 @@
 import type { ScanContext } from '../context';
 import type { RuleResults } from '../types';
-import type { CoverageData } from '../rules/schema-coverage';
+import { allSchemaFields } from '../schema-util';
 
 export interface ScanOverview {
   operations: number;
@@ -10,19 +10,16 @@ export interface ScanOverview {
   coverage: { usedFields: number; totalFields: number; percent: number };
 }
 
-/** Project-level totals, derived from the corpus and the schema-coverage rule.
- * Shared so the JSON `overview` and the terminal header show the same numbers. */
+/** Project-level totals, derived from the corpus, the schema, and the
+ * field-usage rule. Shared so the JSON `overview` and the terminal header show
+ * the same numbers. */
 export function buildOverview(context: ScanContext, rules: RuleResults): ScanOverview {
   const operationsByKind = { query: 0, mutation: 0, subscription: 0 };
   for (const op of context.operations) operationsByKind[op.kind]++;
 
-  let usedFields = 0;
-  let totalFields = 0;
-  for (const datapoint of rules['schema-coverage'] || []) {
-    const data = datapoint.data as CoverageData;
-    usedFields += data.usedFields;
-    totalFields += data.totalFields;
-  }
+  // field-usage emits one datapoint per used schema field.
+  const usedFields = (rules['field-usage'] || []).length;
+  const totalFields = allSchemaFields(context.getSchemas()).length;
   const percent = totalFields ? Math.round((usedFields / totalFields) * 100) : 100;
 
   return {

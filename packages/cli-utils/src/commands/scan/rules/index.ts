@@ -4,7 +4,6 @@ import { fieldUsage } from './field-usage';
 import { operationFootprint } from './operation-footprint';
 import { inputUsage } from './input-usage';
 import { deprecatedUsage } from './deprecated-usage';
-import { schemaCoverage } from './schema-coverage';
 import { orphanFragments } from './orphan-fragments';
 import { couplingHotspots } from './coupling-hotspots';
 import { crossFeatureFragments } from './cross-feature-fragments';
@@ -26,7 +25,6 @@ export const DEFAULT_RULES: ScanRule[] = [
   inputUsage,
   // Schema evolution & safety
   deprecatedUsage,
-  schemaCoverage,
   // Code navigation & refactoring
   orphanFragments,
   couplingHotspots,
