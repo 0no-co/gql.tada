@@ -14,6 +14,7 @@ export const couplingHotspots: ScanRule<CouplingData> = {
   description: 'Fragments shared across many operations/fragments.',
   create(context) {
     const counts = new Map<string, number>();
+    const fragments = context.getFragmentGraph();
 
     return {
       visitor: {
@@ -21,8 +22,8 @@ export const couplingHotspots: ScanRule<CouplingData> = {
           enter(node) {
             const definition = context.getCurrentDefinition();
             if (!definition) return;
-            const fragment = context.getFragment(definition.schemaName, node.name.value);
-            if (fragment) counts.set(fragment.id, (counts.get(fragment.id) || 0) + 1);
+            const id = fragments.resolve(definition.schemaName, node.name.value);
+            if (id) counts.set(id, (counts.get(id) || 0) + 1);
           },
         },
       },

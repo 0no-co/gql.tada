@@ -44,13 +44,13 @@ export const deprecatedUsage: ScanRule<DeprecatedUsageData> = {
 
       collect() {
         const operationIds = new Set(context.operations.map((op) => op.id));
+        const fragments = context.getFragmentGraph();
         return [...byCoordinate.entries()]
           .map(([coordinate, entry]) => {
             const operations = new Set<string>();
             for (const defId of entry.defIds) {
               if (operationIds.has(defId)) operations.add(defId);
-              else
-                for (const id of context.getOperationsReachingFragment(defId)) operations.add(id);
+              else for (const id of fragments.operationsReaching(defId)) operations.add(id);
             }
             return { coordinate, reason: entry.reason, operations: [...operations] };
           })

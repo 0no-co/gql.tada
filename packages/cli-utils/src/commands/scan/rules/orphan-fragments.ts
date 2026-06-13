@@ -11,6 +11,7 @@ export const orphanFragments: ScanRule<OrphanFragmentData> = {
   description: 'Fragments that are defined but never used.',
   create(context) {
     const spreadIds = new Set<string>();
+    const fragments = context.getFragmentGraph();
 
     return {
       visitor: {
@@ -18,8 +19,8 @@ export const orphanFragments: ScanRule<OrphanFragmentData> = {
           enter(node) {
             const definition = context.getCurrentDefinition();
             if (!definition) return;
-            const fragment = context.getFragment(definition.schemaName, node.name.value);
-            if (fragment) spreadIds.add(fragment.id);
+            const id = fragments.resolve(definition.schemaName, node.name.value);
+            if (id) spreadIds.add(id);
           },
         },
       },

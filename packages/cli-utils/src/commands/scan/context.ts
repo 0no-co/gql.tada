@@ -25,6 +25,8 @@ import type {
   ScanCorpus,
 } from './types';
 import { ModuleGraph } from './module-graph';
+import { FragmentGraph } from './fragment-graph';
+import type { FragmentGraphDefinition } from './fragment-graph';
 
 const CWD = process.cwd();
 
@@ -37,9 +39,6 @@ export interface ScanContextParams {
 
 const hashOf = (input: string): string =>
   crypto.createHash('sha256').update(input).digest('hex').slice(0, 16);
-
-const fragmentKey = (schemaName: SchemaName, name: string): string =>
-  `${schemaName ?? ''}\0${name}`;
 
 /** Collects the names of fragments spread anywhere within a definition. */
 function collectFragmentSpreads(node: DefinitionNode): string[] {
@@ -69,12 +68,8 @@ export class ScanContext {
   private readonly _fragments: FragmentInfo[] = [];
   private readonly _definitions: DefinitionRecord[] = [];
   private readonly _recordByNode = new Map<ASTNode, DefinitionRecord>();
-  private readonly _fragmentIdByName = new Map<string, string>();
   private readonly _recordById = new Map<string, DefinitionRecord>();
   private readonly _modules: ModuleInfo[];
-
-  private readonly _reachableFragments = new Map<string, Set<string>>();
-  private _operationsReachingFragment: Map<string, Set<string>> | undefined;
 
   private _typeInfo: TypeInfo | null = null;
   private _currentDefinition: DefinitionRecord | null = null;
@@ -82,6 +77,7 @@ export class ScanContext {
   // Static module dependency graph (every scanned file → its project imports).
   private readonly _importGraph: Map<string, string[]>;
   private _moduleGraph: ModuleGraph | undefined;
+  private _fragmentGraph: FragmentGraph | undefined;
 
   // Raw inferred type per definition id (kept internal, not serialised).
   private readonly _inferredTypeById = new Map<string, string>();
@@ -176,54 +172,11 @@ export class ScanContext {
     return this._typeInfo?.getFieldDef();
   }
 
-  /* -- Structural helpers -- */
+  /* -- Generic primitives for type- and graph-level rules -- */
 
   getDefinition(id: string): DefinitionRecord | undefined {
     return this._recordById.get(id);
   }
-
-  getFragment(schemaName: SchemaName, name: string): DefinitionRecord | undefined {
-    const id = this._fragmentIdByName.get(fragmentKey(schemaName, name));
-    return id ? this._recordById.get(id) : undefined;
-  }
-
-  /** Ids of fragments reachable from a definition via (nested) spreads. */
-  getRecursivelyReferencedFragments(definition: DefinitionRecord): Set<string> {
-    const cached = this._reachableFragments.get(definition.id);
-    if (cached) return cached;
-
-    const result = new Set<string>();
-    const stack = [...definition.fragmentSpreads];
-    let name: string | undefined;
-    while ((name = stack.pop())) {
-      const fragment = this.getFragment(definition.schemaName, name);
-      if (!fragment || result.has(fragment.id)) continue;
-      result.add(fragment.id);
-      stack.push(...fragment.fragmentSpreads);
-    }
-
-    this._reachableFragments.set(definition.id, result);
-    return result;
-  }
-
-  /** Operation ids that reach a fragment directly or transitively. */
-  getOperationsReachingFragment(fragmentId: string): Set<string> {
-    if (!this._operationsReachingFragment) {
-      const map = new Map<string, Set<string>>();
-      for (const operation of this._definitions) {
-        if (operation.defKind !== 'operation') continue;
-        for (const reachableId of this.getRecursivelyReferencedFragments(operation)) {
-          let set = map.get(reachableId);
-          if (!set) map.set(reachableId, (set = new Set()));
-          set.add(operation.id);
-        }
-      }
-      this._operationsReachingFragment = map;
-    }
-    return this._operationsReachingFragment.get(fragmentId) || new Set();
-  }
-
-  /* -- Generic primitives for type- and graph-level rules -- */
 
   /** The raw inferred `TadaDocumentNode` type for a definition, if it was
    * resolved. Exposed raw so rules can derive whatever metric they need (size,
@@ -237,6 +190,34 @@ export class ScanContext {
    * context methods. */
   getModuleGraph(): ModuleGraph {
     return (this._moduleGraph ??= new ModuleGraph(this._importGraph, CWD));
+  }
+
+  /** The fragment spread graph (resolution + reachability), as a reusable
+   * structure. Built from the corpus, so fragment-graph rules need no bespoke
+   * context methods. */
+  getFragmentGraph(): FragmentGraph {
+    if (!this._fragmentGraph) {
+      const definitions: FragmentGraphDefinition[] = [];
+      for (const op of this._operations) {
+        definitions.push({
+          id: op.id,
+          kind: 'operation',
+          schemaName: op.schemaName,
+          fragmentSpreads: op.fragmentSpreads,
+        });
+      }
+      for (const fragment of this._fragments) {
+        definitions.push({
+          id: fragment.id,
+          kind: 'fragment',
+          schemaName: fragment.schemaName,
+          name: fragment.name,
+          fragmentSpreads: fragment.fragmentSpreads,
+        });
+      }
+      this._fragmentGraph = new FragmentGraph(definitions);
+    }
+    return this._fragmentGraph;
   }
 
   /* -- Construction -- */
@@ -263,7 +244,6 @@ export class ScanContext {
     } else {
       const { node: _node, defKind: _defKind, ...info } = record;
       this._fragments.push(info);
-      this._fragmentIdByName.set(fragmentKey(record.schemaName, record.name), record.id);
     }
   }
 

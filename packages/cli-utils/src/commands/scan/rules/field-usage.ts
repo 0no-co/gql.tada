@@ -86,6 +86,7 @@ export const fieldUsage: ScanRule<FieldUsageData> = {
         const operationIds = new Set(context.operations.map((op) => op.id));
         const moduleById = new Map(context.operations.map((op) => [op.id, op.module] as const));
         const graph = context.getModuleGraph();
+        const fragments = context.getFragmentGraph();
         const hasEntryPoints = graph.entryPoints().size > 0;
         const datapoints: RuleDatapoint<FieldUsageData>[] = [];
         for (const [coordinate, entry] of byCoordinate) {
@@ -94,7 +95,7 @@ export const fieldUsage: ScanRule<FieldUsageData> = {
             if (operationIds.has(usage.defId)) {
               operations.add(usage.defId);
             } else {
-              for (const id of context.getOperationsReachingFragment(usage.defId)) {
+              for (const id of fragments.operationsReaching(usage.defId)) {
                 operations.add(id);
               }
             }

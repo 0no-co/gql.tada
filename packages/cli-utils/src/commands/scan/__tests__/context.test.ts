@@ -29,32 +29,25 @@ function context(documents: RawScanDocument[]) {
   return new ScanContext({ documents, schemas, imports: new Map(), warnings: [] });
 }
 
-describe('ScanContext', () => {
-  it('resolves recursively referenced fragments through nesting', () => {
-    const ctx = context([
-      doc('query Q { viewer { ...A } }', '/p/q.ts'),
-      doc('fragment A on User { id ...B }', '/p/a.ts'),
-      doc('fragment B on User { name }', '/p/b.ts'),
-    ]);
+describe('ScanContext builds a fragment graph from parsed documents', () => {
+  const ctx = context([
+    doc('query Q { viewer { ...A } }', '/p/q.ts'),
+    doc('fragment A on User { id ...B }', '/p/a.ts'),
+    doc('fragment B on User { name }', '/p/b.ts'),
+  ]);
+  const fragments = ctx.getFragmentGraph();
 
-    const operation = ctx.getDefinition(ctx.operations[0].id)!;
-    const reachable = ctx.getRecursivelyReferencedFragments(operation);
+  it('resolves recursively referenced fragments through nesting', () => {
+    const reachable = fragments.reachableFragments(ctx.operations[0].id);
     expect([...reachable].sort()).toEqual([':fragment:A', ':fragment:B']);
   });
 
   it('maps fragments back to the operations that reach them', () => {
-    const ctx = context([
-      doc('query Q { viewer { ...A } }', '/p/q.ts'),
-      doc('fragment A on User { id ...B }', '/p/a.ts'),
-      doc('fragment B on User { name }', '/p/b.ts'),
-    ]);
-
-    expect([...ctx.getOperationsReachingFragment(':fragment:B')]).toEqual([':operation:Q']);
+    expect([...fragments.operationsReaching(':fragment:B')]).toEqual([':operation:Q']);
   });
 
   it('resolves fragments by name within a schema', () => {
-    const ctx = context([doc('fragment A on User { id }', '/p/a.ts')]);
-    expect(ctx.getFragment(null, 'A')?.id).toBe(':fragment:A');
-    expect(ctx.getFragment(null, 'Missing')).toBeUndefined();
+    expect(fragments.resolve(null, 'A')).toBe(':fragment:A');
+    expect(fragments.resolve(null, 'Missing')).toBeUndefined();
   });
 });
