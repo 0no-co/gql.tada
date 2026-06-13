@@ -19,7 +19,7 @@ export interface ScanOptions {
   tsconfig: string | undefined;
   /** When `json`, write the JSON report; otherwise show the terminal report. */
   format: ScanFormat | undefined;
-  /** Where to write the JSON report to. Defaults to the piped output. */
+  /** Where to write the JSON report to. Defaults to standard output. */
   output: string | undefined;
   /** Whether to fail with a non-zero exit code if any warnings are reported. */
   failOnWarn: boolean;
@@ -51,13 +51,11 @@ export async function* run(tty: TTY, opts: ScanOptions): AsyncIterable<ComposeIn
     throw logger.externalError('Failed to load configuration.', error);
   }
 
-  if (projects.length > 1 && opts.format && (opts.output || tty.pipeTo)) {
+  // Machine output goes to a single destination, so it can't span projects.
+  if (projects.length > 1 && !!opts.format) {
     throw logger.errorMessage(
-      'Output path was specified, while multiple projects are configured.\n' +
-        logger.hint(
-          'The JSON report can only target a single project.\n' +
-            `Run scan per-project with an explicit ${logger.code('--tsconfig')}.`
-        )
+      'The JSON report can only target a single project.\n' +
+        logger.hint(`Run scan per-project with an explicit ${logger.code('--tsconfig')}.`)
     );
   }
 
@@ -78,6 +76,11 @@ async function* runProject(
   project: ProjectContext
 ): AsyncGenerator<ComposeInput, number> {
   const { runScan } = await import('./thread');
+
+  const machine = !!opts.format;
+  // When the JSON shares the (single) stdout stream, human chatter would corrupt
+  // it — so suppress progress/warnings/summary in that case.
+  const quiet = machine && !opts.output && !tty.pipeTo;
 
   let schemas: Map<SchemaName, GraphQLSchema>;
   try {
@@ -100,13 +103,15 @@ async function* runProject(
   let fileCount = 0;
 
   try {
-    if (tty.isInteractive) yield logger.runningScan();
+    if (tty.isInteractive && !quiet) yield logger.runningScan();
 
     for await (const signal of generator) {
       if (signal.kind === 'EXTERNAL_WARNING') {
-        yield logger.experimentMessage(
-          `${logger.code('.vue')} and ${logger.code('.svelte')} file support is experimental.`
-        );
+        if (!quiet) {
+          yield logger.experimentMessage(
+            `${logger.code('.vue')} and ${logger.code('.svelte')} file support is experimental.`
+          );
+        }
       } else if (signal.kind === 'FILE_COUNT') {
         totalFileCount = signal.fileCount;
       } else {
@@ -115,16 +120,18 @@ async function* runProject(
         if (signal.imports.length) imports.set(signal.filePath, signal.imports);
         if (signal.warnings.length) {
           warnings.push(...signal.warnings);
-          let buffer = logger.warningFile(signal.filePath);
-          for (const warning of signal.warnings) {
-            buffer += logger.warningMessage(warning);
-            logger.warningGithub(warning);
+          if (!quiet) {
+            let buffer = logger.warningFile(signal.filePath);
+            for (const warning of signal.warnings) {
+              buffer += logger.warningMessage(warning);
+              logger.warningGithub(warning);
+            }
+            yield buffer + '\n';
           }
-          yield buffer + '\n';
         }
       }
 
-      if (tty.isInteractive) yield logger.runningScan(fileCount, totalFileCount);
+      if (tty.isInteractive && !quiet) yield logger.runningScan(fileCount, totalFileCount);
     }
   } catch (error) {
     throw logger.externalError('Could not scan files', error);
@@ -134,47 +141,31 @@ async function* runProject(
   // the context's identities for resolving locators).
   const { context, rules } = analyze({ documents, schemas, imports, warnings });
 
-  if (opts.format === 'json') {
-    yield* writeJson(tty, opts, () => renderJson(context, rules));
+  if (machine) {
+    // Default to stdout; `--output` writes a file instead.
+    const destination: WriteTarget = opts.output
+      ? path.resolve(process.cwd(), opts.output)
+      : (tty.pipeTo ?? process.stdout);
+    try {
+      await writeOutput(destination, renderJson(context, rules));
+    } catch (error) {
+      throw logger.externalError('Something went wrong while writing the JSON report', error);
+    }
+    if (!quiet && typeof destination === 'string') {
+      yield logger.wroteOutput('JSON report', destination);
+    }
   } else {
     yield renderTerminalReport(context, rules);
   }
 
-  yield logger.summary({
-    warnings: context.warnings.length,
-    operations: context.operations.length,
-    fragments: context.fragments.length,
-    modules: context.modules.length,
-  });
+  if (!quiet) {
+    yield logger.summary({
+      warnings: context.warnings.length,
+      operations: context.operations.length,
+      fragments: context.fragments.length,
+      modules: context.modules.length,
+    });
+  }
 
   return context.warnings.length;
-}
-
-async function* writeJson(
-  tty: TTY,
-  opts: ScanOptions,
-  render: () => string
-): AsyncGenerator<ComposeInput, void> {
-  let destination: WriteTarget;
-  if (opts.output) {
-    destination = path.resolve(process.cwd(), opts.output);
-  } else if (tty.pipeTo) {
-    destination = tty.pipeTo;
-  } else {
-    throw logger.errorMessage(
-      'No output path was specified to write the JSON report to.\n' +
-        logger.hint(
-          `Pass an ${logger.code('--output')} argument to this command,\n` +
-            'or pipe this command to an output file.'
-        )
-    );
-  }
-
-  try {
-    await writeOutput(destination, render());
-  } catch (error) {
-    throw logger.externalError('Something went wrong while writing the JSON report', error);
-  }
-
-  if (typeof destination === 'string') yield logger.wroteOutput('JSON report', destination);
 }
