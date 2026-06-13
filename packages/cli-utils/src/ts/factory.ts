@@ -44,6 +44,7 @@ export interface ProgramFactory {
 
   addVirtualFiles(files: readonly ts.SourceFile[]): Promise<this>;
 
+  resolveModulePath(importSpecifier: string, fromPath: string): string | undefined;
   resolveModuleName(importSpecifier: string, fromPath: string, toPath: string): string;
 
   build(): ProgramContainer;
@@ -185,6 +186,12 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
       return factory;
     },
 
+    resolveModulePath(importSpecifier: string, fromPath: string): string | undefined {
+      const resolved = ts.resolveModuleName(importSpecifier, fromPath, options, host.compilerHost);
+
+      return resolved.resolvedModule?.resolvedFileName;
+    },
+
     resolveModuleName(importSpecifier: string, fromPath: string, toPath: string): string {
       // For absolute imports (including path-mapped ones), keep them as-is
       // TypeScript's module resolution will handle them correctly
@@ -193,22 +200,13 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
       }
 
       // For relative imports, we need to adjust the path using the virtual compiler host
-      const compilerOptions = options;
-
       // First, resolve the import from the original location to get the actual file
-      const resolved = ts.resolveModuleName(
-        importSpecifier,
-        fromPath,
-        compilerOptions,
-        host.compilerHost
-      );
+      const resolvedFileName = factory.resolveModulePath(importSpecifier, fromPath);
 
-      if (resolved.resolvedModule) {
-        const targetFilePath = resolved.resolvedModule.resolvedFileName;
-
+      if (resolvedFileName) {
         // Now create a relative path from the new location (toPath) to the target
         const fromDir = path.dirname(toPath);
-        let relativePath = path.relative(fromDir, targetFilePath);
+        let relativePath = path.relative(fromDir, resolvedFileName);
 
         // Ensure it starts with ./ or ../
         if (!relativePath.startsWith('.')) {
