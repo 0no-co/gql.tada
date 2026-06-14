@@ -242,7 +242,7 @@ of a given GraphQL query by matching it against `TypedDocumentNode` instead.
 In our example, we can now infer the generic types from the `query` instead:
 
 ::: code-group
-```ts twoslash [query.ts] 
+```ts twoslash [query.ts]
 // @filename: query.generated.ts
 import { parse } from 'graphql';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
@@ -379,7 +379,7 @@ typed documents and will hence also work well with `gql.tada`.
 import './graphql/graphql-env.d.ts';
 // ---cut-before---
 import { graphql } from 'gql.tada';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 
 const getPokemonsQuery = graphql(`
   query GetPokemons {

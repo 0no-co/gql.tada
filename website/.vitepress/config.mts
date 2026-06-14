@@ -1,7 +1,13 @@
 import { defineConfig } from 'vitepress';
-import { defaultTwoslashOptions } from 'shikiji-twoslash';
-import { transformerTwoslash } from 'vitepress-plugin-twoslash';
+import { defaultTwoslashOptions } from '@shikijs/twoslash';
+import { transformerTwoslash } from '@shikijs/vitepress-twoslash';
 import type { JsxEmit } from 'typescript';
+
+// Bundles the `graphql` grammar together with the `javascript`, `typescript`,
+// `jsx`, and `tsx` grammars that the custom injection grammar embeds. Shiki v2
+// no longer auto-resolves a custom grammar's `embeddedLangs`, so these must be
+// registered explicitly ahead of it.
+import bundledGraphqlLanguages from '@shikijs/langs/graphql';
 
 import { graphqlLanguage } from './graphql-textmate.mts';
 
@@ -46,6 +52,7 @@ export default defineConfig({
 
   markdown: {
     languages: [
+      ...bundledGraphqlLanguages,
       graphqlLanguage,
     ],
 
@@ -57,7 +64,11 @@ export default defineConfig({
       transformerTwoslash({
         twoslashOptions: {
           ...defaultTwoslashOptions(),
-          vfsRoot: `${import.meta.dirname}/../twoslash/`,
+          // Twoslash resolves relative imports in examples (e.g.
+          // `./graphql/graphql-env.d.ts`) against `vfsRoot`, which must be the
+          // `website/` directory. (Older twoslash resolved these against cwd and
+          // ignored `vfsRoot`, so this previously pointed at a non-existent dir.)
+          vfsRoot: `${import.meta.dirname}/../`,
           shouldGetHoverInfo: (() => {
             let lastIdentifier: string | undefined;
             return (identifier, _start, _filename) => {
