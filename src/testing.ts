@@ -1,8 +1,6 @@
 import type { DocumentDecoration, obj, overload } from './utils';
-import type { $tada, FragmentShape } from './namespace';
+import type { $tada, FragmentShape, omitFragmentRefsRec, makeFragmentRef } from './namespace';
 import type { ResultOf } from './api';
-
-export { maskFragments, unsafe_readResult } from './api';
 
 type fragmentRegistryEntry<Fragment> =
   Fragment extends FragmentShape<infer Definition, infer Result>
@@ -117,4 +115,134 @@ function readResult(_document: unknown, data: unknown, _fragments?: unknown): un
   return data;
 }
 
-export { readResult };
+type resultOfFragmentsRec<
+  Fragments extends readonly any[],
+  Result = {},
+> = Fragments extends readonly [infer Fragment, ...infer Rest]
+  ? resultOfFragmentsRec<Rest, ResultOf<Fragment> & Result>
+  : Result;
+
+type fragmentRefsOfFragmentsRec<
+  Fragments extends readonly any[],
+  FragmentRefs = {},
+> = Fragments extends readonly [infer Fragment, ...infer Rest]
+  ? fragmentRefsOfFragmentsRec<Rest, makeFragmentRef<Fragment> & FragmentRefs>
+  : obj<FragmentRefs>;
+
+/** For testing, masks fragment data for given data and fragments.
+ *
+ * @param _fragments - A list of GraphQL documents of fragments, created using `graphql`.
+ * @param data - The combined result data of the fragments, which can be wrapped in arrays.
+ * @returns The masked data of the fragments.
+ *
+ * @remarks
+ * When creating test data, you may define data for fragments that’s unmasked, making it
+ * unusable in parent fragments or queries that require masked data.
+ *
+ * This means that you may have to use {@link maskFragments} to mask your data first
+ * for TypeScript to not report an error.
+ *
+ * @example
+ * ```
+ * import { FragmentOf, ResultOf, graphql } from 'gql.tada';
+ * import { maskFragments } from 'gql.tada/testing';
+ *
+ * const bookFragment = graphql(`
+ *   fragment BookComponent on Book {
+ *     id
+ *     title
+ *   }
+ * `);
+ *
+ * const data = maskFragments([bookFragment], { id: 'id', title: 'book' });
+ * ```
+ *
+ * @see {@link readFragment} for how to read from fragment masks (i.e. the reverse)
+ */
+function maskFragments<const Fragments extends readonly FragmentShape[]>(
+  _fragments: Fragments,
+  fragment: resultOfFragmentsRec<Fragments>
+): fragmentRefsOfFragmentsRec<Fragments>;
+function maskFragments<const Fragments extends readonly FragmentShape[]>(
+  _fragments: Fragments,
+  fragment: resultOfFragmentsRec<Fragments> | null
+): fragmentRefsOfFragmentsRec<Fragments> | null;
+function maskFragments<const Fragments extends readonly FragmentShape[]>(
+  _fragments: Fragments,
+  fragment: resultOfFragmentsRec<Fragments> | undefined
+): fragmentRefsOfFragmentsRec<Fragments> | undefined;
+function maskFragments<const Fragments extends readonly FragmentShape[]>(
+  _fragments: Fragments,
+  fragment: resultOfFragmentsRec<Fragments> | null | undefined
+): fragmentRefsOfFragmentsRec<Fragments> | null | undefined;
+function maskFragments<const Fragments extends readonly FragmentShape[]>(
+  _fragments: Fragments,
+  fragment: readonly resultOfFragmentsRec<Fragments>[]
+): readonly fragmentRefsOfFragmentsRec<Fragments>[];
+function maskFragments<const Fragments extends readonly FragmentShape[]>(
+  _fragments: Fragments,
+  fragment: readonly (resultOfFragmentsRec<Fragments> | null)[]
+): readonly (fragmentRefsOfFragmentsRec<Fragments> | null)[];
+function maskFragments<const Fragments extends readonly FragmentShape[]>(
+  _fragments: Fragments,
+  fragment: readonly (resultOfFragmentsRec<Fragments> | undefined)[]
+): readonly (fragmentRefsOfFragmentsRec<Fragments> | undefined)[];
+function maskFragments<const Fragments extends readonly FragmentShape[]>(
+  _fragments: Fragments,
+  fragment: readonly (resultOfFragmentsRec<Fragments> | null | undefined)[]
+): readonly (fragmentRefsOfFragmentsRec<Fragments> | null | undefined)[];
+function maskFragments(_fragments: unknown, data: unknown) {
+  return data;
+}
+
+/** For testing, converts document data without fragment refs to their result type.
+ *
+ * @param _document - A GraphQL document, created using `graphql`.
+ * @param data - The result data of the GraphQL document with optional fragment refs.
+ * @returns The masked result data of the document.
+ *
+ * @remarks
+ * When creating test data, you may define data for documents that’s unmasked, but
+ * need to cast the data to match the result type of your document.
+ *
+ * This means that you may have to use {@link unsafe_readResult} to cast
+ * them to the result type, instead of doing `as any as ResultOf<typeof document>`.
+ *
+ * This function is inherently unsafe, since it doesn't check that your document
+ * actually contains the masked fragment data! For a type-safe alternative that
+ * resolves nested fragments, see {@link readResult}.
+ *
+ * @example
+ * ```
+ * import { FragmentOf, ResultOf, graphql } from 'gql.tada';
+ * import { unsafe_readResult } from 'gql.tada/testing';
+ *
+ * const bookFragment = graphql(`
+ *   fragment BookComponent on Book {
+ *     id
+ *     title
+ *   }
+ * `);
+ *
+ * const query = graphql(`
+ *   query {
+ *     book {
+ *       ...BookComponent
+ *     }
+ *   }
+ * `, [bookFragment]);
+ *
+ * const data = unsafe_readResult(query, { book: { id: 'id', title: 'book' } });
+ * ```
+ *
+ * @see {@link readResult} for a type-safe alternative that resolves nested fragments.
+ * @see {@link readFragment} for how to read from fragment masks (i.e. the reverse)
+ */
+function unsafe_readResult<
+  const Document extends DocumentDecoration<any, any>,
+  const Data extends omitFragmentRefsRec<ResultOf<Document>>,
+>(_document: Document, data: Data): ResultOf<Document> {
+  return data as any;
+}
+
+export { readResult, maskFragments, unsafe_readResult };
