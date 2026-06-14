@@ -7,6 +7,11 @@ import { graphqlLanguage } from './graphql-textmate.mts';
 
 const devlogItems = [
   {
+    text: 'v1.11.0',
+    longText: 'v1.11.0 - Closing gaps',
+    link: '/devlog/2026-06-14',
+  },
+  {
     text: 'v1.8.0',
     longText: 'v1.8.0 - Future Setup Instructions',
     link: '/devlog/2024-06-26',
