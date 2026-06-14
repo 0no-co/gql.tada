@@ -1,5 +1,20 @@
 # gql.tada
 
+## 1.11.0
+
+### Minor Changes
+
+- Add typed `readResult` testing utility, which, unlike `unsafe_readResult`, accepts fragments as an array and then becomes fully typed
+  Submitted by [@kitten](https://github.com/kitten) (See [#555](https://github.com/0no-co/gql.tada/pull/555))
+- Move testing functions API to `gql.tada/testing`, increasing separation. This isn't a breaking change as `maskFragments` and `unsafe_readResult` are (for now) re-exported from the main entrypoint
+  Submitted by [@kitten](https://github.com/kitten) (See [#555](https://github.com/0no-co/gql.tada/pull/555))
+
+### Patch Changes
+
+- Updated dependencies (See [#556](https://github.com/0no-co/gql.tada/pull/556), [#554](https://github.com/0no-co/gql.tada/pull/554), and [#556](https://github.com/0no-co/gql.tada/pull/556))
+  - @gql.tada/cli-utils@1.9.0
+  - @gql.tada/internal@1.2.0
+
 ## 1.10.2
 
 ### Patch Changes
