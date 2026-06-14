@@ -17,6 +17,7 @@
     "README.md",
     "cli/",
     "ts-plugin/",
+    "testing/",
     "bin/",
     "dist/"
   ],
@@ -38,6 +39,12 @@
       "import": "./dist/gql-tada-internal.mjs",
       "require": "./dist/gql-tada-internal.js",
       "source": "./src/internal/index.ts"
+    },
+    "./testing": {
+      "types": "./dist/gql-tada-testing.d.ts",
+      "import": "./dist/gql-tada-testing.mjs",
+      "require": "./dist/gql-tada-testing.js",
+      "source": "./src/testing.ts"
     },
     "./ts-plugin": {
       "types": "./dist/gql-tada-ts-plugin.d.ts",
