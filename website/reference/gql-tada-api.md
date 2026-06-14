@@ -350,200 +350,6 @@ const getQuery = (data: ResultOf<typeof pokemonQuery>) => {
 
 ---
 
-### `maskFragments()`
-
-|                       | Description                                                                      |
-| --------------------- | -------------------------------------------------------------------------------- |
-| `_fragments` argument | A list of GraphQL documents of fragments, created using [`graphql()`](#graphql). |
-| `data` argument       | The combined result data of the fragments, which can be wrapped in arrays.       |
-| returns               | The masked data of the fragments.                                                |
-
-> [!NOTE]
-> While useful, `maskFragments()` is mostly meant to be used in tests or as
-> an escape hatch to convert data to masked fragments.
->
-> You shouldn’t have to use it in your regular component code.
-
-When [`graphql()`](#graphql) is used to compose fragments into another fragment or
-operation, the resulting type will by default be masked, [unless the `@_unmask`
-directive is used.](../guides/fragment-colocation#fragment-masking)
-
-This means that when we’re writing tests or are creating “fake data” without
-inferring types from a full document, the types in TypeScript may not match,
-since our testing data will not be masked and will be equal to [the result type](#resultof)
-of the fragments.
-
-To address this, the `maskFragments` utility takes a list of fragments and masks data (or an array of data)
-to match the masked fragment types of the fragments.
-
-- [Read more about fragment masking on the “Writing GraphQL” page.](../get-started/writing-graphql#fragment-masking)
-- [For the reverse operation, see `readFragment()`.](#readfragment)
-
-#### Example
-
-```ts twoslash
-import './graphql/graphql-env.d.ts';
-// ---cut-before---
-import { graphql, maskFragments } from 'gql.tada';
-
-const pokemonItemFragment = graphql(`
-  fragment PokemonItem on Pokemon {
-    id
-    name
-  }
-`);
-
-const data = maskFragments([pokemonItemFragment], {
-  id: '001',
-  name: 'Bulbasaur',
-});
-```
-
----
-
-### `unsafe_readResult()`
-
-|                      | Description                                                          |
-| -------------------- | -------------------------------------------------------------------- |
-| `_document` argument | A GraphQL document, created using [`graphql()`](#graphql).           |
-| `data` argument      | The result data of the GraphQL document with optional fragment refs. |
-| returns              | The masked result data of the document.                              |
-
-> [!CAUTION]
-> Unlike, [`maskFragments()`](#maskfragments), this utility is unsafe, and
-> should only be used when you know that data matches the expected shape
-> of a GraphQL query you created.
->
-> While useful, this utility is only a slightly safer alternative to `as any`
-> and doesn’t type check the result shape against the masked fragments in your
-> document.
->
-> You shouldn’t have to use it in your regular app code.
-
-When [`graphql()`](#graphql) is used to compose fragments into a document,
-the resulting type will by default be masked, [unless the `@_unmask`
-directive is used.](../guides/fragment-colocation#fragment-masking)
-
-This means that when we’re writing tests and are creating “fake data”,
-for instance for a query, that we cannot convert this data to the query’s
-result type, if it contains masked fragment refs.
-
-To address this, the `unsafe_readResult` utility accepts the document and
-converts a query’s data to masked data.
-
-#### Example
-
-```ts twoslash
-import './graphql/graphql-env.d.ts';
-// ---cut-before---
-import { graphql, unsafe_readResult } from 'gql.tada';
-
-const pokemonItemFragment = graphql(`
-  fragment PokemonItem on Pokemon {
-    id
-    name
-  }
-`);
-
-const query = graphql(
-  `
-    query {
-      pokemon(id: "001") {
-        ...PokemonItem
-      }
-    }
-  `,
-  [pokemonItemFragment]
-);
-
-// @warn: data will be cast (unsafely!) to the result type
-
-const data = unsafe_readResult(query, {
-  pokemon: { id: '001', name: 'Bulbasaur' },
-});
-```
-
----
-
-### `readResult()`
-
-|                      | Description                                                         |
-| -------------------- | ------------------------------------------------------------------ |
-| `document` argument  | A GraphQL document, created using [`graphql()`](#graphql).         |
-| `data` argument      | The result data of the document, with fragment data inlined.       |
-| `fragments` argument | A list of every fragment used in the document, transitively.       |
-| returns              | The result data, typed as the document’s [result type](#resultof). |
-
-> [!NOTE]
-> `readResult()` is exported from `gql.tada/testing`, and is meant to be used
-> in tests, stories, fixtures, or cache updaters — not in your regular app code.
-
-When [`graphql()`](#graphql) composes fragments into a document, the result type
-only contains opaque references to those fragments, rather than the fragments’
-fields. This makes it hard to assemble a full result as “fake data”.
-
-Unlike [`unsafe_readResult()`](#unsafe_readresult), which discards all fragment
-references and doesn’t type check the data nested inside them, `readResult()` is
-type-safe. You pass it the fragments used in the document, and it recursively
-resolves their references, so the data you write is fully type checked — including
-data for nested fragments and fragments that themselves spread other fragments.
-
-Pass every fragment you’d like to inline — including fragments spread by other
-fragments — to the `fragments` argument. Any fragment you leave out stays masked
-in the expected data, merged into its surrounding object as a fragment reference.
-This keeps the result’s shape intact and makes it easy to spot which fragments
-are still missing, and lets you fill them with [`maskFragments()`](#maskfragments)
-instead.
-
-- [For masking a single level of fragment data, see `maskFragments()`.](#maskfragments)
-- [For the unsafe variant that performs no checks, see `unsafe_readResult()`.](#unsafe_readresult)
-
-#### Example
-
-```ts twoslash
-import './graphql/graphql-env.d.ts';
-// ---cut-before---
-import { graphql } from 'gql.tada';
-import { readResult } from 'gql.tada/testing';
-
-const pokemonNameFragment = graphql(`
-  fragment PokemonName on Pokemon {
-    name
-  }
-`);
-
-const pokemonItemFragment = graphql(
-  `
-    fragment PokemonItem on Pokemon {
-      id
-      ...PokemonName
-    }
-  `,
-  [pokemonNameFragment]
-);
-
-const query = graphql(
-  `
-    query {
-      pokemon(id: "001") {
-        ...PokemonItem
-      }
-    }
-  `,
-  [pokemonItemFragment]
-);
-
-// @log: data is fully type-checked, including the nested fragment fields
-
-const data = readResult(
-  query,
-  { pokemon: { id: '001', name: 'Bulbasaur' } },
-  [pokemonItemFragment, pokemonNameFragment]
-);
-```
-
----
-
 ### `initGraphQLTada()`
 
 |                 | Description                                                           |
@@ -720,3 +526,196 @@ enums, the `enumValues` defined by the schema will be used.
 
 The `disableMasking` flag may be set to `true` instead of using `@_unmask` on individual fragments
 and allows fragment masking to be disabled globally.
+
+## Testing Functions
+
+These functions are all exported from `gql.tada/testing`, and are meant for tests,
+stories, fixtures, or cache updaters, rather than your regular app code.
+
+### `maskFragments()`
+
+|                       | Description                                                                      |
+| --------------------- | -------------------------------------------------------------------------------- |
+| `_fragments` argument | A list of GraphQL documents of fragments, created using [`graphql()`](#graphql). |
+| `data` argument       | The combined result data of the fragments, which can be wrapped in arrays.       |
+| returns               | The masked data of the fragments.                                                |
+
+> [!NOTE]
+> While useful, `maskFragments()` is mostly meant to be used in tests or as
+> an escape hatch to convert data to masked fragments.
+>
+> You shouldn’t have to use it in your regular component code.
+
+When [`graphql()`](#graphql) is used to compose fragments into another fragment or
+operation, the resulting type will by default be masked, [unless the `@_unmask`
+directive is used.](../guides/fragment-colocation#fragment-masking)
+
+This means that when we’re writing tests or are creating “fake data” without
+inferring types from a full document, the types in TypeScript may not match,
+since our testing data will not be masked and will be equal to [the result type](#resultof)
+of the fragments.
+
+To address this, the `maskFragments` utility takes a list of fragments and masks data (or an array of data)
+to match the masked fragment types of the fragments.
+
+- [Read more about fragment masking on the “Writing GraphQL” page.](../get-started/writing-graphql#fragment-masking)
+- [For the reverse operation, see `readFragment()`.](#readfragment)
+
+#### Example
+
+```ts twoslash
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
+import { graphql, maskFragments } from 'gql.tada';
+
+const pokemonItemFragment = graphql(`
+  fragment PokemonItem on Pokemon {
+    id
+    name
+  }
+`);
+
+const data = maskFragments([pokemonItemFragment], {
+  id: '001',
+  name: 'Bulbasaur',
+});
+```
+
+---
+
+### `unsafe_readResult()`
+
+|                      | Description                                                          |
+| -------------------- | -------------------------------------------------------------------- |
+| `_document` argument | A GraphQL document, created using [`graphql()`](#graphql).           |
+| `data` argument      | The result data of the GraphQL document with optional fragment refs. |
+| returns              | The masked result data of the document.                              |
+
+> [!CAUTION]
+> Unlike, [`maskFragments()`](#maskfragments), this utility is unsafe, and
+> should only be used when you know that data matches the expected shape
+> of a GraphQL query you created.
+>
+> While useful, this utility is only a slightly safer alternative to `as any`
+> and doesn’t type check the result shape against the masked fragments in your
+> document.
+>
+> You shouldn’t have to use it in your regular app code.
+
+When [`graphql()`](#graphql) is used to compose fragments into a document,
+the resulting type will by default be masked, [unless the `@_unmask`
+directive is used.](../guides/fragment-colocation#fragment-masking)
+
+This means that when we’re writing tests and are creating “fake data”,
+for instance for a query, that we cannot convert this data to the query’s
+result type, if it contains masked fragment refs.
+
+To address this, the `unsafe_readResult` utility accepts the document and
+converts a query’s data to masked data.
+
+#### Example
+
+```ts twoslash
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
+import { graphql, unsafe_readResult } from 'gql.tada';
+
+const pokemonItemFragment = graphql(`
+  fragment PokemonItem on Pokemon {
+    id
+    name
+  }
+`);
+
+const query = graphql(
+  `
+    query {
+      pokemon(id: "001") {
+        ...PokemonItem
+      }
+    }
+  `,
+  [pokemonItemFragment]
+);
+
+// @warn: data will be cast (unsafely!) to the result type
+
+const data = unsafe_readResult(query, {
+  pokemon: { id: '001', name: 'Bulbasaur' },
+});
+```
+
+---
+
+### `readResult()`
+
+|                      | Description                                                         |
+| -------------------- | ------------------------------------------------------------------ |
+| `document` argument  | A GraphQL document, created using [`graphql()`](#graphql).         |
+| `data` argument      | The result data of the document, with fragment data inlined.       |
+| `fragments` argument | A list of every fragment used in the document, transitively.       |
+| returns              | The result data, typed as the document’s [result type](#resultof). |
+
+When [`graphql()`](#graphql) composes fragments into a document, the result type
+only contains opaque references to those fragments, rather than the fragments’
+fields. This makes it hard to assemble a full result as “fake data”.
+
+Unlike [`unsafe_readResult()`](#unsafe_readresult), which discards all fragment
+references and doesn’t type check the data nested inside them, `readResult()` is
+type-safe. You pass it the fragments used in the document, and it recursively
+resolves their references, so the data you write is fully type checked — including
+data for nested fragments and fragments that themselves spread other fragments.
+
+Pass every fragment you’d like to inline — including fragments spread by other
+fragments — to the `fragments` argument. Any fragment you leave out stays masked
+in the expected data, merged into its surrounding object as a fragment reference.
+This keeps the result’s shape intact and makes it easy to spot which fragments
+are still missing, and lets you fill them with [`maskFragments()`](#maskfragments)
+instead.
+
+- [For masking a single level of fragment data, see `maskFragments()`.](#maskfragments)
+- [For the unsafe variant that performs no checks, see `unsafe_readResult()`.](#unsafe_readresult)
+
+#### Example
+
+```ts twoslash
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
+import { graphql } from 'gql.tada';
+import { readResult } from 'gql.tada/testing';
+
+const pokemonNameFragment = graphql(`
+  fragment PokemonName on Pokemon {
+    name
+  }
+`);
+
+const pokemonItemFragment = graphql(
+  `
+    fragment PokemonItem on Pokemon {
+      id
+      ...PokemonName
+    }
+  `,
+  [pokemonNameFragment]
+);
+
+const query = graphql(
+  `
+    query {
+      pokemon(id: "001") {
+        ...PokemonItem
+      }
+    }
+  `,
+  [pokemonItemFragment]
+);
+
+// @log: data is fully type-checked, including the nested fragment fields
+
+const data = readResult(
+  query,
+  { pokemon: { id: '001', name: 'Bulbasaur' } },
+  [pokemonItemFragment, pokemonNameFragment]
+);
+```
