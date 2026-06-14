@@ -1,10 +1,15 @@
 import * as path from 'node:path';
 
-import { loadRef, minifyIntrospection, outputIntrospectionFile } from '@gql.tada/internal';
+import {
+  loadRef,
+  minifyIntrospection,
+  outputIntrospectionFile,
+  extractIntrospectionHeader,
+} from '@gql.tada/internal';
 
 import type { TTY, ComposeInput } from '../../term';
 import type { ProjectContext, WriteTarget } from '../shared';
-import { loadProjects, writeOutput } from '../shared';
+import { loadProjects, writeOutput, readOutput } from '../shared';
 import * as logger from './logger';
 
 export interface OutputOptions {
@@ -89,6 +94,7 @@ async function* runProject(
       );
     }
 
+    const existing = await readOutput(destination);
     let contents: string;
     try {
       contents = outputIntrospectionFile(minifyIntrospection(schema.introspection), {
@@ -99,6 +105,7 @@ async function* runProject(
               ? '.ts'
               : '.d.ts',
         shouldPreprocess: !opts.disablePreprocessing,
+        preamble: existing ? extractIntrospectionHeader(existing) || undefined : undefined,
       });
     } catch (error) {
       throw logger.externalError('Could not generate introspection output', error);
@@ -139,11 +146,14 @@ async function* runProject(
         );
       }
 
+      const destination = path.resolve(projectPath, schema.tadaOutputLocation);
+      const existing = await readOutput(destination);
       let contents: string;
       try {
         contents = outputIntrospectionFile(minifyIntrospection(schema.introspection), {
           fileType: schema.tadaOutputLocation,
           shouldPreprocess: !opts.disablePreprocessing,
+          preamble: existing ? extractIntrospectionHeader(existing) || undefined : undefined,
         });
       } catch (error) {
         throw logger.externalError(
@@ -153,7 +163,7 @@ async function* runProject(
       }
 
       try {
-        await writeOutput(path.resolve(projectPath, schema.tadaOutputLocation), contents);
+        await writeOutput(destination, contents);
       } catch (error) {
         throw logger.externalError(
           `Something went wrong while writing the '${schemaName}' schema's output`,
