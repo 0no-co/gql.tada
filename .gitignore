@@ -16,3 +16,4 @@ package-lock.json
 /cli
 /internal
 /ts-plugin
+/testing
