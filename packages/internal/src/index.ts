@@ -7,4 +7,5 @@ export {
   minifyIntrospection,
   preprocessIntrospection,
   outputIntrospectionFile,
+  extractIntrospectionHeader,
 } from './introspection';

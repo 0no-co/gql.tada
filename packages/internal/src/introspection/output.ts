@@ -10,17 +10,52 @@ const TYPES_VAR = 'introspection_types';
 const stringifyJson = (input: unknown | string): string =>
   typeof input === 'string' ? input : JSON.stringify(input, null, 2);
 
+const ANNOTATION_SIGNATURE = 'An IntrospectionQuery representation';
+
+/** Extracts the leading comment header of a previously generated file, so it
+ * can be preserved across regenerations. Returns `null` when no custom header
+ * is present (or when only the generated annotation remains). */
+export function extractIntrospectionHeader(contents: string): string | null {
+  const lines = contents.split('\n');
+  const header: string[] = [];
+  let inBlock = false;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (inBlock) {
+      header.push(line);
+      if (trimmed.includes('*/')) inBlock = false;
+    } else if (trimmed === '') {
+      break;
+    } else if (trimmed.startsWith('//')) {
+      header.push(line);
+    } else if (trimmed.startsWith('/*')) {
+      header.push(line);
+      if (!trimmed.includes('*/')) inBlock = true;
+    } else {
+      break;
+    }
+  }
+  if (!header.length || inBlock) return null;
+  const result = header.join('\n');
+  if (result.includes(ANNOTATION_SIGNATURE)) return null;
+  return result + '\n';
+}
+
 interface OutputIntrospectionFileOptions {
   fileType: '.ts' | '.d.ts' | string;
   shouldPreprocess?: boolean;
+  /** A custom leading comment header used in place of the default preamble,
+   * typically extracted from a prior file via `extractIntrospectionHeader`. */
+  preamble?: string;
 }
 
 export function outputIntrospectionFile(
   introspection: IntrospectionQuery | IntrospectionResult,
   opts: OutputIntrospectionFileOptions
 ): string {
+  const preamble = opts.preamble || PREAMBLE_IGNORE;
   if (/\.d\.ts$/.test(opts.fileType)) {
-    const out = [PREAMBLE_IGNORE];
+    const out = [preamble];
     if (typeof introspection !== 'string' && opts.shouldPreprocess) {
       // NOTE: When types aren't exported separately, composite tsconfigs
       // will output a serialization error in diagnostics
@@ -53,7 +88,7 @@ export function outputIntrospectionFile(
   } else if (/\.ts$/.test(opts.fileType)) {
     const json = stringifyJson(introspection);
     return [
-      PREAMBLE_IGNORE,
+      preamble,
       ANNOTATION_TS,
       `const introspection = ${json} as const;\n`,
       'export { introspection };',
