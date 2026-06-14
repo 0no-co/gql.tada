@@ -35,6 +35,16 @@ const touchFile = async (file: PathLike): Promise<void> => {
 
 export type WriteTarget = PathLike | WriteStream;
 
+/** Reads the current contents of a file target, or `undefined` for streams or missing files. */
+export const readOutput = async (target: WriteTarget): Promise<string | undefined> => {
+  if (target && typeof target === 'object' && 'writable' in target) return undefined;
+  try {
+    return await fs.readFile(target, 'utf8');
+  } catch {
+    return undefined;
+  }
+};
+
 /** Writes a file to a swapfile then moves it into place to prevent excess change events. */
 export const writeOutput = async (target: WriteTarget, contents: string): Promise<void> => {
   if (target && typeof target === 'object' && 'writable' in target) {

@@ -1,8 +1,10 @@
 import * as path from 'node:path';
 
+import { extractIntrospectionHeader } from '@gql.tada/internal';
+
 import type { TTY, ComposeInput } from '../../term';
 import type { ProjectContext, WriteTarget } from '../shared';
-import { loadProjects, writeOutput } from '../shared';
+import { loadProjects, writeOutput, readOutput } from '../shared';
 import type { TurboDocument, GraphQLSourceFile, TurboPath } from './types';
 import * as logger from './logger';
 
@@ -169,7 +171,8 @@ async function* runProject(
     }
 
     try {
-      const contents = createCacheContents(documents, graphqlSources, destination!);
+      const existing = await readOutput(destination!);
+      const contents = createCacheContents(documents, graphqlSources, destination!, existing);
       await writeOutput(destination!, contents);
     } catch (error) {
       throw logger.externalError('Something went wrong while writing the type cache file', error);
@@ -213,7 +216,8 @@ async function* runProject(
           }
         }
         const destination = path.resolve(projectPath, tadaTurboLocation);
-        const contents = createCacheContents(cache, graphqlSources, destination);
+        const existing = await readOutput(destination);
+        const contents = createCacheContents(cache, graphqlSources, destination, existing);
         await writeOutput(destination, contents);
       } catch (error) {
         throw logger.externalError(
@@ -237,8 +241,10 @@ async function* runProject(
 function createCacheContents(
   cache: TurboDocument[],
   graphqlSources: GraphQLSourceFile[],
-  turboDestination: WriteTarget
+  turboDestination: WriteTarget,
+  existing?: string
 ): string {
+  const preamble = (existing && extractIntrospectionHeader(existing)) || PREAMBLE_IGNORE;
   const documentsByKey = new Map<string, TurboDocument>();
   for (const document of cache) documentsByKey.set(document.argumentKey, document);
 
@@ -278,7 +284,7 @@ function createCacheContents(
   }
 
   return (
-    PREAMBLE_IGNORE +
+    preamble +
     imports +
     '\n' +
     "declare module 'gql.tada' {\n" +
