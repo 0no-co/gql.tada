@@ -222,6 +222,11 @@ export default defineConfig({
     ]
   },
   vite: {
-    plugins: [llmstxt()],
+    plugins: [
+      llmstxt({
+        ignoreFiles: ['CHANGELOG.md', 'devlog/*'],
+        customLLMsTxtTemplate: ['# {title}', '', '{description}', '', '## Table of Contents', '', '{toc}'].join('\n'),
+      }) as any,
+    ],
   },
 });
