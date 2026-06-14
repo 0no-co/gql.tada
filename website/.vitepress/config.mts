@@ -1,7 +1,14 @@
 import { defineConfig } from 'vitepress';
-import { defaultTwoslashOptions } from 'shikiji-twoslash';
-import { transformerTwoslash } from 'vitepress-plugin-twoslash';
+import { defaultTwoslashOptions } from '@shikijs/twoslash';
+import { transformerTwoslash } from '@shikijs/vitepress-twoslash';
+import llmstxt from 'vitepress-plugin-llms';
 import type { JsxEmit } from 'typescript';
+
+// Bundles the `graphql` grammar together with the `javascript`, `typescript`,
+// `jsx`, and `tsx` grammars that the custom injection grammar embeds. Shiki v2
+// no longer auto-resolves a custom grammar's `embeddedLangs`, so these must be
+// registered explicitly ahead of it.
+import bundledGraphqlLanguages from '@shikijs/langs/graphql';
 
 import { graphqlLanguage } from './graphql-textmate.mts';
 
@@ -40,12 +47,21 @@ export default defineConfig({
   cleanUrls: true,
   lastUpdated: true,
 
+  head: [
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+    ['link', { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' }],
+    ['link', { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' }],
+    ['link', { rel: 'icon', href: '/favicon.ico', sizes: '48x48' }],
+    ['link', { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' }],
+  ],
+
   sitemap: {
     hostname: 'https://gql-tada.0no.co'
   },
 
   markdown: {
     languages: [
+      ...bundledGraphqlLanguages,
       graphqlLanguage,
     ],
 
@@ -57,7 +73,11 @@ export default defineConfig({
       transformerTwoslash({
         twoslashOptions: {
           ...defaultTwoslashOptions(),
-          vfsRoot: `${import.meta.dirname}/../twoslash/`,
+          // Twoslash resolves relative imports in examples (e.g.
+          // `./graphql/graphql-env.d.ts`) against `vfsRoot`, which must be the
+          // `website/` directory. (Older twoslash resolved these against cwd and
+          // ignored `vfsRoot`, so this previously pointed at a non-existent dir.)
+          vfsRoot: `${import.meta.dirname}/../`,
           shouldGetHoverInfo: (() => {
             let lastIdentifier: string | undefined;
             return (identifier, _start, _filename) => {
@@ -200,5 +220,13 @@ export default defineConfig({
       { icon: 'github', link: 'https://github.com/0no-co/gql.tada' },
       { icon: 'discord', link: 'https://urql.dev/discord' },
     ]
-  }
+  },
+  vite: {
+    plugins: [
+      llmstxt({
+        ignoreFiles: ['CHANGELOG.md', 'devlog/*'],
+        customLLMsTxtTemplate: ['# {title}', '', '{description}', '', '## Table of Contents', '', '{toc}'].join('\n'),
+      }) as any,
+    ],
+  },
 });

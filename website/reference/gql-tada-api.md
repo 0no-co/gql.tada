@@ -326,7 +326,7 @@ const pokemonItemFragment = graphql(`
 `);
 
 const getPokemonItem = (data: FragmentOf<typeof pokemonItemFragment> | null) => {
-  // @annotate: Unmasks the fragment and casts to the result type:
+// @annotate: Unmasks the fragment and casts to the result type:
 
   const pokemon = readFragment(pokemonItemFragment, data);
 };

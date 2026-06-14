@@ -2,9 +2,9 @@
 import { h } from 'vue';
 import type { Theme } from 'vitepress';
 import DefaultTheme from 'vitepress/theme';
-import TwoslashFloatingVue from 'vitepress-plugin-twoslash/client';
+import TwoslashFloatingVue from '@shikijs/vitepress-twoslash/client';
 
-import 'vitepress-plugin-twoslash/style.css';
+import '@shikijs/vitepress-twoslash/style.css';
 import './style.css'
 
 export default {
