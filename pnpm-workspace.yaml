@@ -19,4 +19,4 @@ overrides:
   '@gql.tada/internal': workspace:*
   astro-expressive-code: ^0.31.0
   typescript: ^5.9.3
-  '@0no-co/graphqlsp': ^1.17.1
+  '@0no-co/graphqlsp': ^1.17.2
