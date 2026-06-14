@@ -1,5 +1,19 @@
 # @gql.tada/cli-utils
 
+## 1.9.0
+
+### Minor Changes
+
+- Implement experimental `scan` command to either output an analysis to the terminal (or a JSON file) or a graph of relationships between TypeScript and GraphQL usage
+  Submitted by [@kitten](https://github.com/kitten) (See [#554](https://github.com/0no-co/gql.tada/pull/554))
+
+### Patch Changes
+
+- Preserve preamble headers in turbo and output introspection file
+  Submitted by [@kitten](https://github.com/kitten) (See [#556](https://github.com/0no-co/gql.tada/pull/556))
+- Updated dependencies (See [#556](https://github.com/0no-co/gql.tada/pull/556))
+  - @gql.tada/internal@1.2.0
+
 ## 1.8.2
 
 ### Patch Changes

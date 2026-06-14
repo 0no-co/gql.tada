@@ -1,5 +1,12 @@
 # @gql.tada/internal
 
+## 1.2.0
+
+### Minor Changes
+
+- Add `extractIntrospectionHeader` and accept `preamble` option in `outputIntrospectionFile`
+  Submitted by [@kitten](https://github.com/kitten) (See [#556](https://github.com/0no-co/gql.tada/pull/556))
+
 ## 1.1.0
 
 ### Minor Changes
