@@ -465,6 +465,85 @@ const data = unsafe_readResult(query, {
 
 ---
 
+### `readResult()`
+
+|                      | Description                                                         |
+| -------------------- | ------------------------------------------------------------------ |
+| `document` argument  | A GraphQL document, created using [`graphql()`](#graphql).         |
+| `data` argument      | The result data of the document, with fragment data inlined.       |
+| `fragments` argument | A list of every fragment used in the document, transitively.       |
+| returns              | The result data, typed as the document’s [result type](#resultof). |
+
+> [!NOTE]
+> `readResult()` is exported from `gql.tada/testing`, and is meant to be used
+> in tests, stories, fixtures, or cache updaters — not in your regular app code.
+
+When [`graphql()`](#graphql) composes fragments into a document, the result type
+only contains opaque references to those fragments, rather than the fragments’
+fields. This makes it hard to assemble a full result as “fake data”.
+
+Unlike [`unsafe_readResult()`](#unsafe_readresult), which discards all fragment
+references and doesn’t type check the data nested inside them, `readResult()` is
+type-safe. You pass it the fragments used in the document, and it recursively
+resolves their references, so the data you write is fully type checked — including
+data for nested fragments and fragments that themselves spread other fragments.
+
+Pass every fragment you’d like to inline — including fragments spread by other
+fragments — to the `fragments` argument. Any fragment you leave out stays masked
+in the expected data, merged into its surrounding object as a fragment reference.
+This keeps the result’s shape intact and makes it easy to spot which fragments
+are still missing, and lets you fill them with [`maskFragments()`](#maskfragments)
+instead.
+
+- [For masking a single level of fragment data, see `maskFragments()`.](#maskfragments)
+- [For the unsafe variant that performs no checks, see `unsafe_readResult()`.](#unsafe_readresult)
+
+#### Example
+
+```ts twoslash
+import './graphql/graphql-env.d.ts';
+// ---cut-before---
+import { graphql } from 'gql.tada';
+import { readResult } from 'gql.tada/testing';
+
+const pokemonNameFragment = graphql(`
+  fragment PokemonName on Pokemon {
+    name
+  }
+`);
+
+const pokemonItemFragment = graphql(
+  `
+    fragment PokemonItem on Pokemon {
+      id
+      ...PokemonName
+    }
+  `,
+  [pokemonNameFragment]
+);
+
+const query = graphql(
+  `
+    query {
+      pokemon(id: "001") {
+        ...PokemonItem
+      }
+    }
+  `,
+  [pokemonItemFragment]
+);
+
+// @log: data is fully type-checked, including the nested fragment fields
+
+const data = readResult(
+  query,
+  { pokemon: { id: '001', name: 'Bulbasaur' } },
+  [pokemonItemFragment, pokemonNameFragment]
+);
+```
+
+---
+
 ### `initGraphQLTada()`
 
 |                 | Description                                                           |
