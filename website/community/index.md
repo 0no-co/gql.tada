@@ -13,11 +13,11 @@ next: false
 <div class="community-hero">
   <div class="community-hero__copy">
     <p class="community-eyebrow">Community showcase</p>
-    <h2>Learn gql.tada from the people putting it to work.</h2>
+    <h2>Learn gql.tada from people putting it to work.</h2>
     <p>
-      A collection of creator-led videos that explain why automatic GraphQL typing matters,
-      where <code>gql.tada</code> fits in TypeScript projects, and how the workflow feels in
-      real applications.
+      A collection of creator content and posts that explain why automatic GraphQL typing
+      matters, where <code>gql.tada</code> fits in TypeScript projects, and how the workflow
+      feels.
     </p>
   </div>
   <a
@@ -106,7 +106,7 @@ next: false
   </a>
 </div>
 
-## Written Guides & Case Studies
+## Blog Posts
 
 <div class="community-resource-grid">
   <article class="community-resource-card">
