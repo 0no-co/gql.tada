@@ -106,6 +106,46 @@ next: false
   </a>
 </div>
 
+## Written Guides & Case Studies
+
+<div class="community-resource-grid">
+  <article class="community-resource-card">
+    <span>Shopify Remix</span>
+    <a href="https://heliumdev.com/blog/integrate-gql-tada-shopify-app">Shopify Admin GraphQL API + gql.tada</a>
+    <p>A practical guide to using gql.tada and urql for type-safe Shopify Admin API calls.</p>
+  </article>
+
+  <article class="community-resource-card">
+    <span>Versioned APIs</span>
+    <a href="https://chenghsuan.me/posts/type-safe-versioned-graphql-query">Type-safe Versioned GraphQL made easy - gql.tada and urql</a>
+    <p>A migration story for locking Shopify API versions with multiple schemas and shared typed GraphQL operations.</p>
+  </article>
+
+  <article class="community-resource-card">
+    <span>Migration</span>
+    <a href="https://techblog.gaudiy.com/entry/2024/08/15/113040">gql.tada に graphql-code-generator から移行した話</a>
+    <p>Gaudiy's production migration notes from GraphQL Code Generator to gql.tada. Japanese.</p>
+  </article>
+
+  <article class="community-resource-card">
+    <span>Apollo Client</span>
+    <a href="https://www.ursolutions.no/en/aktuelt/plug-and-play-graphql-typesikkerhet-ved-bruk-av-gql-tada">Plug-and-play GraphQL type safety using gql.tada</a>
+    <p>A field report on introducing gql.tada gradually in an existing React and Apollo Client application.</p>
+  </article>
+
+  <article class="community-resource-card">
+    <span>Developer Experience</span>
+    <a href="https://dev.to/czystyl/gqltada-makes-a-graphql-great-again-15m2">gql.tada makes GraphQL great again</a>
+    <p>A hands-on overview of autocomplete, fragment masking, and unused-field feedback while building with gql.tada.</p>
+  </article>
+
+  <article class="community-resource-card">
+    <span>React Frontends</span>
+    <a href="https://mingyang-li.medium.com/how-to-build-bullet-proof-graphql-frontends-in-react-in-2025-a3cb0e384c55">How to Build Bullet-Proof GraphQL Frontends in React in 2025</a>
+    <p>A broader GraphQL frontend guide that covers where gql.tada fits into a modern React stack.</p>
+  </article>
+</div>
+
 <div class="community-submit">
   <div>
     <h2>Seen something helpful?</h2>
