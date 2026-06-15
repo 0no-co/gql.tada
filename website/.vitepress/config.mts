@@ -135,10 +135,24 @@ export default defineConfig({
         text: 'Devlog',
         items: devlogItems,
       },
+      { text: 'Community', link: '/community/' },
       { text: 'Documentation', link: '/get-started/' },
     ],
 
     sidebar: {
+      '/community': [
+        {
+          text: 'Community',
+          collapsed: false,
+          items: [
+            {
+              text: 'Creator Videos',
+              link: '/community/',
+            },
+          ],
+        },
+      ],
+
       '/devlog': [
         {
           text: 'Devlog',
@@ -222,6 +236,12 @@ export default defineConfig({
     ]
   },
   vite: {
+    server: {
+      allowedHosts: true,
+      fs: {
+        strict: false,
+      },
+    },
     plugins: [
       llmstxt({
         ignoreFiles: ['CHANGELOG.md', 'devlog/*'],
