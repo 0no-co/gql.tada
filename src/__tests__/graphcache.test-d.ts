@@ -1,6 +1,7 @@
 import { describe, it, expectTypeOf } from 'vitest';
 
 import type { simpleIntrospection } from './fixtures/simpleIntrospection';
+import type { simpleSchema } from './fixtures/simpleSchema';
 import { initGraphQLTada } from '../api';
 import type {
   GraphCacheConfig,
@@ -11,6 +12,7 @@ import type {
 } from '../addons/graphcache';
 
 const graphql = initGraphQLTada<{ introspection: simpleIntrospection }>();
+const preprocessedGraphql = initGraphQLTada<{ introspection: simpleSchema }>();
 
 type Config = GraphCacheConfig<typeof graphql>;
 
@@ -123,6 +125,16 @@ describe('graphcache addon', () => {
       GraphCacheFieldValue<typeof graphql, 'Todo', 'author'>
     >().toEqualTypeOf<GraphCacheObject<typeof graphql, 'Author'> | null>();
     expectTypeOf<GraphCacheFieldArgsOf<typeof graphql, 'Mutation', 'updateTodo'>>().toEqualTypeOf<{
+      id: string;
+      input: {
+        title: string;
+        description: string;
+        complete?: boolean | null | undefined;
+      };
+    }>();
+    expectTypeOf<
+      GraphCacheFieldArgsOf<typeof preprocessedGraphql, 'Mutation', 'updateTodo'>
+    >().toEqualTypeOf<{
       id: string;
       input: {
         title: string;
