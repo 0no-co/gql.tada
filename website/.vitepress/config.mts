@@ -135,10 +135,24 @@ export default defineConfig({
         text: 'Devlog',
         items: devlogItems,
       },
+      { text: 'Community', link: '/community/' },
       { text: 'Documentation', link: '/get-started/' },
     ],
 
     sidebar: {
+      '/community': [
+        {
+          text: 'Community',
+          collapsed: false,
+          items: [
+            {
+              text: 'Creator Videos',
+              link: '/community/',
+            },
+          ],
+        },
+      ],
+
       '/devlog': [
         {
           text: 'Devlog',
@@ -222,9 +236,20 @@ export default defineConfig({
     ]
   },
   vite: {
+    server: {
+      allowedHosts: true,
+      fs: {
+        strict: false,
+      },
+    },
     plugins: [
       llmstxt({
-        ignoreFiles: ['CHANGELOG.md', 'devlog/*'],
+        ignoreFiles: ['CHANGELOG.md', 'community/*', 'devlog/*'],
+        sidebar: (sidebar) => {
+          if (!sidebar || Array.isArray(sidebar)) return sidebar;
+          const { ['/community']: _community, ...rest } = sidebar;
+          return rest;
+        },
         customLLMsTxtTemplate: ['# {title}', '', '{description}', '', '## Table of Contents', '', '{toc}'].join('\n'),
       }) as any,
     ],
