@@ -207,6 +207,10 @@ export default defineConfig({
               text: 'Multiple Schemas',
               link: '/guides/multiple-schemas',
             },
+            {
+              text: 'Graphcache',
+              link: '/guides/graphcache',
+            },
           ],
         },
         {

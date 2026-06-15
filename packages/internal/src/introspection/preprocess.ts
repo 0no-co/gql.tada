@@ -51,7 +51,8 @@ const printFields = (fields: readonly IntrospectionField[]) => {
   for (const field of fields) {
     const name = printName(field.name);
     const type = printTypeRef(field.type);
-    output += `${printName(field.name)}: { name: ${name}; type: ${type} }; `;
+    const args = field.args && field.args.length ? ` args: ${printInputFields(field.args)};` : '';
+    output += `${printName(field.name)}: { name: ${name}; type: ${type};${args} }; `;
   }
   return `{ ${output}}`;
 };

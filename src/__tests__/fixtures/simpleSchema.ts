@@ -188,6 +188,21 @@ export type simpleSchema =
               name: 'Todo';
               ofType: null;
             };
+            args: [
+              {
+                name: 'id';
+                type: {
+                  kind: 'NON_NULL';
+                  name: never;
+                  ofType: {
+                    kind: 'SCALAR';
+                    name: 'ID';
+                    ofType: null;
+                  };
+                };
+                defaultValue: null;
+              },
+            ];
           };
           updateTodo: {
             name: 'updateTodo';
@@ -196,6 +211,34 @@ export type simpleSchema =
               name: 'Boolean';
               ofType: null;
             };
+            args: [
+              {
+                name: 'id';
+                type: {
+                  kind: 'NON_NULL';
+                  name: never;
+                  ofType: {
+                    kind: 'SCALAR';
+                    name: 'ID';
+                    ofType: null;
+                  };
+                };
+                defaultValue: null;
+              },
+              {
+                name: 'input';
+                type: {
+                  kind: 'NON_NULL';
+                  name: never;
+                  ofType: {
+                    kind: 'INPUT_OBJECT';
+                    name: 'TodoPayload';
+                    ofType: null;
+                  };
+                };
+                defaultValue: null;
+              },
+            ];
           };
         };
       };

@@ -12,6 +12,7 @@
     "jsx": "react-jsx",
     "target": "es2016",
     "moduleResolution": "bundler",
+    "preserveSymlinks": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
