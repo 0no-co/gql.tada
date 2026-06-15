@@ -244,7 +244,12 @@ export default defineConfig({
     },
     plugins: [
       llmstxt({
-        ignoreFiles: ['CHANGELOG.md', 'devlog/*'],
+        ignoreFiles: ['CHANGELOG.md', 'community/*', 'devlog/*'],
+        sidebar: (sidebar) => {
+          if (!sidebar || Array.isArray(sidebar)) return sidebar;
+          const { ['/community']: _community, ...rest } = sidebar;
+          return rest;
+        },
         customLLMsTxtTemplate: ['# {title}', '', '{description}', '', '## Table of Contents', '', '{toc}'].join('\n'),
       }) as any,
     ],
