@@ -42,6 +42,8 @@ async function* _runDiagnostics(
       write: new Map<string, string>(),
     },
     outputLocations: new Map<string, number>(),
+    sourceLocations: new Map<string | null, string>(),
+    turboLocations: new Map<string | null, string>(),
     checkStale() {},
   };
 
