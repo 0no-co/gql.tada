@@ -205,9 +205,24 @@ const LOCATION_PROPS = [
   'tadaPersistedLocation',
 ] as const;
 
+// Generated purely from the schema, so projects emitting it to the same path
+// with the same schema produce identical contents. Turbo and persisted locations
+// derive from each project's own documents instead, so a shared path clobbers.
+const SCHEMA_DERIVED_PROPS = new Set<(typeof LOCATION_PROPS)[number]>(['tadaOutputLocation']);
+
+const schemaIdentity = (projectPath: string, origin: SchemaOrigin | undefined): string => {
+  if (!origin) return '';
+  if (typeof origin === 'object')
+    return `url:${origin.url}\0${JSON.stringify(origin.headers || null)}`;
+  if (getURLConfig(origin)) return `url:${origin}`;
+  let resolved = path.resolve(projectPath, origin);
+  if (process.platform === 'win32') resolved = resolved.toLowerCase();
+  return `file:${resolved}`;
+};
+
 export const validateUniqueOutputLocations = (projects: readonly ProjectConfig[]): void => {
   for (const prop of LOCATION_PROPS) {
-    const seen = new Map<string, string>();
+    const seen = new Map<string, { label: string; schema: string }>();
     for (const project of projects) {
       const label = project.label || project.projectPath;
       const schemas = 'schemas' in project.config ? project.config.schemas : [project.config];
@@ -216,13 +231,19 @@ export const validateUniqueOutputLocations = (projects: readonly ProjectConfig[]
         if (!location) continue;
         let resolved = path.resolve(project.projectPath, location);
         if (process.platform === 'win32') resolved = resolved.toLowerCase();
+        const identity = schemaIdentity(project.projectPath, schema.schema);
         const previous = seen.get(resolved);
-        if (previous && previous !== label) {
-          throw new TadaError(
-            `Projects '${previous}' and '${label}' resolve '${prop}' to the same file: ${location}`
-          );
+        if (previous && previous.label !== label) {
+          // Identical schema-derived output is a deliberately shared file, not a conflict.
+          const isSharedOutput = SCHEMA_DERIVED_PROPS.has(prop) && previous.schema === identity;
+          if (!isSharedOutput) {
+            throw new TadaError(
+              `Projects '${previous.label}' and '${label}' resolve '${prop}' to the same file: ${location}`
+            );
+          }
+        } else if (!previous) {
+          seen.set(resolved, { label, schema: identity });
         }
-        seen.set(resolved, label);
       }
     }
   }

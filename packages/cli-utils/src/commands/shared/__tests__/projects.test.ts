@@ -157,6 +157,38 @@ describe('generate-output', () => {
     );
   });
 
+  it('writes a shared output location only once across projects', () => {
+    const sharedPlugin = {
+      name: '@0no-co/graphqlsp',
+      schema: '../../schema.graphql',
+      tadaOutputLocation: '../../shared/graphql-env.d.ts',
+    };
+    return inFixture(
+      {
+        'tsconfig.json': {
+          files: [],
+          references: [{ path: './packages/a' }, { path: './packages/b' }],
+        },
+        'packages/a/tsconfig.json': { compilerOptions: { plugins: [sharedPlugin] } },
+        'packages/b/tsconfig.json': { compilerOptions: { plugins: [sharedPlugin] } },
+        'schema.graphql': SCHEMA,
+      },
+      async (root) => {
+        const signals: unknown[] = [];
+        for await (const signal of runGenerateOutput(tty, { output: undefined, tsconfig: root })) {
+          signals.push(signal);
+        }
+
+        // A deduplicated project is skipped before emitting its project header.
+        const headerCount = (JSON.stringify(signals).match(/tsconfig\.json/g) || []).length;
+        expect(headerCount).toBe(1);
+
+        const output = await fs.readFile(path.join(root, 'shared', 'graphql-env.d.ts'), 'utf8');
+        expect(output).toContain("declare module 'gql.tada'");
+      }
+    );
+  });
+
   it('does not write terminal output when silent is set', () => {
     return inFixture(
       {

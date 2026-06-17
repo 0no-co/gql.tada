@@ -264,6 +264,67 @@ describe('loadConfigs', () => {
     );
   });
 
+  it('scopes to a targeted project that has its own plugin entry, ignoring its references', () => {
+    return inFixture(
+      {
+        'apps/app/tsconfig.app.json': {
+          compilerOptions: { plugins: [PLUGIN] },
+          include: ['src'],
+          references: [{ path: '../../libs/a' }, { path: '../../libs/b' }],
+        },
+        'libs/a/tsconfig.json': { compilerOptions: { plugins: [PLUGIN] }, include: ['src'] },
+        'libs/b/tsconfig.json': { compilerOptions: { plugins: [PLUGIN] }, include: ['src'] },
+      },
+      async (root) => {
+        const results = await loadConfigs(path.join(root, 'apps', 'app', 'tsconfig.app.json'));
+        expect(results).toHaveLength(1);
+        expect(results[0].tsconfigPath).toBe(path.join(root, 'apps', 'app', 'tsconfig.app.json'));
+      }
+    );
+  });
+
+  it('scopes to a targeted project that inherits its plugin entry through `extends`', () => {
+    return inFixture(
+      {
+        'tsconfig.base.json': { compilerOptions: { plugins: [PLUGIN] } },
+        'apps/app/tsconfig.app.json': {
+          extends: '../../tsconfig.base.json',
+          include: ['src'],
+          references: [{ path: '../../libs/a' }],
+        },
+        'libs/a/tsconfig.json': { extends: '../../tsconfig.base.json', include: ['src'] },
+      },
+      async (root) => {
+        const results = await loadConfigs(path.join(root, 'apps', 'app', 'tsconfig.app.json'));
+        expect(results).toHaveLength(1);
+        expect(results[0].tsconfigPath).toBe(path.join(root, 'apps', 'app', 'tsconfig.app.json'));
+        expect(results[0].configPath).toBe(path.join(root, 'tsconfig.base.json'));
+      }
+    );
+  });
+
+  it('does not walk a referenced concrete project into its own references', () => {
+    return inFixture(
+      {
+        'tsconfig.json': {
+          files: [],
+          references: [{ path: './apps/app' }],
+        },
+        'apps/app/tsconfig.json': {
+          compilerOptions: { plugins: [PLUGIN] },
+          include: ['src'],
+          references: [{ path: '../../libs/a' }],
+        },
+        'libs/a/tsconfig.json': { compilerOptions: { plugins: [PLUGIN] }, include: ['src'] },
+      },
+      async (root) => {
+        const results = await loadConfigs(root);
+        expect(results).toHaveLength(1);
+        expect(results[0].tsconfigPath).toBe(path.join(root, 'apps', 'app', 'tsconfig.json'));
+      }
+    );
+  });
+
   it('rejects when no project has a plugin entry', () => {
     return inFixture(
       {
