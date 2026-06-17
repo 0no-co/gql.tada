@@ -207,6 +207,14 @@ export default defineConfig({
               text: 'Multiple Schemas',
               link: '/guides/multiple-schemas',
             },
+            {
+              text: 'Testing',
+              link: '/guides/testing',
+            },
+            {
+              text: 'Recipebook',
+              link: '/guides/recipebook',
+            },
           ],
         },
         {

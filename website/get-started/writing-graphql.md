@@ -638,3 +638,72 @@ export type SearchPokemon = ReturnType<typeof graphql.scalar<'SearchPokemon'>>;
 
 Reusing input types is common when we create local state that isn't immediately
 used as operation variables, or doesn't match the variables types of some operations.
+
+## Abstract Types
+
+When a field returns an abstract type (a union or interface) we select its
+possible types using inline fragments (`... on Type`). Selecting `__typename`
+alongside them gives TypeScript a discriminant it can use to narrow the result
+to a single variant.
+
+```ts twoslash
+import { initGraphQLTada, type ResultOf } from 'gql.tada';
+
+type introspection = {
+  name: 'sample';
+  query: 'Query';
+  mutation: never;
+  subscription: never;
+  types: {
+    String: { kind: 'SCALAR'; name: 'String' };
+    Query: {
+      kind: 'OBJECT';
+      name: 'Query';
+      fields: {
+        search: { name: 'search'; type: { kind: 'UNION'; name: 'SearchResult'; ofType: null } };
+      };
+    };
+    SearchResult: { kind: 'UNION'; name: 'SearchResult'; fields: {}; possibleTypes: 'Article' | 'Photo' };
+    Article: {
+      kind: 'OBJECT';
+      name: 'Article';
+      fields: {
+        title: { name: 'title'; type: { kind: 'NON_NULL'; name: never; ofType: { kind: 'SCALAR'; name: 'String'; ofType: null } } };
+      };
+    };
+    Photo: {
+      kind: 'OBJECT';
+      name: 'Photo';
+      fields: {
+        url: { name: 'url'; type: { kind: 'NON_NULL'; name: never; ofType: { kind: 'SCALAR'; name: 'String'; ofType: null } } };
+      };
+    };
+  };
+};
+
+const graphql = initGraphQLTada<{ introspection: introspection }>();
+// ---cut-before---
+const SearchQuery = graphql(`
+  query Search {
+    search {
+      __typename
+      ... on Article { title }
+      ... on Photo { url }
+    }
+  }
+`);
+
+declare const data: ResultOf<typeof SearchQuery>;
+
+if (data.search?.__typename === 'Article') {
+// @annotate: data.search is narrowed to Article here, so title is available
+
+  data.search.title;
+}
+```
+
+Without `__typename` in the selection set, we have no discriminant to let TypeScript
+tell the variants apart. In some cases `gql.tada` may automatically add optionally-typed
+`__typename` fields, so the result types are still readable. But, select `__typename`
+manually when you encounter unions or interfaces, so your code can switch between
+them directly.
