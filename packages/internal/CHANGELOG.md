@@ -1,5 +1,12 @@
 # @gql.tada/internal
 
+## 1.2.1
+
+### Patch Changes
+
+- Refine how `references` are walked and when they conflict. We should only check references if we haven't yet found a plugin entry, and allow duplicate entries, if their output locations don't conflict
+  Submitted by [@kitten](https://github.com/kitten) (See [#568](https://github.com/0no-co/gql.tada/pull/568))
+
 ## 1.2.0
 
 ### Minor Changes

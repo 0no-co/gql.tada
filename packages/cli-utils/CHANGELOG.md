@@ -1,5 +1,18 @@
 # @gql.tada/cli-utils
 
+## 1.9.2
+
+### Patch Changes
+
+- Bump to `@0no-co/graphqlsp@^1.17.3` to include go-to-definition support
+  Submitted by [@kitten](https://github.com/kitten) (See [#569](https://github.com/0no-co/gql.tada/pull/569))
+- ⚠️ Fix teardown of interactive CLI keyhandlers on Node 24 with non-interactive stdin stream
+  Submitted by [@kitten](https://github.com/kitten) (See [#566](https://github.com/0no-co/gql.tada/pull/566))
+- Refine how `references` are walked and when they conflict. We should only check references if we haven't yet found a plugin entry, and allow duplicate entries, if their output locations don't conflict
+  Submitted by [@kitten](https://github.com/kitten) (See [#568](https://github.com/0no-co/gql.tada/pull/568))
+- Updated dependencies (See [#568](https://github.com/0no-co/gql.tada/pull/568))
+  - @gql.tada/internal@1.2.1
+
 ## 1.9.1
 
 ### Patch Changes

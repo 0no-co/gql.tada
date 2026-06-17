@@ -1,5 +1,15 @@
 # gql.tada
 
+## 1.11.2
+
+### Patch Changes
+
+- Bump to `@0no-co/graphqlsp@^1.17.3` to include go-to-definition support
+  Submitted by [@kitten](https://github.com/kitten) (See [#569](https://github.com/0no-co/gql.tada/pull/569))
+- Updated dependencies (See [#569](https://github.com/0no-co/gql.tada/pull/569), [#566](https://github.com/0no-co/gql.tada/pull/566), and [#568](https://github.com/0no-co/gql.tada/pull/568))
+  - @gql.tada/cli-utils@1.9.2
+  - @gql.tada/internal@1.2.1
+
 ## 1.11.1
 
 ### Patch Changes
