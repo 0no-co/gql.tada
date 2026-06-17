@@ -68,10 +68,17 @@ function fromReadStream(stream: ReadStream, onTerminate: () => void): Source<Key
     }
 
     function cleanup() {
-      if (stream.isTTY) stream.setRawMode(false);
-      observer.complete();
-      stream.removeListener('keypress', onKeypress);
-      stream.unref();
+      try {
+        if (stream.isTTY) stream.setRawMode(false);
+        stream.removeListener('keypress', onKeypress);
+        if (typeof stream.unref === 'function') {
+          stream.unref();
+        }
+      } catch {
+        // noop
+      } finally {
+        observer.complete();
+      }
     }
 
     if (stream.isTTY) stream.setRawMode(true);
