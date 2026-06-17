@@ -60,6 +60,76 @@ describe('validateUniqueOutputLocations', () => {
     ).toThrow(/tadaOutputLocation/);
   });
 
+  it('allows projects to share an output location when they resolve the same schema', () => {
+    expect(() =>
+      validateUniqueOutputLocations([
+        {
+          projectPath: path.join(ROOT, 'apps', 'a'),
+          config: { schema: '../../schema.graphql', tadaOutputLocation: '../../graphql-env.d.ts' },
+          label: 'apps/a/tsconfig.json',
+        },
+        {
+          projectPath: path.join(ROOT, 'apps', 'b'),
+          config: { schema: '../../schema.graphql', tadaOutputLocation: '../../graphql-env.d.ts' },
+          label: 'apps/b/tsconfig.json',
+        },
+      ])
+    ).not.toThrow();
+  });
+
+  it('still throws when a shared output location resolves to different schemas', () => {
+    expect(() =>
+      validateUniqueOutputLocations([
+        {
+          projectPath: path.join(ROOT, 'apps', 'a'),
+          config: { schema: '../../a.graphql', tadaOutputLocation: '../../graphql-env.d.ts' },
+          label: 'apps/a/tsconfig.json',
+        },
+        {
+          projectPath: path.join(ROOT, 'apps', 'b'),
+          config: { schema: '../../b.graphql', tadaOutputLocation: '../../graphql-env.d.ts' },
+          label: 'apps/b/tsconfig.json',
+        },
+      ])
+    ).toThrow(/tadaOutputLocation/);
+  });
+
+  it('still throws when projects share a turbo location, even with the same schema', () => {
+    // Turbo caches are built from each project's own documents, not the schema.
+    expect(() =>
+      validateUniqueOutputLocations([
+        {
+          projectPath: path.join(ROOT, 'apps', 'a'),
+          config: { schema: '../../schema.graphql', tadaTurboLocation: '../../graphql-cache.d.ts' },
+          label: 'apps/a/tsconfig.json',
+        },
+        {
+          projectPath: path.join(ROOT, 'apps', 'b'),
+          config: { schema: '../../schema.graphql', tadaTurboLocation: '../../graphql-cache.d.ts' },
+          label: 'apps/b/tsconfig.json',
+        },
+      ])
+    ).toThrow(/tadaTurboLocation/);
+  });
+
+  it('still throws when projects share a persisted manifest location', () => {
+    // Persisted manifests are built from each project's own documents, not the schema.
+    expect(() =>
+      validateUniqueOutputLocations([
+        {
+          projectPath: path.join(ROOT, 'apps', 'a'),
+          config: { schema: '../../schema.graphql', tadaPersistedLocation: '../../persisted.json' },
+          label: 'apps/a/tsconfig.json',
+        },
+        {
+          projectPath: path.join(ROOT, 'apps', 'b'),
+          config: { schema: '../../schema.graphql', tadaPersistedLocation: '../../persisted.json' },
+          label: 'apps/b/tsconfig.json',
+        },
+      ])
+    ).toThrow(/tadaPersistedLocation/);
+  });
+
   it('ignores repeated locations within the same project', () => {
     expect(() =>
       validateUniqueOutputLocations([
