@@ -185,7 +185,11 @@ export const loadConfigs = async (targetPath?: string): Promise<LoadConfigResult
       }
     }
 
-    if (Array.isArray(tsconfig.references)) {
+    // A concrete project's `references` are build-order dependencies, not
+    // sub-projects to load, so only descend for an aggregator: one with no
+    // plugin entry of its own, or a solution-style config with no files.
+    const isAggregator = !entry || isSolutionStyleConfig(tsconfig);
+    if (isAggregator && Array.isArray(tsconfig.references)) {
       hasReferences = true;
       for (const reference of tsconfig.references) {
         if (!reference || typeof reference.path !== 'string') continue;
