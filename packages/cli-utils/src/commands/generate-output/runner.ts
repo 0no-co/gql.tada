@@ -50,10 +50,29 @@ export async function* run(tty: TTY, opts: OutputOptions): AsyncIterable<Compose
     );
   }
 
+  // Projects may share an output file; its contents come only from the schema,
+  // so generate each distinct file once rather than once per referencing project.
+  const generated = new Set<string>();
   for (const project of projects) {
+    const destinations = outputDestinations(project);
+    if (destinations.length && destinations.every((destination) => generated.has(destination))) {
+      continue;
+    }
+    for (const destination of destinations) generated.add(destination);
     if (projects.length > 1) yield logger.projectHeader(project.label);
     yield* runProject(tty, opts, project);
   }
+}
+
+function outputDestinations(project: ProjectContext): string[] {
+  const { pluginConfig, projectPath } = project;
+  const locations =
+    'schemas' in pluginConfig
+      ? pluginConfig.schemas.map((schema) => schema.tadaOutputLocation)
+      : [pluginConfig.tadaOutputLocation];
+  return locations
+    .filter((location): location is string => !!location)
+    .map((location) => path.resolve(projectPath, location));
 }
 
 /** Generates the introspection output for a single project. */
