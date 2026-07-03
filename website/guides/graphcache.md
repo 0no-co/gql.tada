@@ -3,7 +3,7 @@ title: Graphcache
 description: Typing Graphcache configuration with gql.tada schemas
 ---
 
-# Graphcache
+# Graphcache <Badge type="warning" text="experimental" />
 
 The `gql.tada/addons/graphcache` module derives Graphcache configuration types
 from the same schema you use for `graphql()`.
