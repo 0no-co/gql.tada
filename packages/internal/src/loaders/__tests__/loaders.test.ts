@@ -30,6 +30,14 @@ afterEach(async () => {
 });
 
 describe('loadFromSDL', () => {
+  it('marks assumed-valid SDL schemas as valid', async () => {
+    const file = await makeSchemaFile(VALID_SCHEMA);
+    const loader = loadFromSDL({ file, assumeValid: true });
+
+    const result = await loader.load();
+    expect(result.schema.toConfig().assumeValid).toBe(true);
+  });
+
   it('returns the cached result unless a reload is forced', async () => {
     const file = await makeSchemaFile(VALID_SCHEMA);
     const loader = loadFromSDL({ file, assumeValid: true });
