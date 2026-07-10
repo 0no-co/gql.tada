@@ -42,7 +42,10 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
         schema: buildClientSchema(introspection, { assumeValid: !!config.assumeValid }),
       };
     } else {
-      const schema = buildSchema(data, { assumeValidSDL: !!config.assumeValid });
+      const schema = buildSchema(data, {
+        assumeValid: !!config.assumeValid,
+        assumeValidSDL: !!config.assumeValid,
+      });
       const query = makeIntrospectionQuery(getPeerSupportedFeatures());
       const queryResult = executeSync({ schema, document: query });
       if (queryResult.errors) {
