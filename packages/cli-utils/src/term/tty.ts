@@ -55,9 +55,9 @@ export interface TTY {
 function fromReadStream(stream: ReadStream, onTerminate: () => void): Source<KeypressEvent> {
   return make((observer) => {
     function onKeypress(data: string | undefined, event: KeypressEvent) {
+      // PTY hosts may send Ctrl-D to signal EOF, so it must not terminate the command.
       switch (event.name) {
         case 'c':
-        case 'd':
         case 'x':
           if (event.ctrl) return onTerminate();
           break;
@@ -100,7 +100,7 @@ export function initTTY(params: TTYParams = {}): TTY {
     output = process.stderr;
     pipeTo = process.stdout;
   } else {
-    isTTY = output.isTTY;
+    isTTY = isTTY && !!output.isTTY;
   }
 
   const hasColorArg = process.argv.includes('--color');
@@ -168,7 +168,7 @@ export function initTTY(params: TTYParams = {}): TTY {
     const write = (input: string | CLIError) => {
       if (!params.silent) output.write('' + input);
     };
-    if (params.disableTTY) {
+    if (params.disableTTY || !isTTY) {
       return pipe(compose(outputs), onPush(write), toPromise);
     } else {
       return pipe(compose(outputs), onPush(write), takeUntil(cancelSource), toPromise);
