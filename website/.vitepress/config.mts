@@ -215,6 +215,10 @@ export default defineConfig({
               text: 'Recipebook',
               link: '/guides/recipebook',
             },
+            {
+              text: 'Graphcache',
+              link: '/guides/graphcache',
+            },
           ],
         },
         {
