@@ -238,7 +238,7 @@ async function* runProject(
   return { warnings, failed: false };
 }
 
-function createCacheContents(
+export function createCacheContents(
   cache: TurboDocument[],
   graphqlSources: GraphQLSourceFile[],
   turboDestination: WriteTarget,
@@ -248,8 +248,15 @@ function createCacheContents(
   const documentsByKey = new Map<string, TurboDocument>();
   for (const document of cache) documentsByKey.set(document.argumentKey, document);
 
+  // Entries are sorted so the output only depends on the set of documents,
+  // rather than the order files are traversed in. This keeps the file stable across
+  // refactors and reduces line adjacency of unrelated changes in merge conflicts
+  const documents = [...documentsByKey.values()].sort((a, b) =>
+    compareUtf16(a.argumentKey, b.argumentKey)
+  );
+
   let output = '';
-  for (const document of documentsByKey.values()) {
+  for (const document of documents) {
     if (output) output += '\n';
     if (document.documentHash) output += `    /** @gql.tada/hash ${document.documentHash} */\n`;
     output += `    ${document.argumentKey}:\n      ${document.documentType};`;
@@ -264,8 +271,13 @@ function createCacheContents(
       'toString' in turboDestination &&
       !('writable' in turboDestination));
 
+  // Sources are sorted by path for the same reason documents are sorted above
+  const sortedSources = [...graphqlSources].sort((a, b) =>
+    compareUtf16(a.absolutePath, b.absolutePath)
+  );
+
   const addedImports = new Set<string>();
-  for (const source of graphqlSources) {
+  for (const source of sortedSources) {
     for (const importInfo of source.imports) {
       if (isFilePath) {
         const turboPath = turboDestination.toString();
@@ -293,4 +305,8 @@ function createCacheContents(
     '\n  }' +
     '\n}\n'
   );
+}
+
+function compareUtf16(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0;
 }
