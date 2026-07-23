@@ -1,5 +1,12 @@
 # @gql.tada/internal
 
+## 1.2.2
+
+### Patch Changes
+
+- Ensure assumed-valid SDL schemas bypass schema validation during introspection
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#575](https://github.com/0no-co/gql.tada/pull/575))
+
 ## 1.2.1
 
 ### Patch Changes
