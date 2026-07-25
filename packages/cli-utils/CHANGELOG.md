@@ -1,5 +1,16 @@
 # @gql.tada/cli-utils
 
+## 1.9.3
+
+### Patch Changes
+
+- Emit `turbo` cache entries and imports in a stable sorted order. The cache file's contents now only depend on the set of discovered documents rather than file traversal order, which keeps the output stable across refactors and reduces merge conflicts in committed cache files. Existing cache files will be reordered once when `gql-tada turbo` is next run
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#579](https://github.com/0no-co/gql.tada/pull/579))
+- Prevent non-interactive stdin and Ctrl-D/EOF bytes from terminating CLI commands with exit code 130
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#578](https://github.com/0no-co/gql.tada/pull/578))
+- Updated dependencies (See [#575](https://github.com/0no-co/gql.tada/pull/575))
+  - @gql.tada/internal@1.2.2
+
 ## 1.9.2
 
 ### Patch Changes
