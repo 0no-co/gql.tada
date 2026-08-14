@@ -113,9 +113,29 @@ The `doctor` and `check` reports share these top-level fields:
 | `success`       | Whether the command completed without a failure under the selected options. |
 | `error`         | On failure, a structured `name`, `message`, and `exitCode`.                 |
 
-A doctor report additionally contains `checks`, `issues`, and discovered `projects`. Checks use
-stable IDs and a `pass`, `warn`, `fail`, or `skip` status. A check report contains `projects`, a
-severity `summary`, and `diagnostics` with file, line, column, and optional end locations.
+A doctor report additionally contains `checks`, `issues`, and discovered `projects`:
+
+```json
+{
+  "schemaVersion": 1,
+  "command": "doctor",
+  "success": false,
+  "checks": [
+    { "id": "typescript-version", "label": "Checking TypeScript version", "status": "pass" },
+    { "id": "dependencies", "label": "Checking installed dependencies", "status": "pass" },
+    { "id": "tsconfig", "label": "Checking tsconfig.json", "status": "pass" },
+    { "id": "external-files", "label": "Checking external files support", "status": "skip" },
+    { "id": "vscode", "label": "Checking VSCode setup", "status": "skip" },
+    { "id": "schema", "label": "Checking schema", "status": "pass" }
+  ],
+  "issues": [],
+  "projects": [{ "label": "tsconfig.json", "tsconfig": "tsconfig.json" }]
+}
+```
+
+A check report contains `projects`, a severity `summary`, and `diagnostics` with file, line, column,
+and optional end locations.
+
 Diagnostic paths are emitted relative to their configured project root when possible.
 
 ```json

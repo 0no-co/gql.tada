@@ -87,6 +87,73 @@ describe('machine-readable command output', () => {
     });
   });
 
+  it('writes a clean doctor JSON report to a file without human terminal output', async () => {
+    vi.stubEnv('CI', '1');
+    const directory = await fixture();
+    process.chdir(directory);
+    const output = captureStdout();
+    vi.resetModules();
+    const { DoctorCommand } = await import('../doctor');
+    const command = new DoctorCommand();
+    command.format = 'json';
+    command.output = './reports/doctor.json';
+
+    const exit = await command.execute();
+    const report = JSON.parse(
+      await fs.readFile(path.join(directory, 'reports', 'doctor.json'), 'utf8')
+    );
+
+    expect(exit).toBe(0);
+    expect(process.exitCode).toBe(0);
+    expect(output()).toBe('');
+    expect(report).toMatchObject({
+      schemaVersion: 1,
+      command: 'doctor',
+      success: true,
+    });
+    expect(report.checks).toBeInstanceOf(Array);
+    expect(report.projects).toHaveLength(1);
+  });
+
+  it('requires --output to be used with --format json', async () => {
+    vi.stubEnv('CI', '1');
+    const directory = await fixture();
+    process.chdir(directory);
+    const output = captureStdout();
+    vi.resetModules();
+    const { DoctorCommand } = await import('../doctor');
+    const command = new DoctorCommand();
+    command.format = undefined;
+    command.output = './reports/doctor.json';
+
+    await expect(command.execute()).rejects.toThrow('--output option requires --format json.');
+    expect(output()).toBe('');
+  });
+
+  it('resets process.exitCode for successful machine JSON output', async () => {
+    vi.stubEnv('CI', '1');
+    const directory = await fixture();
+    process.chdir(directory);
+    const output = captureStdout();
+    vi.resetModules();
+    const { DoctorCommand } = await import('../doctor');
+    const command = new DoctorCommand();
+    command.format = 'json';
+    command.output = undefined;
+    process.exitCode = 123;
+
+    const exit = await command.execute();
+    const report = JSON.parse(output());
+
+    expect(exit).toBe(0);
+    expect(process.exitCode).toBe(0);
+    expect(report).toMatchObject({
+      schemaVersion: 1,
+      command: 'doctor',
+      success: true,
+    });
+  });
+
   it('returns structured doctor failures and preserves a non-zero exit code', async () => {
     vi.stubEnv('CI', '1');
     const directory = await fixture(false);
@@ -107,6 +174,58 @@ describe('machine-readable command output', () => {
       error: { exitCode: 1 },
     });
     expect(report.issues[0]).toMatchObject({ severity: 'error' });
+  });
+
+  it('falls back to stdout when doctor machine output file cannot be written', async () => {
+    vi.stubEnv('CI', '1');
+    const directory = await fixture();
+    process.chdir(directory);
+    const output = captureStdout();
+    await fs.mkdir(path.join(directory, 'reports'));
+    vi.resetModules();
+    const { DoctorCommand } = await import('../doctor');
+    const command = new DoctorCommand();
+    command.format = 'json';
+    command.output = './reports';
+
+    const exit = await command.execute();
+    const report = JSON.parse(output());
+
+    expect(exit).toBe(1);
+    expect(process.exitCode).toBe(1);
+    expect(report).toMatchObject({
+      schemaVersion: 1,
+      command: 'doctor',
+      success: false,
+      error: { exitCode: 1 },
+    });
+    expect(report.error.message).toContain('Failed to write JSON report');
+  });
+
+  it('reports both command failure and file-write failure when doctor output cannot be written', async () => {
+    vi.stubEnv('CI', '1');
+    const directory = await fixture(false);
+    process.chdir(directory);
+    const output = captureStdout();
+    await fs.mkdir(path.join(directory, 'reports'));
+    vi.resetModules();
+    const { DoctorCommand } = await import('../doctor');
+    const command = new DoctorCommand();
+    command.format = 'json';
+    command.output = './reports';
+
+    const exit = await command.execute();
+    const report = JSON.parse(output());
+
+    expect(exit).toBe(1);
+    expect(report).toMatchObject({
+      schemaVersion: 1,
+      command: 'doctor',
+      success: false,
+      error: { exitCode: 1 },
+    });
+    expect(report.error.message).toMatch(/A package\.json/);
+    expect(report.error.message).toContain('Failed to write JSON report');
   });
 
   it('resets process.exitCode for successful machine JSON output', async () => {
