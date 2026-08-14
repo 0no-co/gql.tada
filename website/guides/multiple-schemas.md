@@ -1,6 +1,6 @@
 ---
 title: Multiple Schemas
-description: Configure and initialize gql.tada for multiple GraphQL schemas, projects, or monorepos.
+description: How to set up multiple schemas and GraphQL APIs
 ---
 
 # Multiple Schemas <Badge text="v1.6" />

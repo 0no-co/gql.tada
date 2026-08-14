@@ -12,7 +12,8 @@ import bundledGraphqlLanguages from '@shikijs/langs/graphql';
 
 import { graphqlLanguage } from './graphql-textmate.mts';
 
-const siteDescription =
+const siteDescription = 'Magical GraphQL query engine for TypeScript';
+const agentDescription =
   'Schema-aware TypedDocumentNode result and variable inference for GraphQL and TypeScript';
 
 const softwareSourceCode = JSON.stringify({
@@ -322,7 +323,7 @@ export default defineConfig({
         },
         domain: 'https://gql-tada.0no.co',
         customTemplateVariables: {
-          description: siteDescription,
+          description: agentDescription,
           details:
             'gql.tada infers schema-aware TypedDocumentNode result and variable types directly in TypeScript. It works with TypedDocumentNode-compatible clients without generating a TypeScript file for every GraphQL operation.',
         },

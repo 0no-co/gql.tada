@@ -1,6 +1,6 @@
 ---
 title: Essential Workflows
-description: Use the gql.tada CLI to update schemas and typings, run diagnostics, enable Turbo Mode, and validate CI.
+description: How to use and adapt the CLI in your workflows
 ---
 
 # Essential Workflows

@@ -1,6 +1,6 @@
 {
   "name": "gql.tada",
-  "description": "Schema-aware TypedDocumentNode result and variable inference for GraphQL and TypeScript",
+  "description": "The spec-compliant & magical GraphQL query language engine in the TypeScript type system",
   "version": "1.11.3",
   "author": "0no.co <hi@0no.co>",
   "source": "./src/index.ts",

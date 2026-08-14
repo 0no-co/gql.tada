@@ -1,6 +1,6 @@
 ---
 title: Writing GraphQL
-description: Author typed GraphQL queries, variables, fragments, scalars, and abstract types with gql.tada.
+description: How to get set up and ready
 ---
 
 # Writing GraphQL

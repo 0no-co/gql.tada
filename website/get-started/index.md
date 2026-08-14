@@ -1,6 +1,5 @@
 ---
 title: Introduction
-description: Learn how gql.tada infers schema-aware GraphQL result and variable types directly in TypeScript.
 prev: false
 next: false
 ---

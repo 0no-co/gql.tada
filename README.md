@@ -1,6 +1,6 @@
 <div align="center">
   <h2>gql.tada 🪄</h2>
-  <strong>Schema-aware GraphQL documents for TypeScript</strong>
+  <strong>Magical GraphQL query engine for TypeScript</strong>
   <br />
   <br />
   <a href="https://github.com/0no-co/gql.tada/actions/workflows/release.yml"><img alt="CI Status" src="https://github.com/0no-co/gql.tada/actions/workflows/release.yml/badge.svg?branch=main" /></a>
@@ -9,109 +9,53 @@
   <br />
 </div>
 
-`gql.tada` is a GraphQL document-authoring library that infers a query's result and variable
-types from your schema. It returns standard `TypedDocumentNode` values, so typed documents work
-with GraphQL clients without generating a TypeScript file for every operation.
+`gql.tada` is a GraphQL document authoring library, inferring the result and variables types
+of GraphQL queries and fragments in the TypeScript type system. It derives the types for your
+GraphQL queries on the fly allowing you to write type-safe GraphQL documents quickly.
 
-- GraphQL parsing and type inference happen in TypeScript's type system.
-- The TypeScript plugin provides schema-aware completions, diagnostics, and hover information.
-- Fragment masking and composition keep component data requirements explicit.
-- The CLI supports schema updates, CI diagnostics, persisted documents, Turbo Mode, and
-  machine-readable project analysis.
+In short, `gql.tada`,
 
-## Quick start
+- parses your GraphQL documents in the TypeScript type system
+- uses your introspected schema and scalar configuration to derive a schema
+- maps your GraphQL queries and fragments with the schema to result and variables types
+- creates fragment masks and enforces unwrapping fragments gradually
 
-Install `gql.tada`:
+Since this is all done in the TypeScript type system and type checker, this all happens
+while you edit your GraphQL front-end code and is always accurate.
 
-```sh
-npm install gql.tada
-```
+In short, **with `gql.tada` and [GraphQLSP](https://github.com/0no-co/graphqlsp) you get on-the-fly, automatically typed GraphQL documents
+with full editor feedback, auto-completion, and type hints!**
 
-Point the TypeScript plugin at your schema and choose where its schema typings should be written:
+## 📃 [Documentation](https://gql-tada.0no.co)
 
-```json
-{
-  "compilerOptions": {
-    "strict": true,
-    "plugins": [
-      {
-        "name": "gql.tada/ts-plugin",
-        "schema": "./schema.graphql",
-        "tadaOutputLocation": "./src/graphql-env.d.ts"
-      }
-    ]
-  }
-}
-```
+Check out the [“Get Started” section’s Installation page](https://gql-tada.0no.co/get-started/installation/) in the documentation.
 
-The schema can be GraphQL SDL, introspection JSON, or an introspectable GraphQL endpoint. Generate
-the output once from the command line (the TypeScript plugin also keeps it updated in your editor):
+- Get Started
+  - **[Introduction](https://gql-tada.0no.co)** — everything you need to know
+  - **[Installation](https://gql-tada.0no.co/get-started/installation)** — an installation guide
+  - **[Writing GraphQL](https://gql-tada.0no.co/get-started/writing-graphql/)** — how to write GraphQL documents
+- API Reference
+  - **[`gql.tada` API](https://gql-tada.0no.co/reference/gql-tada-api/)** — `gql.tada` API Reference docs
+  - **[`gql.tada` CLI](https://gql-tada.0no.co/reference/gql-tada-cli/)** — `gql.tada` CLI Reference docs
+  - **[Config Format](https://gql-tada.0no.co/reference/config-format/)** — Configuration Reference docs
 
-```sh
-npx gql-tada generate-output
-```
+Furthermore, all APIs and packages are self-documented using TSDocs. If you’re using a language
+server for TypeScript, the documentation for each API should pop up in your editor when hovering
+`gql.tada`’s code and APIs.
 
-Then author a typed document directly in TypeScript:
+## 🔎 Let’s take a look!
 
-```ts
-import { graphql } from 'gql.tada';
-import type { ResultOf, VariablesOf } from 'gql.tada';
+<img width="100%" alt="Code Editor showing GraphQL queries being edited with gql.tada and GraphLSP" src="https://github.com/0no-co/gql.tada/blob/277ce424a747522ef2ca0d398b113f4f285eb595/website/public/demo-code.png?raw=true" />
 
-export const PokemonQuery = graphql(`
-  query Pokemon($id: ID!) {
-    pokemon(id: $id) {
-      id
-      name
-    }
-  }
-`);
+## 📦 [Releases](https://github.com/0no-co/gql.tada/releases)
 
-export type PokemonResult = ResultOf<typeof PokemonQuery>;
-export type PokemonVariables = VariablesOf<typeof PokemonQuery>;
-```
+If you'd like to get involved, [check out our Contributor's guide.](https://github.com/0no-co/gql.tada/blob/main/CONTRIBUTING.md)
 
-The value returned by `graphql()` is a `TypedDocumentNode`. It can be passed directly to clients
-including [urql](https://urql.dev), [Apollo Client](https://www.apollographql.com/docs/react),
-[graphql-request](https://github.com/graffle-js/graffle/tree/main/packages/graphql-request), and other clients that accept typed
-GraphQL documents.
+All new releases and updates are listed on GitHub with full changelogs.
+The [`CHANGELOG.md` file](https://github.com/0no-co/gql.tada/blob/main/CHANGELOG.md) further documents all the historical changes for `gql.tada`.
 
-For the complete setup, including VSCode, custom scalars, Vue, and Svelte, read the
-[installation guide](https://gql-tada.0no.co/get-started/installation).
-
-## Common commands
-
-```sh
-npx gql-tada doctor                 # diagnose the local setup
-npx gql-tada generate-output        # refresh schema typings
-npx gql-tada check                  # run GraphQL diagnostics in CI
-npx gql-tada turbo                  # cache document types for large projects
-npx gql-tada scan --format json     # analyze document and schema usage
-```
-
-See [Essential Workflows](https://gql-tada.0no.co/get-started/workflows) and the
-[CLI reference](https://gql-tada.0no.co/reference/gql-tada-cli) for all options.
-
-## Documentation
-
-- [Introduction](https://gql-tada.0no.co/get-started/)
-- [Installation](https://gql-tada.0no.co/get-started/installation)
-- [Writing GraphQL](https://gql-tada.0no.co/get-started/writing-graphql)
-- [Fragment colocation and masking](https://gql-tada.0no.co/guides/fragment-colocation)
-- [`gql.tada` API reference](https://gql-tada.0no.co/reference/gql-tada-api)
-- [Configuration reference](https://gql-tada.0no.co/reference/config-format)
-
-Agent-friendly documentation is available as a curated
-[`llms.txt`](https://gql-tada.0no.co/llms.txt), a complete
-[`llms-full.txt`](https://gql-tada.0no.co/llms-full.txt), and a Markdown version of every
-documentation page by appending `.md` to its clean URL.
-
-All public APIs also include TSDoc comments, which are available in editor hovers and the
-published TypeScript declarations.
-
-## Releases and contributing
-
-All releases are listed on [GitHub Releases](https://github.com/0no-co/gql.tada/releases) and in
-[`CHANGELOG.md`](https://github.com/0no-co/gql.tada/blob/main/CHANGELOG.md). Canary releases are
-available under the `@canary` npm tag.
-
-To contribute, read the [contributor guide](https://github.com/0no-co/gql.tada/blob/main/CONTRIBUTING.md).
+New releases are prepared using
+[changesets](https://github.com/0no-co/gql.tada/blob/main/CONTRIBUTING.md#how-do-i-document-a-change-for-the-changelog),
+which are changelog entries added to each PR, and we have “Version Packages” PRs that once merged
+will release new versions of the `gql.tada` package. You can use `@canary` releases from `npm` if you’d
+like to get a preview of the merged changes.

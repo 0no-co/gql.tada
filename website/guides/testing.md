@@ -1,6 +1,6 @@
 ---
 title: Testing
-description: Build type-safe GraphQL test fixtures and fake data while preserving fragment masking.
+description: How to write type-safe test fixtures and fake data with fragment masking.
 ---
 
 # Testing

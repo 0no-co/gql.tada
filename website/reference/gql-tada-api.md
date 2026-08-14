@@ -1,6 +1,5 @@
 ---
 title: gql.tada API
-description: Reference gql.tada functions and types for documents, fragments, inferred results, variables, and tests.
 ---
 
 # `gql.tada` API

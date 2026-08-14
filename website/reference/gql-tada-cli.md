@@ -1,6 +1,5 @@
 ---
 title: gql-tada CLI
-description: Reference gql.tada CLI commands for setup, diagnostics, generation, Turbo Mode, persistence, and analysis.
 ---
 
 # `gql-tada` CLI

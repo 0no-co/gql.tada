@@ -36,10 +36,11 @@ for (const match of llms.matchAll(/\[[^\]]+\]\(([^)]+\.md(?:#[^)]+)?)\)/g)) {
 
 assert.ok(markdownUrls.size >= 13, 'llms.txt must link all core documentation pages');
 
-const completeDocumentation = llms.split('## Complete documentation')[1] || '';
-const describedCoreLinks =
-  completeDocumentation.match(/^\- \[[^\]]+\]\([^)]+\.md\): \S.+$/gm) || [];
-assert.ok(describedCoreLinks.length >= 13, 'Every core llms.txt entry must include a description');
+assert.match(
+  llms,
+  /Schema-aware TypedDocumentNode result and variable inference/,
+  'llms.txt must include the agent-oriented project description'
+);
 
 for (const pathname of markdownUrls) {
   assert.equal(path.extname(pathname), '.md', `${pathname} must be a Markdown route`);

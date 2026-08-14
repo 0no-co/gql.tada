@@ -3,7 +3,7 @@ layout: home
 
 hero:
   name: gql.tada
-  tagline: Schema-aware TypedDocumentNode inference for TypeScript
+  tagline: Magical GraphQL query engine for TypeScript
   actions:
     - theme: brand
       text: Get Started

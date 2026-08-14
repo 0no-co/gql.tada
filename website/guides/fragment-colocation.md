@@ -1,6 +1,6 @@
 ---
 title: Fragment Colocation
-description: Colocate GraphQL fragments with components and use gql.tada fragment composition and masking.
+description: How GraphQL fragments are effectively used in componentized apps.
 ---
 
 # Fragment Colocation
