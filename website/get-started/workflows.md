@@ -13,6 +13,22 @@ description: How to use and adapt the CLI in your workflows
   commands to help with getting all set up.
 </section>
 
+### Non-interactive setup
+
+Agents and CI can initialize a project without answering prompts. Pass the schema and choose
+explicitly whether the CLI may run a package manager:
+
+```sh
+gql-tada init . \
+  --schema ./schema.graphql \
+  --output ./src/graphql-env.d.ts \
+  --no-install
+```
+
+`--no-install` updates `package.json`; use `--install` to install dependencies immediately.
+Local schema paths are validated before files are changed. The initializer keeps unrelated
+entries in `compilerOptions.plugins` intact.
+
 ### Downloading Schemas
 
 The [`schema` setting](/reference/config-format#schema) supports
@@ -75,6 +91,15 @@ you don't run into any unexpected issues.
 While it's entirely optional, it doesn't hurt to run it before
 you get started or when onboarding a new team member onto
 `gql.tada`.
+
+An agent can request a stable JSON report instead of parsing terminal presentation:
+
+```sh
+gql-tada doctor --format json --output .gql-tada/doctor.json
+```
+
+The report includes a versioned envelope, stable check IDs, check statuses, discovered projects,
+and structured issues. A failed check still writes the report before the command exits non-zero.
 
 ## <span data-step="2">2.</span> Editing
 
@@ -310,6 +335,17 @@ CI environment.
 gql-tada generate output
 gql-tada check
 ```
+
+For agent-driven CI, write diagnostics to a machine-readable artifact. The JSON is written even
+when diagnostics make the command exit non-zero:
+
+```sh
+gql-tada doctor --format json --output .gql-tada/doctor.json
+gql-tada check --format json --output .gql-tada/check.json
+```
+
+Both reports use `schemaVersion: 1`. The check report contains a severity summary and exact file,
+line, and column locations without ANSI sequences or GitHub workflow annotations.
 
 ::: details GitHub Actions Example
 If you're using GitHub Actions, you can run the commands in a simple step

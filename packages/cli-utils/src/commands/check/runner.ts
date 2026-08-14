@@ -1,8 +1,46 @@
+import * as path from 'node:path';
+
 import * as logger from './logger';
 import type { TTY, ComposeInput } from '../../term';
 import type { ProjectContext } from '../shared';
 import { loadProjects } from '../shared';
-import type { Severity, SeveritySummary } from './types';
+import type { DiagnosticMessage, Severity, SeveritySummary } from './types';
+import { displayPath } from '../shared/machine';
+
+export interface CheckJsonDiagnostic {
+  severity: Severity;
+  message: string;
+  file: string;
+  line: number;
+  column: number;
+  endLine?: number;
+  endColumn?: number;
+}
+
+export interface CheckResult {
+  projects: Array<{ label: string; tsconfig: string }>;
+  diagnostics: CheckJsonDiagnostic[];
+  summary: SeveritySummary;
+}
+
+export const createCheckResult = (): CheckResult => ({
+  projects: [],
+  diagnostics: [],
+  summary: { warn: 0, error: 0, info: 0 },
+});
+
+const toJsonDiagnostic = (
+  message: DiagnosticMessage,
+  projectPath: string
+): CheckJsonDiagnostic => ({
+  severity: message.severity,
+  message: message.message.trim(),
+  file: displayPath(message.file, projectPath),
+  line: message.line,
+  column: message.col,
+  ...(message.endLine == null ? {} : { endLine: message.endLine }),
+  ...(message.endColumn == null ? {} : { endColumn: message.endColumn }),
+});
 
 const isMinSeverity = (severity: Severity, minSeverity: Severity) => {
   switch (severity) {
@@ -27,6 +65,12 @@ export interface Options {
   failOnWarn: boolean | undefined;
   minSeverity: Severity;
   tsconfig: string | undefined;
+  /** Suppresses human-only side effects while collecting structured output. */
+  machine?: boolean;
+  /** Working directory captured when the command starts, for stable relative paths. */
+  cwd?: string;
+  /** Optional result sink used by the machine-readable command path. */
+  result?: CheckResult;
 }
 
 export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput> {
@@ -39,12 +83,16 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
     throw logger.externalError('Failed to load configuration.', error);
   }
 
-  const summary: SeveritySummary = { warn: 0, error: 0, info: 0 };
+  const summary: SeveritySummary = opts.result?.summary ?? { warn: 0, error: 0, info: 0 };
   const minSeverity = opts.minSeverity;
   let warnedAboutExternalFiles = false;
 
   for (const project of projects) {
-    if (projects.length > 1) yield logger.projectHeader(project.label);
+    opts.result?.projects.push({
+      label: project.label,
+      tsconfig: displayPath(project.configResult.tsconfigPath, opts.cwd),
+    });
+    if (projects.length > 1 && !opts.machine) yield logger.projectHeader(project.label);
 
     const generator = runDiagnostics({
       rootPath: project.configResult.rootPath,
@@ -63,9 +111,11 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
         if (signal.kind === 'EXTERNAL_WARNING') {
           if (!warnedAboutExternalFiles) {
             warnedAboutExternalFiles = true;
-            yield logger.experimentMessage(
-              `${logger.code('.vue')} and ${logger.code('.svelte')} file support is experimental.`
-            );
+            if (!opts.machine) {
+              yield logger.experimentMessage(
+                `${logger.code('.vue')} and ${logger.code('.svelte')} file support is experimental.`
+              );
+            }
           }
         } else if (signal.kind === 'FILE_COUNT') {
           totalFileCount = signal.fileCount;
@@ -75,11 +125,21 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
           for (const message of signal.messages) {
             summary[message.severity]++;
             if (isMinSeverity(message.severity, minSeverity)) {
-              buffer += logger.diagnosticMessage(message);
-              logger.diagnosticMessageGithub(message);
+              opts.result?.diagnostics.push(
+                toJsonDiagnostic(
+                  message,
+                  path.isAbsolute(project.configResult.tsconfigPath)
+                    ? path.dirname(project.configResult.tsconfigPath)
+                    : opts.cwd || process.cwd()
+                )
+              );
+              if (!opts.machine) {
+                buffer += logger.diagnosticMessage(message);
+                logger.diagnosticMessageGithub(message);
+              }
             }
           }
-          if (buffer) {
+          if (buffer && !opts.machine) {
             yield logger.diagnosticFile(signal.filePath) + buffer + '\n';
           }
         }
@@ -96,7 +156,7 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
 
   if ((opts.failOnWarn && summary.warn) || summary.error) {
     throw logger.problemsSummary(summary);
-  } else {
+  } else if (!opts.machine) {
     yield logger.infoSummary(summary);
   }
 }

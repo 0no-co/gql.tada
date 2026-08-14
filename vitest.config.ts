@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
   resolve: {
@@ -9,9 +9,17 @@ export default defineConfig({
       '@gql.tada/internal': fileURLToPath(
         new URL('packages/internal/src/index.ts', import.meta.url)
       ),
+      '@gql.tada/svelte-support': fileURLToPath(
+        new URL('packages/svelte-support/src/index.ts', import.meta.url)
+      ),
+      '@gql.tada/vue-support': fileURLToPath(
+        new URL('packages/vue-support/src/index.ts', import.meta.url)
+      ),
     },
   },
   test: {
+    // cli-utils has its own workspace project; exclude it here to avoid running its tests twice.
+    exclude: [...configDefaults.exclude, '**/packages/cli-utils/**'],
     benchmark: {},
     typecheck: {
       enabled: true,

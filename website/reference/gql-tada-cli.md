@@ -13,9 +13,13 @@ title: gql-tada CLI
 > The `gql-tada init` command is still a work in progress.
 > If you run into any trouble, feel free to let us know what you’d like to see added or changed.
 
-| Option | Description                                                                                      |
-| ------ | ------------------------------------------------------------------------------------------------ |
-| `dir`  | A relative location from your current working directory where the project should be initialized. |
+| Option         | Description                                                                                      |
+| -------------- | ------------------------------------------------------------------------------------------------ |
+| `dir`          | A relative location from your current working directory where the project should be initialized. |
+| `--schema,-s`  | Configure non-interactively with a schema URL, introspection JSON file, or GraphQL SDL file.     |
+| `--output,-o`  | Typings path for non-interactive setup. (Default: `./src/graphql-env.d.ts`)                      |
+| `--install`    | Install dependencies with the detected package manager during non-interactive setup.             |
+| `--no-install` | Update `package.json` without running a package manager during non-interactive setup.            |
 
 The `init` command takes care of everything required to setup a `gql-tada`
 project. The main tasks involved here are:
@@ -43,6 +47,20 @@ bunx gql-tada init ./my-project
 
 :::
 
+For agents and CI, passing `--schema` enables non-interactive mode. Exactly one of
+`--install` and `--no-install` is required, so the command never installs packages
+implicitly:
+
+```sh
+npx gql-tada init . \
+  --schema ./schema.graphql \
+  --output ./src/graphql-env.d.ts \
+  --no-install
+```
+
+This mode validates local schema paths, preserves unrelated TypeScript plugins, and exits
+non-zero when configuration cannot be completed.
+
 ### `doctor`
 
 > [!NOTE]
@@ -52,6 +70,15 @@ bunx gql-tada init ./my-project
 
 The `doctor` command will check for common mistakes in the `gql-tada`’s setup and configuration. It will check installed versions of packages, check the configuration, and check the schema.
 
+| Option        | Description                                                       |
+| ------------- | ----------------------------------------------------------------- |
+| `--format,-f` | Emit a machine-readable `json` report instead of terminal output. |
+| `--output,-o` | Write the JSON report to a file instead of standard output.       |
+
+`--output` requires `--format json`. JSON output never contains terminal progress, ANSI
+sequences, or GitHub workflow commands. The command preserves its normal exit semantics:
+`0` when setup checks complete and non-zero when a check fails.
+
 ### `check`
 
 | Option              | Description                                                                                       |
@@ -59,6 +86,8 @@ The `doctor` command will check for common mistakes in the `gql-tada`’s setup 
 | `--tsconfig,-c`     | Optionally, a `tsconfig.json` file to use instead of an automatically discovered one.             |
 | `--fail-on-warn,-w` | Triggers an error and a non-zero exit code if any warnings have been reported (default: `false`). |
 | `--level,-l`        | The minimum severity of diagnostics to display: `info`, `warn` or `error` (default: `info`).      |
+| `--format,-f`       | Emit a machine-readable `json` report instead of terminal output.                                 |
+| `--output,-o`       | Write the JSON report to a file instead of standard output.                                       |
 
 Usually, the TypeScript plugin will run inside your editor's TypeScript language server process and will report warnings
 and errors. However, these diagnostics aren't run when `tsc` or other TypeScript compiler processes are used, since those
@@ -68,6 +97,66 @@ The `gql-tada check` command exists to run these diagnostics in a standalone com
 files and reports these errors to the console.
 
 When this command is run inside a GitHub Action, [workflow commands](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions) are used to annotate errors within the GitHub UI.
+
+With `--format json`, diagnostics are emitted as structured locations instead. `--output`
+requires JSON format. The JSON report and command exit code are both produced when diagnostics
+fail, so an agent can inspect the report without treating a non-zero exit as missing output.
+
+### Machine-readable result envelope
+
+The `doctor` and `check` reports share these top-level fields:
+
+| Field           | Description                                                                 |
+| --------------- | --------------------------------------------------------------------------- |
+| `schemaVersion` | Version of this JSON envelope. Currently `1`.                               |
+| `command`       | Either `"doctor"` or `"check"`.                                             |
+| `success`       | Whether the command completed without a failure under the selected options. |
+| `error`         | On failure, a structured `name`, `message`, and `exitCode`.                 |
+
+A doctor report additionally contains `checks`, `issues`, and discovered `projects`:
+
+```json
+{
+  "schemaVersion": 1,
+  "command": "doctor",
+  "success": false,
+  "checks": [
+    { "id": "typescript-version", "label": "Checking TypeScript version", "status": "pass" },
+    { "id": "dependencies", "label": "Checking installed dependencies", "status": "pass" },
+    { "id": "tsconfig", "label": "Checking tsconfig.json", "status": "pass" },
+    { "id": "external-files", "label": "Checking external files support", "status": "skip" },
+    { "id": "vscode", "label": "Checking VSCode setup", "status": "skip" },
+    { "id": "schema", "label": "Checking schema", "status": "pass" }
+  ],
+  "issues": [],
+  "projects": [{ "label": "tsconfig.json", "tsconfig": "tsconfig.json" }]
+}
+```
+
+A check report contains `projects`, a severity `summary`, and `diagnostics` with file, line, column,
+and optional end locations.
+
+Diagnostic paths are emitted relative to their configured project root when possible.
+
+```json
+{
+  "schemaVersion": 1,
+  "command": "check",
+  "success": false,
+  "projects": [{ "label": "tsconfig.json", "tsconfig": "tsconfig.json" }],
+  "diagnostics": [
+    {
+      "severity": "error",
+      "message": "Unknown field \"missing\".",
+      "file": "src/query.ts",
+      "line": 4,
+      "column": 5
+    }
+  ],
+  "summary": { "info": 0, "warn": 0, "error": 1 },
+  "error": { "name": "Error", "message": "1 problem", "exitCode": 1 }
+}
+```
 
 ### `generate-schema`
 

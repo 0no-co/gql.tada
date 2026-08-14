@@ -178,8 +178,10 @@ remain, fragment references resolve, and no unrelated schema reach changed.
 | Goal | Command |
 | --- | --- |
 | Check installation and schema loading | `gql-tada doctor` |
+| Export setup checks as JSON | `gql-tada doctor --format json` |
 | Regenerate schema typings | `gql-tada generate output` |
 | Run GraphQL diagnostics | `gql-tada check --fail-on-warn` |
+| Export diagnostics as JSON | `gql-tada check --format json` |
 | Cache inferred document types | `gql-tada turbo` |
 | Analyze documents as JSON | `gql-tada scan --format json` |
 | Export relationships as JSON | `gql-tada scan --graph` |

@@ -73,11 +73,13 @@ Remember that `tsc` does not run language-service plugin diagnostics; use `gql-t
 - Configure `tadaTurboLocation` and run `gql-tada turbo`.
 - Follow the repository's policy before committing or ignoring the generated cache.
 
-### Analyze
+### Analyze and automate
 
-Use machine-readable scan output without changing source:
+Use versioned machine-readable output without changing source:
 
 ```sh
+gql-tada doctor --format json --output gql-tada-doctor.json
+gql-tada check --format json --output gql-tada-check.json
 gql-tada scan --format json --output gql-tada-scan.json
 gql-tada scan --graph --output gql-tada-graph.json
 ```
