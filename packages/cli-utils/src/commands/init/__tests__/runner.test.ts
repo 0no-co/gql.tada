@@ -63,6 +63,25 @@ describe('configureProject', () => {
     expect(output).toContain('Configured gql.tada');
   });
 
+  it('requires choosing install behavior for non-interactive mode', async () => {
+    const directory = await fixture();
+    const stdout = new PassThrough();
+    let output = '';
+    stdout.on('data', (chunk) => (output += chunk.toString()));
+    const cli = Cli.from([InitCommand], { binaryName: 'gql.tada' });
+
+    const missingInstallExit = await cli.run(['init', directory, '--schema', './schema.graphql'], {
+      stdout,
+    });
+    expect(missingInstallExit).toBe(1);
+    expect(output).toContain('Non-interactive init requires either --install or --no-install.');
+
+    output = '';
+    const missingSchemaExit = await cli.run(['init', directory, '--no-install'], { stdout });
+    expect(missingSchemaExit).toBe(1);
+    expect(output).toContain('Non-interactive init requires --schema.');
+  });
+
   it('configures a project non-interactively without running a package manager', async () => {
     const directory = await fixture();
     const result = await configureProject(directory, {
