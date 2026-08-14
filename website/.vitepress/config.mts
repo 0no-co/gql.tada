@@ -278,6 +278,22 @@ export default defineConfig({
               text: 'Recipebook',
               link: '/guides/recipebook',
             },
+            {
+              text: 'Migrating from GraphQL Code Generator',
+              link: '/guides/migrating-from-codegen',
+            },
+            {
+              text: 'GraphQL Client Integrations',
+              link: '/guides/client-integrations',
+            },
+            {
+              text: 'Troubleshooting',
+              link: '/guides/troubleshooting',
+            },
+            {
+              text: 'Agentic Workflows',
+              link: '/guides/agentic-workflows',
+            },
           ],
         },
         {

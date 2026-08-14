@@ -26,6 +26,8 @@ of your queries, fragments, and variables.
 If you instead would like to manually create a `graphql` function with an explicit schema type,
 [use `initGraphQLTada` instead.](#initgraphqltada)
 
+<llm-exclude>
+
 #### Example
 
 ```ts twoslash
@@ -103,6 +105,37 @@ const query = graphql(
 );
 ```
 
+</llm-exclude>
+
+<llm-only>
+
+#### Example
+
+Assuming gql.tada has been configured with your schema:
+
+```ts
+import { graphql } from 'gql.tada';
+
+const fragment = graphql(`
+  fragment HelloWorld on Query {
+    hello
+    world
+  }
+`);
+
+const query = graphql(
+  `
+    query HelloQuery {
+      hello
+      ...HelloWorld
+    }
+  `,
+  [fragment]
+);
+```
+
+</llm-only>
+
 ---
 
 ### `graphql.scalar()`
@@ -125,6 +158,8 @@ a scalar or enum, but not a full fragment.
 > It’s not recommended to use this utiliy to replace fragments, i.e. to
 > create your own object types. Try to use fragments where appropriate
 > instead.
+
+<llm-exclude>
 
 #### Example
 
@@ -173,6 +208,24 @@ function validateMediaEnum(value: 'Book' | 'Song' | 'Video') {
 type Media = ReturnType<typeof graphql.scalar<'Media'>>;
 ```
 
+</llm-exclude>
+
+<llm-only>
+
+#### Example
+
+```ts
+import { graphql } from 'gql.tada';
+
+function validateMediaEnum(value: 'Book' | 'Song' | 'Video') {
+  return graphql.scalar('Media', value);
+}
+
+type Media = ReturnType<typeof graphql.scalar<'Media'>>;
+```
+
+</llm-only>
+
 ---
 
 ### `graphql.persisted()`
@@ -206,6 +259,8 @@ can be fully omitted during runtime from the client-side bundle.
 > This may cause problems with GraphQL clients (especially normalized caches) that rely on the AST to be available,
 > since the full document will be transpile away.
 > For such clients, you may want to preserve the document by passing it as a second argument instead.
+
+<llm-exclude>
 
 #### Example
 
@@ -274,6 +329,26 @@ const query = graphql(`
 // You can now use this in your `useQuery` calls.
 const persistedOperation = graphql.persisted<typeof query>('sha256:x');
 ```
+
+</llm-exclude>
+
+<llm-only>
+
+#### Example
+
+```ts
+import { graphql } from 'gql.tada';
+
+const query = graphql(`
+  query Hello {
+    hello
+  }
+`);
+
+const persistedOperation = graphql.persisted<typeof query>('sha256:x');
+```
+
+</llm-only>
 
 ---
 
