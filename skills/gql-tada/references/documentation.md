@@ -27,9 +27,9 @@ Prefer the Markdown routes below when retrieving documentation for a task.
 
 ## Command semantics
 
-- `doctor` checks setup and schema loading; its output is human-readable.
+- `doctor` checks setup and schema loading; use `doctor --format json` for a versioned report.
 - `generate output` writes schema typings to `tadaOutputLocation`.
-- `check` runs GraphQL and gql.tada diagnostics; use it in addition to `tsc`.
+- `check` runs GraphQL and gql.tada diagnostics; use `check --format json` for structured diagnostics and run it in addition to `tsc`.
 - `turbo` writes a document type cache to `tadaTurboLocation`.
 - `scan --format json` emits a versioned experimental analysis report.
 - `scan --graph` emits only the relationship graph as JSON.
