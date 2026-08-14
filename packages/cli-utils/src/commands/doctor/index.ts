@@ -29,6 +29,7 @@ export class DoctorCommand extends Command {
       const result = createDoctorResult();
       const reporter = new DoctorReporter(result);
       let caught: unknown;
+      process.exitCode = 0;
       try {
         for await (const _output of run(reporter)) {
           // Machine mode records structured results and suppresses human output.
@@ -53,8 +54,37 @@ export class DoctorCommand extends Command {
         ...result,
         ...(error ? { error } : {}),
       };
-      await writeMachineOutput(tty, this.output, report);
-      return error?.exitCode ?? 0;
+
+      try {
+        await writeMachineOutput(tty, this.output, report);
+      } catch (writeError) {
+        const writeFailure = toMachineError(writeError);
+        const fallbackReport = {
+          ...report,
+          success: false,
+          error: error
+            ? {
+                ...error,
+                message: `${error.message}\nFailed to write JSON report to ${this.output || 'stdout'}: ${writeFailure.message}`,
+              }
+            : {
+                ...writeFailure,
+                message: `Failed to write JSON report to ${this.output || 'stdout'}: ${writeFailure.message}`,
+              },
+        };
+        try {
+          await writeMachineOutput(tty, undefined, fallbackReport);
+        } catch {
+          // If fallback output fails, preserve exit status and move on.
+        }
+        const exit = writeFailure.exitCode;
+        process.exitCode = exit;
+        return exit;
+      }
+
+      const exit = error?.exitCode ?? 0;
+      process.exitCode = exit;
+      return exit;
     }
 
     const result = await initTTY().start(run());

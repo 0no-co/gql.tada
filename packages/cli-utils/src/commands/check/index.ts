@@ -42,6 +42,7 @@ export class CheckCommand extends Command {
       const result = createCheckResult();
       const cwd = process.cwd();
       let caught: unknown;
+      process.exitCode = 0;
       try {
         for await (const _output of run(tty, {
           failOnWarn: this.failOnWarn,
@@ -65,8 +66,37 @@ export class CheckCommand extends Command {
         ...result,
         ...(error ? { error } : {}),
       };
-      await writeMachineOutput(tty, this.output, report);
-      return error?.exitCode ?? 0;
+
+      try {
+        await writeMachineOutput(tty, this.output, report);
+      } catch (writeError) {
+        const writeFailure = toMachineError(writeError);
+        const fallbackReport = {
+          ...report,
+          success: false,
+          error: error
+            ? {
+                ...error,
+                message: `${error.message}\nFailed to write JSON report to ${this.output || 'stdout'}: ${writeFailure.message}`,
+              }
+            : {
+                ...writeFailure,
+                message: `Failed to write JSON report to ${this.output || 'stdout'}: ${writeFailure.message}`,
+              },
+        };
+        try {
+          await writeMachineOutput(tty, undefined, fallbackReport);
+        } catch {
+          // If fallback output fails, preserve exit status and move on.
+        }
+        const exit = writeFailure.exitCode;
+        process.exitCode = exit;
+        return exit;
+      }
+
+      const exit = error?.exitCode ?? 0;
+      process.exitCode = exit;
+      return exit;
     }
 
     const tty = initTTY();

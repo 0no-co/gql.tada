@@ -109,6 +109,37 @@ describe('machine-readable command output', () => {
     expect(report.issues[0]).toMatchObject({ severity: 'error' });
   });
 
+  it('resets process.exitCode for successful machine JSON output', async () => {
+    vi.stubEnv('CI', '1');
+    const directory = await fixture();
+    process.chdir(directory);
+    const output = captureStdout();
+    vi.resetModules();
+    vi.doMock('../check/thread', () => ({
+      async *runDiagnostics() {
+        yield { kind: 'FILE_COUNT', fileCount: 0 };
+      },
+    }));
+    const { CheckCommand } = await import('../check');
+    const command = new CheckCommand();
+    command.format = 'json';
+    command.output = undefined;
+    command.failOnWarn = false;
+    command.minSeverity = 'info';
+    command.tsconfig = undefined;
+    process.exitCode = 123;
+
+    const exit = await command.execute();
+    const report = JSON.parse(output());
+    expect(exit).toBe(0);
+    expect(process.exitCode).toBe(0);
+    expect(report).toMatchObject({
+      schemaVersion: 1,
+      command: 'check',
+      success: true,
+    });
+  });
+
   it('returns structured check diagnostics and a non-zero exit code', async () => {
     vi.stubEnv('CI', '1');
     const directory = await fixture();
@@ -163,6 +194,38 @@ describe('machine-readable command output', () => {
       ],
       error: { exitCode: 1 },
     });
+  });
+
+  it('falls back to stdout when machine output file cannot be written', async () => {
+    vi.stubEnv('CI', '1');
+    const directory = await fixture();
+    process.chdir(directory);
+    const output = captureStdout();
+    await fs.mkdir(path.join(directory, 'reports'));
+    vi.resetModules();
+    vi.doMock('../check/thread', () => ({
+      async *runDiagnostics() {
+        yield { kind: 'FILE_COUNT', fileCount: 0 };
+      },
+    }));
+    const { CheckCommand } = await import('../check');
+    const command = new CheckCommand();
+    command.format = 'json';
+    command.output = './reports';
+    command.failOnWarn = false;
+    command.minSeverity = 'info';
+    command.tsconfig = undefined;
+
+    const exit = await command.execute();
+    const report = JSON.parse(output());
+    expect(exit).toBe(1);
+    expect(report).toMatchObject({
+      schemaVersion: 1,
+      command: 'check',
+      success: false,
+      error: { exitCode: 1 },
+    });
+    expect(report.error.message).toContain('Failed to write JSON report');
   });
 
   it('writes check JSON to a file without human terminal output', async () => {
