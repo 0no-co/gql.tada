@@ -1,6 +1,6 @@
 ---
 title: Typed Documents
-description: How GraphQL documents and TypeScript come together
+description: Understand TypedDocumentNode, gql.tada type inference, and integration with GraphQL clients.
 ---
 
 # Typed Documents

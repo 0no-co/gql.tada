@@ -1,5 +1,6 @@
 ---
 title: Configuration Format
+description: Reference every gql.tada TypeScript plugin and CLI configuration option.
 ---
 
 # Configuration Format

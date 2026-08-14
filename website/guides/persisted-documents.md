@@ -1,6 +1,6 @@
 ---
 title: Persisted Documents
-description: How to integrate with and generate persisted documents
+description: Define persisted GraphQL documents, generate manifests, and integrate them with urql or Apollo Client.
 ---
 
 # Persisted Documents

@@ -46,6 +46,10 @@ jobs:
         working-directory: website
         run: pnpm run export
 
+      - name: Validate agent documentation
+        working-directory: website
+        run: pnpm run validate:agents
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/pages-action@f0a1cd58cd66095dee69bfa18fa5efd1dde93bca # v1.5.0
         with:

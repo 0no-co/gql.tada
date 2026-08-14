@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: How to get set up and ready
+description: Install gql.tada, configure its TypeScript plugin and schema, and generate schema typings.
 ---
 
 # Installation

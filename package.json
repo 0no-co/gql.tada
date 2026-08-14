@@ -1,6 +1,6 @@
 {
   "name": "gql.tada",
-  "description": "The spec-compliant & magical GraphQL query language engine in the TypeScript type system",
+  "description": "Schema-aware TypedDocumentNode result and variable inference for GraphQL and TypeScript",
   "version": "1.11.3",
   "author": "0no.co <hi@0no.co>",
   "source": "./src/index.ts",
@@ -66,9 +66,16 @@
   "public": true,
   "keywords": [
     "graphql",
+    "typescript",
+    "typed-document-node",
+    "type-safe graphql",
     "graphql typescript",
     "graphql types",
     "graphql typegen",
+    "graphql codegen",
+    "apollo client",
+    "urql",
+    "graphql-request",
     "graphql-js",
     "client-side graphql"
   ],

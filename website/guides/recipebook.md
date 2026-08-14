@@ -1,6 +1,6 @@
 ---
 title: Recipebook
-description: A collection of tips, tricks, and patterns for common gql.tada use-cases.
+description: Apply gql.tada patterns for custom scalars, enum migrations, and TypeScript performance.
 ---
 
 # Recipebook

@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "vitepress dev",
     "export": "vitepress build",
-    "preview": "vitepress preview"
+    "preview": "vitepress preview",
+    "validate:agents": "node scripts/validate-agent-docs.mjs"
   },
   "devDependencies": {
     "@shikijs/core": "^2.5.0",
