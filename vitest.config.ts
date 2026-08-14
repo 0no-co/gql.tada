@@ -9,6 +9,12 @@ export default defineConfig({
       '@gql.tada/internal': fileURLToPath(
         new URL('packages/internal/src/index.ts', import.meta.url)
       ),
+      '@gql.tada/svelte-support': fileURLToPath(
+        new URL('packages/svelte-support/src/index.ts', import.meta.url)
+      ),
+      '@gql.tada/vue-support': fileURLToPath(
+        new URL('packages/vue-support/src/index.ts', import.meta.url)
+      ),
     },
   },
   test: {
