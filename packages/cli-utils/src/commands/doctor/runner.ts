@@ -17,6 +17,8 @@ import { findGraphQLConfig } from './helpers/graphqlConfig';
 import * as versions from './helpers/versions';
 import * as vscode from './helpers/vscode';
 import * as logger from './logger';
+import type { DoctorReporter } from './report';
+import { displayPath } from '../shared/machine';
 
 // NOTE: Currently, most tasks in this command complete too quickly
 // We slow them down to make the CLI output easier to follow along to
@@ -30,6 +32,8 @@ const delay = (ms = 700) => {
   }
 };
 
+const wait = (reporter?: DoctorReporter) => (reporter ? Promise.resolve() : delay());
+
 const enum Messages {
   TITLE = 'Doctor',
   DESCRIPTION = 'Detects problems with your setup',
@@ -41,10 +45,11 @@ const enum Messages {
   CHECK_SCHEMA = 'Checking schema',
 }
 
-export async function* run(): AsyncIterable<ComposeInput> {
+export async function* run(reporter?: DoctorReporter): AsyncIterable<ComposeInput> {
   yield logger.title(Messages.TITLE, Messages.DESCRIPTION);
+  reporter?.start('typescript-version');
   yield logger.runningTask(Messages.CHECK_TS_VERSION);
-  await delay();
+  await wait(reporter);
 
   // Check TypeScript version
   let packageJson: versions.PackageJson;
@@ -76,9 +81,11 @@ export async function* run(): AsyncIterable<ComposeInput> {
     );
   }
 
+  reporter?.pass('typescript-version');
   yield logger.completedTask(Messages.CHECK_TS_VERSION);
+  reporter?.start('dependencies');
   yield logger.runningTask(Messages.CHECK_DEPENDENCIES);
-  await delay();
+  await wait(reporter);
 
   const supportsEmbeddedLsp = semverComply(
     typeScriptVersion,
@@ -124,9 +131,11 @@ export async function* run(): AsyncIterable<ComposeInput> {
     );
   }
 
+  reporter?.pass('dependencies');
   yield logger.completedTask(Messages.CHECK_DEPENDENCIES);
+  reporter?.start('tsconfig');
   yield logger.runningTask(Messages.CHECK_TSCONFIG);
-  await delay();
+  await wait(reporter);
 
   let configResults: LoadConfigResult[];
   try {
@@ -174,6 +183,13 @@ export async function* run(): AsyncIterable<ComposeInput> {
     throw logger.externalError('The output locations of your configured projects overlap.', error);
   }
 
+  reporter?.result.projects.push(
+    ...projects.map((project) => ({
+      label: project.label,
+      tsconfig: displayPath(project.configResult.tsconfigPath),
+    }))
+  );
+  reporter?.pass('tsconfig');
   yield logger.completedTask(Messages.CHECK_TSCONFIG);
   if (projects.length > 1) {
     yield logger.hintMessage(
@@ -183,12 +199,13 @@ export async function* run(): AsyncIterable<ComposeInput> {
     );
   }
 
-  yield* runExternalFilesChecks(projects, packageJson);
+  yield* runExternalFilesChecks(projects, packageJson, reporter);
 
-  yield* runVSCodeChecks();
+  yield* runVSCodeChecks(reporter);
 
+  reporter?.start('schema');
   yield logger.runningTask(Messages.CHECK_SCHEMA);
-  await delay();
+  await wait(reporter);
 
   for (const project of projects) {
     try {
@@ -204,18 +221,20 @@ export async function* run(): AsyncIterable<ComposeInput> {
     }
   }
 
+  reporter?.pass('schema');
   yield logger.completedTask(Messages.CHECK_SCHEMA, true);
-  await delay();
+  await wait(reporter);
 
   yield logger.success();
 }
 
-async function* runVSCodeChecks(): AsyncIterable<ComposeInput> {
+async function* runVSCodeChecks(reporter?: DoctorReporter): AsyncIterable<ComposeInput> {
   const suggestedExtensions = await vscode.loadSuggestedExtensionsList();
   const isVSCodeInstalled = await vscode.isVSCodeInstalled();
   if (suggestedExtensions.length || isVSCodeInstalled) {
+    reporter?.start('vscode');
     yield logger.runningTask(Messages.CHECK_VSCODE);
-    await delay();
+    await wait(reporter);
 
     let hasEndedTask = false;
     let userExtensions: readonly string[] = [];
@@ -226,6 +245,10 @@ async function* runVSCodeChecks(): AsyncIterable<ComposeInput> {
           hasEndedTask = true;
           yield logger.warningTask(Messages.CHECK_VSCODE);
         }
+        reporter?.warn(
+          'vscode',
+          'We recommend installing the "GraphQL: Syntax Highlighting" extension for VSCode.'
+        );
         yield logger.hintMessage(
           `We recommend you to install the ${logger.code(
             '"GraphQL: Syntax Highlighting"'
@@ -245,6 +268,10 @@ async function* runVSCodeChecks(): AsyncIterable<ComposeInput> {
         yield logger.warningTask(Messages.CHECK_VSCODE);
       }
       const fileName = path.basename(graphqlConfig);
+      reporter?.warn(
+        'vscode',
+        'The "GraphQL: Language Feature Support" VSCode extension can conflict with gql.tada when a GraphQL config targets TypeScript files.'
+      );
       yield logger.hintMessage(
         `The ${logger.code(
           '"GraphQL: Language Feature Support"'
@@ -259,6 +286,7 @@ async function* runVSCodeChecks(): AsyncIterable<ComposeInput> {
     }
 
     if (!hasEndedTask) {
+      reporter?.pass('vscode');
       yield logger.completedTask(Messages.CHECK_VSCODE);
     }
   }
@@ -266,7 +294,8 @@ async function* runVSCodeChecks(): AsyncIterable<ComposeInput> {
 
 async function* runExternalFilesChecks(
   projects: readonly ProjectContext[],
-  packageJson: versions.PackageJson
+  packageJson: versions.PackageJson,
+  reporter?: DoctorReporter
 ): AsyncIterable<ComposeInput> {
   const externalFiles: ts.SourceFile[] = [];
   for (const project of projects) {
@@ -282,8 +311,9 @@ async function* runExternalFilesChecks(
   }
 
   if (externalFiles.length) {
+    reporter?.start('external-files');
     yield logger.runningTask(Messages.CHECK_EXTERNAL_FILES);
-    await delay();
+    await wait(reporter);
 
     const extensions = new Set(
       externalFiles.map((sourceFile) => path.extname(sourceFile.fileName))
@@ -309,6 +339,7 @@ async function* runExternalFilesChecks(
       );
     }
 
+    reporter?.pass('external-files');
     yield logger.completedTask(Messages.CHECK_EXTERNAL_FILES);
   }
 }
