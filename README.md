@@ -72,7 +72,7 @@ export type PokemonVariables = VariablesOf<typeof PokemonQuery>;
 
 The value returned by `graphql()` is a `TypedDocumentNode`. It can be passed directly to clients
 including [urql](https://urql.dev), [Apollo Client](https://www.apollographql.com/docs/react),
-[graphql-request](https://github.com/graffle-js/graffle), and other clients that accept typed
+[graphql-request](https://github.com/graffle-js/graffle/tree/main/packages/graphql-request), and other clients that accept typed
 GraphQL documents.
 
 For the complete setup, including VSCode, custom scalars, Vue, and Svelte, read the

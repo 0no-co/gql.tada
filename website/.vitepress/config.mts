@@ -317,7 +317,7 @@ export default defineConfig({
         ignoreFiles: ['CHANGELOG.md', 'community/*', 'devlog/*'],
         sidebar: (sidebar) => {
           if (!sidebar || Array.isArray(sidebar)) return sidebar;
-          const { ['/community']: _community, ...rest } = sidebar;
+          const { ['/community']: _community, ['/devlog']: _devlog, ...rest } = sidebar;
           return rest;
         },
         domain: 'https://gql-tada.0no.co',
