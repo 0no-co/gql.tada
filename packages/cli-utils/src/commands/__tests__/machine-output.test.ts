@@ -63,7 +63,7 @@ afterEach(async () => {
   );
 });
 
-describe('machine-readable command output', () => {
+describe('machine-readable command output', { sequential: true, timeout: 15_000 }, () => {
   it('writes a clean doctor JSON report to stdout', async () => {
     vi.stubEnv('CI', '1');
     const directory = await fixture();

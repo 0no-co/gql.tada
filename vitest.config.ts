@@ -19,7 +19,7 @@ export default defineConfig({
   },
   test: {
     // cli-utils has its own workspace project; exclude it here to avoid running its tests twice.
-    exclude: [...configDefaults.exclude, 'packages/cli-utils/**'],
+    exclude: [...configDefaults.exclude, '**/packages/cli-utils/**'],
     benchmark: {},
     typecheck: {
       enabled: true,
