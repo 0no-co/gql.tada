@@ -61,7 +61,7 @@
     "@gql.tada/internal": "workspace:*"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0"
+    "typescript": "^5.0.0 || ^6.0.0 || ^7.0.0 || >=7.1.0-dev.20260815.1 <7.2.0 || ^8.0.0"
   },
   "public": true,
   "keywords": [
@@ -84,7 +84,8 @@
     "changeset:version": "changeset version && pnpm install --lockfile-only",
     "changeset:publish": "changeset publish",
     "check:ts-latest": "pnpm --package=typescript@latest dlx tsc --noEmit",
-    "check:tsgo": "pnpm --package=@typescript/native-preview dlx tsgo --noEmit"
+    "check:tsgo": "pnpm --package=@typescript/native-preview dlx tsgo --noEmit",
+    "check:ts-native-api": "node scripts/check-typescript-71-native-api.mjs"
   },
   "repository": "https://github.com/0no-co/gql.tada",
   "bugs": {
@@ -139,6 +140,7 @@
     "rollup-plugin-dts": "^6.1.1",
     "terser": "^5.31.6",
     "typescript": "^5.9.3",
+    "typescript-native": "npm:typescript@7.1.0-dev.20260815.1",
     "vitest": "2.0.5"
   },
   "publishConfig": {

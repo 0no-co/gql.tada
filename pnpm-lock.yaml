@@ -118,6 +118,9 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+      typescript-native:
+        specifier: npm:typescript@7.1.0-dev.20260815.1
+        version: typescript@7.1.0-dev.20260815.1
       vitest:
         specifier: 2.0.5
         version: 2.0.5(@types/node@22.4.0)(terser@5.31.6)
@@ -1420,6 +1423,48 @@ packages:
   '@typescript-eslint/visitor-keys@8.1.0':
     resolution: {integrity: sha512-ba0lNI19awqZ5ZNKh6wCModMwoZs457StTebQ0q1NP58zSi2F6MOZRXwfKZy+jB78JNJ/WH8GSh2IQNzXX8Nag==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@typescript/typescript-darwin-arm64@7.1.0-dev.20260815.1':
+    resolution: {integrity: sha512-xx3by+4jtumexNJbzCY+h1CcCXeUvwbgtY8r1VUKsSnh6c2UW43DwexirCks+jTKJRosoB7GJ88I8ww03k6tfQ==}
+    engines: {node: '>=16.20.0'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@typescript/typescript-darwin-x64@7.1.0-dev.20260815.1':
+    resolution: {integrity: sha512-AYpZQvxoGQEPbnreOOTDX/zHod13AmJsZTdrr4IYlIB1ewGBfjzbCtaShwB1m6SPZcqQxD7SMNhakOPtrNqNyg==}
+    engines: {node: '>=16.20.0'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@typescript/typescript-linux-arm64@7.1.0-dev.20260815.1':
+    resolution: {integrity: sha512-1HRaiTU8Smie7zhlakZnuHdw699edwizxNJFucuyQ9yk9w2pDlhpG8k1JlrZYU3GkuyfJRxIr3UjvvNBMbzbMQ==}
+    engines: {node: '>=16.20.0'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@typescript/typescript-linux-arm@7.1.0-dev.20260815.1':
+    resolution: {integrity: sha512-NYz3FiC/OuzzEORRP+XmPQbmursjVSqjDR0GHpZ8coL6+lbgpgGARikeYmlUP8ilLenyYtMLD5YX0Hnou3nIaw==}
+    engines: {node: '>=16.20.0'}
+    cpu: [arm]
+    os: [linux]
+
+  '@typescript/typescript-linux-x64@7.1.0-dev.20260815.1':
+    resolution: {integrity: sha512-+ulIyUEtjLo0GdVU2ySMyBd9SiG79ADmABczbty29jiVHwyuG5Wg8D3x39Gan+59wgcprvj28x73dvqzvxo+Ww==}
+    engines: {node: '>=16.20.0'}
+    cpu: [x64]
+    os: [linux]
+
+  '@typescript/typescript-win32-arm64@7.1.0-dev.20260815.1':
+    resolution: {integrity: sha512-rfYbC96N3DaYTQ/vHVe5XLccCk01TMCNsbXcqe2AOpCfK4F5xDivKNSancdC/pjWnlHBW78xtOE3e12eNAfNQQ==}
+    engines: {node: '>=16.20.0'}
+    cpu: [arm64]
+    os: [win32]
+
+  '@typescript/typescript-win32-x64@7.1.0-dev.20260815.1':
+    resolution: {integrity: sha512-uopfANsZEDztYSDArLT4RYKr6Zx7hdLLic2d5+D09b884AJEdNSC11e1owj97BvS30RlTmYAD5/kh6APPycnQg==}
+    engines: {node: '>=16.20.0'}
+    cpu: [x64]
+    os: [win32]
 
   '@typescript/vfs@1.6.4':
     resolution: {integrity: sha512-PJFXFS4ZJKiJ9Qiuix6Dz/OwEIqHD7Dme1UwZhTK11vR+5dqW2ACbdndWQexBzCx+CPuMe5WBYQWCsFyGlQLlQ==}
@@ -3646,6 +3691,11 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
+  typescript@7.1.0-dev.20260815.1:
+    resolution: {integrity: sha512-nOY5i7ODbbn+/VDHkfCn64YmQm+PgIBRn1k9iOS9CTUwU2quWA7D/CMjlEUweREH2kWBm/2CYnHFJRTjQ4dTSA==}
+    engines: {node: '>=16.20.0'}
+    hasBin: true
+
   uc.micro@2.1.0:
     resolution: {integrity: sha512-ARDJmphmdvUk6Glw7y9DQ2bFkKBHwQHLi2lsaH6PPmz/Ka9sFOBsBluozhDltWmnv9u/cF6Rt87znRTPV+yp/A==}
 
@@ -5166,6 +5216,27 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 8.1.0
       eslint-visitor-keys: 3.4.3
+
+  '@typescript/typescript-darwin-arm64@7.1.0-dev.20260815.1':
+    optional: true
+
+  '@typescript/typescript-darwin-x64@7.1.0-dev.20260815.1':
+    optional: true
+
+  '@typescript/typescript-linux-arm64@7.1.0-dev.20260815.1':
+    optional: true
+
+  '@typescript/typescript-linux-arm@7.1.0-dev.20260815.1':
+    optional: true
+
+  '@typescript/typescript-linux-x64@7.1.0-dev.20260815.1':
+    optional: true
+
+  '@typescript/typescript-win32-arm64@7.1.0-dev.20260815.1':
+    optional: true
+
+  '@typescript/typescript-win32-x64@7.1.0-dev.20260815.1':
+    optional: true
 
   '@typescript/vfs@1.6.4(typescript@5.9.3)':
     dependencies:
@@ -7707,6 +7778,16 @@ snapshots:
       is-typed-array: 1.1.12
 
   typescript@5.9.3: {}
+
+  typescript@7.1.0-dev.20260815.1:
+    optionalDependencies:
+      '@typescript/typescript-darwin-arm64': 7.1.0-dev.20260815.1
+      '@typescript/typescript-darwin-x64': 7.1.0-dev.20260815.1
+      '@typescript/typescript-linux-arm': 7.1.0-dev.20260815.1
+      '@typescript/typescript-linux-arm64': 7.1.0-dev.20260815.1
+      '@typescript/typescript-linux-x64': 7.1.0-dev.20260815.1
+      '@typescript/typescript-win32-arm64': 7.1.0-dev.20260815.1
+      '@typescript/typescript-win32-x64': 7.1.0-dev.20260815.1
 
   uc.micro@2.1.0: {}
 

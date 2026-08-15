@@ -9,6 +9,8 @@ on:
       - src/**
       - packages/**
       - examples/**
+      - scripts/check-typescript-71-native-api.mjs
+      - scripts/typescript-71-compat/**
       - .github/workflows/typescript-compat.yml
   schedule:
     - cron: '0 8 * * 1'
@@ -29,6 +31,9 @@ jobs:
             experimental: false
           - name: TypeScript native preview
             script: check:tsgo
+            experimental: true
+          - name: TypeScript 7.1 native API
+            script: check:ts-native-api
             experimental: true
     steps:
       - name: Checkout Repo
