@@ -140,7 +140,7 @@
     "rollup-plugin-dts": "^6.1.1",
     "terser": "^5.31.6",
     "typescript": "^5.9.3",
-    "typescript-native": "npm:typescript@7.1.0-dev.20260815.1",
+    "typescript-native": "npm:typescript@7.1.0-dev.20260821.1",
     "vitest": "2.0.5"
   },
   "publishConfig": {
