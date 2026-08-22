@@ -81,13 +81,13 @@ export type takeObjectRec<
     ? takeObjectRec<[...Fields, Field], In, Const>
     : void;
 
-type takeArgument<In extends any[], Const extends boolean> = In extends [
-  { kind: Token.Name; name: infer ArgName },
-  Token.Colon,
-  ...infer In,
-]
+type takeArgument<
+  In extends any[],
+  Const extends boolean,
+  ArgumentKind = Kind.ARGUMENT,
+> = In extends [{ kind: Token.Name; name: infer ArgName }, Token.Colon, ...infer In]
   ? takeValue<In, Const> extends _match<infer Value, infer In>
-    ? _match<{ kind: Kind.ARGUMENT; name: { kind: Kind.NAME; value: ArgName }; value: Value }, In>
+    ? _match<{ kind: ArgumentKind; name: { kind: Kind.NAME; value: ArgName }; value: Value }, In>
     : void
   : void;
 
@@ -95,16 +95,18 @@ type _takeArgumentsRec<
   Arguments extends any[],
   In extends any[],
   Const extends boolean,
+  ArgumentKind,
 > = In extends [Token.ParenClose, ...infer In]
   ? _match<Arguments, In>
-  : takeArgument<In, Const> extends _match<infer Argument, infer In>
-    ? _takeArgumentsRec<[...Arguments, Argument], In, Const>
+  : takeArgument<In, Const, ArgumentKind> extends _match<infer Argument, infer In>
+    ? _takeArgumentsRec<[...Arguments, Argument], In, Const, ArgumentKind>
     : void;
-export type takeArguments<In extends any[], Const extends boolean> = In extends [
-  Token.ParenOpen,
-  ...infer In,
-]
-  ? _takeArgumentsRec<[], In, Const>
+export type takeArguments<
+  In extends any[],
+  Const extends boolean,
+  ArgumentKind = Kind.ARGUMENT,
+> = In extends [Token.ParenOpen, ...infer In]
+  ? _takeArgumentsRec<[], In, Const, ArgumentKind>
   : _match<[], In>;
 
 export type takeDirective<In extends any[], Const extends boolean> = In extends [
@@ -195,15 +197,18 @@ type _takeFragmentSpread<In extends any[]> = In extends [Token.Spread, ...infer 
         : void
       : void
     : In extends [{ kind: Token.Name; name: infer Name }, ...infer In]
-      ? takeDirectives<In, false> extends _match<infer Directives, infer In>
-        ? _match<
-            {
-              kind: Kind.FRAGMENT_SPREAD;
-              name: { kind: Kind.NAME; value: Name };
-              directives: Directives;
-            },
-            In
-          >
+      ? takeArguments<In, false, Kind.FRAGMENT_ARGUMENT> extends _match<infer Arguments, infer In>
+        ? takeDirectives<In, false> extends _match<infer Directives, infer In>
+          ? _match<
+              {
+                kind: Kind.FRAGMENT_SPREAD;
+                name: { kind: Kind.NAME; value: Name };
+                arguments: Arguments;
+                directives: Directives;
+              },
+              In
+            >
+          : void
         : void
       : takeDirectives<In, false> extends _match<infer Directives, infer In>
         ? takeSelectionSet<In> extends _match<infer SelectionSet, infer In>
@@ -315,22 +320,29 @@ export type takeVarDefinitions<In extends any[]> = In extends [Token.ParenOpen, 
 export type takeFragmentDefinition<In extends any[]> = In extends [
   { kind: Token.Name; name: 'fragment' },
   { kind: Token.Name; name: infer Name },
-  { kind: Token.Name; name: 'on' },
-  { kind: Token.Name; name: infer Type },
   ...infer In,
 ]
-  ? takeDirectives<In, true> extends _match<infer Directives, infer In>
-    ? takeSelectionSet<In> extends _match<infer SelectionSet, infer In>
-      ? _match<
-          {
-            kind: Kind.FRAGMENT_DEFINITION;
-            name: { kind: Kind.NAME; value: Name };
-            typeCondition: { kind: Kind.NAMED_TYPE; name: { kind: Kind.NAME; value: Type } };
-            directives: Directives;
-            selectionSet: SelectionSet;
-          },
-          In
-        >
+  ? takeVarDefinitions<In> extends _match<infer VarDefinitions, infer In>
+    ? In extends [
+        { kind: Token.Name; name: 'on' },
+        { kind: Token.Name; name: infer Type },
+        ...infer In,
+      ]
+      ? takeDirectives<In, true> extends _match<infer Directives, infer In>
+        ? takeSelectionSet<In> extends _match<infer SelectionSet, infer In>
+          ? _match<
+              {
+                kind: Kind.FRAGMENT_DEFINITION;
+                name: { kind: Kind.NAME; value: Name };
+                variableDefinitions: VarDefinitions;
+                typeCondition: { kind: Kind.NAMED_TYPE; name: { kind: Kind.NAME; value: Type } };
+                directives: Directives;
+                selectionSet: SelectionSet;
+              },
+              In
+            >
+          : void
+        : void
       : void
     : void
   : void;

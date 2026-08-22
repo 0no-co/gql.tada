@@ -216,6 +216,87 @@ describe('takeVarDefinitions', () => {
 });
 
 describe('takeSelectionSet', () => {
+  it('parses fragment spreads with fragment arguments', () => {
+    type expected = _match<
+      {
+        kind: Kind.SELECTION_SET;
+        selections: [
+          {
+            kind: Kind.FRAGMENT_SPREAD;
+            name: {
+              kind: Kind.NAME;
+              value: 'Fields';
+            };
+            arguments: [
+              {
+                kind: Kind.FRAGMENT_ARGUMENT;
+                name: {
+                  kind: Kind.NAME;
+                  value: 'size';
+                };
+                value: {
+                  kind: Kind.VARIABLE;
+                  name: {
+                    kind: Kind.NAME;
+                    value: 'size';
+                  };
+                };
+              },
+              {
+                kind: Kind.FRAGMENT_ARGUMENT;
+                name: {
+                  kind: Kind.NAME;
+                  value: 'tag';
+                };
+                value: {
+                  kind: Kind.STRING;
+                  value: string;
+                  block: false;
+                };
+              },
+            ];
+            directives: [];
+          },
+        ];
+      },
+      []
+    >;
+
+    expectTypeOf<
+      takeSelectionSet<tokenize<'{ ...Fields(size: $size, tag: "hero") }'>>
+    >().toEqualTypeOf<expected>();
+  });
+
+  it('parses fragment arguments before directives', () => {
+    type actual = takeSelectionSet<tokenize<'{ ...Fields(size: 2) @include(if: true) }'>>;
+
+    expectTypeOf<actual>().not.toEqualTypeOf<void>();
+    expectTypeOf<
+      actual extends _match<{ selections: [{ directives: [infer Directive] }] }, any>
+        ? Directive
+        : never
+    >().toEqualTypeOf<{
+      kind: Kind.DIRECTIVE;
+      name: {
+        kind: Kind.NAME;
+        value: 'include';
+      };
+      arguments: [
+        {
+          kind: Kind.ARGUMENT;
+          name: {
+            kind: Kind.NAME;
+            value: 'if';
+          };
+          value: {
+            kind: Kind.BOOLEAN;
+            value: boolean;
+          };
+        },
+      ];
+    }>();
+  });
+
   it('does not accept fragment spread of "on"', () => {
     type expected = _match<
       {
@@ -224,6 +305,7 @@ describe('takeSelectionSet', () => {
           {
             kind: Kind.FRAGMENT_SPREAD;
             directives: [];
+            arguments: [];
             name: {
               kind: Kind.NAME;
               value: 'On';
@@ -316,6 +398,7 @@ describe('takeOperationDefinition', () => {
           kind: Kind.NAME;
           value: 'name';
         };
+        variableDefinitions: [];
         typeCondition: {
           kind: Kind.NAMED_TYPE;
           name: {
@@ -353,6 +436,72 @@ describe('takeOperationDefinition', () => {
     expectTypeOf<
       takeFragmentDefinition<tokenize<'fragment name on Type { field }'>>
     >().toEqualTypeOf<expected>();
+  });
+
+  it('parses fragment argument definitions', () => {
+    type actual = takeFragmentDefinition<
+      tokenize<'fragment name($size: Int! = 2, $tag: String) on Type { field }'>
+    >;
+
+    expectTypeOf<actual>().not.toEqualTypeOf<void>();
+    expectTypeOf<
+      actual extends _match<{ variableDefinitions: infer VarDefinitions }, any>
+        ? VarDefinitions
+        : never
+    >().toEqualTypeOf<
+      [
+        {
+          kind: Kind.VARIABLE_DEFINITION;
+          variable: {
+            kind: Kind.VARIABLE;
+            name: {
+              kind: Kind.NAME;
+              value: 'size';
+            };
+          };
+          type: {
+            kind: Kind.NON_NULL_TYPE;
+            type: {
+              kind: Kind.NAMED_TYPE;
+              name: {
+                kind: Kind.NAME;
+                value: 'Int';
+              };
+            };
+          };
+          defaultValue: {
+            kind: Kind.INT;
+            value: string;
+          };
+          directives: [];
+        },
+        {
+          kind: Kind.VARIABLE_DEFINITION;
+          variable: {
+            kind: Kind.VARIABLE;
+            name: {
+              kind: Kind.NAME;
+              value: 'tag';
+            };
+          };
+          type: {
+            kind: Kind.NAMED_TYPE;
+            name: {
+              kind: Kind.NAME;
+              value: 'String';
+            };
+          };
+          defaultValue: undefined;
+          directives: [];
+        },
+      ]
+    >();
+  });
+
+  it('does not accept fragment argument definitions after the type condition', () => {
+    expectTypeOf<
+      takeFragmentDefinition<tokenize<'fragment name on Type($size: Int!) { field }'>>
+    >().toEqualTypeOf<void>();
   });
 });
 
