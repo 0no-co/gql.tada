@@ -966,3 +966,90 @@ describe('graphql.persisted()', () => {
     graphql.persisted<number>('Test');
   });
 });
+
+describe('graphql() with fragment arguments', () => {
+  const graphql = initGraphQLTada<{ introspection: simpleIntrospection }>();
+
+  it('should accept fragment arguments on definitions and spreads', () => {
+    const fragment = graphql(`
+      fragment Fields($skipText: Boolean! = false) on Todo {
+        id
+        text @skip(if: $skipText)
+      }
+    `);
+
+    const query = graphql(
+      `
+        query Test($limit: Int) {
+          todos(limit: $limit) {
+            ...Fields(skipText: true)
+          }
+        }
+      `,
+      [fragment]
+    );
+
+    expectTypeOf<FragmentOf<typeof fragment>>().toEqualTypeOf<{
+      [$tada.fragmentRefs]: {
+        Fields: 'Todo';
+      };
+    }>();
+
+    expectTypeOf<ResultOf<typeof query>>().toEqualTypeOf<{
+      todos:
+        | ({
+            [$tada.fragmentRefs]: {
+              Fields: 'Todo';
+            };
+          } | null)[]
+        | null;
+    }>();
+
+    // Fragment arguments are scoped to the fragment and never leak into the operation
+    expectTypeOf<VariablesOf<typeof query>>().toEqualTypeOf<{
+      limit?: number | null;
+    }>();
+  });
+
+  it('should expose fragment arguments as the fragment’s own variables', () => {
+    const fragment = graphql(`
+      fragment Fields($skipText: Boolean!) on Todo {
+        id
+        text @skip(if: $skipText)
+      }
+    `);
+
+    expectTypeOf<VariablesOf<typeof fragment>>().toEqualTypeOf<{
+      skipText: boolean;
+    }>();
+  });
+
+  it('should still infer unmasked results of fragments with arguments', () => {
+    const fragment = graphql(`
+      fragment Fields($skipText: Boolean! = false) on Todo @_unmask {
+        id
+        text @skip(if: $skipText)
+      }
+    `);
+
+    const query = graphql(
+      `
+        query Test {
+          todos {
+            ...Fields(skipText: false)
+          }
+        }
+      `,
+      [fragment]
+    );
+
+    expectTypeOf<ResultOf<typeof query>>().toEqualTypeOf<{
+      todos:
+        | ({
+            id: string;
+            text?: string | undefined;
+          } | null)[]
+        | null;
+    }>();
+  });
+});

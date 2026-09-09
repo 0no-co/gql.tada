@@ -312,6 +312,7 @@ export type kitchensinkDocument = {
                                       kind: Kind.NAME;
                                       value: 'frag';
                                     };
+                                    arguments: [];
                                     directives: [
                                       {
                                         kind: Kind.DIRECTIVE;
@@ -646,6 +647,7 @@ export type kitchensinkDocument = {
         kind: Kind.NAME;
         value: 'frag';
       };
+      variableDefinitions: [];
       typeCondition: {
         kind: Kind.NAMED_TYPE;
         name: {
