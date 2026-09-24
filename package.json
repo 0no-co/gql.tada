@@ -66,9 +66,16 @@
   "public": true,
   "keywords": [
     "graphql",
+    "typescript",
+    "typed-document-node",
+    "type-safe graphql",
     "graphql typescript",
     "graphql types",
     "graphql typegen",
+    "graphql codegen",
+    "apollo client",
+    "urql",
+    "graphql-request",
     "graphql-js",
     "client-side graphql"
   ],

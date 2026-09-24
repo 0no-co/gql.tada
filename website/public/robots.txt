@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gql-tada.0no.co/sitemap.xml

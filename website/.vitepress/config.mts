@@ -12,6 +12,56 @@ import bundledGraphqlLanguages from '@shikijs/langs/graphql';
 
 import { graphqlLanguage } from './graphql-textmate.mts';
 
+const siteDescription = 'Magical GraphQL query engine for TypeScript';
+const agentDescription =
+  'Schema-aware TypedDocumentNode result and variable inference for GraphQL and TypeScript';
+
+const softwareSourceCode = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareSourceCode',
+  name: 'gql.tada',
+  description: siteDescription,
+  codeRepository: 'https://github.com/0no-co/gql.tada',
+  url: 'https://gql-tada.0no.co',
+  license: 'https://opensource.org/license/mit',
+  programmingLanguage: 'TypeScript',
+  runtimePlatform: 'Node.js',
+});
+
+const agentDocumentationTemplate = [
+  '# {title}',
+  '',
+  '{description}',
+  '',
+  '{details}',
+  '',
+  '## Start here',
+  '',
+  '- [Install and configure gql.tada](https://gql-tada.0no.co/get-started/installation.md)',
+  '- [Author typed GraphQL documents](https://gql-tada.0no.co/get-started/writing-graphql.md)',
+  '- [Use the CLI in development and CI](https://gql-tada.0no.co/get-started/workflows.md)',
+  '',
+  '## Common tasks',
+  '',
+  '- [Integrate TypedDocumentNode with GraphQL clients](https://gql-tada.0no.co/guides/typed-documents.md#client-support)',
+  '- [Colocate, compose, and mask fragments](https://gql-tada.0no.co/guides/fragment-colocation.md)',
+  '- [Configure multiple schemas or monorepos](https://gql-tada.0no.co/guides/multiple-schemas.md)',
+  '- [Generate and integrate persisted documents](https://gql-tada.0no.co/guides/persisted-documents.md)',
+  '- [Create type-safe test fixtures](https://gql-tada.0no.co/guides/testing.md)',
+  '- [Tune TypeScript performance](https://gql-tada.0no.co/guides/recipebook.md#typescript-performance)',
+  '',
+  '## Automation and reference',
+  '',
+  '- [Analyze a project with `gql-tada scan --format json`](https://gql-tada.0no.co/reference/gql-tada-cli.md#scan)',
+  '- [gql.tada API reference](https://gql-tada.0no.co/reference/gql-tada-api.md)',
+  '- [CLI reference](https://gql-tada.0no.co/reference/gql-tada-cli.md)',
+  '- [Configuration reference](https://gql-tada.0no.co/reference/config-format.md)',
+  '',
+  '## Complete documentation',
+  '',
+  '{toc}',
+].join('\n');
+
 const devlogItems = [
   {
     text: 'v1.11.0',
@@ -43,7 +93,7 @@ export default defineConfig({
 
   lang: 'en-US',
   title: 'gql.tada 🪄',
-  description: 'Magical GraphQL query engine for TypeScript',
+  description: siteDescription,
   cleanUrls: true,
   lastUpdated: true,
 
@@ -53,7 +103,20 @@ export default defineConfig({
     ['link', { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' }],
     ['link', { rel: 'icon', href: '/favicon.ico', sizes: '48x48' }],
     ['link', { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' }],
+    ['link', { rel: 'describedby', href: '/llms.txt' }],
+    ['script', { type: 'application/ld+json' }, softwareSourceCode],
   ],
+
+  transformHead({ pageData }) {
+    const relativePath = pageData.relativePath;
+    if (!/^(get-started|guides|reference)\//.test(relativePath)) return;
+
+    const markdownPath = relativePath.endsWith('/index.md')
+      ? `/${relativePath.slice(0, -'/index.md'.length)}.md`
+      : `/${relativePath}`;
+
+    return [['link', { rel: 'alternate', type: 'text/markdown', href: markdownPath }]];
+  },
 
   sitemap: {
     hostname: 'https://gql-tada.0no.co'
@@ -255,10 +318,16 @@ export default defineConfig({
         ignoreFiles: ['CHANGELOG.md', 'community/*', 'devlog/*'],
         sidebar: (sidebar) => {
           if (!sidebar || Array.isArray(sidebar)) return sidebar;
-          const { ['/community']: _community, ...rest } = sidebar;
+          const { ['/community']: _community, ['/devlog']: _devlog, ...rest } = sidebar;
           return rest;
         },
-        customLLMsTxtTemplate: ['# {title}', '', '{description}', '', '## Table of Contents', '', '{toc}'].join('\n'),
+        domain: 'https://gql-tada.0no.co',
+        customTemplateVariables: {
+          description: agentDescription,
+          details:
+            'gql.tada infers schema-aware TypedDocumentNode result and variable types directly in TypeScript. It works with TypedDocumentNode-compatible clients without generating a TypeScript file for every GraphQL operation.',
+        },
+        customLLMsTxtTemplate: agentDocumentationTemplate,
       }) as any,
     ],
   },
