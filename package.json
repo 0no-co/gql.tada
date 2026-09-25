@@ -18,6 +18,7 @@
     "cli/",
     "ts-plugin/",
     "testing/",
+    "addons-graphcache/",
     "bin/",
     "dist/"
   ],
@@ -45,6 +46,12 @@
       "import": "./dist/gql-tada-testing.mjs",
       "require": "./dist/gql-tada-testing.js",
       "source": "./src/testing.ts"
+    },
+    "./addons/graphcache": {
+      "types": "./dist/gql-tada-addons-graphcache.d.ts",
+      "import": "./dist/gql-tada-addons-graphcache.mjs",
+      "require": "./dist/gql-tada-addons-graphcache.js",
+      "source": "./src/addons/graphcache.ts"
     },
     "./ts-plugin": {
       "types": "./dist/gql-tada-ts-plugin.d.ts",

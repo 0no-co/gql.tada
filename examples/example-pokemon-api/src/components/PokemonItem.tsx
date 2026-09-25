@@ -17,11 +17,7 @@ const PokemonItem = ({ data }: Props) => {
     return null;
   }
 
-  return (
-    <li>
-      {pokemon.name}
-    </li>
-  );
+  return <li>{String(pokemon.name)}</li>;
 };
 
 export { PokemonItem };
