@@ -3,68 +3,58 @@ import type { SchemaLike } from './introspection';
 import type { DocumentNodeLike } from './parser';
 import type { obj } from './utils';
 
-type getInputObjectTypeRec<
-  InputFields,
-  Introspection extends SchemaLike,
-  InputObject = {},
-> = InputFields extends [infer InputField, ...infer Rest]
-  ? getInputObjectTypeRec<
-      Rest,
-      Introspection,
-      (InputField extends {
-        name: any;
-        type: any;
-      }
-        ? InputField extends { defaultValue?: undefined | null; type: { kind: 'NON_NULL' } }
-          ? {
-              [Name in InputField['name']]: unwrapTypeRec<InputField['type'], Introspection, true>;
-            }
-          : {
-              [Name in InputField['name']]?: unwrapTypeRec<
-                InputField['type'],
-                Introspection,
-                true
-              > | null;
-            }
-        : {}) &
-        InputObject
-    >
-  : obj<InputObject>;
-
-type getInputObjectTypeOneOfRec<
-  InputFields,
-  Introspection extends SchemaLike,
-  InputObject = never,
-> = InputFields extends [infer InputField, ...infer Rest]
-  ? getInputObjectTypeOneOfRec<
-      Rest,
-      Introspection,
-      | (InputField extends {
-          name: any;
-          type: any;
-        }
-          ? {
-              [Name in InputField['name']]: unwrapTypeRec<InputField['type'], Introspection, false>;
-            }
-          : never)
-      | InputObject
-    >
-  : InputObject;
-
-type unwrapTypeRec<TypeRef, Introspection extends SchemaLike, IsOptional> = TypeRef extends {
-  kind: 'NON_NULL';
-  ofType: any;
+type isRequiredInputField<InputField> = InputField extends {
+  defaultValue?: undefined | null;
+  type: { kind: 'NON_NULL' };
 }
-  ? unwrapTypeRec<TypeRef['ofType'], Introspection, false>
-  : TypeRef extends { kind: 'LIST'; ofType: any }
-    ? IsOptional extends false
-      ? Array<unwrapTypeRec<TypeRef['ofType'], Introspection, true>>
-      : null | Array<unwrapTypeRec<TypeRef['ofType'], Introspection, true>>
-    : TypeRef extends { name: any }
+  ? true
+  : false;
+
+type getInputObjectType<InputFields, Introspection extends SchemaLike> = obj<
+  {
+    [Name in keyof InputFields as isRequiredInputField<InputFields[Name]> extends true
+      ? Name
+      : never]: InputFields[Name] extends { type: any }
+      ? unwrapTypeRec<InputFields[Name]['type'], Introspection, true>
+      : never;
+  } & {
+    [Name in keyof InputFields as isRequiredInputField<InputFields[Name]> extends true
+      ? never
+      : Name]?: InputFields[Name] extends { type: any }
+      ? unwrapTypeRec<InputFields[Name]['type'], Introspection, true> | null
+      : never;
+  }
+>;
+
+type getInputObjectTypeOneOf<
+  InputFields,
+  Introspection extends SchemaLike,
+  Name = keyof InputFields,
+> = Name extends keyof InputFields
+  ? {
+      [P in Name]: InputFields[Name] extends { type: any }
+        ? unwrapTypeRec<InputFields[Name]['type'], Introspection, false>
+        : never;
+    }
+  : never;
+
+// NOTE: `any` must not be unwrapped, since it'd otherwise recurse infinitely
+type unwrapTypeRec<TypeRef, Introspection extends SchemaLike, IsOptional> = 0 extends 1 & TypeRef
+  ? any
+  : TypeRef extends {
+        kind: 'NON_NULL';
+        ofType: any;
+      }
+    ? unwrapTypeRec<TypeRef['ofType'], Introspection, false>
+    : TypeRef extends { kind: 'LIST'; ofType: any }
       ? IsOptional extends false
-        ? getScalarType<TypeRef['name'], Introspection>
-        : null | getScalarType<TypeRef['name'], Introspection>
-      : unknown;
+        ? Array<unwrapTypeRec<TypeRef['ofType'], Introspection, true>>
+        : null | Array<unwrapTypeRec<TypeRef['ofType'], Introspection, true>>
+      : TypeRef extends { name: any }
+        ? IsOptional extends false
+          ? getScalarType<TypeRef['name'], Introspection>
+          : null | getScalarType<TypeRef['name'], Introspection>
+        : unknown;
 
 type unwrapTypeRefRec<Type, Introspection extends SchemaLike, IsOptional> = Type extends {
   kind: Kind.NON_NULL_TYPE;
@@ -125,8 +115,8 @@ type getScalarType<
       isOneOf?: any;
     }
     ? Introspection['types'][TypeName]['isOneOf'] extends true
-      ? getInputObjectTypeOneOfRec<Introspection['types'][TypeName]['inputFields'], Introspection>
-      : getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>
+      ? getInputObjectTypeOneOf<Introspection['types'][TypeName]['inputFields'], Introspection>
+      : getInputObjectType<Introspection['types'][TypeName]['inputFields'], Introspection>
     : Introspection['types'][TypeName] extends { type: any }
       ? Introspection['types'][TypeName]['type']
       : Introspection['types'][TypeName]['enumValues']
