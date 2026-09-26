@@ -18,6 +18,7 @@
     "cli/",
     "ts-plugin/",
     "testing/",
+    "server/",
     "bin/",
     "dist/"
   ],
@@ -40,6 +41,12 @@
       "require": "./dist/gql-tada-internal.js",
       "source": "./src/internal/index.ts"
     },
+    "./server": {
+      "types": "./dist/gql-tada-server.d.ts",
+      "import": "./dist/gql-tada-server.mjs",
+      "require": "./dist/gql-tada-server.js",
+      "source": "./src/server/index.ts"
+    },
     "./testing": {
       "types": "./dist/gql-tada-testing.d.ts",
       "import": "./dist/gql-tada-testing.mjs",
@@ -61,7 +68,13 @@
     "@gql.tada/internal": "workspace:*"
   },
   "peerDependencies": {
+    "graphql": "^16.0.0 || ^17.0.0",
     "typescript": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "graphql": {
+      "optional": true
+    }
   },
   "public": true,
   "keywords": [

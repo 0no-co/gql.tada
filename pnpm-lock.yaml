@@ -221,6 +221,31 @@ importers:
         specifier: ^2.0.14
         version: 2.0.29(typescript@5.9.3)
 
+  examples/example-server:
+    dependencies:
+      '@urql/core':
+        specifier: ^5.0.2
+        version: 5.0.6(graphql@16.9.0)
+      gql.tada:
+        specifier: workspace:*
+        version: link:../..
+      graphql:
+        specifier: 16.9.0
+        version: 16.9.0
+      graphql-http:
+        specifier: ^1.22.4
+        version: 1.23.0(graphql@16.9.0)
+    devDependencies:
+      '@0no-co/graphqlsp':
+        specifier: ^1.17.3
+        version: 1.17.3(graphql@16.9.0)(typescript@5.9.3)
+      '@types/node':
+        specifier: ^22.4.0
+        version: 22.4.0
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   packages/cli-utils:
     dependencies:
       '@0no-co/graphqlsp':
@@ -2338,6 +2363,12 @@ packages:
 
   graphemer@1.4.0:
     resolution: {integrity: sha512-EtKwoO6kxCL9WO5xipiHTZlSzBm7WLT627TqC/uVRd0HKmq8NXyebnNYxDoBi7wt8eTWrUrKXCOVaFq9x1kgag==}
+
+  graphql-http@1.23.0:
+    resolution: {integrity: sha512-nQbRzoaqyNBVFG6X6r0mXC6S4X9eZOmmGz6t3l9H3MVKc2em3KeQAx+KhZKKFzj56ePDEncMOXeLu/hjO/4LQg==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      graphql: '>=0.11 <=17'
 
   graphql-request@7.4.0:
     resolution: {integrity: sha512-xfr+zFb/QYbs4l4ty0dltqiXIp07U6sl+tOKAb0t50/EnQek6CVVBLjETXi+FghElytvgaAWtIOt3EV7zLzIAQ==}
@@ -6243,6 +6274,10 @@ snapshots:
   graceful-fs@4.2.11: {}
 
   graphemer@1.4.0: {}
+
+  graphql-http@1.23.0(graphql@16.9.0):
+    dependencies:
+      graphql: 16.9.0
 
   graphql-request@7.4.0(graphql@16.14.2):
     dependencies:

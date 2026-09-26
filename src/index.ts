@@ -23,6 +23,26 @@ export type {
 
 export type { DocumentDecoration } from './utils';
 
+export type {
+  IntrospectionOf,
+  TadaSchema,
+  TadaSchemaDefinition,
+  TadaSchemaCarrier,
+  TadaContractVersion,
+  TadaType,
+  TadaNamedKind,
+  TadaNamedTypeRef,
+  TadaNonNullTypeRef,
+  TadaListTypeRef,
+  TadaTypeRef,
+  TadaScalarType,
+  TadaEnumType,
+  TadaObjectType,
+  TadaInterfaceType,
+  TadaUnionType,
+  TadaInputObjectType,
+} from './server/contract';
+
 // NOTE: This must be exported for `isolatedModules: true`
 export type { $tada } from './namespace';
 export type { mapType as __mapType } from './introspection';
