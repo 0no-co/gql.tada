@@ -1,0 +1,59 @@
+"""An ISO-8601 encoded UTC date string."""
+scalar DateTime @specifiedBy(url: "https://scalars.graphql.org/andimarek/date-time")
+
+"""An object with a globally unique ID."""
+interface Node {
+  id: ID!
+}
+
+type User implements Node {
+  id: ID!
+  name: String!
+  todos: [Todo!]!
+}
+
+type Query {
+  viewer: User!
+  user(id: ID!): User
+  todos(filter: TodoFilter): [Todo!]!
+  todo(by: TodoBy!): Todo
+  node(id: ID!): Node
+  search(term: String!): [SearchResult!]!
+}
+
+type Todo implements Node {
+  id: ID!
+  text: String!
+  status: TodoStatus!
+  done: Boolean! @deprecated(reason: "Use `status`")
+  createdAt: DateTime!
+  author: User!
+}
+
+enum TodoStatus {
+  """Still to do"""
+  OPEN
+  DONE
+}
+
+input TodoFilter {
+  status: TodoStatus
+  first: Int! = 10
+}
+
+input TodoBy @oneOf {
+  id: ID
+  text: String
+}
+
+input CreateTodoInput {
+  text: String!
+  status: TodoStatus! = OPEN
+}
+
+union SearchResult = User | Todo
+
+type Mutation {
+  createTodo(input: CreateTodoInput!): Todo!
+  toggleTodo(id: ID!): Todo
+}
