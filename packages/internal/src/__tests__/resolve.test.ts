@@ -46,6 +46,60 @@ describe('loadConfigs', () => {
     );
   });
 
+  it('parses tsconfig JSON with comments and trailing commas', () => {
+    return inFixture(
+      {
+        'tsconfig.json': `{
+          // TypeScript accepts JSONC in tsconfig files.
+          "compilerOptions": {
+            "plugins": [
+              { "name": "@0no-co/graphqlsp", "schema": "./schema.graphql", },
+            ],
+          },
+          "include": ["src",],
+        }`,
+      },
+      async (root) => {
+        const results = await loadConfigs(root);
+        expect(results).toHaveLength(1);
+        expect(results[0].pluginConfig).toEqual(PLUGIN);
+      }
+    );
+  });
+
+  it('parses tsconfig files starting with a UTF-8 byte order mark', () => {
+    return inFixture(
+      {
+        'tsconfig.json':
+          '\ufeff' +
+          JSON.stringify({ compilerOptions: { plugins: [PLUGIN] }, include: ['src'] }, null, 2),
+      },
+      async (root) => {
+        const results = await loadConfigs(root);
+        expect(results).toHaveLength(1);
+        expect(results[0].pluginConfig).toEqual(PLUGIN);
+      }
+    );
+  });
+
+  it('treats empty tsconfig files as empty configs', () => {
+    return inFixture(
+      {
+        'tsconfig.json': {
+          files: [],
+          references: [{ path: './tsconfig.empty.json' }, { path: './tsconfig.app.json' }],
+        },
+        'tsconfig.empty.json': '',
+        'tsconfig.app.json': { compilerOptions: { plugins: [PLUGIN] }, include: ['src'] },
+      },
+      async (root) => {
+        const results = await loadConfigs(root);
+        expect(results).toHaveLength(1);
+        expect(results[0].tsconfigPath).toBe(path.join(root, 'tsconfig.app.json'));
+      }
+    );
+  });
+
   it('resolves a referenced project from a solution-style root config', () => {
     return inFixture(
       {
