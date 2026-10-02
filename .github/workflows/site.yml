@@ -55,4 +55,5 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: website
+          packageManager: pnpm
           command: pages deploy .vitepress/dist --project-name=gql-tada
