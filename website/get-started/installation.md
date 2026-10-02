@@ -359,8 +359,8 @@ To resolve this, you should create a `.vscode/settings.json` file to prompt you
 ::: code-group
 ```js [.vscode/settings.json] {2-3}
 {
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true
 }
 ```
 :::
