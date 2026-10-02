@@ -61,6 +61,11 @@ export const writeOutput = async (target: WriteTarget, contents: string): Promis
     });
   }
 
+  // Skip writing when the content matches, to prevent watchers reloading the file unnecessarily.
+  if ((await readOutput(target)) === contents) {
+    return;
+  }
+
   const targetDirectory = dirname(typeof target !== 'string' ? await fs.realpath(target) : target);
   if (!(await directoryExists(targetDirectory))) {
     await fs.mkdir(targetDirectory, { recursive: true });
