@@ -133,12 +133,14 @@ describe('computeSchemaFingerprints', () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gql-tada-fingerprint-'));
     try {
       fs.writeFileSync(path.join(dir, 'graphql-env.d.ts'), contents);
-      return computeSchemaFingerprints({
+      const fingerprint = computeSchemaFingerprints({
         rootPath: dir,
         configPath: path.join(dir, 'tsconfig.json'),
         pluginConfig: { schema: './schema.graphql', tadaOutputLocation: './graphql-env.d.ts' },
         turboOutputPath: path.join(dir, 'cache.d.ts'),
       }).get(null);
+      // NOTE: schema.graphql doesn't exist, so per-document fingerprints use the output fallback
+      return typeof fingerprint === 'function' ? fingerprint('{ __typename }') : fingerprint;
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }

@@ -23,6 +23,7 @@ import type {
 } from './types';
 import { readCachedTurboDocuments, type CachedTurboDocuments } from './cache';
 import { BUILDER_FLAGS, createDocumentHasher } from './hash';
+import { createSchemaFingerprinter, type SchemaFingerprint } from './fingerprint';
 import { hasGraphQLDocumentCandidate, shouldScanTurboFile } from './scan';
 
 export interface TurboParams {
@@ -447,8 +448,10 @@ export async function* _runTurbo(params: TurboParams): AsyncIterableIterator<Tur
   }
 }
 
-export function computeSchemaFingerprints(params: TurboParams): Map<string | null, string> {
-  const fingerprints = new Map<string | null, string>();
+export function computeSchemaFingerprints(
+  params: TurboParams
+): Map<string | null, SchemaFingerprint> {
+  const fingerprints = new Map<string | null, SchemaFingerprint>();
   const configDir = path.dirname(params.configPath);
   for (const schemaName of getSchemaNamesFromConfig(params.pluginConfig)) {
     const schemaConfig = getSchemaConfigForName(params.pluginConfig, schemaName || undefined);
@@ -465,7 +468,10 @@ export function computeSchemaFingerprints(params: TurboParams): Map<string | nul
     // NOTE: CRLF checkouts (e.g. with `core.autocrlf` on Windows) must keep the same fingerprint
     const normalizedContents = contents.replace(/\r\n/g, '\n');
     const hash = crypto.createHash('sha256').update(normalizedContents).digest('hex');
-    fingerprints.set(schemaName, `sha256:${hash.slice(0, 32)}`);
+    fingerprints.set(
+      schemaName,
+      createSchemaFingerprinter(schemaConfig.schema, configDir, `sha256:${hash.slice(0, 32)}`)
+    );
   }
   return fingerprints;
 }

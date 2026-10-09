@@ -1,6 +1,8 @@
 import ts from 'typescript';
 import * as crypto from 'node:crypto';
 
+import type { SchemaFingerprint } from './fingerprint';
+
 // NOTE(@kitten): Change if document type input or output changes
 const CACHE_BUSTER = 'turbo-document-hash-v2';
 
@@ -28,7 +30,7 @@ export interface DocumentHasher {
 
 interface HashContext {
   readonly checker: ts.TypeChecker;
-  schemaFingerprints: ReadonlyMap<string | null, string>;
+  schemaFingerprints: ReadonlyMap<string | null, SchemaFingerprint>;
 }
 
 export function createDocumentHasher(context: HashContext): DocumentHasher {
@@ -81,7 +83,13 @@ export function createDocumentHasher(context: HashContext): DocumentHasher {
 
     addHashPart(hash, CACHE_BUSTER);
     addHashPart(hash, schemaName || '');
-    addHashPart(hash, context.schemaFingerprints.get(schemaName) || '');
+    const schemaFingerprint = context.schemaFingerprints.get(schemaName);
+    addHashPart(
+      hash,
+      typeof schemaFingerprint === 'function'
+        ? schemaFingerprint(documentText)
+        : schemaFingerprint || ''
+    );
     addHashPart(hash, getSetupFingerprint(callExpression));
     addHashPart(hash, documentText);
     for (const fragmentHash of fragmentHashes) {
