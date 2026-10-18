@@ -45,10 +45,11 @@ const exports = {};
 for (const key in meta.exports) {
   const entry = meta.exports[key];
   if (typeof entry === 'object' && !!entry.source) {
-    const entryPath = normalize(key);
-    const entryName = normalize([name, entryPath]);
+    const entryName = normalize([name, normalize(key)]);
     exports[entryName] = {
-      path: entryPath,
+      // NOTE: The stub package.json must sit at the subpath itself (e.g. `addons/graphcache/`)
+      // for resolutions that don't support `exports`, like `moduleResolution: node10`
+      path: key === '.' ? '' : path.normalize(key),
       ...entry,
     };
   }
