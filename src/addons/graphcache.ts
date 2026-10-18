@@ -87,25 +87,19 @@ type GraphCacheDecrement<Depth extends readonly unknown[]> = Depth extends reado
   ? Rest
   : [];
 
-type ObjectTypeNames<Schema extends SchemaLike> = {
-  [Name in keyof TypeMap<Schema>]: TypeMap<Schema>[Name] extends {
-    kind: 'OBJECT';
-    fields: any;
-  }
-    ? Name
-    : never;
-}[keyof TypeMap<Schema>] &
-  string;
+// NOTE: Collecting the names of all object types forces every type of the schema to be
+// evaluated, which is quadratic for unprocessed introspection types. Instead, configs are
+// keyed by all type names and `ifObjectType` resolves non-object types to `never` lazily
+type TypeNames<Schema extends SchemaLike> = keyof TypeMap<Schema> & string;
 
-type ObjectLikeTypeNames<Schema extends SchemaLike> = {
-  [Name in keyof TypeMap<Schema>]: TypeMap<Schema>[Name] extends {
-    kind: 'OBJECT' | 'INTERFACE';
-    fields: any;
-  }
-    ? Name
-    : never;
-}[keyof TypeMap<Schema>] &
-  string;
+type ifObjectType<Schema extends SchemaLike, TypeName, T, Fallback = never> =
+  TypeOf<Schema, TypeName> extends { kind: 'OBJECT'; fields: any } ? T : Fallback;
+
+// NOTE: Graphcache's `KeyingConfig` doesn't accept `undefined` values, which an optional
+// `never` property resolves to. This rejects any key generator but stays compatible with it
+type GraphCacheInvalidKeyGenerator = {
+  bivarianceHack(data: never): never;
+}['bivarianceHack'];
 
 type FieldsOf<Schema extends SchemaLike, TypeName> =
   TypeOf<Schema, TypeName> extends { fields: infer Fields } ? Fields : {};
@@ -113,7 +107,7 @@ type FieldsOf<Schema extends SchemaLike, TypeName> =
 type RootTypeName<
   Schema extends SchemaLike,
   Kind extends 'mutation' | 'subscription',
-> = Schema extends { [K in Kind]: infer Name } ? Name & ObjectTypeNames<Schema> : never;
+> = Schema extends { [K in Kind]: infer Name } ? Name & string : never;
 
 type GraphCacheInputObjectRec<
   InputFields,
@@ -190,12 +184,24 @@ type GraphCacheInputOfNamedType<
     ? TypeMap<Schema>[TypeName]['isOneOf'] extends true
       ? GraphCacheInputObjectOneOfRec<TypeMap<Schema>[TypeName]['inputFields'], Schema>
       : GraphCacheInputObjectRec<TypeMap<Schema>[TypeName]['inputFields'], Schema>
-    : TypeMap<Schema>[TypeName] extends { type: any }
-      ? TypeMap<Schema>[TypeName]['type']
-      : TypeMap<Schema>[TypeName] extends { enumValues: any }
-        ? TypeMap<Schema>[TypeName]['enumValues']
-        : unknown
-  : unknown;
+    : GraphCacheScalarOfNamedType<TypeName, Schema>
+  : GraphCacheScalar;
+
+// NOTE: Custom scalars without a configured type are `unknown` in gql.tada. Graphcache
+// stores them as its own `Scalar` type, and `unknown` isn't assignable to it, which
+// would make the config incompatible with `cacheExchange`'s constraint
+type GraphCacheScalarOfNamedType<
+  TypeName,
+  Schema extends SchemaLike,
+> = TypeName extends keyof TypeMap<Schema>
+  ? TypeMap<Schema>[TypeName] extends { type: any }
+    ? unknown extends TypeMap<Schema>[TypeName]['type']
+      ? GraphCacheScalar
+      : TypeMap<Schema>[TypeName]['type']
+    : TypeMap<Schema>[TypeName] extends { enumValues: any }
+      ? TypeMap<Schema>[TypeName]['enumValues']
+      : GraphCacheScalar
+  : GraphCacheScalar;
 
 type GraphCacheArgsOfField<Field, Schema extends SchemaLike> = Field extends {
   args?: infer Args;
@@ -234,12 +240,8 @@ type GraphCacheOutputOfNamedType<
     ? GraphCacheObjectOfType<Schema, TypeName, Depth>
     : TypeMap<Schema>[TypeName] extends { kind: 'INTERFACE' | 'UNION'; possibleTypes: any }
       ? GraphCacheObjectOfType<Schema, TypeMap<Schema>[TypeName]['possibleTypes'], Depth>
-      : TypeMap<Schema>[TypeName] extends { type: any }
-        ? TypeMap<Schema>[TypeName]['type']
-        : TypeMap<Schema>[TypeName] extends { enumValues: any }
-          ? TypeMap<Schema>[TypeName]['enumValues']
-          : unknown
-  : unknown;
+      : GraphCacheScalarOfNamedType<TypeName, Schema>
+  : GraphCacheScalar;
 
 type GraphCacheObjectOfType<
   Schema extends SchemaLike,
@@ -289,11 +291,10 @@ type GraphCacheResolverOutputOfNamedType<
   Depth extends readonly unknown[] = GraphCacheDepth,
 > = TypeName extends keyof TypeMap<Schema>
   ? TypeMap<Schema>[TypeName] extends { kind: 'OBJECT' | 'INTERFACE' | 'UNION' }
-    ?
-        | GraphCacheOutputOfNamedType<TypeName, Schema, Depth>
-        | GraphCacheReference<GraphCacheOutputOfNamedType<TypeName, Schema, Depth>>
+    ? // NOTE: Resolvers may return entity keys, e.g. from `cache.keyOfEntity()`
+      GraphCacheOutputOfNamedType<TypeName, Schema, Depth> | string
     : GraphCacheOutputOfNamedType<TypeName, Schema, Depth>
-  : unknown;
+  : GraphCacheScalar;
 
 type GraphCacheNormalize<T> = T extends readonly (infer Item)[]
   ? Array<GraphCacheNormalize<Item>>
@@ -301,32 +302,43 @@ type GraphCacheNormalize<T> = T extends readonly (infer Item)[]
     ? GraphCacheReference<T>
     : T;
 
-type GraphCacheTypedEntity<
-  Schema extends SchemaLike,
-  TypeName extends ObjectLikeTypeNames<Schema>,
-> =
+type GraphCacheTypedEntity<Schema extends SchemaLike, TypeName extends TypeNames<Schema>> =
   | GraphCacheReference<{ __typename: TypeName }>
   | ({ __typename: TypeName } & { [key: string]: unknown });
 
 type GraphCacheEntityInput<Schema extends SchemaLike> =
-  | GraphCacheTypedEntity<Schema, ObjectLikeTypeNames<Schema>>
+  | GraphCacheTypedEntity<Schema, TypeNames<Schema>>
   | GraphCacheEntity;
+
+// NOTE: Blocks inference from a resolver's contextual return type into `resolve()`'s
+// type parameters, which otherwise recurses through the whole output type (TS2589)
+type noInfer<T> = [T][T extends any ? 0 : never];
+
+type GraphCacheResolveResult<Schema extends SchemaLike, TypeName, FieldName> = FieldsOf<
+  Schema,
+  TypeName
+>[FieldName & keyof FieldsOf<Schema, TypeName>] extends {
+  type: infer TypeRef;
+}
+  ? GraphCacheNormalize<GraphCacheOutputOfType<TypeRef, Schema, true>> | undefined
+  : GraphCacheDataField | undefined;
 
 interface GraphCache<Schema extends SchemaLike> {
   keyOfEntity(entity: GraphCacheEntityInput<Schema> | undefined): string | null;
   keyOfField(fieldName: string, args?: GraphCacheFieldArgs): string | null;
   resolve<
-    TypeName extends ObjectLikeTypeNames<Schema>,
+    TypeName extends TypeNames<Schema>,
     FieldName extends keyof FieldsOf<Schema, TypeName> & string,
   >(
-    entity: GraphCacheTypedEntity<Schema, TypeName> | undefined,
+    entity: GraphCacheTypedEntity<Schema, TypeName> | null | undefined,
     fieldName: FieldName,
-    args?: FieldsOf<Schema, TypeName>[FieldName] extends infer Field
-      ? GraphCacheArgsOfField<Field, Schema>
-      : GraphCacheFieldArgs
-  ): FieldsOf<Schema, TypeName>[FieldName] extends { type: infer TypeRef }
-    ? GraphCacheNormalize<GraphCacheOutputOfType<TypeRef, Schema, true>> | undefined
-    : GraphCacheDataField | undefined;
+    args?: GraphCacheArgsOfField<FieldsOf<Schema, TypeName>[FieldName], Schema>
+  ): noInfer<GraphCacheResolveResult<Schema, TypeName, FieldName>>;
+  resolve<FieldName extends keyof FieldsOf<Schema, Schema['query']> & string>(
+    entity: Schema['query'],
+    fieldName: FieldName,
+    args?: GraphCacheArgsOfField<FieldsOf<Schema, Schema['query']>[FieldName], Schema>
+  ): noInfer<GraphCacheResolveResult<Schema, Schema['query'], FieldName>>;
   resolve(
     entity: string | null | undefined,
     fieldName: string,
@@ -429,59 +441,82 @@ type GraphCacheOptimisticMutationResolver<
 }['bivarianceHack'];
 
 type GraphCacheKeysConfig<Schema extends SchemaLike> = {
-  [TypeName in ObjectTypeNames<Schema>]?: {
-    bivarianceHack(data: GraphCacheObjectOfType<Schema, TypeName>): string | null;
-  }['bivarianceHack'];
+  [TypeName in TypeNames<Schema>]?: ifObjectType<
+    Schema,
+    TypeName,
+    {
+      bivarianceHack(data: GraphCacheObjectOfType<Schema, TypeName>): string | null;
+    }['bivarianceHack'],
+    GraphCacheInvalidKeyGenerator
+  >;
 };
 
 type GraphCacheResolversConfig<Schema extends SchemaLike> = {
-  [TypeName in ObjectLikeTypeNames<Schema>]?: {
-    [FieldName in keyof FieldsOf<Schema, TypeName>]?: FieldsOf<
-      Schema,
-      TypeName
-    >[FieldName] extends {
-      type: infer TypeRef;
+  [TypeName in TypeNames<Schema>]?: ifObjectType<
+    Schema,
+    TypeName,
+    {
+      [FieldName in keyof FieldsOf<Schema, TypeName>]?: FieldsOf<
+        Schema,
+        TypeName
+      >[FieldName] extends {
+        type: infer TypeRef;
+      }
+        ? GraphCacheResolver<
+            Schema,
+            GraphCacheObjectOfType<Schema, TypeName>,
+            GraphCacheArgsOfField<FieldsOf<Schema, TypeName>[FieldName], Schema>,
+            GraphCacheResolverOutputOfType<TypeRef, Schema, true> | undefined
+          >
+        : GraphCacheResolver<Schema>;
     }
-      ? GraphCacheResolver<
-          Schema,
-          GraphCacheObjectOfType<Schema, TypeName>,
-          GraphCacheArgsOfField<FieldsOf<Schema, TypeName>[FieldName], Schema>,
-          GraphCacheResolverOutputOfType<TypeRef, Schema, true> | GraphCacheResolverResult
-        >
-      : GraphCacheResolver<Schema>;
-  };
+  >;
 };
 
-type GraphCacheRootUpdatesConfig<
+type RootTypeNames<Schema extends SchemaLike> =
+  | Schema['query']
+  | Schema['mutation']
+  | Schema['subscription'];
+
+// NOTE: Graphcache calls updaters for fields on any type. On root types, the parent
+// is the operation's result data, otherwise it's the entity's data that's being written
+type GraphCacheUpdaterParent<
   Schema extends SchemaLike,
-  TypeName extends ObjectTypeNames<Schema>,
-> = {
-  [RootName in TypeName]?: {
-    [FieldName in keyof FieldsOf<Schema, RootName>]?: FieldsOf<
-      Schema,
-      RootName
-    >[FieldName] extends {
-      type: infer TypeRef;
-    }
-      ? GraphCacheUpdateResolver<
-          Schema,
-          {
-            [Name in FieldName]: GraphCacheOutputOfType<TypeRef, Schema, true>;
-          },
-          GraphCacheArgsOfField<FieldsOf<Schema, RootName>[FieldName], Schema>
-        >
-      : GraphCacheUpdateResolver<Schema>;
-  };
-};
+  TypeName,
+  FieldName extends PropertyKey,
+  TypeRef,
+> =
+  TypeName extends RootTypeNames<Schema>
+    ? { [Name in FieldName]: GraphCacheOutputOfType<TypeRef, Schema, true> }
+    : obj<
+        Omit<GraphCacheObjectOfType<Schema, TypeName>, FieldName> & {
+          [Name in FieldName]: GraphCacheOutputOfType<TypeRef, Schema, true>;
+        }
+      >;
 
-type GraphCacheUpdatesConfig<Schema extends SchemaLike> = GraphCacheRootUpdatesConfig<
-  Schema,
-  RootTypeName<Schema, 'mutation'>
-> &
-  GraphCacheRootUpdatesConfig<Schema, RootTypeName<Schema, 'subscription'>>;
+type GraphCacheUpdatesConfig<Schema extends SchemaLike> = {
+  [TypeName in TypeNames<Schema>]?: ifObjectType<
+    Schema,
+    TypeName,
+    {
+      [FieldName in keyof FieldsOf<Schema, TypeName>]?: FieldsOf<
+        Schema,
+        TypeName
+      >[FieldName] extends {
+        type: infer TypeRef;
+      }
+        ? GraphCacheUpdateResolver<
+            Schema,
+            GraphCacheUpdaterParent<Schema, TypeName, FieldName, TypeRef>,
+            GraphCacheArgsOfField<FieldsOf<Schema, TypeName>[FieldName], Schema>
+          >
+        : GraphCacheUpdateResolver<Schema>;
+    }
+  >;
+};
 
 type GraphCacheOptimisticMutationConfig<Schema extends SchemaLike> =
-  RootTypeName<Schema, 'mutation'> extends infer MutationName extends ObjectTypeNames<Schema>
+  RootTypeName<Schema, 'mutation'> extends infer MutationName extends string
     ? {
         [FieldName in keyof FieldsOf<Schema, MutationName>]?: FieldsOf<
           Schema,
