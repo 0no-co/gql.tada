@@ -52,7 +52,7 @@ SDL may only return data matching our query, such as:
 ```json
 {
   "helloWorld": "Hello!",
-  "numberOfRequests: 1
+  "numberOfRequests": 1
 }
 ```
 
