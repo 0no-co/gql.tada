@@ -105,7 +105,7 @@ of GraphQL documents as it contains an introspection type of
 your schema.
 
 To generate the output typings file, use the `gql-tada` CLI's
-`generate turbo` command.
+`generate output` command.
 
 ```sh
 gql-tada generate output
@@ -126,7 +126,7 @@ using the `schema` setting:
     "plugins": [
       {
         "name": "gql.tada/ts-plugin",
-        "schema": "./schema.graphql"
+        "schema": "./schema.graphql",
         "tadaOutputLocation": "./src/graphql-env.d.ts"
       }
     ]
@@ -259,7 +259,7 @@ setting:
     "plugins": [
       {
         "name": "gql.tada/ts-plugin",
-        "schema": "./schema.graphql"
+        "schema": "./schema.graphql",
         "tadaOutputLocation": "./src/graphql-env.d.ts",
         "tadaTurboLocation": "./src/graphql-cache.d.ts" // [!code ++]
       }

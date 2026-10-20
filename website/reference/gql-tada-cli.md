@@ -241,7 +241,7 @@ await generatePersisted({
 | ----------------- | ------------------------------------------------------------------------------------------------------ |
 | `input` option    | The filename to a `.graphql` SDL file, introspection JSON, or URL to a GraphQL API to introspect.      |
 | `headers` option  | Optionally, an object of headers to send when introspecting a GraphQL API.                             |
-| `output` option   | The filename to write the persisted JSON manifest file to (Default: the `schema` configuration option) |
+| `output` option   | The filename to write the generated SDL schema file to (Default: the `schema` configuration option) |
 | `tsconfig` option | The `tsconfig.json` to use instead of an automatically discovered one.                                 |
 | `silent` option   | Whether to disable terminal output when using the programmatic API.                                    |
 | returns           | A `Promise` that resolves when the task completes.                                                     |

@@ -140,12 +140,43 @@ export const buildContainer = (params: ContainerParams): ProgramContainer => {
   };
 };
 
+/** Creates a predicate matching files belonging to the project.
+ * @remarks
+ * A project's files aren't necessarily nested inside the directory of its
+ * `tsconfig.json`. Generated configs (e.g. Nuxt's `.nuxt/tsconfig.app.json`)
+ * commonly live in a subdirectory while including files from outside of it,
+ * so the directories of the config's root file names are in scope as well. */
+const createProjectScope = (
+  projectRoot: string,
+  rootNames: readonly string[]
+): ((fileName: string) => boolean) => {
+  // NOTE: `path.relative` compares case-insensitively on Windows, so the
+  // directory keys have to be normalized to match that behaviour
+  const toKey = (filePath: string): string =>
+    process.platform === 'win32' ? filePath.toLowerCase() : filePath;
+  const directories = new Set([toKey(path.resolve(projectRoot))]);
+  for (const rootName of rootNames) {
+    if (path.isAbsolute(rootName)) directories.add(toKey(path.dirname(rootName)));
+  }
+  return (fileName: string): boolean => {
+    let directory = toKey(path.dirname(path.resolve(fileName)));
+    for (;;) {
+      if (directories.has(directory)) return true;
+      const parent = path.dirname(directory);
+      if (parent === directory) return false;
+      directory = parent;
+    }
+  };
+};
+
 const buildProgram = (params: {
   program: ts.Program;
   virtualMap: VirtualMap;
   projectRoot: string;
+  rootNames: readonly string[];
 }): ts.Program => {
-  const { program, virtualMap, projectRoot } = params;
+  const { program, virtualMap } = params;
+  const isInProjectScope = createProjectScope(params.projectRoot, params.rootNames);
 
   const isSourceFileFromExternalLibrary = maybeBind(
     program,
@@ -185,9 +216,8 @@ const buildProgram = (params: {
     getSourceFiles() {
       const sourceFiles: ts.SourceFile[] = [];
       for (const sourceFile of getSourceFiles()) {
-        const relativePath = path.relative(projectRoot, sourceFile.fileName);
         if (
-          !relativePath.startsWith('..') &&
+          isInProjectScope(sourceFile.fileName) &&
           !program.isSourceFileFromExternalLibrary(sourceFile)
         ) {
           sourceFiles.push(sourceFile);
@@ -318,6 +348,7 @@ const buildLanguageService = (params: {
               program: serviceProgram,
               virtualMap: params.virtualMap,
               projectRoot: params.projectRoot,
+              rootNames: params.rootNames,
             }))
           : undefined;
       }

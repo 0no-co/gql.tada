@@ -1,5 +1,16 @@
 # @gql.tada/cli-utils
 
+## 1.9.4
+
+### Patch Changes
+
+- ⚠️ Fix `createExternalFiles()` resolving its `"."` scan directory (from a synthetic file with no directory component) against the calling process's `cwd` instead of the project directory, which could scan unrelated directories and add significant overhead when `generateTurbo`/`generateOutput` are invoked as a library from a different working directory
+  Submitted by [@coogie](https://github.com/coogie) (See [#589](https://github.com/0no-co/gql.tada/pull/589))
+- ⚠️ Fix `check` and `generate-persisted` finding no files when a project's `tsconfig.json` lives in a subdirectory of the files it includes. Both commands filtered the program's source files to those nested inside the config's directory, which excluded every file of generated configs like Nuxt's `.nuxt/tsconfig.app.json`. The project's root file names are now taken into account as well
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#593](https://github.com/0no-co/gql.tada/pull/593))
+- Skip rewriting the output file when its contents are unchanged. `writeOutput()` always performed an atomic write and then forced `fs.utimes()` on the target to guarantee a change event, so file watchers reloaded even when `generate-output` and `turbo` produced no changes. The file is now left untouched when the generated contents match what is already on disk
+  Submitted by [@jonjomckay](https://github.com/jonjomckay) (See [#597](https://github.com/0no-co/gql.tada/pull/597))
+
 ## 1.9.3
 
 ### Patch Changes

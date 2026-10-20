@@ -192,4 +192,58 @@ describe('programFactory', () => {
       await fs.rm(rootPath, { recursive: true, force: true });
     }
   });
+
+  it('includes project files that live outside of the tsconfig directory', async () => {
+    const workspacePath = await fs.realpath(
+      await fs.mkdtemp(path.join(os.tmpdir(), 'gql-tada-factory-'))
+    );
+
+    try {
+      const { loadConfigs } = await import('../../../../internal/src/resolve');
+      const { programFactory } = await import('../factory');
+      // NOTE: This mirrors Nuxt's generated `.nuxt/tsconfig.app.json` layout,
+      // where the project's config is nested but its files aren't
+      const generatedConfigPath = path.join(workspacePath, '.nuxt', 'tsconfig.app.json');
+      const entryPath = path.join(workspacePath, 'app', 'graphql', 'queries.ts');
+
+      await fs.mkdir(path.dirname(generatedConfigPath), { recursive: true });
+      await fs.mkdir(path.dirname(entryPath), { recursive: true });
+
+      await Promise.all([
+        fs.writeFile(
+          path.join(workspacePath, 'tsconfig.json'),
+          JSON.stringify({ files: [], references: [{ path: './.nuxt/tsconfig.app.json' }] })
+        ),
+        fs.writeFile(
+          generatedConfigPath,
+          JSON.stringify({
+            compilerOptions: {
+              module: 'esnext',
+              moduleResolution: 'bundler',
+              plugins: [
+                {
+                  name: 'gql.tada/ts-plugin',
+                  schema: '../app/graphql/schema.graphql',
+                  tadaOutputLocation: '../app/graphql/graphql-env.d.ts',
+                },
+              ],
+            },
+            include: ['../app/**/*'],
+          })
+        ),
+        fs.writeFile(entryPath, 'export const queries = 1;\n'),
+      ]);
+
+      const configResults = await loadConfigs(workspacePath);
+      const factory = programFactory(configResults[0]);
+      const container = factory.build();
+      const programFileNames = container.getSourceFiles().map((file) => file.fileName);
+
+      expect(configResults[0].rootPath).toBe(path.dirname(generatedConfigPath));
+      expect(factory.rootFileNames).toContain(entryPath);
+      expect(programFileNames).toContain(entryPath);
+    } finally {
+      await fs.rm(workspacePath, { recursive: true, force: true });
+    }
+  });
 });

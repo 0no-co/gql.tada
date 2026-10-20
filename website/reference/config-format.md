@@ -258,7 +258,7 @@ we're always required to set up `gql.tada` manually using the
 
 ### `tadaTurboLocation`
 
-The `tadaOutputLocation` specifies the output path that the
+The `tadaTurboLocation` specifies the output path that the
 [`gql-tada turbo`](/reference/gql-tada-cli#turbo) command will write
 the type cache output file to.
 
@@ -399,9 +399,7 @@ By default, this option is enabled. When enabled, your imports will be scanned
 for exported fragments.
 
 The TypeScript plugin and the [`gql-tada check` command](/reference/gql-tada-cli#check)
-will issue warnings when you're missing imports to a GraphQL fragment exported by
-will run a diagnostic that issues warnings when any imports statements don't import
-a GraphQL fragment exported by another module.<br />
+will issue warnings when import statements don't import a GraphQL fragment exported by another module.<br />
 This is important to help with [fragment co-location](/guides/fragment-colocation)
 as many component modules may export fragments that you should be importing and
 use in the importer's GraphQL documents.

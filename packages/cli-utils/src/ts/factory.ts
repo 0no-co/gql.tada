@@ -122,7 +122,10 @@ export const programFactory = (params: ProgramFactoryParams): ProgramFactory => 
       const files: ts.SourceFile[] = [];
       const seen = new Set(rootNames);
       const directories = new Set([params.rootPath]);
-      for (const rootName of rootNames) directories.add(path.dirname(rootName));
+      for (const rootName of rootNames) {
+        const directory = path.dirname(rootName);
+        if (path.isAbsolute(directory)) directories.add(directory);
+      }
       for (const directory of directories) {
         for (const fileId of system.readDirectory(directory, exts, ['**/node_modules'])) {
           if (!seen.has(fileId)) {
