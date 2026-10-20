@@ -23,6 +23,7 @@ import type {
 } from './types';
 import { readCachedTurboDocuments, type CachedTurboDocuments } from './cache';
 import { createDocumentHasher } from './hash';
+import { createSchemaFingerprinter, type SchemaFingerprint } from './fingerprint';
 import { hasGraphQLDocumentCandidate, shouldScanTurboFile } from './scan';
 
 export interface TurboParams {
@@ -446,8 +447,8 @@ export async function* _runTurbo(params: TurboParams): AsyncIterableIterator<Tur
   }
 }
 
-function computeSchemaFingerprints(params: TurboParams): Map<string | null, string> {
-  const fingerprints = new Map<string | null, string>();
+function computeSchemaFingerprints(params: TurboParams): Map<string | null, SchemaFingerprint> {
+  const fingerprints = new Map<string | null, SchemaFingerprint>();
   const configDir = path.dirname(params.configPath);
   for (const schemaName of getSchemaNamesFromConfig(params.pluginConfig)) {
     const schemaConfig = getSchemaConfigForName(params.pluginConfig, schemaName || undefined);
@@ -462,7 +463,10 @@ function computeSchemaFingerprints(params: TurboParams): Map<string | null, stri
     }
 
     const hash = crypto.createHash('sha256').update(contents).digest('hex');
-    fingerprints.set(schemaName, `sha256:${hash.slice(0, 32)}`);
+    fingerprints.set(
+      schemaName,
+      createSchemaFingerprinter(schemaConfig.schema, configDir, `sha256:${hash.slice(0, 32)}`)
+    );
   }
   return fingerprints;
 }
