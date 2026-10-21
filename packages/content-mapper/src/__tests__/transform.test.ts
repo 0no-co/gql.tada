@@ -171,6 +171,14 @@ describe('transform', () => {
     ]);
   });
 
+  it('emits unclosed definitions, so they can be completed while typing', () => {
+    const result = run('fragment F on T { a }\nquery A {\n  b {\n    ...F');
+    expect(result.text).toContain('export const A = $graphql(`query A {\n  b {\n    ...F`, [F]);');
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({ code: DiagnosticCode.SyntaxError }),
+    ]);
+  });
+
   it('emits empty modules for schema definitions and comment-only documents', () => {
     const schema = run('"""Description"""\ntype Query {\n  a: Int\n}\nscalar Date\n');
     expect(schema).toMatchObject({ text: 'export {};\n', diagnostics: [] });

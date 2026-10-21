@@ -173,6 +173,13 @@ const scan = (input: string): Scan => {
     }
   }
 
+  // An unclosed definition (e.g. while it's being typed) is still emitted, so
+  // editors can offer completions in it; it's reported as a syntax error
+  if (current) {
+    current.end = input.length;
+    definitions.push(current);
+  }
+
   return { definitions, imports, hasTypeSystem };
 };
 
