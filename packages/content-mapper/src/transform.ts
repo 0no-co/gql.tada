@@ -103,7 +103,7 @@ const scan = (input: string): Scan => {
       if (match) {
         const offset = start + 1;
         const [listStart] = match.indices![1] || [0];
-        const [specifierStart, specifierEnd] = match.indices![3];
+        const [specifierStart, specifierEnd] = match.indices![3]!;
         let names: Token[] | null = null;
         if (match[1] && match[1].trim() !== '*') {
           names = [];
