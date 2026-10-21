@@ -2,7 +2,17 @@ import ts from 'typescript';
 import * as crypto from 'node:crypto';
 
 // NOTE(@kitten): Change if document type input or output changes
-const CACHE_BUSTER = 'turbo-document-hash-v1';
+const CACHE_BUSTER = 'turbo-document-hash-v2';
+
+export const BUILDER_FLAGS: ts.TypeFormatFlags =
+  ts.TypeFormatFlags.NoTruncation |
+  ts.TypeFormatFlags.NoTypeReduction |
+  ts.TypeFormatFlags.InTypeAlias |
+  ts.TypeFormatFlags.UseFullyQualifiedType |
+  ts.TypeFormatFlags.GenerateNamesForShadowedTypeParams |
+  ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope |
+  ts.TypeFormatFlags.AllowUniqueESSymbolType |
+  ts.TypeFormatFlags.WriteTypeArgumentsOfSignature;
 
 export interface DocumentHashResult {
   hashable: boolean;
@@ -25,6 +35,7 @@ export function createDocumentHasher(context: HashContext): DocumentHasher {
   const callExpressionCache = new WeakMap<ts.CallExpression, Map<string, DocumentHashResult>>();
   const symbolCallCache = new Map<ts.Symbol, ts.CallExpression | null>();
   const activeCalls = new WeakSet<ts.CallExpression>();
+  const setupFingerprintCache = new WeakMap<ts.Type, string>();
 
   const hashCallExpression = (
     callExpression: ts.CallExpression,
@@ -71,6 +82,7 @@ export function createDocumentHasher(context: HashContext): DocumentHasher {
     addHashPart(hash, CACHE_BUSTER);
     addHashPart(hash, schemaName || '');
     addHashPart(hash, context.schemaFingerprints.get(schemaName) || '');
+    addHashPart(hash, getSetupFingerprint(callExpression));
     addHashPart(hash, documentText);
     for (const fragmentHash of fragmentHashes) {
       addHashPart(hash, fragmentHash);
@@ -80,6 +92,48 @@ export function createDocumentHasher(context: HashContext): DocumentHasher {
       hashable: true,
       documentHash: `sha256:${hash.digest('hex').slice(0, 32)}`,
     };
+  };
+
+  const getSetupFingerprint = (callExpression: ts.CallExpression): string => {
+    const calleeType = context.checker.getTypeAtLocation(callExpression.expression);
+    let fingerprint = setupFingerprintCache.get(calleeType);
+    if (fingerprint == null) {
+      fingerprint = computeSetupFingerprint(calleeType, callExpression);
+      setupFingerprintCache.set(calleeType, fingerprint);
+    }
+    return fingerprint;
+  };
+
+  const computeSetupFingerprint = (calleeType: ts.Type, node: ts.Node): string => {
+    const { checker } = context;
+    const printType = (type: ts.Type) => checker.typeToString(type, undefined, BUILDER_FLAGS);
+
+    // NOTE: The `graphql` function's type is usually `initGraphQLTada<Setup>`. The introspection
+    // is already covered by the schema fingerprint, so we only print the remaining options, e.g.
+    // `scalars` and `disableMasking`. These are printed like the document types are, so a change
+    // to what a scalar resolves to (even when it's imported) changes the fingerprint
+    const setupType =
+      calleeType.aliasSymbol &&
+      calleeType.aliasSymbol.name === 'initGraphQLTada' &&
+      calleeType.aliasTypeArguments &&
+      calleeType.aliasTypeArguments[0];
+    if (setupType) {
+      let fingerprint = '';
+      for (const property of checker.getPropertiesOfType(setupType)) {
+        if (property.name === 'introspection') continue;
+        const propertyType = checker.getTypeOfSymbolAtLocation(property, node);
+        fingerprint += `${property.name}: ${printType(propertyType)};\n`;
+      }
+      return fingerprint;
+    }
+
+    // Otherwise, fall back to printing the resolved schema and config of `GraphQLTadaAPI`
+    const typeArguments =
+      calleeType.flags & ts.TypeFlags.Object &&
+      (calleeType as ts.ObjectType).objectFlags & ts.ObjectFlags.Reference
+        ? checker.getTypeArguments(calleeType as ts.TypeReference)
+        : [calleeType];
+    return typeArguments.map(printType).join('\n');
   };
 
   const getFragmentHashes = (

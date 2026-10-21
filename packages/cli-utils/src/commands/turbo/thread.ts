@@ -22,7 +22,7 @@ import type {
   TurboPath,
 } from './types';
 import { readCachedTurboDocuments, type CachedTurboDocuments } from './cache';
-import { createDocumentHasher } from './hash';
+import { BUILDER_FLAGS, createDocumentHasher } from './hash';
 import { hasGraphQLDocumentCandidate, shouldScanTurboFile } from './scan';
 
 export interface TurboParams {
@@ -503,16 +503,6 @@ function forceGc(): void {
 }
 
 export const runTurbo = expose(_runTurbo);
-
-const BUILDER_FLAGS: ts.TypeFormatFlags =
-  ts.TypeFormatFlags.NoTruncation |
-  ts.TypeFormatFlags.NoTypeReduction |
-  ts.TypeFormatFlags.InTypeAlias |
-  ts.TypeFormatFlags.UseFullyQualifiedType |
-  ts.TypeFormatFlags.GenerateNamesForShadowedTypeParams |
-  ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope |
-  ts.TypeFormatFlags.AllowUniqueESSymbolType |
-  ts.TypeFormatFlags.WriteTypeArgumentsOfSignature;
 
 const DECLARATION_OVERRIDE = `
 import * as _gqlTada from 'gql.tada';
