@@ -111,6 +111,7 @@ type mapField<T> = T extends IntrospectionField
   ? {
       name: T['name'];
       type: T['type'];
+      args?: T extends { readonly args: readonly any[] } ? [...T['args']] : [];
     }
   : never;
 
