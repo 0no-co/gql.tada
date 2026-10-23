@@ -1,12 +1,12 @@
-import ts from 'typescript';
 import * as path from 'node:path';
 import * as fs from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import type { Stats } from 'node:fs';
 import type { TsConfigJson } from 'type-fest';
+import { parse, printParseErrorCode, type ParseError } from 'jsonc-parser';
 
 import { cwd, maybeRelative } from './helpers';
-import { TSError, TadaError } from './errors';
+import { TadaError } from './errors';
 
 const TSCONFIG = 'tsconfig.json';
 
@@ -43,10 +43,26 @@ const toTSConfigPath = (tsconfigPath: string): string =>
 
 export const readTSConfigFile = async (filePath: string): Promise<TsConfigJson> => {
   const tsconfigPath = toTSConfigPath(filePath);
-  const contents = await fs.readFile(tsconfigPath, 'utf8');
-  const result = ts.parseConfigFileTextToJson(tsconfigPath, contents);
-  if (result.error) throw new TSError(result.error);
-  return result.config || {};
+  let contents = await fs.readFile(tsconfigPath, 'utf8');
+  // Like TypeScript itself, tolerate a UTF-8 BOM
+  if (contents.charCodeAt(0) === 0xfeff) contents = contents.slice(1);
+  const errors: ParseError[] = [];
+  const config = parse(contents, errors, {
+    allowTrailingComma: true,
+    allowEmptyContent: true,
+  }) as TsConfigJson | undefined;
+  if (errors.length) {
+    const error = errors[0];
+    const prefix = contents.slice(0, error.offset);
+    const line = prefix.split(/\r\n?|\n/).length;
+    const col = prefix.length - Math.max(prefix.lastIndexOf('\n'), prefix.lastIndexOf('\r'));
+    throw new TadaError(
+      `Failed to parse ${maybeRelative(tsconfigPath)} at ${line}:${col}: ${printParseErrorCode(
+        error.error
+      )}`
+    );
+  }
+  return config || {};
 };
 
 export const findTSConfigFile = async (targetPath?: string): Promise<string | null> => {
