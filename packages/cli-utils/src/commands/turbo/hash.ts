@@ -107,6 +107,25 @@ export function createDocumentHasher(context: HashContext): DocumentHasher {
   const computeSetupFingerprint = (calleeType: ts.Type, node: ts.Node): string => {
     const { checker } = context;
     const printType = (type: ts.Type) => checker.typeToString(type, undefined, BUILDER_FLAGS);
+    const getTypeOfProperty = (property: ts.Symbol) =>
+      checker.getTypeOfSymbolAtLocation(property, node);
+    // NOTE: Sorted, so that reordering the setup's or scalars' properties keeps the fingerprint
+    const getProperties = (type: ts.Type) =>
+      checker
+        .getPropertiesOfType(type)
+        .slice()
+        .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+
+    // NOTE: A named scalars type (e.g. `scalars: Scalars`) would only print as its name, while the
+    // cached document types contain what each scalar resolves to, so we print each member instead
+    const printScalars = (type: ts.Type) => {
+      let output = '';
+      for (const property of getProperties(type))
+        output += `${property.name}: ${printType(getTypeOfProperty(property))};\n`;
+      for (const info of checker.getIndexInfosOfType(type))
+        output += `[key: ${printType(info.keyType)}]: ${printType(info.type)};\n`;
+      return `{\n${output}}`;
+    };
 
     // NOTE: The `graphql` function's type is usually `initGraphQLTada<Setup>`. The introspection
     // is already covered by the schema fingerprint, so we only print the remaining options, e.g.
@@ -119,21 +138,41 @@ export function createDocumentHasher(context: HashContext): DocumentHasher {
       calleeType.aliasTypeArguments[0];
     if (setupType) {
       let fingerprint = '';
-      for (const property of checker.getPropertiesOfType(setupType)) {
+      for (const property of getProperties(setupType)) {
         if (property.name === 'introspection') continue;
-        const propertyType = checker.getTypeOfSymbolAtLocation(property, node);
-        fingerprint += `${property.name}: ${printType(propertyType)};\n`;
+        const propertyType = getTypeOfProperty(property);
+        const printed =
+          property.name === 'scalars'
+            ? printScalars(checker.getNonNullableType(propertyType))
+            : printType(propertyType);
+        fingerprint += `${property.name}: ${printed};\n`;
       }
       return fingerprint;
     }
 
-    // Otherwise, fall back to printing the resolved schema and config of `GraphQLTadaAPI`
+    // Otherwise, fall back to the `GraphQLTadaAPI<Schema, Config>` type arguments. Of the schema,
+    // only scalar entries have a `type` and the rest is covered by the schema fingerprint. Printing
+    // all of it would make every document depend on the whole schema and can be very large
     const typeArguments =
       calleeType.flags & ts.TypeFlags.Object &&
       (calleeType as ts.ObjectType).objectFlags & ts.ObjectFlags.Reference
-        ? checker.getTypeArguments(calleeType as ts.TypeReference)
+        ? checker
+            .getTypeArguments(calleeType as ts.TypeReference)
+            .slice(0, ((calleeType as ts.TypeReference).target.typeParameters || []).length)
         : [calleeType];
-    return typeArguments.map(printType).join('\n');
+    return typeArguments
+      .map((type) => {
+        const typesProperty = checker.getPropertyOfType(type, 'types');
+        if (!typesProperty) return printType(type);
+        let output = '';
+        for (const property of getProperties(getTypeOfProperty(typesProperty))) {
+          const scalarProperty = checker.getPropertyOfType(getTypeOfProperty(property), 'type');
+          if (scalarProperty)
+            output += `${property.name}: ${printType(getTypeOfProperty(scalarProperty))};\n`;
+        }
+        return output;
+      })
+      .join('\n');
   };
 
   const getFragmentHashes = (

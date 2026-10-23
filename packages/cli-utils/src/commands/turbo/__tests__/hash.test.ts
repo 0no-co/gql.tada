@@ -89,6 +89,27 @@ describe('createDocumentHasher', () => {
       expect(before.hashes.query.documentHash).not.toBe(after.hashes.query.documentHash);
     });
 
+    it.each([
+      ['interface', (type: string) => `interface Scalars { DateTime: ${type} }`],
+      ['type alias', (type: string) => `type Scalars = { DateTime: ${type} };`],
+    ])('changes when a member of a named scalars %s changes', (_, declareScalars) => {
+      const before = createFixture(declareScalars('string') + declareTada('{ scalars: Scalars }'));
+      const after = createFixture(declareScalars('number') + declareTada('{ scalars: Scalars }'));
+
+      expect(before.hashes.query.documentHash).not.toBe(after.hashes.query.documentHash);
+    });
+
+    it('keeps the hash when setup properties or scalars are reordered', () => {
+      const before = createFixture(
+        declareTada('{ scalars: { A: string; B: number }; disableMasking: true }')
+      );
+      const after = createFixture(
+        declareTada('{ disableMasking: true; scalars: { B: number; A: string } }')
+      );
+
+      expect(before.hashes.query.documentHash).toBe(after.hashes.query.documentHash);
+    });
+
     it('changes when an imported scalar type alias resolves to a different type', () => {
       const sourceText = `
         import type { DateTime } from './scalars';
@@ -134,14 +155,28 @@ describe('createDocumentHasher', () => {
       expect(before.hashes.query.documentHash).not.toBe(after.hashes.query.documentHash);
     });
 
-    it('falls back to the resolved schema type without an `initGraphQLTada` alias', () => {
-      const declaration = (scalar: string) =>
-        `GraphQLTadaAPI<{ types: { DateTime: ${scalar} } }, { isMaskingDisabled: false }>`;
-      const before = createFixture(declareTada('', declaration('string')));
-      const after = createFixture(declareTada('', declaration('number')));
+    describe('without an `initGraphQLTada` alias', () => {
+      const declaration = (scalar: string, field = 'id') =>
+        `GraphQLTadaAPI<{ types: {
+          DateTime: { name: 'DateTime'; type: ${scalar} };
+          Todo: { kind: 'OBJECT'; name: 'Todo'; fields: { ${field}: unknown } };
+        } }, { isMaskingDisabled: false }>`;
 
-      expect(before.hashes.query.hashable).toBe(true);
-      expect(before.hashes.query.documentHash).not.toBe(after.hashes.query.documentHash);
+      it('falls back to the scalar types of the schema', () => {
+        const before = createFixture(declareTada('', declaration('string')));
+        const after = createFixture(declareTada('', declaration('number')));
+
+        expect(before.hashes.query.hashable).toBe(true);
+        expect(before.hashes.query.documentHash).not.toBe(after.hashes.query.documentHash);
+      });
+
+      it('ignores the rest of the schema', () => {
+        // NOTE: The schema fingerprint covers these instead
+        const before = createFixture(declareTada('', declaration('string', 'id')));
+        const after = createFixture(declareTada('', declaration('string', 'text')));
+
+        expect(before.hashes.query.documentHash).toBe(after.hashes.query.documentHash);
+      });
     });
   });
 });
