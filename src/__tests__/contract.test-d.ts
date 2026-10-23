@@ -17,8 +17,11 @@ import type {
   TadaScalarType,
   TadaInputObjectType,
 } from '../contract';
+import type { contractSchema, schema as graphqlJsSchema } from './fixtures/contractSchema';
+import type { contractIntrospection } from './fixtures/contractIntrospection';
+import { documents } from './fixtures/contractSchema';
 
-// A schema as a third-party builder (e.g. Pothos or Grats) would emit it
+// A schema as a builder would emit it
 type ID = TadaNonNullTypeRef<TadaNamedTypeRef<'SCALAR', 'ID'>>;
 type String = TadaNamedTypeRef<'SCALAR', 'String'>;
 
@@ -160,6 +163,70 @@ describe('contract', () => {
     expectTypeOf<ResultOf<typeof query>>().toEqualTypeOf<{ a: string; b: string | null }>();
     expectTypeOf<VariablesOf<typeof query>>().toEqualTypeOf<{
       input: { a: string; b?: string | null };
+    }>();
+  });
+});
+
+describe('contract of a graphql-js schema', () => {
+  const fromContract = initGraphQLTada<{
+    introspection: IntrospectionOf<typeof graphqlJsSchema>;
+  }>();
+  const fromIntrospection = initGraphQLTada<{
+    introspection: contractIntrospection;
+    scalars: { DateTime: string };
+  }>();
+
+  it('carries the contract type on the schema object', () => {
+    expectTypeOf<IntrospectionOf<typeof graphqlJsSchema>>().toEqualTypeOf<contractSchema>();
+  });
+
+  it('types documents like the generated introspection type does', () => {
+    const issue = [fromContract(documents.issue), fromIntrospection(documents.issue)];
+    const issues = [fromContract(documents.issues), fromIntrospection(documents.issues)];
+    const search = [fromContract(documents.search), fromIntrospection(documents.search)];
+    const node = [fromContract(documents.node), fromIntrospection(documents.node)];
+    const create = [fromContract(documents.createIssue), fromIntrospection(documents.createIssue)];
+    const close = [fromContract(documents.closeIssue), fromIntrospection(documents.closeIssue)];
+    expectTypeOf<ResultOf<(typeof issue)[0]>>().toEqualTypeOf<ResultOf<(typeof issue)[1]>>();
+    expectTypeOf<VariablesOf<(typeof issue)[0]>>().toEqualTypeOf<VariablesOf<(typeof issue)[1]>>();
+    expectTypeOf<ResultOf<(typeof issues)[0]>>().toEqualTypeOf<ResultOf<(typeof issues)[1]>>();
+    expectTypeOf<VariablesOf<(typeof issues)[0]>>().toEqualTypeOf<
+      VariablesOf<(typeof issues)[1]>
+    >();
+    expectTypeOf<ResultOf<(typeof search)[0]>>().toEqualTypeOf<ResultOf<(typeof search)[1]>>();
+    expectTypeOf<ResultOf<(typeof node)[0]>>().toEqualTypeOf<ResultOf<(typeof node)[1]>>();
+    expectTypeOf<ResultOf<(typeof create)[0]>>().toEqualTypeOf<ResultOf<(typeof create)[1]>>();
+    expectTypeOf<VariablesOf<(typeof create)[0]>>().toEqualTypeOf<
+      VariablesOf<(typeof create)[1]>
+    >();
+    expectTypeOf<ResultOf<(typeof close)[0]>>().toEqualTypeOf<ResultOf<(typeof close)[1]>>();
+    expectTypeOf<VariablesOf<(typeof close)[0]>>().toEqualTypeOf<VariablesOf<(typeof close)[1]>>();
+  });
+
+  it('types variables of input objects, defaults, OneOf inputs, and custom scalars', () => {
+    const issues = fromContract(documents.issues);
+    expectTypeOf<VariablesOf<typeof issues>>().toEqualTypeOf<{
+      filter?: {
+        status?: ('OPEN' | 'IN_PROGRESS' | 'CLOSED')[] | null;
+        priority?: 'LOW' | 'MEDIUM' | 'HIGH' | null;
+        assignee?: string | null;
+        createdAfter?: string | null;
+        first?: number | null;
+      } | null;
+    }>();
+    const issue = fromContract(documents.issue);
+    expectTypeOf<VariablesOf<typeof issue>>().toEqualTypeOf<{
+      by: { id: string } | { number: number };
+    }>();
+  });
+
+  it('types results of interfaces, unions, enums, and nullability', () => {
+    const search = fromContract(documents.search);
+    expectTypeOf<ResultOf<typeof search>>().toEqualTypeOf<{
+      search: (
+        | { __typename: 'User'; id: string; login: string }
+        | { __typename: 'Issue'; id: string; title: string }
+      )[];
     }>();
   });
 });
