@@ -1,5 +1,15 @@
 # gql.tada
 
+## 1.11.5
+
+### Patch Changes
+
+- Parse `tsconfig.json` files without relying on the TypeScript compiler API so schema output generation works with the TypeScript 7 package
+  Submitted by [@byrnehollander](https://github.com/byrnehollander) (See [#573](https://github.com/0no-co/gql.tada/pull/573))
+- Updated dependencies (See [#573](https://github.com/0no-co/gql.tada/pull/573), [#603](https://github.com/0no-co/gql.tada/pull/603), and [#605](https://github.com/0no-co/gql.tada/pull/605))
+  - @gql.tada/cli-utils@1.9.5
+  - @gql.tada/internal@1.2.3
+
 ## 1.11.4
 
 ### Patch Changes
