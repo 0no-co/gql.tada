@@ -109,8 +109,10 @@ describe('collectImportsFromSourceFile', () => {
       },
       (specifier) => specifier,
       (specifier, fromPath) => {
-        if (specifier === './pokemon-env.d') return '/project/graphql/pokemon-env.d.ts';
-        if (specifier === './countries-env.d') return '/project/graphql/countries-env.d.ts';
+        if (specifier === './pokemon-env.d')
+          return path.resolve('/project/graphql/pokemon-env.d.ts');
+        if (specifier === './countries-env.d')
+          return path.resolve('/project/graphql/countries-env.d.ts');
         return path.resolve(path.dirname(fromPath), specifier);
       },
       '/project',
