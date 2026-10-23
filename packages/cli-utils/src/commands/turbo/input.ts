@@ -5,25 +5,53 @@ import type { TypeNode } from 'graphql';
 
 import { INPUT_ALIAS_PREFIX } from './types';
 
-/** Serialize input objects separately so recursive references have a name. */
+interface SerializedDocumentType {
+  documentType: string;
+  inputTypes?: Record<string, string>;
+}
+
+const must = <T>(value: T | undefined): T => {
+  if (value === undefined) throw new TypeError('Unexpected introspection type shape');
+  return value;
+};
+
+/** Serialize input objects separately so recursive references have a name.
+ * @remarks
+ * This mirrors the variable types in gql.tada's `src/variables.ts` and must be kept in sync with it.
+ */
 export function serializeDocumentType(
   checker: ts.TypeChecker,
   call: ts.CallExpression,
   document: string,
   returnType: ts.Type,
   flags: ts.TypeFormatFlags
-): { documentType: string; inputTypes?: Record<string, string> } {
+): SerializedDocumentType {
   const print = (type: ts.Type) => checker.typeToString(type, call, flags);
-  const fallback = () => ({ documentType: print(returnType) });
+  try {
+    const serialized = serializeInputTypes(checker, call, document, returnType, print);
+    if (serialized) return serialized;
+  } catch {
+    // NOTE: An unexpected schema shape falls back to the printed type rather than failing turbo
+  }
+  return { documentType: print(returnType) };
+}
+
+function serializeInputTypes(
+  checker: ts.TypeChecker,
+  call: ts.CallExpression,
+  document: string,
+  returnType: ts.Type,
+  print: (type: ts.Type) => string
+): SerializedDocumentType | undefined {
   const api = checker.getTypeAtLocation(call.expression);
-  if (!api.symbol || api.symbol.getName() !== 'GraphQLTadaAPI') return fallback();
+  if (!api.symbol || api.symbol.getName() !== 'GraphQLTadaAPI') return;
   const schema = checker.getTypeArguments(api as ts.TypeReference)[0];
   const property = (type: ts.Type, name: string): ts.Type | undefined => {
     const symbol = checker.getPropertyOfType(type, name);
     return symbol && checker.getTypeOfSymbolAtLocation(symbol, call);
   };
   const types = schema && property(schema, 'types');
-  if (!types) return fallback();
+  if (!types) return;
   const literal = (type: ts.Type | undefined): string | undefined =>
     type && type.isStringLiteral() ? type.value : undefined;
   const kind = (type: ts.Type) => literal(property(type, 'kind'));
@@ -32,13 +60,9 @@ export function serializeDocumentType(
     return type && kind(type) === 'INPUT_OBJECT' ? type : undefined;
   };
 
-  let definition;
-  try {
-    definition = parse(document).definitions[0];
-  } catch {
-    return fallback();
-  }
-  if (!definition || definition.kind !== Kind.OPERATION_DEFINITION) return fallback();
+  // NOTE: Like getVariablesType, only the first definition's variables are used
+  const definition = parse(document).definitions[0];
+  if (!definition || definition.kind !== Kind.OPERATION_DEFINITION) return;
   const arguments_ = checker.getTypeArguments(returnType as ts.TypeReference);
   const variables = arguments_[1];
   const inputTypes: Record<string, string> = {};
@@ -57,20 +81,24 @@ export function serializeDocumentType(
       reference: (name: string) => string
     ): string => {
       const refKind = kind(ref);
-      if (refKind === 'NON_NULL') return renderRef(property(ref, 'ofType')!, false, reference);
+      if (refKind === 'NON_NULL') return renderRef(must(property(ref, 'ofType')), false, reference);
       const value =
         refKind === 'LIST'
-          ? `(${renderRef(property(ref, 'ofType')!, true, reference)})[]`
-          : renderNamed(literal(property(ref, 'name'))!, reference);
+          ? `(${renderRef(must(property(ref, 'ofType')), true, reference)})[]`
+          : renderNamed(must(literal(property(ref, 'name'))), reference);
       return optional ? `(${value}) | null` : value;
     };
     const renderInput = (name: string, reference: (name: string) => string): string => {
-      const type = input(name)!;
-      const fields = checker.getTypeArguments(property(type, 'inputFields')! as ts.TypeReference);
-      const isOneOf = print(property(type, 'isOneOf')!) === 'true';
+      const type = must(input(name));
+      const fields = checker.getTypeArguments(
+        must(property(type, 'inputFields')) as ts.TypeReference
+      );
+      // NOTE: Output from before oneOf support omits `isOneOf`, which core treats as `false`
+      const oneOf = property(type, 'isOneOf');
+      const isOneOf = !!oneOf && print(oneOf) === 'true';
       const members = fields.map((field) => {
-        const fieldName = JSON.stringify(literal(property(field, 'name'))!);
-        const ref = property(field, 'type')!;
+        const fieldName = JSON.stringify(must(literal(property(field, 'name'))));
+        const ref = must(property(field, 'type'));
         if (isOneOf) return `{ ${fieldName}: ${renderRef(ref, false, reference)}; }`;
         const defaultValue = property(field, 'defaultValue');
         const noDefault =
@@ -122,7 +150,7 @@ export function serializeDocumentType(
         : print(checker.getTypeOfSymbolAtLocation(variable, call));
     return `${JSON.stringify(variable.getName())}${variable.flags & ts.SymbolFlags.Optional ? '?' : ''}: ${value};`;
   });
-  if (!Object.keys(inputTypes).length) return fallback();
+  if (!Object.keys(inputTypes).length) return;
   return {
     documentType: `TadaDocumentNode<${print(arguments_[0])}, { ${members.join(' ')} }, ${print(arguments_[2])}>`,
     inputTypes,

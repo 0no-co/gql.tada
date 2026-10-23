@@ -243,6 +243,72 @@ describe('Turbo input aliases', () => {
     }
   }, 30_000);
 
+  it.each([
+    ['preprocessed', true],
+    ['raw', false],
+  ])(
+    'matches variables inferred without turbo for %s introspection',
+    async (_, shouldPreprocess) => {
+      const documents = [
+        'query ($a: SomeInput, $b: FirstInput!, $c: [ListInput!], $d: TypedInput = {required: "x", mode: ON, date: "x"}, $e: ChoiceInput, $f: [[SomeInput!]!]!) { field(arg: $a, mutual: $b, list: $c, typed: $d, choice: $e, batch: $f) }',
+        'fragment Fields on Query { field } query ($a: SomeInput) { field(arg: $a) }',
+      ];
+      const project = await fixture(
+        `import { graphql } from './graphql';\n` +
+          documents
+            .map((document, index) => `export const cached${index} = graphql('${document}');`)
+            .join('\n'),
+        shouldPreprocess
+      );
+      try {
+        await project.generate();
+        // NOTE: A document string that isn't in the cache is inferred by gql.tada's own types
+        await fs.writeFile(
+          path.join(project.rootPath, 'parity.ts'),
+          `import { graphql } from './graphql';
+          import type { VariablesOf } from 'gql.tada';
+          import * as cached from './documents';
+          type Equal<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
+          ${documents
+            .map(
+              (document, index) => `
+          const live${index} = graphql('${document} ');
+          const parity${index}: Equal<VariablesOf<typeof live${index}>, VariablesOf<typeof cached.cached${index}>> = true;`
+            )
+            .join('')}`
+        );
+        expect(await project.check()).toEqual([]);
+      } finally {
+        await project.dispose();
+      }
+    },
+    30_000
+  );
+
+  it('treats input objects without `isOneOf` like gql.tada does', async () => {
+    const project = await fixture(`
+      import { graphql } from './graphql';
+      import type { VariablesOf } from 'gql.tada';
+      const query = graphql('query ($arg: SomeInput) { field(arg: $arg) }');
+      // @ts-expect-error Nested String inputs must not become any.
+      const invalid: VariablesOf<typeof query> = { arg: { inner: { field: 1 } } };
+    `);
+    try {
+      // NOTE: Output generated before oneOf support omits `isOneOf`
+      const envPath = path.join(project.rootPath, 'graphql-env.d.ts');
+      const env = await fs.readFile(envPath, 'utf8');
+      expect(env).toContain('isOneOf: false; ');
+      await fs.writeFile(envPath, env.replace(/isOneOf: \w+; /g, ''));
+      expect(await project.check()).toEqual([]);
+      const { contents } = await project.generate();
+      expect(contents).toMatch(/type \$tadaInput_\w+_SomeInput =/);
+      expect(contents).not.toMatch(/\bany\b/);
+      expect(await project.check()).toEqual([]);
+    } finally {
+      await project.dispose();
+    }
+  }, 30_000);
+
   it('keeps aliases separate for different scalar mappings of the same schema', async () => {
     const project = await fixture(`
       import { graphql, graphqlString } from './graphql';
