@@ -1,11 +1,11 @@
 import ts from 'typescript';
 import type { IntrospectionQuery } from 'graphql';
-import { buildSchema, buildClientSchema, executeSync } from 'graphql';
+import { buildSchema, buildClientSchema } from 'graphql';
 import { CombinedError } from '@urql/core';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { makeIntrospectionQuery, getPeerSupportedFeatures } from './introspection';
+import { introspectSchema } from '../introspection/schema';
 
 import { toError } from '../helpers';
 import type { SchemaLoader, SchemaLoaderResult, OnSchemaUpdate, OnSchemaError } from './types';
@@ -46,8 +46,7 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
         assumeValid: !!config.assumeValid,
         assumeValidSDL: !!config.assumeValid,
       });
-      const query = makeIntrospectionQuery(getPeerSupportedFeatures());
-      const queryResult = executeSync({ schema, document: query });
+      const queryResult = introspectSchema(schema);
       if (queryResult.errors) {
         throw new CombinedError({ graphQLErrors: queryResult.errors as any[] });
       } else if (queryResult.data) {
