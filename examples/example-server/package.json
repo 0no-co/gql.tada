@@ -1,0 +1,25 @@
+{
+  "name": "@gql.tada/example-server",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "emit-schema": "node scripts/emit-schema.ts",
+    "start": "node src/server.ts",
+    "client": "node src/client/index.ts",
+    "check": "node scripts/emit-schema.ts && gql.tada check && tsc"
+  },
+  "dependencies": {
+    "@urql/core": "^5.0.2",
+    "gql.tada": "workspace:*",
+    "graphql": "16.9.0",
+    "graphql-http": "^1.22.4"
+  },
+  "devDependencies": {
+    "@0no-co/graphqlsp": "^1.12.9",
+    "@types/node": "^22.4.0",
+    "typescript": "^5.5.2"
+  }
+}
