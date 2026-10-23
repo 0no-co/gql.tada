@@ -33,7 +33,8 @@ export interface TurboParams {
   turboOutputPath: string | TurboPath[];
 }
 
-const HEAP_SOFT_LIMIT_BYTES = 2_500 * 1_024 * 1_024;
+const HEAP_SOFT_LIMIT_RATIO = 0.6;
+const HEAP_SOFT_LIMIT_BYTES = v8.getHeapStatistics().heap_size_limit * HEAP_SOFT_LIMIT_RATIO;
 const TURBO_MAX_BATCH = 1_000;
 
 interface ImportTraceCache {
