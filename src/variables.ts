@@ -51,6 +51,55 @@ type getInputObjectTypeOneOfRec<
     >
   : InputObject;
 
+type isRequiredInputField<InputField> = InputField extends {
+  defaultValue?: undefined | null;
+  type: { kind: 'NON_NULL' };
+}
+  ? true
+  : false;
+
+type getInputObjectTypeMap<InputFields, Introspection extends SchemaLike> = obj<
+  {
+    [Name in keyof InputFields as isRequiredInputField<InputFields[Name]> extends true
+      ? Name
+      : never]: InputFields[Name] extends { type: any }
+      ? unwrapTypeRec<InputFields[Name]['type'], Introspection, true>
+      : never;
+  } & {
+    [Name in keyof InputFields as isRequiredInputField<InputFields[Name]> extends true
+      ? never
+      : Name]?: InputFields[Name] extends { type: any }
+      ? unwrapTypeRec<InputFields[Name]['type'], Introspection, true> | null
+      : never;
+  }
+>;
+
+type getInputObjectTypeOneOfMap<
+  InputFields,
+  Introspection extends SchemaLike,
+  Name = keyof InputFields,
+> = Name extends keyof InputFields
+  ? {
+      [P in Name]: InputFields[Name] extends { type: any }
+        ? unwrapTypeRec<InputFields[Name]['type'], Introspection, false>
+        : never;
+    }
+  : never;
+
+// NOTE: Introspection lists input fields as a tuple, while schema contract types key them by name.
+// The check isn't distributive, so `any` keeps taking the tuple path rather than recursing infinitely
+type getInputObjectType<InputFields, Introspection extends SchemaLike> = [InputFields] extends [
+  readonly any[],
+]
+  ? getInputObjectTypeRec<InputFields, Introspection>
+  : getInputObjectTypeMap<InputFields, Introspection>;
+
+type getInputObjectTypeOneOf<InputFields, Introspection extends SchemaLike> = [
+  InputFields,
+] extends [readonly any[]]
+  ? getInputObjectTypeOneOfRec<InputFields, Introspection>
+  : getInputObjectTypeOneOfMap<InputFields, Introspection>;
+
 type unwrapTypeRec<TypeRef, Introspection extends SchemaLike, IsOptional> = TypeRef extends {
   kind: 'NON_NULL';
   ofType: any;
@@ -125,8 +174,8 @@ type getScalarType<
       isOneOf?: any;
     }
     ? Introspection['types'][TypeName]['isOneOf'] extends true
-      ? getInputObjectTypeOneOfRec<Introspection['types'][TypeName]['inputFields'], Introspection>
-      : getInputObjectTypeRec<Introspection['types'][TypeName]['inputFields'], Introspection>
+      ? getInputObjectTypeOneOf<Introspection['types'][TypeName]['inputFields'], Introspection>
+      : getInputObjectType<Introspection['types'][TypeName]['inputFields'], Introspection>
     : Introspection['types'][TypeName] extends { type: any }
       ? Introspection['types'][TypeName]['type']
       : Introspection['types'][TypeName]['enumValues']
