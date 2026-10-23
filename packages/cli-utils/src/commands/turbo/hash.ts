@@ -2,7 +2,7 @@ import ts from 'typescript';
 import * as crypto from 'node:crypto';
 
 // NOTE(@kitten): Change if document type input or output changes
-const CACHE_BUSTER = 'turbo-document-hash-v1';
+const CACHE_BUSTER = 'turbo-document-hash-v2';
 
 export interface DocumentHashResult {
   hashable: boolean;

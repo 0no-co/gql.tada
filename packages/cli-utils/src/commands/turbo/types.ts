@@ -16,7 +16,10 @@ export interface TurboDocument {
   documentType: string;
   documentHash?: string | undefined;
   isCached?: boolean | undefined;
+  inputTypes?: Record<string, string> | undefined;
 }
+
+export const INPUT_ALIAS_PREFIX = '$tadaInput_';
 
 export interface GraphQLSourceImport {
   specifier: string;

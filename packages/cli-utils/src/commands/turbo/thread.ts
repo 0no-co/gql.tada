@@ -23,6 +23,7 @@ import type {
 } from './types';
 import { readCachedTurboDocuments, type CachedTurboDocuments } from './cache';
 import { createDocumentHasher } from './hash';
+import { serializeDocumentType } from './input';
 import { hasGraphQLDocumentCandidate, shouldScanTurboFile } from './scan';
 
 export interface TurboParams {
@@ -359,9 +360,11 @@ export async function* _runTurbo(params: TurboParams): AsyncIterableIterator<Tur
           : undefined;
 
       let documentType: string;
+      let inputTypes: Record<string, string> | undefined;
       let isCached = false;
       if (cachedDocument && cachedDocument.documentHash === documentHash.documentHash) {
         documentType = cachedDocument.documentType;
+        inputTypes = cachedDocument.inputTypes;
         isCached = true;
       } else {
         const returnType = checker.getTypeAtLocation(callExpression);
@@ -379,7 +382,15 @@ export async function* _runTurbo(params: TurboParams): AsyncIterableIterator<Tur
           continue;
         }
 
-        documentType = checker.typeToString(returnType, callExpression, BUILDER_FLAGS);
+        const serialized = serializeDocumentType(
+          checker,
+          callExpression,
+          call.node.text,
+          returnType,
+          BUILDER_FLAGS
+        );
+        documentType = serialized.documentType;
+        inputTypes = serialized.inputTypes;
       }
 
       documents.push({
@@ -388,6 +399,7 @@ export async function* _runTurbo(params: TurboParams): AsyncIterableIterator<Tur
         documentType,
         documentHash: documentHash.documentHash,
         isCached,
+        inputTypes,
       });
     }
 
