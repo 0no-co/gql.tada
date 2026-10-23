@@ -208,6 +208,10 @@ export default defineConfig({
               link: '/guides/multiple-schemas',
             },
             {
+              text: 'GraphQL Files',
+              link: '/guides/graphql-files',
+            },
+            {
               text: 'Testing',
               link: '/guides/testing',
             },
