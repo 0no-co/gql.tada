@@ -1,5 +1,20 @@
 # @gql.tada/cli-utils
 
+## 1.9.5
+
+### Patch Changes
+
+- Parse `tsconfig.json` files without relying on the TypeScript compiler API so schema output generation works with the TypeScript 7 package
+  Submitted by [@byrnehollander](https://github.com/byrnehollander) (See [#573](https://github.com/0no-co/gql.tada/pull/573))
+- Scale turbo's soft heap limit with V8's configured heap budget so that larger
+  TypeScript programs can use an explicitly increased Node heap without rebuilding
+  the checker before every file
+  Submitted by [@solon](https://github.com/solon) (See [#603](https://github.com/0no-co/gql.tada/pull/603))
+- Include the `initGraphQLTada` setup in `turbo` document hashes, so changing a scalar mapping (including what an imported scalar type resolves to) or `disableMasking` invalidates the affected cached document types instead of reusing stale ones
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#605](https://github.com/0no-co/gql.tada/pull/605))
+- Updated dependencies (See [#573](https://github.com/0no-co/gql.tada/pull/573))
+  - @gql.tada/internal@1.2.3
+
 ## 1.9.4
 
 ### Patch Changes
