@@ -70,7 +70,8 @@ Content mappers run external code, so TypeScript only starts them when you opt i
   masking and `readFragment()` behave the same as in `.ts` files.
 - Definitions named after reserved words (e.g. `query delete`) are still exported
   under their GraphQL names.
-- Files that only contain schema definitions (SDL) become empty modules.
+- Files that only contain schema definitions (SDL) become empty modules, unless
+  they're your schema (see [Schemas](#schemas)).
 
 Fragments from other files are imported with comments at the top level of a document:
 
@@ -87,6 +88,61 @@ defined in the current file.
 The mapper reports GraphQL syntax errors, unknown fragments, duplicate definition
 names, and fragment cycles. Type errors from the generated code, such as an imported
 fragment that doesn't exist, are reported on the original GraphQL source.
+
+When the project has a single SDL schema (see below), documents are also validated
+against it, e.g. unknown fields or variables of the wrong type are reported where
+they're written. Validation reads the schema from disk, and TypeScript re-checks your
+documents when it changes.
+
+## Schemas
+
+The mapper also maps your `.graphql` schema file, so you don't need to generate an
+introspection output file (`tadaOutputLocation`) with `gql.tada generate output` or
+GraphQLSP. It reads the schema from the GraphQLSP / `gql.tada` plugin config in your
+`tsconfig.json` (TypeScript 7 doesn't pass it to mappers), including configs it
+`extends`:
+
+```json
+{
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "@0no-co/graphqlsp",
+        "schema": "./schema.graphql",
+        "tadaOutputLocation": "./src/graphql-env.d.ts"
+      }
+    ]
+  },
+  "include": ["src", "schema.graphql"],
+  "contentMappers": [
+    {
+      "package": "@gql.tada/content-mapper",
+      "extensions": [".graphql"],
+      "options": { "module": "./src/graphql.js" }
+    }
+  ]
+}
+```
+
+The schema module exports the same `introspection` type as a generated
+`graphql-env.d.ts` file. Import it to create your `graphql()` function:
+
+```ts
+import { initGraphQLTada } from 'gql.tada';
+import type { introspection } from '../schema.graphql';
+
+export const graphql = initGraphQLTada<{ introspection: introspection }>();
+```
+
+Like a generated file, a single schema also sets up `gql.tada`'s default `graphql`
+export, as long as the schema file is part of your program (e.g. through `include`).
+In multi-schema setups (`schemas` with a `name` each), every schema file only exports
+its `introspection` type. `.graphql` schemas need `graphql` to be installed. URL and
+`.json` introspection schemas aren't mapped, so keep generating output files for them.
+
+Without a plugin config, a `.graphql` file that defines a `Query` type or a `schema`
+definition is mapped as a schema, which only exports its `introspection` type.
+Schema syntax and validation errors are reported on the schema file.
 
 ## Runtime
 
