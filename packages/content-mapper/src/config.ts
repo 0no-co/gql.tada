@@ -2,10 +2,12 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { createRequire } from 'node:module';
 
-/** A `.graphql` schema file configured through the GraphQLSP / `gql.tada` plugin config. */
+/** A schema file configured through the GraphQLSP / `gql.tada` plugin config. */
 export interface SchemaEntry {
-  /** Absolute path of the SDL file. */
+  /** Absolute path of the schema file. */
   file: string;
+  /** Whether the file contains SDL or a JSON introspection result. */
+  format: 'sdl' | 'json';
   /** The `schemas[].name` label of a multi-schema setup. */
   name?: string;
 }
@@ -94,18 +96,28 @@ const findPluginConfig = (
   return null;
 };
 
-const toSchemaFile = (schema: unknown, rootPath: string): string | null => {
+const toSchemaFile = (
+  schema: unknown,
+  rootPath: string
+): Pick<SchemaEntry, 'file' | 'format'> | null => {
   if (typeof schema !== 'string' || /^https?:\/\//i.test(schema)) return null;
   const file = path.resolve(rootPath, schema.replace(/\$\{configDir\}/g, rootPath));
-  return path.extname(file) === '.graphql' || path.extname(file) === '.gql' ? file : null;
+  const extension = path.extname(file);
+  if (extension === '.graphql' || extension === '.gql') {
+    return { file, format: 'sdl' };
+  } else if (extension === '.json') {
+    return { file, format: 'json' };
+  } else {
+    return null;
+  }
 };
 
-/** Reads the project's `.graphql` schema files from its GraphQLSP / `gql.tada` plugin config.
+/** Reads the project's SDL and JSON introspection schema files from its GraphQLSP / `gql.tada` plugin config.
  *
  * @remarks
  * TypeScript 7 only passes plugin names (not their options) as compiler options, so the
  * tsconfig is read here. Relative paths resolve against the project's own `tsconfig.json`,
- * as in GraphQLSP. URL and `.json` introspection schemas aren't SDL files and are skipped.
+ * as in GraphQLSP. URL schemas are skipped.
  */
 export const readProjectConfig = (configFileName: string): ProjectConfig => {
   const configFiles: string[] = [];
@@ -115,13 +127,13 @@ export const readProjectConfig = (configFileName: string): ProjectConfig => {
   const plugin = findPluginConfig(configFileName, configFiles);
   if (plugin && Array.isArray(plugin.schemas)) {
     for (const entry of plugin.schemas) {
-      const file = entry && toSchemaFile(entry.schema, rootPath);
-      if (file && typeof entry.name === 'string') schemas.push({ file, name: entry.name });
+      const schema = entry && toSchemaFile(entry.schema, rootPath);
+      if (schema && typeof entry.name === 'string') schemas.push({ ...schema, name: entry.name });
     }
   } else if (plugin) {
     // A single schema's `name` is the plugin's name, which `generate output` ignores too
-    const file = toSchemaFile(plugin.schema, rootPath);
-    if (file) schemas.push({ file });
+    const schema = toSchemaFile(plugin.schema, rootPath);
+    if (schema) schemas.push(schema);
   }
   return { schemas, configFiles };
 };

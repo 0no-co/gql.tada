@@ -183,6 +183,29 @@ const scan = (input: string): Scan => {
   return { definitions, imports, hasTypeSystem };
 };
 
+export interface DocumentImport {
+  /** The specifier of an `# import` comment, as written */
+  path: string;
+  /** Location of the quoted specifier */
+  start: number;
+  length: number;
+}
+
+/** Reads a document's `# import` comments and whether it contains any definitions. */
+export const scanImports = (content: string) => {
+  const { definitions, imports, hasTypeSystem } = scan(content);
+  return {
+    imports: imports.map(
+      (importComment): DocumentImport => ({
+        path: importComment.path,
+        start: importComment.specifier.start,
+        length: importComment.specifier.value.length,
+      })
+    ),
+    hasDefinitions: definitions.length > 0 || hasTypeSystem,
+  };
+};
+
 const toIdentifier = (name: string) => (RESERVED_WORDS.has(name) ? `$${name}` : name);
 
 const toSpecifier = (from: string, to: string) => {
