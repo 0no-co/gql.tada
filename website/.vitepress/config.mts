@@ -208,6 +208,10 @@ export default defineConfig({
               link: '/guides/multiple-schemas',
             },
             {
+              text: 'Schema Contract',
+              link: '/guides/schema-contract',
+            },
+            {
               text: 'Testing',
               link: '/guides/testing',
             },

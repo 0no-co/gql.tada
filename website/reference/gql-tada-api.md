@@ -527,6 +527,51 @@ enums, the `enumValues` defined by the schema will be used.
 The `disableMasking` flag may be set to `true` instead of using `@_unmask` on individual fragments
 and allows fragment masking to be disabled globally.
 
+The `introspection` property also accepts a [`TadaSchema`](#tadaschema) type, e.g. one
+read from a schema object with [`IntrospectionOf`](#introspectionof).
+
+---
+
+### `IntrospectionOf`
+
+|                  | Description                                                    |
+| ---------------- | -------------------------------------------------------------- |
+| `Schema` generic | The type of a schema object that carries the schema contract. |
+
+This returns the [`TadaSchema`](#tadaschema) type that a schema builder attached to its
+schema object, which you can pass as `introspection` to [`initGraphQLTada()`](#initgraphqltada).
+A schema object without a schema type, such as a plain `GraphQLSchema`, is a type error.
+
+[Read more about the schema contract on its guide page.](../guides/schema-contract)
+
+#### Example
+
+```ts
+import { initGraphQLTada, type IntrospectionOf } from 'gql.tada';
+import type { schema } from './server/schema';
+
+export const graphql = initGraphQLTada<{
+  introspection: IntrospectionOf<typeof schema>;
+}>();
+```
+
+---
+
+### `TadaSchema`
+
+|                      | Description                                                                         |
+| -------------------- | ----------------------------------------------------------------------------------- |
+| `Definition` generic | The schema's root type names, its optional `name`, and a union of its named types. |
+
+This builds a schema type in the format of the schema contract, which schema builders emit
+in place of introspection. Its named types are built with the `TadaObjectType`,
+`TadaInterfaceType`, `TadaUnionType`, `TadaEnumType`, `TadaScalarType`, and
+`TadaInputObjectType` helpers, and their fields reference types with `TadaNamedTypeRef`,
+`TadaNonNullTypeRef`, and `TadaListTypeRef`. `TadaSchemaCarrier` attaches a schema type
+to a schema object, for `IntrospectionOf` to read.
+
+[Read more about emitting the schema contract on its guide page.](../guides/schema-contract#emitting-the-contract)
+
 ## Testing Functions
 
 These functions are all exported from `gql.tada/testing`, and are meant for tests,
