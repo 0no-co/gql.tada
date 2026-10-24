@@ -137,8 +137,17 @@ export const graphql = initGraphQLTada<{ introspection: introspection }>();
 Like a generated file, a single schema also sets up `gql.tada`'s default `graphql`
 export, as long as the schema file is part of your program (e.g. through `include`).
 In multi-schema setups (`schemas` with a `name` each), every schema file only exports
-its `introspection` type. `.graphql` schemas need `graphql` to be installed. URL and
-`.json` introspection schemas aren't mapped, so keep generating output files for them.
+its `introspection` type. Mapped schemas need `graphql` to be installed. URL schemas
+aren't mapped, so keep generating output files for them.
+
+TypeScript doesn't let content mappers handle `.json` files, so a `.json` introspection
+schema from the plugin config is mapped through a `.graphql` file that only imports it,
+and which you import the `introspection` type from instead:
+
+```graphql
+# src/schema.graphql
+# import * from "../schema.json"
+```
 
 Without a plugin config, a `.graphql` file that defines a `Query` type or a `schema`
 definition is mapped as a schema, which only exports its `introspection` type.
