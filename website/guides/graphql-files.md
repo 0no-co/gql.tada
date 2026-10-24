@@ -98,6 +98,8 @@ output file with `gql.tada generate output`, as described on the
   operation becomes the default export.
 - Fragment spreads are passed to `graphql()` as fragment dependencies, so
   [fragment masking](/guides/fragment-colocation) works as it does in `.ts` files.
+- Definitions named after reserved words (e.g. `query delete`) are still exported
+  under their GraphQL names.
 - Files that only contain schema definitions become empty modules.
 
 Fragments from other files are imported with comments at the top of a document:
@@ -110,8 +112,9 @@ Fragments from other files are imported with comments at the top of a document:
 Named imports only import the listed fragments. Wildcard imports resolve any spread
 fragment that isn't defined in the current file.
 
-The mapper reports syntax errors, unknown fragments, duplicate names and fragment
-cycles on the `.graphql` file.
+The mapper reports syntax errors, unknown fragments, duplicate names, anonymous
+operations next to other definitions, and fragment cycles. Type errors, hovers and
+go-to-definition in the generated code are mapped back to the `.graphql` source.
 
 ::: info
 Documents in `.graphql` files aren't validated against the schema yet. An unknown
@@ -132,3 +135,7 @@ const { text } = transform(source, {
   graphqlModule: '../graphql',
 });
 ```
+
+`graphqlExport` sets the export name (defaults to `"graphql"`). To reuse the
+`tsconfig.json`-relative `module` option, `resolveGraphQLModule(configFileName,
+fileName, module)` turns it into a specifier relative to `fileName`.
