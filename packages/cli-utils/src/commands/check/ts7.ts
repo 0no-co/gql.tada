@@ -9,6 +9,8 @@ export interface TS7DiagnosticsParams {
   /** The project's own `tsconfig.json`. */
   tsconfigPath: string;
   compiler: CompilerName;
+  /** Whether to run the project's content mappers, like `tsc --runExternalCode`. */
+  runExternalCode?: boolean;
 }
 
 interface CheckDiagnostic {
@@ -30,6 +32,7 @@ interface CheckProjectResult {
 type CheckProject = (options: {
   tsconfigPath: string;
   compiler?: CompilerName;
+  runExternalCode?: boolean;
 }) => Promise<CheckProjectResult>;
 
 const toSeverity = (severity: CheckDiagnostic['severity']): Severity => {
@@ -70,6 +73,7 @@ export async function* runTS7Diagnostics(
   const result = await checkProject({
     tsconfigPath: params.tsconfigPath,
     compiler: params.compiler,
+    runExternalCode: params.runExternalCode,
   });
 
   yield { kind: 'FILE_COUNT', fileCount: result.files.length };
