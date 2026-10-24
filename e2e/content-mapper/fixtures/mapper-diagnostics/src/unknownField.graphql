@@ -1,0 +1,6 @@
+query UnknownField {
+  pokemons {
+    id
+    nope
+  }
+}
