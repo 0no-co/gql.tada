@@ -1,14 +1,14 @@
 import { describe, it, expectTypeOf } from 'vitest';
 import type { GraphQLResolveInfo } from 'graphql';
 
-import type { IntrospectionOf } from '../../contract';
+import type { IntrospectionOf } from 'gql.tada';
 import { initSchemaBuilder } from '../builder';
-import type { AuthRule } from '../auth';
-import { authPlugin, and, or, not } from '../auth';
-import { maskErrorsPlugin } from '../maskErrors';
+import type { AuthRule } from '../../../../examples/example-server/src/plugins/auth';
+import { authPlugin, and, or, not } from '../../../../examples/example-server/src/plugins/auth';
+import { maskErrorsPlugin } from '../../../../examples/example-server/src/plugins/maskErrors';
 import type { SchemaPlugin } from '../plugin';
 
-declare module '../plugin' {
+declare module '@gql.tada/server' {
   interface FieldPluginOptions<Parent, Context, Args> {
     typedHint?: (parent: Parent, args: Args, context: Context) => string;
   }

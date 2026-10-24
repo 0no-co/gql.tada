@@ -11,7 +11,7 @@ import {
 import type { SchemaPlugin, PluginField } from '../plugin';
 import { initSchemaBuilder } from '../builder';
 
-declare module '../plugin' {
+declare module '@gql.tada/server' {
   interface FieldPluginOptions<Parent, Context, Args> {
     cost?: number;
   }

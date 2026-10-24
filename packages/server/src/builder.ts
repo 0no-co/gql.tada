@@ -1,6 +1,6 @@
 import type { GraphQLResolveInfo, GraphQLSchema, ValueNode } from 'graphql';
 
-import type { obj } from '../utils';
+import type { obj } from './utils';
 import type {
   TadaSchema,
   TadaSchemaCarrier,
@@ -11,7 +11,7 @@ import type {
   TadaScalarType,
   TadaInputObjectType,
   TadaTypeRef,
-} from '../contract';
+} from 'gql.tada';
 
 import type {
   AppliedDirective,
@@ -947,7 +947,7 @@ const define = (kind: string, ref: string | NamedRef, config: unknown): any => (
  *
  * @example
  * ```ts
- * import { initSchemaBuilder } from 'gql.tada/server';
+ * import { initSchemaBuilder } from '@gql.tada/server';
  *
  * const t = initSchemaBuilder<{ context: { userId: string } }>();
  *

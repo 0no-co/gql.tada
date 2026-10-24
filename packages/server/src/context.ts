@@ -11,7 +11,7 @@
  * @example
  * ```ts
  * import DataLoader from 'dataloader';
- * import { createContextCache } from 'gql.tada/server';
+ * import { createContextCache } from '@gql.tada/server';
  *
  * const userLoader = createContextCache(
  *   (context: Context) => new DataLoader((ids: readonly string[]) => context.db.getUsers(ids))

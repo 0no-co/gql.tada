@@ -3,13 +3,22 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   resolve: {
-    alias: {
+    alias: [
       // NOTE: Tests run without the workspace packages being built, so the
-      // workspace dependency is resolved to its source instead of `dist/`
-      '@gql.tada/internal': fileURLToPath(
-        new URL('packages/internal/src/index.ts', import.meta.url)
-      ),
-    },
+      // workspace dependencies are resolved to their sources instead of `dist/`
+      {
+        find: /^@gql\.tada\/internal$/,
+        replacement: fileURLToPath(new URL('packages/internal/src/index.ts', import.meta.url)),
+      },
+      {
+        find: /^@gql\.tada\/server$/,
+        replacement: fileURLToPath(new URL('packages/server/src/index.ts', import.meta.url)),
+      },
+      {
+        find: /^gql\.tada$/,
+        replacement: fileURLToPath(new URL('src/index.ts', import.meta.url)),
+      },
+    ],
   },
   test: {
     benchmark: {},

@@ -1,5 +1,5 @@
-import type { obj } from '../utils';
-import type { TadaNamedTypeRef, TadaNonNullTypeRef, TadaListTypeRef } from '../contract';
+import type { obj } from './utils';
+import type { TadaNamedTypeRef, TadaNonNullTypeRef, TadaListTypeRef } from 'gql.tada';
 
 export type MaybePromise<T> = T | PromiseLike<T>;
 

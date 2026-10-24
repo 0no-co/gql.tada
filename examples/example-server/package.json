@@ -12,6 +12,7 @@
     "check": "node scripts/emit-schema.ts && gql.tada check && tsc"
   },
   "dependencies": {
+    "@gql.tada/server": "workspace:*",
     "@urql/core": "^5.0.2",
     "gql.tada": "workspace:*",
     "graphql": "16.9.0",

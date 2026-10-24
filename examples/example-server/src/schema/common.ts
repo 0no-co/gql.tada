@@ -1,5 +1,5 @@
 import { Kind } from 'graphql';
-import { createContextCache } from 'gql.tada/server';
+import { createContextCache } from '@gql.tada/server';
 import type { Context } from '../db.ts';
 import { t } from './builder.ts';
 import { Node } from './refs.ts';

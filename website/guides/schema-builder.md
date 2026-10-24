@@ -1,12 +1,12 @@
 ---
 title: Schema Builder
-description: How to define a GraphQL API with gql.tada/server and type documents against it without code generation.
+description: How to define a GraphQL API with @gql.tada/server and type documents against it without code generation.
 ---
 
-# Schema Builder
+# Schema Builder <Badge type="warning" text="experimental" />
 
 <section>
-  <code>gql.tada/server</code> defines a GraphQL schema in TypeScript
+  <code>@gql.tada/server</code> defines a GraphQL schema in TypeScript
   with <code>graphql</code>'s type system. It derives the schema's
   type from your definitions, so clients in the same codebase type
   their documents against it, without introspection or code generation.
@@ -23,32 +23,38 @@ are checked against the values that their parents resolve to.
 ::: tip
 The [`examples/example-server`](https://github.com/0no-co/gql.tada/tree/main/examples/example-server)
 directory contains a complete API with a typed client, including
-[plugins and authorization](/guides/server-plugins).
+[plugins](/guides/server-plugins) for authorization and error masking.
+:::
+
+::: warning
+`@gql.tada/server` is experimental. Its API may change in minor releases until it reaches v1.
 :::
 
 ---
 
 ## Installation
 
-`gql.tada/server` is an entrypoint of `gql.tada`. It requires `graphql` v16
-or v17, which `gql.tada` lists as an optional peer dependency.
+Install `@gql.tada/server` in the package that defines your schema, together with
+`graphql` v16.9 or later. Both `graphql` and `gql.tada` are peer dependencies, so the
+schema and your client share one copy of each. If you haven't installed `gql.tada` yet,
+follow the [Installation page](/get-started/installation) first.
 
 ::: code-group
 
 ```sh [npm]
-npm install gql.tada graphql
+npm install @gql.tada/server graphql
 ```
 
 ```sh [pnpm]
-pnpm add gql.tada graphql
+pnpm add @gql.tada/server graphql
 ```
 
 ```sh [yarn]
-yarn add gql.tada graphql
+yarn add @gql.tada/server graphql
 ```
 
 ```sh [bun]
-bun add gql.tada graphql
+bun add @gql.tada/server graphql
 ```
 
 :::
@@ -61,7 +67,7 @@ bun add gql.tada graphql
 context value that your GraphQL server passes to resolvers.
 
 ```ts [src/schema/builder.ts]
-import { initSchemaBuilder } from 'gql.tada/server';
+import { initSchemaBuilder } from '@gql.tada/server';
 
 export interface Context {
   db: Database;
@@ -148,7 +154,7 @@ const TodoFilter = t.input('TodoFilter', {
 ```
 
 Set `isOneOf: true` to define a [OneOf Input Object](https://github.com/graphql/graphql-spec/pull/825),
-of which exactly one field must be set. This requires `graphql` v16.9 or later.
+of which exactly one field must be set.
 
 ### Subscriptions
 
@@ -251,7 +257,7 @@ without creating them upfront.
 
 ```ts
 import DataLoader from 'dataloader';
-import { createContextCache } from 'gql.tada/server';
+import { createContextCache } from '@gql.tada/server';
 
 const userLoader = createContextCache(
   (ctx: Context) => new DataLoader((ids: readonly string[]) => ctx.db.getUsers(ids))
@@ -265,5 +271,5 @@ The context must be an object, so your GraphQL server must pass one.
 
 <a href="/guides/server-plugins" class="button">
   <h3>Server Plugins</h3>
-  <p>Learn how to add authorization and error masking</p>
+  <p>Learn how to write plugins, e.g. for authorization and error masking</p>
 </a>

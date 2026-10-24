@@ -1,7 +1,7 @@
 import type { GraphQLResolveInfo } from 'graphql';
 import { GraphQLError } from 'graphql';
 
-import type { FieldResolver, SchemaPlugin } from './plugin';
+import type { FieldResolver, SchemaPlugin } from '@gql.tada/server';
 
 export interface MaskErrorsPluginOptions {
   /** The message of masked errors. Defaults to `'Unexpected error.'`. */

@@ -1,31 +1,33 @@
 import type { GraphQLDirective, GraphQLResolveInfo } from 'graphql';
-import type { AuthRule } from './auth';
 
 type Extensions = { readonly [key: string]: unknown };
 
 /** Options that plugins add to fields of object types, via declaration merging.
  *
+ * @remarks
+ * Merged declarations must use the same type parameter names. `Parent` is the type of the
+ * field's parent value, `Context` the builder's context type, and `Args` the type of the
+ * field's arguments, as its resolver receives them.
+ *
  * @example
  * ```ts
- * declare module 'gql.tada/server' {
+ * declare module '@gql.tada/server' {
  *   interface FieldPluginOptions<Parent, Context, Args> {
- *     cost?: number;
+ *     cost?: number | ((args: Args, context: Context) => number);
  *   }
  * }
  * ```
  */
-export interface FieldPluginOptions<Parent, Context, Args> {
-  /** The field's authorization rule, which replaces its type's rule. Requires `authPlugin()`.
-   * `true` always allows access, and `false` always denies it.
-   */
-  authorize?: AuthRule<Parent, Context, Args> | boolean;
-}
+export interface FieldPluginOptions<Parent, Context, Args> {}
 
-/** Options that plugins add to object types, via declaration merging. */
-export interface TypePluginOptions<Shape, Context> {
-  /** The authorization rule of this type's fields without their own rule. Requires `authPlugin()`. */
-  authorize?: AuthRule<Shape, Context, { readonly [name: string]: unknown }> | boolean;
-}
+/** Options that plugins add to object types, via declaration merging.
+ *
+ * @remarks
+ * `Shape` is the object type's backing type, and `Context` the builder's context type.
+ */
+export interface TypePluginOptions<Shape, Context> {}
+
+type Options<Declared> = Declared & { readonly [key: string]: unknown };
 
 /** A field resolver, or a subscription field's `subscribe` function. */
 export type FieldResolver<Context = any> = (
@@ -41,17 +43,17 @@ export interface PluginField {
   readonly fieldName: string;
   /** The root operation type that the field belongs to, if any. */
   readonly operation: 'query' | 'mutation' | 'subscription' | undefined;
-  /** The field's options, including plugin options. */
-  readonly options: { readonly [key: string]: unknown };
+  /** The field's options, including plugin options. These aren't validated at runtime. */
+  readonly options: Options<FieldPluginOptions<any, any, any>>;
   /** The plugin options of the field's type, merged from all of its definitions. */
-  readonly typeOptions: { readonly [key: string]: unknown };
+  readonly typeOptions: Options<TypePluginOptions<any, any>>;
 }
 
 /** An object type, as plugins see it when the schema is built. */
 export interface PluginType {
   readonly name: string;
   /** The plugin options of the type, merged from all of its definitions. */
-  readonly options: { readonly [key: string]: unknown };
+  readonly options: Options<TypePluginOptions<any, any>>;
 }
 
 /** A schema builder plugin. Pass plugins to `initSchemaBuilder({ plugins })`.

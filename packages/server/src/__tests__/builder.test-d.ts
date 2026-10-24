@@ -1,8 +1,8 @@
 import { describe, it, expectTypeOf } from 'vitest';
 
-import type { ResultOf, VariablesOf } from '../../api';
-import { initGraphQLTada } from '../../api';
-import type { IntrospectionOf } from '../../contract';
+import type { ResultOf, VariablesOf } from 'gql.tada';
+import { initGraphQLTada } from 'gql.tada';
+import type { IntrospectionOf } from 'gql.tada';
 import { initSchemaBuilder } from '../builder';
 import type { NamedRef } from '../refs';
 

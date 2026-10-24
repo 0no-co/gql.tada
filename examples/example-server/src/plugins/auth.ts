@@ -1,7 +1,7 @@
 import type { GraphQLResolveInfo } from 'graphql';
 import { GraphQLError } from 'graphql';
 
-import type { FieldResolver, PluginField, SchemaPlugin } from './plugin';
+import type { FieldResolver, PluginField, SchemaPlugin } from '@gql.tada/server';
 
 type MaybePromise<T> = T | Promise<T>;
 
@@ -12,6 +12,21 @@ export type AuthRule<Parent = any, Context = any, Args = any> = (
   context: Context,
   info: GraphQLResolveInfo
 ) => MaybePromise<boolean | Error>;
+
+// Adds a typed `authorize` option to fields and object types of every builder in this program
+declare module '@gql.tada/server' {
+  interface FieldPluginOptions<Parent, Context, Args> {
+    /** The field's authorization rule, which replaces its type's rule. Requires `authPlugin()`.
+     * `true` always allows access, and `false` always denies it.
+     */
+    authorize?: AuthRule<Parent, Context, Args> | boolean;
+  }
+
+  interface TypePluginOptions<Shape, Context> {
+    /** The rule of this type's fields without their own rule. Requires `authPlugin()`. */
+    authorize?: AuthRule<Shape, Context, unknown> | boolean;
+  }
+}
 
 export interface AuthPluginOptions {
   /** Whether fields without a field or type rule are allowed or denied. Defaults to `'allow'`. */

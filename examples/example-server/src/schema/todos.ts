@@ -1,6 +1,6 @@
-import { and } from 'gql.tada/server';
 import type { TodoModel } from '../db.ts';
 import { t } from './builder.ts';
+import { and } from '../plugins/auth.ts';
 import { signedIn } from './plugins.ts';
 import { Query, Mutation, Node, User, Todo } from './refs.ts';
 import { DateTime, usersById } from './common.ts';

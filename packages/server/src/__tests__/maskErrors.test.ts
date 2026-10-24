@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { graphql, subscribe, parse, GraphQLError } from 'graphql';
 
-import { maskErrorsPlugin } from '../maskErrors';
+import { maskErrorsPlugin } from '../../../../examples/example-server/src/plugins/maskErrors';
 import { initSchemaBuilder } from '../builder';
 
 const createSchema = (logged: unknown[]) => {

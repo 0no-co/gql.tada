@@ -1,11 +1,12 @@
-# gql.tada/server example
+# @gql.tada/server example
 
-A GraphQL API defined with `gql.tada/server`, with a client that types its GraphQL documents
+A GraphQL API defined with `@gql.tada/server`, with a client that types its GraphQL documents
 against the server's schema, without introspection or code generation.
 
 - `src/schema/refs.ts`: references to the schema's types, which every other schema module uses
 - `src/schema/*.ts`: the schema's types, split into modules that add fields to `Query`, `Mutation`, and `User`
-- `src/schema/plugins.ts`: error masking, authorization, and a custom plugin with its own field option
+- `src/plugins/*.ts`: plugins for authorization, error masking, and tracing, written against the plugin API
+- `src/schema/plugins.ts`: the plugins that the builder uses, and a shared authorization rule
 - `src/server.ts`: serves the schema over HTTP with [`graphql-http`](https://github.com/graphql/graphql-http)
 - `src/client/graphql.ts`: sets up `graphql()` with `IntrospectionOf<typeof schema>`
 - `src/client/index.ts`: typed queries, fragments, and mutations using `@urql/core`
@@ -37,14 +38,17 @@ circular imports.
 
 ## Plugins and authorization
 
-`src/schema/builder.ts` passes plugins to `initSchemaBuilder()`:
+`@gql.tada/server` doesn't ship plugins. The plugins in `src/plugins/` are written against
+its plugin API, and `src/schema/builder.ts` passes them to `initSchemaBuilder()`:
 
-- `maskErrorsPlugin()` replaces unexpected errors with a generic `Unexpected error.`
 - `authPlugin()` checks `authorize` rules. Mutations require a signed-in user, and only a todo's
   author may toggle it. The server reads the user from an `x-user-id` header, as a stand-in for
   real authentication.
-- `tracePlugin` logs how long fields with `trace: true` take. It adds the `trace` option with
-  `declare module 'gql.tada/server'`.
+- `maskErrorsPlugin()` replaces unexpected errors with a generic `Unexpected error.`
+- `tracePlugin` logs how long fields with `trace: true` take.
+
+`authorize` and `trace` are added to fields and types with `declare module '@gql.tada/server'`,
+and typed by each field's parent, arguments, and context.
 
 Plugins don't change the schema, so `schema.graphql` and the client's types are the same with
 or without them.
@@ -52,7 +56,7 @@ or without them.
 ## Running
 
 This example runs TypeScript directly with Node.js 22.18+. From the repository root, run
-`pnpm install` and `pnpm build` first, then in this directory:
+`pnpm install` and `pnpm multi --include-workspace-root run build` first, then in this directory:
 
 ```sh
 pnpm start       # starts the API on http://localhost:4000/graphql
@@ -61,6 +65,6 @@ pnpm check       # validates GraphQL documents and type checks the server and cl
 pnpm emit-schema # writes schema.graphql for GraphQLSP
 ```
 
-> **Note:** `graphql` is pinned to the version the repository root uses, since the example
-> imports `gql.tada/server` from the workspace, and `graphql` may only be loaded once. When
-> installing `gql.tada` from npm, its `graphql` peer dependency takes care of this.
+> **Note:** `graphql` is pinned to the version that `@gql.tada/server` uses in this repository,
+> since the example imports it from the workspace, and `graphql` may only be loaded once. When
+> installing `@gql.tada/server` from npm, its `graphql` peer dependency takes care of this.

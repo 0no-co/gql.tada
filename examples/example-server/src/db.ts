@@ -24,7 +24,7 @@ export const createDatabase = (): Database => ({
   todos: [
     {
       id: 't1',
-      text: 'Define a schema with gql.tada/server',
+      text: 'Define a schema with @gql.tada/server',
       status: 'done',
       authorId: 'u1',
       createdAt: new Date('2025-09-03T10:00:00.000Z'),

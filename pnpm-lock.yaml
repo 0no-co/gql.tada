@@ -223,6 +223,9 @@ importers:
 
   examples/example-server:
     dependencies:
+      '@gql.tada/server':
+        specifier: workspace:*
+        version: link:../../packages/server
       '@urql/core':
         specifier: ^5.0.2
         version: 5.0.6(graphql@16.9.0)
@@ -331,6 +334,24 @@ importers:
       type-fest:
         specifier: ^4.10.2
         version: 4.25.0
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/server:
+    devDependencies:
+      '@gql.tada/internal':
+        specifier: workspace:*
+        version: link:../internal
+      gql.tada:
+        specifier: workspace:*
+        version: link:../..
+      graphql:
+        specifier: 16.9.0
+        version: 16.9.0
+      rollup:
+        specifier: ^4.21.0
+        version: 4.21.0
       typescript:
         specifier: ^5.9.3
         version: 5.9.3

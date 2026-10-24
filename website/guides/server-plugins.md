@@ -1,142 +1,49 @@
 ---
 title: Server Plugins
-description: How to add authorization, error masking, and your own plugins to a gql.tada/server schema.
+description: How to write plugins for @gql.tada/server, with recipes for authorization and error masking.
 ---
 
-# Server Plugins
+# Writing Server Plugins <Badge type="warning" text="experimental" />
 
 <section>
-  Plugins extend the <code>gql.tada/server</code> schema builder.
-  They wrap resolvers, and add typed options to fields and types.
-  <code>gql.tada/server</code> comes with plugins for authorization
-  and for masking errors.
+  Plugins extend the <code>@gql.tada/server</code> schema builder.
+  They wrap resolvers, add extensions and directives, and add typed
+  options to fields and types. This page shows how to write them,
+  with authorization and error masking as recipes.
 </section>
 
-Plugins are passed to `initSchemaBuilder()`, and apply to every type the builder
-defines. They can't change types or arguments, so the schema's type, and with it
-the types of your documents, are the same with or without them.
+`@gql.tada/server` ships the plugin API, but no plugins. The recipes on this page are
+starting points that you copy into your codebase and adapt. Complete versions, with tests,
+are in [`examples/example-server/src/plugins`](https://github.com/0no-co/gql.tada/tree/main/examples/example-server/src/plugins).
+
+Plugins can't change types or arguments, so the schema's type, and with it the types
+of your documents, are the same with or without them.
+
+---
+
+## Passing plugins
+
+Plugins are passed to `initSchemaBuilder()`, and apply to every type the builder defines.
 
 ```ts [src/schema/builder.ts]
-import { initSchemaBuilder, authPlugin, maskErrorsPlugin } from 'gql.tada/server';
+import { initSchemaBuilder } from '@gql.tada/server';
+import { authPlugin } from './plugins/auth';
+import { maskErrorsPlugin } from './plugins/maskErrors';
 
 export const t = initSchemaBuilder<{ context: Context }>({
   plugins: [maskErrorsPlugin(), authPlugin()],
 });
 ```
 
-Plugins run in the order they're passed, so the first plugin's resolver wrapper
-is the outermost. Pass `maskErrorsPlugin()` first to also mask errors of the
-other plugins.
-
----
-
-## Authorization
-
-`authPlugin()` checks rules, which you set with the `authorize` option of fields
-and object types. A rule receives the field's parent value, its arguments, the
-context, and the resolve info, typed by the field. It returns `true` to allow
-access, or `false` or an `Error` to deny it, and may return a promise.
-
-```ts [src/schema/todos.ts]
-import { and } from 'gql.tada/server';
-
-const signedIn = (_parent: unknown, _args: unknown, ctx: Context) =>
-  ctx.viewerId != null || new Error('Sign in first.');
-
-export const TodoMutations = t.object(Mutation, {
-  // Applies to all fields of `Mutation` without their own rule
-  authorize: signedIn,
-  fields: (f) => ({
-    createTodo: f.field({
-      type: t.nonNull(Todo),
-      args: { text: t.nonNull(t.String) },
-      resolve: (_, args, ctx) => ctx.db.createTodo(args.text, ctx.viewerId!),
-    }),
-    toggleTodo: f.field({
-      type: Todo,
-      args: { id: t.nonNull(t.ID) },
-      // A field's rule replaces its type's rule
-      authorize: and(
-        signedIn,
-        (_, args, ctx) => ctx.db.todos.get(args.id)?.authorId === ctx.viewerId
-      ),
-      resolve: (_, args, ctx) => ctx.db.toggleTodo(args.id),
-    }),
-  }),
-});
-```
-
-Each field is checked against the first rule that applies to it:
-
-1. The field's own `authorize` option.
-2. The `authorize` option of its object type, which may be set by one of the type's definitions.
-3. The plugin's `default` option, which is `'allow'` unless it's set to `'deny'`.
-
-`true` and `false` may be passed in place of rules, e.g. to make a field public
-when its type or the default denies access.
-
-Rules run before the field's resolver. A denied field resolves to an error with the
-code `FORBIDDEN` in its `extensions`, and like any other field error, `null` propagates
-to its nearest nullable parent. A rule that returns an `Error` sets the error's message.
-The `createError` option creates errors for rules that return `false`:
-
-```ts
-authPlugin({
-  default: 'deny',
-  createError: (info) =>
-    new GraphQLError(`You can't access ${info.parentType.name}.${info.fieldName}.`, {
-      extensions: { code: 'FORBIDDEN' },
-    }),
-});
-```
-
-Subscription root fields are checked once, before the subscription starts.
-Events are then resolved without checking the rule again.
-
-### Composing rules
-
-| Function        | Description                                                               |
-| --------------- | ------------------------------------------------------------------------- |
-| `and(...rules)` | Allows access if all rules allow it. Stops at the first rule denying it.  |
-| `or(...rules)`  | Allows access if any rule allows it. Stops at the first rule allowing it. |
-| `not(rule)`     | Allows access if the rule denies it.                                      |
-
-Composed rules stay synchronous when all their rules are synchronous. Inside an
-`authorize` option, inline rules are typed by the field, even when they're composed
-with rules that are typed separately. Outside of one, a composed rule's types are
-inferred from the rules you pass it. Reusable rules may be typed with `AuthRule`:
-
-```ts
-import type { AuthRule } from 'gql.tada/server';
-
-const isAdmin: AuthRule<unknown, Context> = (_parent, _args, ctx) => ctx.role === 'admin';
-```
-
----
-
-## Masking errors
-
-Resolvers may throw errors that contain details clients shouldn't see.
-`maskErrorsPlugin()` replaces errors that resolvers throw, return, or reject with,
-with an error that has the message `Unexpected error.` and the code `INTERNAL_SERVER_ERROR`.
-A `GraphQLError` is treated as intentional, and passes through unchanged.
-
-```ts
-maskErrorsPlugin({
-  message: 'Something went wrong.',
-  onError: (error, info) => logger.error(error, { field: info.fieldName }),
-});
-```
-
-`onError` receives each masked error, for example to log it. The plugin also masks errors
-of `subscribe` functions, but not errors of events that a subscription emits.
+Plugins run in the order they're passed, so the first plugin's resolver wrapper is the
+outermost. Here, `maskErrorsPlugin()` comes first to also mask errors of the other plugins.
 
 ---
 
 ## Writing a plugin
 
-A plugin is an object with a `name` and any of the following hooks, which run
-once per field or type when the schema is created:
+A plugin is an object with a `name` and any of the following hooks, which run once per
+field or type when the schema is created:
 
 | Hook                         | Description                                                                                               |
 | ---------------------------- | --------------------------------------------------------------------------------------------------------- |
@@ -152,47 +59,199 @@ once per field or type when the schema is created:
 Resolvers and `subscribe` functions are typed as `FieldResolver`. Hooks apply to fields
 of object types, but not of interfaces.
 
-A wrapper may run code before and after `next`, change its result, or skip
-it, for example to return a cached value. This plugin logs slow resolvers:
+A wrapper may run code before and after `next`, change its result, or skip it, for example
+to return a cached value. This plugin logs how long resolvers take:
 
-```ts [src/schema/plugins.ts]
-import type { SchemaPlugin } from 'gql.tada/server';
+```ts [src/plugins/trace.ts]
+import type { SchemaPlugin } from '@gql.tada/server';
 
-export const tracePlugin: SchemaPlugin<Context> = {
+export const tracePlugin: SchemaPlugin = {
   name: 'trace',
-  fieldOptions: ['trace'],
-  wrapResolve: (next, field) =>
-    field.options.trace
-      ? async (source, args, ctx, info) => {
-          const start = performance.now();
-          try {
-            return await next(source, args, ctx, info);
-          } finally {
-            console.log(`${field.typeName}.${field.fieldName}: ${performance.now() - start}ms`);
-          }
-        }
-      : undefined,
+  wrapResolve: (next, field) => async (source, args, ctx, info) => {
+    const start = performance.now();
+    try {
+      return await next(source, args, ctx, info);
+    } finally {
+      console.log(`${field.typeName}.${field.fieldName}: ${performance.now() - start}ms`);
+    }
+  },
 };
 ```
 
 Typing a plugin as `SchemaPlugin<Context>` types the context that its wrappers receive,
-and only lets it be passed to builders with the same context type.
+and only lets it be passed to builders with a matching context type.
 
 ### Adding options
 
 Plugins add options to fields and object types by merging them into the
-`FieldPluginOptions` and `TypePluginOptions` interfaces. Their type parameters
-give options access to the types of the field's parent, context, and arguments,
-or of the object type's backing type and context.
+`FieldPluginOptions` and `TypePluginOptions` interfaces of `@gql.tada/server`.
+Their type parameters give options the types of the field's parent value, the
+builder's context, and the field's arguments, or of the object type's backing type
+and the context. Merged declarations must use the same type parameter names.
 
-```ts [src/schema/plugins.ts]
-declare module 'gql.tada/server' {
+```ts [src/plugins/trace.ts]
+declare module '@gql.tada/server' {
   interface FieldPluginOptions<Parent, Context, Args> {
     trace?: boolean;
   }
 }
+
+export const tracePlugin: SchemaPlugin = {
+  name: 'trace',
+  fieldOptions: ['trace'], // [!code focus]
+  wrapResolve: (next, field) => (field.options.trace ? traced(next, field) : undefined),
+};
 ```
 
-A plugin lists the options it reads in `fieldOptions` and `typeOptions`.
-Since merged options are available on every builder, the schema throws when it's
-created if a field or type sets an option that none of its builder's plugins list.
+A plugin lists the options it reads in `fieldOptions` and `typeOptions`. Its hooks see
+merged options with their declared types on `field.options`, `field.typeOptions`, and
+`type.options`. These aren't validated at runtime, so check values that a mistyped
+call could have set.
+
+Merged options are available on every builder in your program, whether or not it uses
+the plugin. The schema therefore throws when it's created if a field or type sets an
+option that none of its builder's plugins list.
+
+---
+
+## Recipe: Masking errors
+
+Resolvers may throw errors that contain details clients shouldn't see. This plugin
+replaces errors that resolvers throw, return, or reject with, with a generic error.
+A `GraphQLError` is treated as intentional, and passes through unchanged.
+
+```ts [src/plugins/maskErrors.ts]
+import { GraphQLError, type GraphQLResolveInfo } from 'graphql';
+import type { FieldResolver, SchemaPlugin } from '@gql.tada/server';
+
+export function maskErrorsPlugin(
+  onError?: (error: unknown, info: GraphQLResolveInfo) => void
+): SchemaPlugin {
+  const mask = (error: unknown, info: GraphQLResolveInfo) => {
+    if (error instanceof GraphQLError) return error;
+    if (onError) onError(error, info);
+    return new GraphQLError('Unexpected error.', {
+      extensions: { code: 'INTERNAL_SERVER_ERROR' },
+    });
+  };
+
+  const wrap =
+    (next: FieldResolver): FieldResolver =>
+    async (source, args, ctx, info) => {
+      let result: unknown;
+      try {
+        result = await next(source, args, ctx, info);
+      } catch (error) {
+        throw mask(error, info);
+      }
+      return result instanceof Error ? mask(result, info) : result;
+    };
+
+  return { name: 'maskErrors', wrapResolve: wrap, wrapSubscribe: wrap };
+}
+```
+
+Wrapping `subscribe` masks errors of starting a subscription, but not errors of the
+events it emits. The example's version also keeps synchronous resolvers synchronous.
+
+---
+
+## Recipe: Authorization
+
+This plugin adds an `authorize` option to fields and object types. A rule receives the
+field's parent value, its arguments, the context, and the resolve info, typed by the
+field. It returns `true` to allow access, or `false` or an `Error` to deny it, and may
+return a promise.
+
+```ts [src/plugins/auth.ts]
+import { GraphQLError, type GraphQLResolveInfo } from 'graphql';
+import type { FieldResolver, PluginField, SchemaPlugin } from '@gql.tada/server';
+
+export type AuthRule<Parent = any, Context = any, Args = any> = (
+  parent: Parent,
+  args: Args,
+  context: Context,
+  info: GraphQLResolveInfo
+) => boolean | Error | Promise<boolean | Error>;
+
+declare module '@gql.tada/server' {
+  interface FieldPluginOptions<Parent, Context, Args> {
+    authorize?: AuthRule<Parent, Context, Args> | boolean;
+  }
+  interface TypePluginOptions<Shape, Context> {
+    // Arguments differ between the type's fields
+    authorize?: AuthRule<Shape, Context, unknown> | boolean;
+  }
+}
+
+const deny = (result: boolean | Error, info: GraphQLResolveInfo) =>
+  result instanceof GraphQLError
+    ? result
+    : new GraphQLError(
+        result instanceof Error ? result.message : `Not authorized to access "${info.fieldName}".`,
+        { extensions: { code: 'FORBIDDEN' } }
+      );
+
+export function authPlugin(): SchemaPlugin {
+  const guard = (field: PluginField, next: FieldResolver): FieldResolver | void => {
+    // A field's rule replaces its type's rule
+    const rule = field.options.authorize ?? field.typeOptions.authorize ?? true;
+    if (rule === true) return;
+    return async (source, args, ctx, info) => {
+      const result = rule === false ? false : await rule(source, args, ctx, info);
+      if (result !== true) throw deny(result, info);
+      return next(source, args, ctx, info);
+    };
+  };
+
+  return {
+    name: 'auth',
+    fieldOptions: ['authorize'],
+    typeOptions: ['authorize'],
+    // Subscription root fields are checked once, when the subscription starts
+    wrapResolve: (next, field) =>
+      field.operation === 'subscription' ? undefined : guard(field, next),
+    wrapSubscribe: (next, field) => guard(field, next),
+  };
+}
+```
+
+With the plugin passed to the builder, rules are typed by each field:
+
+```ts [src/schema/todos.ts]
+const signedIn = (_parent: unknown, _args: unknown, ctx: Context) =>
+  ctx.viewerId != null || new Error('Sign in first.');
+
+export const TodoMutations = t.object(Mutation, {
+  authorize: signedIn,
+  fields: (f) => ({
+    toggleTodo: f.field({
+      type: Todo,
+      args: { id: t.nonNull(t.ID) },
+      // `args` is typed as `{ id: string }`
+      authorize: (_, args, ctx) => ctx.db.todos.get(args.id)?.authorId === ctx.viewerId,
+      resolve: (_, args, ctx) => ctx.db.toggleTodo(args.id),
+    }),
+  }),
+});
+```
+
+A denied field resolves to an error with the code `FORBIDDEN`, and like any other field
+error, `null` propagates to its nearest nullable parent.
+
+The example's version adds a default policy for fields without a rule, custom errors,
+and `and()`, `or()`, and `not()` to compose rules. Composing generic rules has one
+subtlety: TypeScript infers a function's type parameters from its arguments before
+the `authorize` option it's passed to. The example's helpers block inference from their
+arguments with an overload, so that inline rules inside `and(signedIn, (_, args) => ...)`
+are still typed by the field.
+
+---
+
+## Other plugins
+
+The same hooks support other plugins, for example:
+
+- **Tracing:** `wrapResolve` receives the resolve info of every call, including the path, to report spans to a tracer.
+- **Caching rule results:** a wrapper can store results per request with [`createContextCache()`](/guides/schema-builder#per-request-values), keyed by the context.
+- **Cost analysis:** a `cost` option and `onField` can add each field's cost to its `extensions`, for a validation rule to read.

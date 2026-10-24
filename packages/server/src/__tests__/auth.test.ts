@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { graphql, subscribe, parse, GraphQLError } from 'graphql';
 
-import type { AuthPluginOptions } from '../auth';
-import { authPlugin, and, or, not } from '../auth';
-import { maskErrorsPlugin } from '../maskErrors';
+import type { AuthPluginOptions } from '../../../../examples/example-server/src/plugins/auth';
+import { authPlugin, and, or, not } from '../../../../examples/example-server/src/plugins/auth';
+import { maskErrorsPlugin } from '../../../../examples/example-server/src/plugins/maskErrors';
 import { initSchemaBuilder } from '../builder';
 
 interface Context {
