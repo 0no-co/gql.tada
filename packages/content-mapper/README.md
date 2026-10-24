@@ -157,14 +157,36 @@ Schema syntax and validation errors are reported on the schema file.
 
 TypeScript only type-checks `.graphql` files and never emits JavaScript for them, so
 your bundler needs to load them at runtime. The `transform` export of this package
-returns the same TypeScript module that TypeScript sees, which can be used in a
-bundler plugin:
+returns the same TypeScript module that TypeScript sees, and `resolveGraphQLModule`
+turns your `module` option into a specifier relative to each file. For example, with
+Vite:
 
 ```ts
-import { transform } from '@gql.tada/content-mapper';
+// vite.config.ts
+import * as path from 'node:path';
+import { defineConfig, transformWithEsbuild } from 'vite';
+import { resolveGraphQLModule, transform } from '@gql.tada/content-mapper';
 
-const { text } = transform(source, {
-  fileName,
-  graphqlModule: '../graphql',
+const tsconfig = path.resolve(__dirname, 'tsconfig.json');
+
+export default defineConfig({
+  plugins: [
+    {
+      name: 'graphql-files',
+      async transform(source, id) {
+        if (!id.endsWith('.graphql')) return;
+        const { text } = transform(source, {
+          fileName: id,
+          // Your `module` option, as your bundler resolves it. Vite only maps
+          // `.js` to `.ts` in TypeScript files, so leave out the extension
+          graphqlModule: resolveGraphQLModule(tsconfig, id, './src/graphql'),
+        });
+        return transformWithEsbuild(text, `${id}.ts`, { loader: 'ts' });
+      },
+    },
+  ],
 });
 ```
+
+`transform` also accepts `graphqlExport`, the export name of your `graphql()` function
+(defaults to `"graphql"`).

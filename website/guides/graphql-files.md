@@ -211,18 +211,37 @@ are validated against the JSON schema too. Other `.json` imports are unaffected.
 ## Runtime
 
 TypeScript never emits JavaScript for `.graphql` files, so our bundler has to load
-them. The package's `transform` export returns the same module TypeScript sees and
-can be used in a bundler plugin:
+them. The package's `transform` export returns the same module TypeScript sees, and
+`resolveGraphQLModule(configFileName, fileName, module)` turns the
+`tsconfig.json`-relative `module` option into a specifier relative to each file.
+For example, with Vite:
 
-```ts
-import { transform } from '@gql.tada/content-mapper';
+::: code-group
+```ts [vite.config.ts]
+import * as path from 'node:path';
+import { defineConfig, transformWithEsbuild } from 'vite';
+import { resolveGraphQLModule, transform } from '@gql.tada/content-mapper';
 
-const { text } = transform(source, {
-  fileName,
-  graphqlModule: '../graphql',
+const tsconfig = path.resolve(__dirname, 'tsconfig.json');
+
+export default defineConfig({
+  plugins: [
+    {
+      name: 'graphql-files',
+      async transform(source, id) {
+        if (!id.endsWith('.graphql')) return;
+        const { text } = transform(source, {
+          fileName: id,
+          // Your `module` option, as your bundler resolves it. Vite only maps
+          // `.js` to `.ts` in TypeScript files, so leave out the extension
+          graphqlModule: resolveGraphQLModule(tsconfig, id, './src/graphql'),
+        });
+        return transformWithEsbuild(text, `${id}.ts`, { loader: 'ts' });
+      },
+    },
+  ],
 });
 ```
+:::
 
-`graphqlExport` sets the export name (defaults to `"graphql"`). To reuse the
-`tsconfig.json`-relative `module` option, `resolveGraphQLModule(configFileName,
-fileName, module)` turns it into a specifier relative to `fileName`.
+`graphqlExport` sets the export name of the `graphql()` function (defaults to `"graphql"`).
