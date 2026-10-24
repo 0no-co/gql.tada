@@ -21,10 +21,7 @@ export default defineConfig({
     ],
   },
   test: {
-    typecheck: {
-      enabled: true,
-      ignoreSourceErrors: true,
-    },
+    // NOTE: Type tests run in the root project, which resolves workspace sources with the root tsconfig
     globals: false,
     clearMocks: true,
   },
