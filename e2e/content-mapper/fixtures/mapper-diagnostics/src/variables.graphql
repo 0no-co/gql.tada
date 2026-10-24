@@ -1,0 +1,5 @@
+query WrongVariable($id: String!) {
+  pokemon(id: $id) {
+    id
+  }
+}

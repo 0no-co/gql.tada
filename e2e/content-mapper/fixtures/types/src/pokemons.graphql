@@ -1,0 +1,8 @@
+# import PokemonItem from "./PokemonItem.graphql"
+
+query Pokemons($limit: Int) {
+  pokemons(limit: $limit) {
+    ...PokemonItem
+    types
+  }
+}

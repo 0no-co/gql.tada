@@ -1,0 +1,3 @@
+src/syntax.graphql(3,1): error gql.tada1: Syntax Error: Unexpected token (expected Name)
+src/unknownField.graphql(4,5): error gql.tada11: Cannot query field "nope" on type "Pokemon". Did you mean "name"?
+src/variables.graphql(1,21): error gql.tada11: Variable "$id" of type "String!" used in position expecting type "ID!".
