@@ -4,7 +4,7 @@ import { extractIntrospectionHeader } from '@gql.tada/internal';
 
 import type { TTY, ComposeInput } from '../../term';
 import type { ProjectContext, WriteTarget } from '../shared';
-import { loadProjects, writeOutput, readOutput } from '../shared';
+import { loadProjects, writeOutput, readOutput, assertCompilerAPI } from '../shared';
 import type { TurboDocument, GraphQLSourceFile, TurboPath } from './types';
 import * as logger from './logger';
 
@@ -67,6 +67,8 @@ async function* runProject(
   project: ProjectContext,
   deferWarnings: boolean
 ): AsyncGenerator<ComposeInput, ProjectResult> {
+  // NOTE: The thread loads the TypeScript compiler API, which TypeScript 7 doesn't expose
+  assertCompilerAPI(project, 'turbo');
   const { runTurbo } = await import('./thread');
 
   const { pluginConfig, projectPath } = project;

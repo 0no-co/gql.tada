@@ -16,6 +16,7 @@ import { programFactory } from '../../ts';
 import { findGraphQLConfig } from './helpers/graphqlConfig';
 import * as versions from './helpers/versions';
 import * as vscode from './helpers/vscode';
+import { detectCompiler } from '../shared';
 import * as logger from './logger';
 
 // NOTE: Currently, most tasks in this command complete too quickly
@@ -180,6 +181,26 @@ export async function* run(): AsyncIterable<ComposeInput> {
       `Found ${projects.length} ${logger.code('gql.tada')} projects through ${logger.code(
         '"references"'
       )} in your ${logger.code('tsconfig.json')} files.\n`
+    );
+  }
+
+  const nativeCompilers = new Set(
+    projects
+      .map((project) =>
+        detectCompiler({
+          rootPath: project.configResult.rootPath,
+          tsconfigPath: project.configResult.tsconfigPath,
+        })
+      )
+      .filter(Boolean)
+  );
+  if (nativeCompilers.size) {
+    // TypeScript 7 doesn't load language service plugins, so the plugin config
+    // above only configures GraphQLSP for the CLI and editor extensions
+    yield logger.hintMessage(
+      `${nativeCompilers.has('tsrs') ? "tsrs and TypeScript 7 don't" : "TypeScript 7 doesn't"} load language service plugins, so GraphQLSP won't report diagnostics in your editor through ${logger.code('tsconfig.json')}.\n` +
+        `Use ${logger.code('gql.tada check')} to check your documents, and the ${logger.code('0no-co.vscode-graphqlsp')} extension for diagnostics in VSCode.\n` +
+        `${logger.code('gql.tada turbo')} and ${logger.code('gql.tada generate persisted')} don't support TypeScript 7 yet.\n`
     );
   }
 

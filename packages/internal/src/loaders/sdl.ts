@@ -1,4 +1,4 @@
-import ts from 'typescript';
+import type ts from 'typescript';
 import type { IntrospectionQuery } from 'graphql';
 import { buildSchema, buildClientSchema, executeSync } from 'graphql';
 import { CombinedError } from '@urql/core';
@@ -9,6 +9,20 @@ import { makeIntrospectionQuery, getPeerSupportedFeatures } from './introspectio
 
 import { toError } from '../helpers';
 import type { SchemaLoader, SchemaLoaderResult, OnSchemaUpdate, OnSchemaError } from './types';
+
+// TypeScript is only used to watch the schema file. It's loaded lazily, since
+// `typescript@7` doesn't expose the compiler API and projects that are checked
+// with e.g. tsrs may not have `typescript` installed at all
+let typescriptSys: Promise<typeof ts | null> | undefined;
+const loadTypeScriptSys = (): Promise<typeof ts | null> =>
+  typescriptSys ||
+  (typescriptSys = import('typescript').then(
+    (mod: any) => {
+      const typescript: typeof ts | undefined = mod && ('sys' in mod ? mod : mod.default);
+      return typescript && 'sys' in typescript && typescript.sys.watchFile ? typescript : null;
+    },
+    () => null
+  ));
 
 interface LoadFromSDLConfig {
   name?: string;
@@ -80,8 +94,11 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
   };
 
   const watch = async () => {
-    if (ts.sys.watchFile) {
-      const watcher = ts.sys.watchFile(config.file, reload, 250, {
+    const ts = await loadTypeScriptSys();
+    // Subscribers may have unsubscribed, or another watcher started, while loading
+    if (!subscriptions.size || abort) return;
+    if (ts) {
+      const watcher = ts.sys.watchFile!(config.file, reload, 250, {
         // NOTE: Using `ts.WatchFileKind.UseFsEvents` causes missed events just like fs.watch
         // as below on macOS, as of TypeScript 5.5 and is hence avoided here
         watchFile: ts.WatchFileKind.UseFsEventsOnParentDirectory,

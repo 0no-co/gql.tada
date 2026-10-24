@@ -108,6 +108,8 @@ async function* convertError(outputs: AsyncIterable<ComposeInput>): AsyncIterabl
       process.exitCode = error.exit;
       yield error;
     } else {
+      // Unexpected errors fail the command, like `CLIError`s do
+      process.exitCode = 1;
       yield ('' + error).trim();
     }
   }
