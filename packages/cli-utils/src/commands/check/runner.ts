@@ -2,6 +2,7 @@ import * as logger from './logger';
 import type { TTY, ComposeInput } from '../../term';
 import type { ProjectContext } from '../shared';
 import { loadProjects } from '../shared';
+import { readTSConfigFile } from '@gql.tada/internal';
 import type { DiagnosticSignal, Severity, SeveritySummary } from './types';
 import type { CompilerName } from './ts7';
 import { detectCompiler, runTS7Diagnostics } from './ts7';
@@ -15,6 +16,18 @@ const isMinSeverity = (severity: Severity, minSeverity: Severity) => {
     case 'error':
       return true;
   }
+};
+
+/** Whether the project's `tsconfig.json`, or the one defining its plugin config, configures content mappers. */
+const hasContentMappers = async (project: ProjectContext): Promise<boolean> => {
+  const { tsconfigPath, configPath } = project.configResult;
+  for (const configFile of new Set([tsconfigPath, configPath])) {
+    try {
+      const tsconfig = (await readTSConfigFile(configFile)) as { contentMappers?: unknown };
+      if (Array.isArray(tsconfig.contentMappers) && tsconfig.contentMappers.length) return true;
+    } catch {}
+  }
+  return false;
 };
 
 export interface FormattedDisplayableDiagnostic {
@@ -56,6 +69,12 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
 
     let generator: AsyncIterable<DiagnosticSignal>;
     if (compiler) {
+      if (!opts.runExternalCode && (await hasContentMappers(project))) {
+        yield logger.hint(
+          `This project configures ${logger.code('"contentMappers"')}, which only run with ${logger.code('--runExternalCode')}.\n` +
+            'Without it, documents imported from content-mapped files (e.g. .graphql) are not resolved.'
+        ) + '\n';
+      }
       generator = runTS7Diagnostics({
         tsconfigPath: project.configResult.tsconfigPath,
         compiler,
