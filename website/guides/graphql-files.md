@@ -88,9 +88,8 @@ Content mappers run external code, so TypeScript only starts them when we opt in
 with `tsc --runExternalCode` or the language server's
 `initializationOptions.runExternalCode`.
 
-The mapper doesn't produce our schema's types. Keep generating the introspection
-output file with `gql.tada generate output`, as described on the
-[Essential Workflows page](/get-started/workflows).
+The mapper also maps our schema file, so we don't need to generate an introspection
+output file. See [Schemas](#schemas) below.
 
 ## Documents
 
@@ -100,7 +99,8 @@ output file with `gql.tada generate output`, as described on the
   [fragment masking](/guides/fragment-colocation) works as it does in `.ts` files.
 - Definitions named after reserved words (e.g. `query delete`) are still exported
   under their GraphQL names.
-- Files that only contain schema definitions become empty modules.
+- Files that only contain schema definitions become empty modules, unless they're
+  our schema.
 
 Fragments from other files are imported with comments at the top of a document:
 
@@ -116,26 +116,132 @@ The mapper reports syntax errors, unknown fragments, duplicate names, anonymous
 operations next to other definitions, and fragment cycles. Type errors, hovers and
 go-to-definition in the generated code are mapped back to the `.graphql` source.
 
+With a single `.graphql` schema, documents are also validated against it. Unknown
+fields and variables of the wrong type are reported where they're written, and
+documents are re-checked when the schema file changes.
+
+::: warning
+TypeScript doesn't know yet that these are type errors. On the command line, `tsc`
+hides the project's other type errors while a `.graphql` file has a validation
+error. Inline `graphql()` calls in `.ts` files aren't validated on TypeScript 7.
+:::
+
+## Schemas
+
+The mapper reads the schema from the `gql.tada` / GraphQLSP plugin config in our
+`tsconfig.json`, including configs it `extends`. The schema file needs to be part of
+the program, e.g. through `include`.
+
+::: code-group
+```json [tsconfig.json]
+{
+  "compilerOptions": {
+    "plugins": [ // [!code focus:6]
+      {
+        "name": "gql.tada/ts-plugin",
+        "schema": "./schema.graphql"
+      }
+    ]
+  },
+  "include": ["src", "schema.graphql"], // [!code focus]
+  "contentMappers": [
+    {
+      "package": "@gql.tada/content-mapper",
+      "extensions": [".graphql"],
+      "options": { "module": "./src/graphql.js" }
+    }
+  ]
+}
+```
+:::
+
+The schema module exports the same `introspection` type as a generated
+`graphql-env.d.ts` file:
+
+::: code-group
+```ts [src/graphql.ts]
+import { initGraphQLTada } from 'gql.tada';
+import type { introspection } from '../schema.graphql';
+
+export const graphql = initGraphQLTada<{
+  introspection: introspection;
+}>();
+```
+:::
+
+A single schema also sets up `gql.tada`'s default `graphql` export, like a generated
+file does. With [multiple schemas](/guides/multiple-schemas), each schema file only
+exports its `introspection` type.
+
+- Mapped schemas need `graphql` to be installed.
+- URL schemas aren't mapped. Keep generating output files for them with
+  `gql.tada generate output`.
+- Without a plugin config, a `.graphql` file that defines a `Query` type or a `schema`
+  definition is mapped as a schema.
+
+### JSON introspection schemas
+
+TypeScript doesn't let content mappers handle `.json` files, so a `.json` schema from
+our plugin config is mapped through a `.graphql` file that only imports it:
+
+::: code-group
+```graphql [src/schema.graphql]
+# import * from "../schema.json"
+```
+```ts [src/graphql.ts]
+import { initGraphQLTada } from 'gql.tada';
+import type { introspection } from './schema.graphql';
+
+export const graphql = initGraphQLTada<{
+  introspection: introspection;
+}>();
+```
+:::
+
+This module is the same as the schema module of a `.graphql` schema, and documents
+are validated against the JSON schema too. Other `.json` imports are unaffected.
+
 ::: info
-Documents in `.graphql` files aren't validated against the schema yet. An unknown
-field is not an error, it's only missing from the result type.
+- Import `introspection` from the `.graphql` file. Importing the `.json` file directly
+  still gives a plain JSON module.
+- Only `.json` files configured as a `schema` can be imported this way.
+- The JSON file is read from disk, so unsaved changes in the editor aren't picked up.
 :::
 
 ## Runtime
 
 TypeScript never emits JavaScript for `.graphql` files, so our bundler has to load
-them. The package's `transform` export returns the same module TypeScript sees and
-can be used in a bundler plugin:
+them. The package's `transform` export returns the same module TypeScript sees, and
+`resolveGraphQLModule(configFileName, fileName, module)` turns the
+`tsconfig.json`-relative `module` option into a specifier relative to each file.
+For example, with Vite:
 
-```ts
-import { transform } from '@gql.tada/content-mapper';
+::: code-group
+```ts [vite.config.ts]
+import * as path from 'node:path';
+import { defineConfig, transformWithEsbuild } from 'vite';
+import { resolveGraphQLModule, transform } from '@gql.tada/content-mapper';
 
-const { text } = transform(source, {
-  fileName,
-  graphqlModule: '../graphql',
+const tsconfig = path.resolve(__dirname, 'tsconfig.json');
+
+export default defineConfig({
+  plugins: [
+    {
+      name: 'graphql-files',
+      async transform(source, id) {
+        if (!id.endsWith('.graphql')) return;
+        const { text } = transform(source, {
+          fileName: id,
+          // Your `module` option, as your bundler resolves it. Vite only maps
+          // `.js` to `.ts` in TypeScript files, so leave out the extension
+          graphqlModule: resolveGraphQLModule(tsconfig, id, './src/graphql'),
+        });
+        return transformWithEsbuild(text, `${id}.ts`, { loader: 'ts' });
+      },
+    },
+  ],
 });
 ```
+:::
 
-`graphqlExport` sets the export name (defaults to `"graphql"`). To reuse the
-`tsconfig.json`-relative `module` option, `resolveGraphQLModule(configFileName,
-fileName, module)` turns it into a specifier relative to `fileName`.
+`graphqlExport` sets the export name of the `graphql()` function (defaults to `"graphql"`).

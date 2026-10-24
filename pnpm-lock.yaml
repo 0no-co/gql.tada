@@ -281,6 +281,9 @@ importers:
       '@0no-co/graphql.web':
         specifier: ^1.3.2
         version: 1.3.2(graphql@16.14.2)
+      '@gql.tada/internal':
+        specifier: workspace:*
+        version: link:../internal
       vscode-jsonrpc:
         specifier: ^9.0.0
         version: 9.0.3
@@ -288,6 +291,9 @@ importers:
       '@types/node':
         specifier: ^20.11.0
         version: 20.16.0
+      graphql:
+        specifier: ^16.8.1
+        version: 16.9.0
 
   packages/internal:
     dependencies:

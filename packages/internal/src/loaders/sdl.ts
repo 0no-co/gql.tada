@@ -1,11 +1,11 @@
 import ts from 'typescript';
 import type { IntrospectionQuery } from 'graphql';
-import { buildSchema, buildClientSchema, executeSync } from 'graphql';
+import { buildSchema, buildClientSchema } from 'graphql';
 import { CombinedError } from '@urql/core';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { makeIntrospectionQuery, getPeerSupportedFeatures } from './introspection';
+import { introspectSchema, parseIntrospectionJSON } from '../introspection/schema';
 
 import { toError } from '../helpers';
 import type { SchemaLoader, SchemaLoaderResult, OnSchemaUpdate, OnSchemaError } from './types';
@@ -27,13 +27,7 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
     const ext = path.extname(config.file);
     const data = await fs.readFile(config.file, { encoding: 'utf8' });
     if (ext === '.json') {
-      const introspection = JSON.parse(data) as IntrospectionQuery | null;
-      if (!introspection || !introspection.__schema) {
-        throw new Error(
-          'Parsing JSON introspection data failed.\n' +
-            'The JSON payload did not evaluate to an introspection schema.'
-        );
-      }
+      const introspection = parseIntrospectionJSON(data);
       return {
         introspection: {
           ...introspection,
@@ -46,8 +40,7 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
         assumeValid: !!config.assumeValid,
         assumeValidSDL: !!config.assumeValid,
       });
-      const query = makeIntrospectionQuery(getPeerSupportedFeatures());
-      const queryResult = executeSync({ schema, document: query });
+      const queryResult = introspectSchema(schema);
       if (queryResult.errors) {
         throw new CombinedError({ graphQLErrors: queryResult.errors as any[] });
       } else if (queryResult.data) {
