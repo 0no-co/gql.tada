@@ -45,7 +45,7 @@ describe('readProjectConfig', () => {
       }`
     );
     expect(readProjectConfig(tsconfig)).toEqual({
-      schemas: [{ file: path.join(root, 'schema.graphql') }],
+      schemas: [{ file: path.join(root, 'schema.graphql'), format: 'sdl' }],
       configFiles: [tsconfig],
     });
   });
@@ -76,8 +76,9 @@ describe('readProjectConfig', () => {
     const tsconfig = write('tsconfig.json', JSON.stringify({ extends: './configs/base' }));
     expect(readProjectConfig(tsconfig)).toEqual({
       schemas: [
-        { file: path.join(root, 'schemas/a.graphql'), name: 'a' },
-        { file: path.join(root, 'schemas/b.gql'), name: 'b' },
+        { file: path.join(root, 'schemas/a.graphql'), format: 'sdl', name: 'a' },
+        { file: path.join(root, 'schemas/b.gql'), format: 'sdl', name: 'b' },
+        { file: path.join(root, 'schemas/d.json'), format: 'json', name: 'd' },
       ],
       configFiles: [tsconfig, base],
     });
@@ -93,7 +94,7 @@ describe('readProjectConfig', () => {
     write('node_modules/shared-config/package.json', JSON.stringify({ name: 'shared-config' }));
     const tsconfig = write('tsconfig.json', JSON.stringify({ extends: 'shared-config' }));
     expect(readProjectConfig(tsconfig).schemas).toEqual([
-      { file: path.join(root, 'schema.graphql') },
+      { file: path.join(root, 'schema.graphql'), format: 'sdl' },
     ]);
   });
 
@@ -111,7 +112,23 @@ describe('readProjectConfig', () => {
         compilerOptions: { plugins: [{ name: '@0no-co/graphqlsp', schema: './own.graphql' }] },
       })
     );
-    expect(readProjectConfig(tsconfig).schemas).toEqual([{ file: path.join(root, 'own.graphql') }]);
+    expect(readProjectConfig(tsconfig).schemas).toEqual([
+      { file: path.join(root, 'own.graphql'), format: 'sdl' },
+    ]);
+  });
+
+  it('reads JSON introspection schemas', () => {
+    const tsconfig = write(
+      'tsconfig.json',
+      JSON.stringify({
+        compilerOptions: {
+          plugins: [{ name: '@0no-co/graphqlsp', schema: './introspection.json' }],
+        },
+      })
+    );
+    expect(readProjectConfig(tsconfig).schemas).toEqual([
+      { file: path.join(root, 'introspection.json'), format: 'json' },
+    ]);
   });
 
   it('returns no schemas without a plugin config, a config file, or for cyclic extends', () => {

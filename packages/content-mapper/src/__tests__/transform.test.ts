@@ -1,7 +1,7 @@
 import * as path from 'node:path';
 import { describe, it, expect } from 'vitest';
 
-import { transform, resolveGraphQLModule, DiagnosticCode } from '../transform';
+import { transform, resolveGraphQLModule, scanImports, DiagnosticCode } from '../transform';
 import { SpanMapKind } from '../protocol';
 import type { TransformResult } from '../protocol';
 
@@ -203,5 +203,21 @@ describe('resolveGraphQLModule', () => {
     expect(resolveGraphQLModule('/project/tsconfig.json', '/a.graphql', '~/graphql')).toBe(
       '~/graphql'
     );
+  });
+});
+
+describe('scanImports', () => {
+  it('reads import specifiers and their quoted locations', () => {
+    const content = '# import * from "../schema.json"\n';
+    expect(scanImports(content)).toEqual({
+      imports: [{ path: '../schema.json', start: 16, length: 16 }],
+      hasDefinitions: false,
+    });
+    expect(content.slice(16, 32)).toBe('"../schema.json"');
+  });
+
+  it('reports definitions and SDL', () => {
+    expect(scanImports('# import "./a.graphql"\nquery { a }').hasDefinitions).toBe(true);
+    expect(scanImports('type Query { a: Int }').hasDefinitions).toBe(true);
   });
 });

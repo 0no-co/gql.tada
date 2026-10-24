@@ -4,6 +4,7 @@ import {
   Kind,
   parse,
   buildASTSchema,
+  buildClientSchema,
   validate,
   validateSchema,
   specifiedRules,
@@ -19,6 +20,7 @@ import {
   introspectSchema,
   minifyIntrospection,
   outputIntrospectionFile,
+  parseIntrospectionJSON,
 } from '@gql.tada/internal/introspection';
 
 import type { MapperDiagnostic, TransformResult } from './protocol';
@@ -35,6 +37,12 @@ export interface SchemaTransformOptions {
    * @defaultValue `true` when no `name` is given
    */
   augmentSetupSchema?: boolean;
+}
+
+/** A span in the transformed file, for errors that have no location of their own. */
+interface Span {
+  start: number;
+  length: number;
 }
 
 interface BuiltSchema {
@@ -104,10 +112,72 @@ export const buildSchemaFromSDL = (content: string): BuiltSchema => {
       diagnostics: toDiagnostics(content, error, SchemaDiagnosticCode.SchemaError),
     };
   }
+  return cacheSchema(key, built);
+};
+
+const cacheSchema = (key: string, built: BuiltSchema) => {
   if (schemaCache.size >= MAX_CACHED_SCHEMAS) schemaCache.delete(schemaCache.keys().next().value!);
   schemaCache.set(key, built);
   return built;
 };
+
+interface ParsedIntrospection {
+  introspection: IntrospectionQuery | null;
+  error: string | null;
+}
+
+const introspectionCache = new Map<string, ParsedIntrospection>();
+
+const parseIntrospection = (content: string): ParsedIntrospection => {
+  const key = hashContent(content);
+  let parsed = introspectionCache.get(key);
+  if (!parsed) {
+    try {
+      parsed = { introspection: parseIntrospectionJSON(content), error: null };
+    } catch (error: any) {
+      parsed = { introspection: null, error: `${(error && error.message) || error}` };
+    }
+    if (introspectionCache.size >= MAX_CACHED_SCHEMAS)
+      introspectionCache.delete(introspectionCache.keys().next().value!);
+    introspectionCache.set(key, parsed);
+  }
+  return parsed;
+};
+
+/** Builds a schema from a JSON introspection result, caching the result by content. */
+export const buildSchemaFromIntrospection = (content: string): BuiltSchema => {
+  const key = `json:${hashContent(content)}`;
+  const built = schemaCache.get(key);
+  if (built) return built;
+  const { introspection, error } = parseIntrospection(content);
+  if (!introspection) {
+    return cacheSchema(key, {
+      schema: null,
+      diagnostics: [
+        { messageText: error!, start: 0, length: 0, code: SchemaDiagnosticCode.SchemaError },
+      ],
+    });
+  }
+  try {
+    return cacheSchema(key, { schema: buildClientSchema(introspection), diagnostics: [] });
+  } catch (error: any) {
+    return cacheSchema(key, {
+      schema: null,
+      diagnostics: [
+        {
+          messageText: `${(error && error.message) || error}`,
+          start: 0,
+          length: 0,
+          code: SchemaDiagnosticCode.SchemaError,
+        },
+      ],
+    });
+  }
+};
+
+/** Builds a schema from either schema format, caching the result by content. */
+export const buildSchemaFromFile = (format: 'sdl' | 'json', content: string): BuiltSchema =>
+  format === 'json' ? buildSchemaFromIntrospection(content) : buildSchemaFromSDL(content);
 
 /** Whether an SDL document defines a whole schema, rather than e.g. only client-side extensions. */
 export const isSchemaDocument = (content: string): boolean => {
@@ -162,17 +232,52 @@ export const transformSchema = (
       diagnostics: toDiagnostics(content, result.errors || [], SchemaDiagnosticCode.SchemaError),
     };
   }
+  return emitIntrospection(result.data as unknown as IntrospectionQuery, options);
+};
+
+const emitIntrospection = (
+  introspection: IntrospectionQuery,
+  options: SchemaTransformOptions
+): TransformResult => {
   const augment = options.augmentSetupSchema != null ? options.augmentSetupSchema : !options.name;
-  const introspection = {
-    ...(result.data as unknown as IntrospectionQuery),
-    // `outputIntrospectionFile` omits the `setupSchema` augmentation for named schemas
-    name: augment ? undefined : options.name || 'schema',
-  };
-  const text = outputIntrospectionFile(minifyIntrospection(introspection), {
-    fileType: '.d.ts',
-    shouldPreprocess: true,
-  }).replace(IMPORT_LINE, '');
+  const text = outputIntrospectionFile(
+    minifyIntrospection({
+      ...introspection,
+      // `outputIntrospectionFile` omits the `setupSchema` augmentation for named schemas
+      name: augment ? undefined : options.name || 'schema',
+    }),
+    { fileType: '.d.ts', shouldPreprocess: true }
+  ).replace(IMPORT_LINE, '');
   return { text, extension: '.ts', mappings: [], diagnostics: [] };
+};
+
+/** Transforms a JSON introspection result into the module `gql.tada generate output` would write for it.
+ *
+ * @remarks
+ * TypeScript doesn't let content mappers register `.json` files, so this is the module of a
+ * `.graphql` file that imports the JSON schema (`# import * from "./schema.json"`). Errors are
+ * reported on that import, since the JSON file isn't the file being transformed.
+ */
+export const transformIntrospection = (
+  json: string,
+  options: SchemaTransformOptions & { fileName: string; span: Span }
+): TransformResult => {
+  const { introspection, error } = parseIntrospection(json);
+  if (!introspection) {
+    return {
+      text: 'export {};\n',
+      extension: '.ts',
+      mappings: [],
+      diagnostics: [
+        {
+          messageText: `${options.fileName}: ${error}`,
+          ...options.span,
+          code: SchemaDiagnosticCode.SchemaError,
+        },
+      ],
+    };
+  }
+  return emitIntrospection(introspection, options);
 };
 
 // Rules that the document transform already reports, or that misfire because

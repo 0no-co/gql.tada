@@ -2,12 +2,14 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { describe, it, expect } from 'vitest';
-import { buildSchema } from 'graphql';
+import { buildSchema, introspectionFromSchema } from 'graphql';
 
 import { loadFromSDL, minifyIntrospection, outputIntrospectionFile } from '@gql.tada/internal';
 import {
   SchemaDiagnosticCode,
+  buildSchemaFromIntrospection,
   isSchemaDocument,
+  transformIntrospection,
   transformSchema,
   validateDocument,
 } from '../schema';
@@ -29,9 +31,11 @@ const sdl = [
   '',
 ].join('\n');
 
-const generateOutput = async (content: string, name?: string) => {
+const json = JSON.stringify(introspectionFromSchema(buildSchema(sdl)), null, 2);
+
+const generateOutput = async (content: string, name?: string, extension = '.graphql') => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'content-mapper-'));
-  const file = path.join(dir, 'schema.graphql');
+  const file = path.join(dir, `schema${extension}`);
   fs.writeFileSync(file, content);
   try {
     const { introspection } = await loadFromSDL({ file, name }).load();
@@ -98,6 +102,56 @@ describe('transformSchema', () => {
     const { start, length } = result.diagnostics![0];
     // The interface field that `Query` fails to implement
     expect(content.slice(start, start + length)).toBe('id');
+  });
+});
+
+describe('transformIntrospection', () => {
+  const options = { fileName: './schema.json', span: { start: 17, length: 15 } };
+
+  it('matches the output file generated from the JSON schema', async () => {
+    const result = transformIntrospection(json, options);
+    expect(result.diagnostics).toEqual([]);
+    expect(result.extension).toBe('.ts');
+    const generated = await generateOutput(json, undefined, '.json');
+    expect(result.text).toBe(generated.replace("import * as gqlTada from 'gql.tada';\n", ''));
+    expect(result.text).toContain('interface setupSchema');
+    // The JSON and SDL forms of a schema produce the same module
+    expect(result.text).toBe(transformSchema(sdl).text);
+  });
+
+  it('matches named schemas of multi-schema setups', async () => {
+    const result = transformIntrospection(json, { ...options, name: 'todos' });
+    const generated = await generateOutput(json, 'todos', '.json');
+    expect(result.text).toBe(generated.replace("import * as gqlTada from 'gql.tada';\n", ''));
+    expect(result.text).not.toContain('setupSchema');
+  });
+
+  it('reports invalid JSON on the import that refers to it', () => {
+    for (const content of ['{ "data": {} }', '{ nope']) {
+      const result = transformIntrospection(content, options);
+      expect(result.text).toBe('export {};\n');
+      expect(result.diagnostics).toMatchObject([
+        { start: 17, length: 15, code: SchemaDiagnosticCode.SchemaError },
+      ]);
+      expect(result.diagnostics![0].messageText).toMatch(/^\.\/schema\.json: /);
+    }
+  });
+});
+
+describe('buildSchemaFromIntrospection', () => {
+  it('builds a schema that documents are validated against', () => {
+    const { schema, diagnostics } = buildSchemaFromIntrospection(json);
+    expect(diagnostics).toEqual([]);
+    const content = 'query Todos {\n  todos {\n    id\n    doesNotExist\n  }\n}\n';
+    expect(validateDocument(content, schema!)).toMatchObject([
+      { messageText: 'Cannot query field "doesNotExist" on type "Todo".' },
+    ]);
+  });
+
+  it('reports JSON that is no introspection result', () => {
+    const { schema, diagnostics } = buildSchemaFromIntrospection('{}');
+    expect(schema).toBe(null);
+    expect(diagnostics).toMatchObject([{ code: SchemaDiagnosticCode.SchemaError }]);
   });
 });
 

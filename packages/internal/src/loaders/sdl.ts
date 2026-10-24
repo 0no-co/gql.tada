@@ -5,7 +5,7 @@ import { CombinedError } from '@urql/core';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { introspectSchema } from '../introspection/schema';
+import { introspectSchema, parseIntrospectionJSON } from '../introspection/schema';
 
 import { toError } from '../helpers';
 import type { SchemaLoader, SchemaLoaderResult, OnSchemaUpdate, OnSchemaError } from './types';
@@ -27,13 +27,7 @@ export function loadFromSDL(config: LoadFromSDLConfig): SchemaLoader {
     const ext = path.extname(config.file);
     const data = await fs.readFile(config.file, { encoding: 'utf8' });
     if (ext === '.json') {
-      const introspection = JSON.parse(data) as IntrospectionQuery | null;
-      if (!introspection || !introspection.__schema) {
-        throw new Error(
-          'Parsing JSON introspection data failed.\n' +
-            'The JSON payload did not evaluate to an introspection schema.'
-        );
-      }
+      const introspection = parseIntrospectionJSON(data);
       return {
         introspection: {
           ...introspection,
