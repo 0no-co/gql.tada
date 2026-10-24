@@ -1,5 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import type { GraphQLSchema } from 'graphql';
 import { createMessageConnection, ErrorCodes, ResponseError } from 'vscode-jsonrpc/node';
 
 import { transform, resolveGraphQLModule, scanImports } from './transform';
@@ -34,7 +35,12 @@ interface Project {
   /** Contents of JSON schemas on disk, keyed by normalized path */
   jsonSchemas: Map<string, { entry: SchemaEntry; content: string | null }>;
   /** The schema documents are validated against, i.e. the only configured schema. */
-  validationSchema: { format: SchemaEntry['format']; content: string } | null;
+  validationSchema: {
+    format: SchemaEntry['format'];
+    content: string;
+    /** Built on the first validation. Projects are reopened when the schema file changes */
+    schema?: GraphQLSchema | null;
+  } | null;
 }
 
 const projects = new Map<string, Project>();
@@ -186,12 +192,18 @@ connection.onRequest('transform', (params: TransformParams): TransformResult => 
     graphqlExport: project.graphqlExport,
   });
 
-  if (project.validationSchema && !(result.diagnostics && result.diagnostics.length)) {
-    const { schema } = buildSchemaFromFile(
-      project.validationSchema.format,
-      project.validationSchema.content
-    );
-    if (schema) result.diagnostics = validateDocument(params.content, schema);
+  const { validationSchema } = project;
+  if (validationSchema && !(result.diagnostics && result.diagnostics.length)) {
+    // NOTE: The schema cache is keyed by a hash of the schema's content, which costs more
+    // than validating a document against large schemas, so the project keeps its own reference
+    if (validationSchema.schema === undefined) {
+      validationSchema.schema = buildSchemaFromFile(
+        validationSchema.format,
+        validationSchema.content
+      ).schema;
+    }
+    if (validationSchema.schema)
+      result.diagnostics = validateDocument(params.content, validationSchema.schema);
   }
   if (diagnostics.length) result.diagnostics = [...diagnostics, ...(result.diagnostics || [])];
   return result;
