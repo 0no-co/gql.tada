@@ -80,11 +80,10 @@ describe('plugin options', () => {
           authorize: (_parent, _args, ctx) => ctx.role === 'admin',
           resolve: () => '',
         }),
-        hint: f.field({
+        authorId: f.field({
           type: t.String,
           // @ts-expect-error the merged option returns a string
           typedHint: () => 1,
-          resolve: () => '',
         }),
       }),
     });
