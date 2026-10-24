@@ -201,6 +201,13 @@ export const graphql = initGraphQLTada<{
 This module is the same as the schema module of a `.graphql` schema, and documents
 are validated against the JSON schema too. Other `.json` imports are unaffected.
 
+::: info
+- Import `introspection` from the `.graphql` file. Importing the `.json` file directly
+  still gives a plain JSON module.
+- Only `.json` files configured as a `schema` can be imported this way.
+- The JSON file is read from disk, so unsaved changes in the editor aren't picked up.
+:::
+
 ## Runtime
 
 TypeScript never emits JavaScript for `.graphql` files, so our bundler has to load
