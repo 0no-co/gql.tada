@@ -1,4 +1,4 @@
-import { expect, describe, it, afterEach } from 'vitest';
+import { expect, describe, it, afterEach, vi } from 'vitest';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -93,11 +93,12 @@ describe('loadRef', () => {
     try {
       // The autoupdate setup retries loaders that have no result yet and
       // reports their failures with the failing schema's input attached
-      await new Promise((resolve) => setTimeout(resolve, 50));
-      expect(errors).toHaveLength(1);
+      await vi.waitFor(() => {
+        expect(errors).toHaveLength(1);
+        expect(ref.multi.valid).not.toBeNull();
+      });
       expect(errors[0].name).toBe('broken');
       expect(errors[0].message).toMatch(/does-not-exist\.graphql/);
-      expect(ref.multi.valid).not.toBeNull();
     } finally {
       teardown();
     }
