@@ -2,6 +2,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "paths": {
+      "gql.tada": ["./src/index.ts"],
       "@gql.tada/*": ["./node_modules/@gql.tada/*/src", "./packages/*/src"]
     },
     "forceConsistentCasingInFileNames": true,

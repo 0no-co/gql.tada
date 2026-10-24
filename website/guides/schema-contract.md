@@ -141,6 +141,7 @@ The helpers are the contract's versioned surface, and `TadaContractVersion`
 identifies the version that `TadaSchemaCarrier` uses.
 :::
 
+[`@gql.tada/server`](/guides/schema-builder) is a schema builder that emits the contract.
 Schemas built with `graphql`'s classes, or with builders that don't carry
 field types at the type level, don't know their own types. Their contract has
 to be written by hand, like the example above. For these schemas,

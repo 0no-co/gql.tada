@@ -212,6 +212,14 @@ export default defineConfig({
               link: '/guides/schema-contract',
             },
             {
+              text: 'Schema Builder',
+              link: '/guides/schema-builder',
+            },
+            {
+              text: 'Server Plugins',
+              link: '/guides/server-plugins',
+            },
+            {
               text: 'Testing',
               link: '/guides/testing',
             },

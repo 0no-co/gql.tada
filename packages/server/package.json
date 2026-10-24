@@ -1,0 +1,66 @@
+{
+  "name": "@gql.tada/server",
+  "version": "0.0.0",
+  "public": true,
+  "description": "A graphql-js schema builder that types gql.tada documents without code generation.",
+  "author": "0no.co <hi@0no.co>",
+  "sideEffects": false,
+  "source": "./src/index.ts",
+  "main": "./dist/gql-tada-server",
+  "module": "./dist/gql-tada-server.mjs",
+  "types": "./dist/gql-tada-server.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/gql-tada-server.d.ts",
+      "import": "./dist/gql-tada-server.mjs",
+      "require": "./dist/gql-tada-server.js",
+      "source": "./src/index.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "CHANGELOG.md",
+    "LICENSE.md",
+    "README.md",
+    "dist/"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/0no-co/gql.tada.git",
+    "directory": "packages/server"
+  },
+  "bugs": {
+    "url": "https://github.com/0no-co/gql.tada/issues"
+  },
+  "homepage": "https://gql-tada.0no.co/guides/schema-builder",
+  "license": "MIT",
+  "keywords": [
+    "graphql",
+    "graphql schema",
+    "schema builder",
+    "gql.tada",
+    "typescript"
+  ],
+  "scripts": {
+    "test": "vitest test",
+    "build": "rollup -c ../../scripts/rollup.config.mjs",
+    "clean": "rimraf dist node_modules/.cache",
+    "prepublishOnly": "run-s clean build"
+  },
+  "devDependencies": {
+    "@gql.tada/internal": "workspace:*",
+    "gql.tada": "workspace:*",
+    "graphql": "16.9.0",
+    "rollup": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "gql.tada": "workspace:^",
+    "graphql": "^16.9.0",
+    "typescript": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
