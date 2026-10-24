@@ -22,6 +22,11 @@ export class CheckCommand extends Command {
     validator: t.isOneOf([t.isLiteral('typescript'), t.isLiteral('tsrs')]),
   });
 
+  runExternalCode = Option.Boolean('--runExternalCode', false, {
+    description:
+      "Runs the project's content mappers (e.g. for .graphql files) on TypeScript 7.1, like `tsc --runExternalCode`",
+  });
+
   minSeverity =
     Option.String('--level,-l', {
       description: 'The minimum severity of diagnostics to display (info, warn, error)',
@@ -36,6 +41,7 @@ export class CheckCommand extends Command {
         minSeverity: this.minSeverity,
         tsconfig: this.tsconfig,
         compiler: this.compiler,
+        runExternalCode: this.runExternalCode,
       })
     );
     return exitCode() || (typeof result === 'object' ? result.exit : 0);

@@ -30,6 +30,7 @@ export interface Options {
   minSeverity: Severity;
   tsconfig: string | undefined;
   compiler: CompilerName | undefined;
+  runExternalCode: boolean | undefined;
 }
 
 export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput> {
@@ -58,6 +59,7 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
       generator = runTS7Diagnostics({
         tsconfigPath: project.configResult.tsconfigPath,
         compiler,
+        runExternalCode: opts.runExternalCode,
       });
     } else {
       // NOTE: The thread loads the TypeScript compiler API, so it's only imported when it's used
