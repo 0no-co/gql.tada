@@ -52,10 +52,11 @@ against the `tsconfig.json`'s directory. Write the path the way your
 }
 ```
 
-| Option   | Description                                                        |
-| -------- | ------------------------------------------------------------------ |
-| `module` | Module specifier of your `graphql()` function. Required.           |
-| `export` | Export name of your `graphql()` function. Defaults to `"graphql"`. |
+| Option         | Description                                                               |
+| -------------- | ------------------------------------------------------------------------- |
+| `module`       | Module specifier of your `graphql()` function. Required.                  |
+| `export`       | Export name of your `graphql()` function. Defaults to `"graphql"`.        |
+| `intellisense` | Experimental. See [Field IntelliSense](#field-intellisense-experimental). |
 
 Content mappers run external code, so TypeScript only starts them when you opt in:
 
@@ -152,6 +153,28 @@ and which you import the `introspection` type from instead:
 Without a plugin config, a `.graphql` file that defines a `Query` type or a `schema`
 definition is mapped as a schema, which only exports its `introspection` type.
 Schema syntax and validation errors are reported on the schema file.
+
+## Field IntelliSense (experimental)
+
+Set `"intellisense": true` in the mapper's `options` to have TypeScript itself offer
+completions, hover information and go-to-definition on field names and type conditions
+in `.graphql` documents, and report unknown fields and types on them:
+
+```json
+"options": { "module": "./src/graphql.ts", "intellisense": true }
+```
+
+The mapper lowers every selection set to type-only declarations typed by your
+`graphql()` function's schema, e.g. `declare const $1: $Of<typeof $0.pokemons>;`, and
+maps each field name onto its GraphQL token. These declarations are erased from emitted
+output.
+
+- When documents are also validated against a configured schema, TypeScript's errors on
+  these declarations are dropped, since validation reports the same errors with GraphQL's
+  messages.
+- Completions are only offered on a name that's being typed, not on an empty line.
+- Go-to-definition jumps to the field in the introspection type, which is only a useful
+  location for generated `graphql-env.d.ts` output, not for mapped `.graphql` schemas.
 
 ## Runtime
 

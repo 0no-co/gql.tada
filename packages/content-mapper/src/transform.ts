@@ -1,8 +1,10 @@
 import * as path from 'node:path';
 import { parse } from '@0no-co/graphql.web';
 
-import { SpanMapFeature, SpanMapKind } from './protocol';
+import { DiagnosticDirectivePolicy, SpanMapFeature, SpanMapKind } from './protocol';
 import type { MapperDiagnostic, SpanMapping, TransformResult } from './protocol';
+import { HELPERS, parseDefinition, resolveHelpers } from './intellisense';
+import type { HelperName, Selection } from './intellisense';
 
 export interface TransformOptions {
   /** Absolute path of the `.graphql` file being transformed. */
@@ -13,6 +15,16 @@ export interface TransformOptions {
    * @defaultValue `'graphql'`
    */
   graphqlExport?: string;
+  /** Lowers selection sets into typed TypeScript, so TypeScript offers completions, hover
+   * information and errors on field names and type conditions.
+   * @defaultValue `false`
+   */
+  intellisense?: boolean;
+  /** Drops TypeScript's errors on lowered selections, e.g. when the document is also validated
+   * against the schema, which reports the same errors with GraphQL's messages.
+   * @defaultValue `false`
+   */
+  ignoreIntellisenseErrors?: boolean;
 }
 
 export const enum DiagnosticCode {
@@ -236,6 +248,8 @@ interface Writer {
   mappings: SpanMapping[];
   write(text: string): Writer;
   alias(text: string, original: Token, features: SpanMapFeature): Writer;
+  /** Writes `original.value`, mapped verbatim onto the original token */
+  verbatim(original: Token, features: SpanMapFeature): Writer;
   /** Writes `input.slice(start, end)` as a template literal, mapping all unescaped runs verbatim */
   template(input: string, start: number, end: number): Writer;
 }
@@ -258,6 +272,18 @@ const createWriter = (): Writer => {
         features,
       ]);
       out.text += text;
+      return out;
+    },
+    verbatim(original, features) {
+      out.mappings.push([
+        out.text.length,
+        original.value.length,
+        original.start,
+        original.value.length,
+        SpanMapKind.Verbatim,
+        features,
+      ]);
+      out.text += original.value;
       return out;
     },
     template(input, start, end) {
@@ -473,5 +499,102 @@ export const transform = (content: string, options: TransformOptions): Transform
     }
   }
 
-  return { text: out.text, extension: '.ts', mappings: out.mappings, diagnostics };
+  const result: TransformResult = {
+    text: out.text,
+    extension: '.ts',
+    mappings: out.mappings,
+    diagnostics,
+  };
+  if (options.intellisense) lowerSelections(content, definitions, out, result, options);
+  return result;
+};
+
+const INTELLISENSE_FEATURES =
+  SpanMapFeature.Completion | SpanMapFeature.Hover | SpanMapFeature.Definition;
+
+/** Appends ambient declarations that type-check every field against its parent type.
+ *
+ * @remarks
+ * For a selection set on `Pokemon` this emits, e.g.:
+ *
+ * ```ts
+ * declare const $1: $Of<typeof $0.pokemons>;
+ * declare const $2: $Of<typeof $1.name>;
+ * declare const $3: typeof $types.Pokemon; // `... on Pokemon`
+ * ```
+ *
+ * Only field names and type conditions are mapped onto the original document, so completions,
+ * hover information and "Property does not exist" errors are only offered on these tokens.
+ */
+const lowerSelections = (
+  content: string,
+  definitions: Definition[],
+  out: Writer,
+  result: TransformResult,
+  options: TransformOptions
+) => {
+  const body = createWriter();
+  const used = new Set<HelperName>();
+  let count = 0;
+
+  const declare = (): string => {
+    const name = `$${count++}`;
+    body.write(`declare const ${name}: `);
+    return name;
+  };
+
+  const lower = (selections: Selection[], parent: string) => {
+    for (const selection of selections) {
+      if (selection.kind === 'field') {
+        used.add('$Of');
+        const name = declare();
+        body
+          .write(`$Of<typeof ${parent}.`)
+          .verbatim(selection.name, INTELLISENSE_FEATURES)
+          .write('>;\n');
+        if (selection.selections) lower(selection.selections, name);
+      } else if (selection.typeCondition) {
+        used.add('$types');
+        const name = declare();
+        body
+          .write('typeof $types.')
+          .verbatim(selection.typeCondition, INTELLISENSE_FEATURES)
+          .write(';\n');
+        lower(selection.selections, name);
+      } else {
+        lower(selection.selections, parent);
+      }
+    }
+  };
+
+  for (const definition of definitions) {
+    const lowered = parseDefinition(content, definition.start, definition.end);
+    if (!lowered) continue;
+    if (typeof lowered.root === 'string') {
+      used.add('$Root');
+      const name = declare();
+      body.write(`$Root<"${lowered.root}">;\n`);
+      lower(lowered.selections, name);
+    } else {
+      used.add('$types');
+      const name = declare();
+      body.write('typeof $types.').verbatim(lowered.root, INTELLISENSE_FEATURES).write(';\n');
+      lower(lowered.selections, name);
+    }
+  }
+
+  if (!count) return;
+  out.write("import type { GraphQLTadaAPI as $GraphQLTadaAPI } from 'gql.tada';\n");
+  for (const helper of resolveHelpers(used)) out.write(HELPERS[helper].text);
+  const offset = out.text.length;
+  for (const [virtualStart, ...rest] of body.mappings)
+    out.mappings.push([virtualStart + offset, ...rest] as SpanMapping);
+  out.write(body.text);
+  result.text = out.text;
+  if (options.ignoreIntellisenseErrors) {
+    result.diagnosticDirectives = {
+      unusedExpectDirectiveDiagnostics: [],
+      directives: [[-1, 0, offset, out.text.length, DiagnosticDirectivePolicy.Ignore]],
+    };
+  }
 };

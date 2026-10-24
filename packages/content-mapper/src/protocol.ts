@@ -97,9 +97,30 @@ export interface MapperDiagnostic {
   code: number;
 }
 
+export enum DiagnosticDirectivePolicy {
+  /** Drops TypeScript diagnostics produced in the virtual range. */
+  Ignore = 0,
+  Expect = 1,
+}
+
+export type DiagnosticDirective = [
+  originalStart: number,
+  originalLength: number,
+  virtualStart: number,
+  virtualEnd: number,
+  policy: DiagnosticDirectivePolicy,
+  unusedExpectDirectiveIndex?: number,
+];
+
+export interface DiagnosticDirectives {
+  unusedExpectDirectiveDiagnostics: { code: number; messageText: string }[];
+  directives: DiagnosticDirective[];
+}
+
 export interface TransformResult {
   text: string;
   extension: '.ts';
   mappings?: SpanMapping[];
   diagnostics?: MapperDiagnostic[];
+  diagnosticDirectives?: DiagnosticDirectives;
 }

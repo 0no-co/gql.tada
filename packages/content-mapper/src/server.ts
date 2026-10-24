@@ -31,6 +31,7 @@ interface Project {
   configFileName: string;
   graphqlModule: string;
   graphqlExport: string;
+  intellisense: boolean;
   schemas: SchemaEntry[];
   /** Contents of JSON schemas on disk, keyed by normalized path */
   jsonSchemas: Map<string, { entry: SchemaEntry; content: string | null }>;
@@ -77,6 +78,13 @@ connection.onRequest('openProject', (params: OpenProjectParams): OpenProjectResu
       code: 1,
     });
   }
+  if (options.intellisense != null && typeof options.intellisense !== 'boolean') {
+    optionDiagnostics.push({
+      path: ['intellisense'],
+      messageText: 'The `intellisense` option must be a boolean.',
+      code: 1,
+    });
+  }
   if (options.export != null && typeof options.export !== 'string') {
     optionDiagnostics.push({
       path: ['export'],
@@ -107,6 +115,7 @@ connection.onRequest('openProject', (params: OpenProjectParams): OpenProjectResu
     configFileName: params.configFileName,
     graphqlModule: typeof options.module === 'string' ? options.module : 'gql.tada',
     graphqlExport: typeof options.export === 'string' ? options.export : 'graphql',
+    intellisense: options.intellisense === true,
     schemas,
     jsonSchemas,
     validationSchema,
@@ -190,6 +199,9 @@ connection.onRequest('transform', (params: TransformParams): TransformResult => 
       project.graphqlModule
     ),
     graphqlExport: project.graphqlExport,
+    intellisense: project.intellisense,
+    // Validation reports unknown fields and types with GraphQL's own messages
+    ignoreIntellisenseErrors: !!project.validationSchema,
   });
 
   const { validationSchema } = project;
