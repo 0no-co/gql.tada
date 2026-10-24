@@ -69,7 +69,12 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
 
     let generator: AsyncIterable<DiagnosticSignal>;
     if (compiler) {
-      if (!opts.runExternalCode && (await hasContentMappers(project))) {
+      if (compiler === 'tsrs' && (await hasContentMappers(project))) {
+        yield logger.hint(
+          `This project configures ${logger.code('"contentMappers"')}, which tsrs doesn't run through its API yet.\n` +
+            'Documents imported from content-mapped files (e.g. .graphql) are not resolved.'
+        ) + '\n';
+      } else if (!opts.runExternalCode && (await hasContentMappers(project))) {
         yield logger.hint(
           `This project configures ${logger.code('"contentMappers"')}, which only run with ${logger.code('--runExternalCode')}.\n` +
             'Without it, documents imported from content-mapped files (e.g. .graphql) are not resolved.'
