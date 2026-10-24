@@ -83,6 +83,7 @@ expects imports to be written.
 | -------- | ------------------------------------------------------------------ |
 | `module` | Module specifier of the `graphql()` function. Required.            |
 | `export` | Export name of the `graphql()` function. Defaults to `"graphql"`.  |
+| `intellisense` | Experimental. Lowers selections so TypeScript completes and checks field names. |
 
 Content mappers run external code, so TypeScript only starts them when we opt in,
 with `tsc --runExternalCode` or the language server's
@@ -206,6 +207,30 @@ are validated against the JSON schema too. Other `.json` imports are unaffected.
   still gives a plain JSON module.
 - Only `.json` files configured as a `schema` can be imported this way.
 - The JSON file is read from disk, so unsaved changes in the editor aren't picked up.
+:::
+
+## Field IntelliSense (experimental)
+
+With `"intellisense": true` in the mapper's `options`, TypeScript itself offers
+completions, hover information and go-to-definition on field names and type conditions
+in `.graphql` documents, and reports unknown fields and types on them:
+
+```json
+"options": { "module": "./src/graphql.ts", "intellisense": true }
+```
+
+The mapper lowers every selection set to type-only declarations typed by our
+`graphql()` function's schema, e.g. `declare const $1: $Of<typeof $0.pokemons>;`, and
+maps each field name onto its GraphQL token. These declarations are erased from emitted
+output.
+
+::: info
+- When documents are also validated against a configured schema, TypeScript's errors on
+  these declarations are dropped, since validation reports the same errors with GraphQL's
+  messages.
+- Completions are only offered on a name that's being typed, not on an empty line.
+- Go-to-definition jumps to the field in the introspection type, which is only a useful
+  location for generated `graphql-env.d.ts` output, not for mapped `.graphql` schemas.
 :::
 
 ## Runtime
