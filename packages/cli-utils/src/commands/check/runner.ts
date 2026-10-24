@@ -2,7 +2,9 @@ import * as logger from './logger';
 import type { TTY, ComposeInput } from '../../term';
 import type { ProjectContext } from '../shared';
 import { loadProjects } from '../shared';
-import type { Severity, SeveritySummary } from './types';
+import type { DiagnosticSignal, Severity, SeveritySummary } from './types';
+import type { CompilerName } from './ts7';
+import { detectCompiler, runTS7Diagnostics } from './ts7';
 
 const isMinSeverity = (severity: Severity, minSeverity: Severity) => {
   switch (severity) {
@@ -27,11 +29,10 @@ export interface Options {
   failOnWarn: boolean | undefined;
   minSeverity: Severity;
   tsconfig: string | undefined;
+  compiler: CompilerName | undefined;
 }
 
 export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput> {
-  const { runDiagnostics } = await import('./thread');
-
   let projects: ProjectContext[];
   try {
     projects = await loadProjects(opts.tsconfig);
@@ -46,12 +47,28 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
   for (const project of projects) {
     if (projects.length > 1) yield logger.projectHeader(project.label);
 
-    const generator = runDiagnostics({
+    const compiler = detectCompiler({
       rootPath: project.configResult.rootPath,
       tsconfigPath: project.configResult.tsconfigPath,
-      configPath: project.configResult.configPath,
-      pluginConfig: project.pluginConfig,
+      compiler: opts.compiler,
     });
+
+    let generator: AsyncIterable<DiagnosticSignal>;
+    if (compiler) {
+      generator = runTS7Diagnostics({
+        tsconfigPath: project.configResult.tsconfigPath,
+        compiler,
+      });
+    } else {
+      // NOTE: The thread loads the TypeScript compiler API, so it's only imported when it's used
+      const { runDiagnostics } = await import('./thread');
+      generator = runDiagnostics({
+        rootPath: project.configResult.rootPath,
+        tsconfigPath: project.configResult.tsconfigPath,
+        configPath: project.configResult.configPath,
+        pluginConfig: project.pluginConfig,
+      });
+    }
 
     let totalFileCount = 0;
     let fileCount = 0;
