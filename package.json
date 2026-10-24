@@ -84,7 +84,8 @@
     "changeset:version": "changeset version && pnpm install --lockfile-only",
     "changeset:publish": "changeset publish",
     "check:ts-latest": "pnpm --package=typescript@latest dlx tsc --noEmit",
-    "check:tsgo": "pnpm --package=@typescript/native-preview dlx tsgo --noEmit"
+    "check:tsgo": "pnpm --package=@typescript/native-preview dlx tsgo --noEmit",
+    "e2e:content-mapper": "node ./e2e/content-mapper/run.mjs"
   },
   "repository": "https://github.com/0no-co/gql.tada",
   "bugs": {

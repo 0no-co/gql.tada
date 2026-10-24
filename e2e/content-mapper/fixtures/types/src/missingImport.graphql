@@ -1,0 +1,7 @@
+# import NotAFragment from "./PokemonItem.graphql"
+
+query MissingImport {
+  pokemons {
+    ...NotAFragment
+  }
+}

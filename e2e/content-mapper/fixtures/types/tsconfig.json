@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "plugins": [{ "name": "gql.tada/ts-plugin", "schema": "./schema.graphql" }],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "es2022",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": []
+  },
+  "include": ["src", "schema.graphql"],
+  "contentMappers": [
+    {
+      "package": "@gql.tada/content-mapper",
+      "extensions": [".graphql"],
+      "options": { "module": "./src/graphql" }
+    }
+  ]
+}

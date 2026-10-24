@@ -9,6 +9,7 @@ on:
       - src/**
       - packages/**
       - examples/**
+      - e2e/**
       - .github/workflows/typescript-compat.yml
   schedule:
     - cron: '0 8 * * 1'
@@ -51,3 +52,44 @@ jobs:
 
       - name: Run compatibility check
         run: pnpm run ${{ matrix.script }}
+
+  content-mapper:
+    name: Content mapper (${{ matrix.compiler }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: ${{ matrix.experimental }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # TODO: Switch to typescript@latest once TypeScript 7.1 is stable
+          - compiler: typescript@beta
+            experimental: false
+          - compiler: typescript@next
+            experimental: true
+          - compiler: tsrs@latest
+            experimental: true
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 11
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Build
+        run: pnpm --filter gql.tada --filter @gql.tada/internal --filter @gql.tada/content-mapper run build
+
+      - name: Check fixtures
+        run: pnpm run e2e:content-mapper --compiler ${{ matrix.compiler }}
