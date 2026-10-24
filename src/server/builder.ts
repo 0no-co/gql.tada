@@ -35,6 +35,8 @@ import type {
   toTadaTypeRef,
 } from './refs';
 
+import type { FieldPluginOptions, TypePluginOptions, SchemaPlugin } from './plugin';
+
 import { ID, String, Int, Float, Boolean, nonNull, list } from './refs';
 import { buildSchema } from './build';
 
@@ -119,23 +121,25 @@ export interface FieldBuilder<Parent, Context> {
    * stream. Each event is then passed to `resolve` as its source value.
    */
   field<const Type extends OutputRef, const Args extends InputValuesInput = {}, Payload = never>(
-    config: FieldOptions<Args> & {
-      type: Type;
-      subscribe?: Resolver<Parent, Context, InputValuesShape<Args>, AsyncIterable<Payload>>;
-      resolve: Resolver<
-        [Payload] extends [never] ? Parent : Payload,
-        Context,
-        InputValuesShape<Args>,
-        OutputShape<Type>
-      >;
-    }
+    config: FieldOptions<Args> &
+      FieldPluginOptions<Parent, Context, InputValuesShape<Args>> & {
+        type: Type;
+        subscribe?: Resolver<Parent, Context, InputValuesShape<Args>, AsyncIterable<Payload>>;
+        resolve: Resolver<
+          [Payload] extends [never] ? Parent : Payload,
+          Context,
+          InputValuesShape<Args>,
+          OutputShape<Type>
+        >;
+      }
   ): FieldDefinition<Type, Args, true, Payload>;
   field<const Type extends OutputRef, const Args extends InputValuesInput = {}, Payload = never>(
-    config: FieldOptions<Args> & {
-      type: Type;
-      subscribe?: Resolver<Parent, Context, InputValuesShape<Args>, AsyncIterable<Payload>>;
-      resolve?: undefined;
-    }
+    config: FieldOptions<Args> &
+      FieldPluginOptions<Parent, Context, InputValuesShape<Args>> & {
+        type: Type;
+        subscribe?: Resolver<Parent, Context, InputValuesShape<Args>, AsyncIterable<Payload>>;
+        resolve?: undefined;
+      }
   ): FieldDefinition<Type, Args, false, Payload>;
 }
 
@@ -299,7 +303,8 @@ export type InputDefinition<
   References
 >;
 
-export interface ObjectConfig<Shape, Context, Fields, Interfaces> {
+export interface ObjectConfig<Shape, Context, Fields, Interfaces>
+  extends TypePluginOptions<Shape, Context> {
   description?: string;
   /** Interfaces this object implements, including all interfaces they implement, or a function returning them. */
   interfaces?: Interfaces | (() => Interfaces);
@@ -916,6 +921,13 @@ interface BuilderSetup {
   context?: unknown;
 }
 
+export interface SchemaBuilderOptions<Context> {
+  /** Plugins that wrap resolvers and add options to fields and types. See `SchemaPlugin`. */
+  plugins?: readonly SchemaPlugin<Context>[];
+}
+
+type contextOf<Setup> = Setup extends { context: infer Context } ? Context : unknown;
+
 const fieldBuilder = { field: (config: unknown) => config };
 
 const define = (kind: string, ref: string | NamedRef, config: unknown): any => ({
@@ -948,9 +960,10 @@ const define = (kind: string, ref: string | NamedRef, config: unknown): any => (
  * export const schema = t.schema({ query: Query });
  * ```
  */
-export function initSchemaBuilder<const Setup extends BuilderSetup = {}>(): SchemaBuilder<
-  Setup extends { context: infer Context } ? Context : unknown
-> {
+export function initSchemaBuilder<const Setup extends BuilderSetup = {}>(
+  options: SchemaBuilderOptions<contextOf<Setup>> = {}
+): SchemaBuilder<contextOf<Setup>> {
+  const plugins = options.plugins || [];
   const builder = {
     ID,
     String,
@@ -976,7 +989,7 @@ export function initSchemaBuilder<const Setup extends BuilderSetup = {}>(): Sche
       args: args || {},
     }),
     schema: (config: SchemaConfig<any, any, any, any, any, any>) =>
-      buildSchema(config, fieldBuilder),
+      buildSchema(config, fieldBuilder, plugins),
   };
   return builder as any;
 }

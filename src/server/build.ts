@@ -29,7 +29,10 @@ import {
   getNamedType as unwrapNamedType,
   isInputObjectType,
   isEnumType,
+  defaultFieldResolver,
 } from 'graphql';
+
+import type { FieldResolver, PluginField, SchemaPlugin } from './plugin';
 
 interface Ref {
   readonly kind: string;
@@ -104,6 +107,50 @@ const isInputValueConfig = (value: any): boolean =>
 
 const circularHint = ' This may be caused by a circular import.';
 
+const coreFieldOptions = [
+  'type',
+  'args',
+  'description',
+  'deprecationReason',
+  'directives',
+  'extensions',
+  'resolve',
+  'subscribe',
+];
+
+const coreTypeOptions = [
+  'description',
+  'interfaces',
+  'isTypeOf',
+  'resolveType',
+  'fields',
+  'directives',
+  'extensions',
+];
+
+const pluginKeys = (plugins: readonly SchemaPlugin[], key: 'fieldOptions' | 'typeOptions') => {
+  const output: string[] = [];
+  for (const plugin of plugins) output.push(...(plugin[key] || []));
+  return output;
+};
+
+/** Plugin options are typed globally, so options without a registered plugin must fail loudly */
+function assertKnownOptions(
+  config: object,
+  core: readonly string[],
+  plugin: readonly string[],
+  coordinate: string
+) {
+  for (const key of Object.keys(config))
+    if (core.indexOf(key) === -1 && plugin.indexOf(key) === -1)
+      throw new TypeError(
+        `"${coordinate}" sets an unknown option "${key}". Options of plugins require passing the plugin to initSchemaBuilder({ plugins }).`
+      );
+}
+
+const mergeInto = (target: Extensions | undefined, source: Extensions | undefined | void) =>
+  source ? { ...target, ...source } : target;
+
 /** Returns a config value that at most one of a type's definitions may set */
 function pickOne(configs: readonly any[], key: string, typeName: string): any {
   let value: unknown;
@@ -137,7 +184,13 @@ function mergeExtensions(configs: readonly any[]): Extensions | undefined {
 }
 
 /** @internal */
-export function buildSchema(config: BuildConfig, fieldBuilder: unknown): GraphQLSchema {
+export function buildSchema(
+  config: BuildConfig,
+  fieldBuilder: unknown,
+  plugins: readonly SchemaPlugin[] = []
+): GraphQLSchema {
+  const pluginFieldOptions = pluginKeys(plugins, 'fieldOptions');
+  const pluginTypeOptions = pluginKeys(plugins, 'typeOptions');
   const definitions = new Map<string, Ref[]>();
   const register = (definition: Ref | undefined, source: string) => {
     if (!definition)
@@ -176,6 +229,30 @@ export function buildSchema(config: BuildConfig, fieldBuilder: unknown): GraphQL
   });
 
   const subscriptionName = config.subscription && config.subscription.name;
+  const operationOf = (typeName: string): PluginField['operation'] =>
+    typeName === config.query.name
+      ? 'query'
+      : config.mutation && typeName === config.mutation.name
+        ? 'mutation'
+        : typeName === subscriptionName
+          ? 'subscription'
+          : undefined;
+
+  const wrapField = (field: PluginField, resolve: unknown, subscribe: unknown) => {
+    let nextResolve = resolve as FieldResolver | undefined;
+    let nextSubscribe = subscribe as FieldResolver | undefined;
+    for (let index = plugins.length - 1; index >= 0; index--) {
+      const plugin = plugins[index];
+      const wrappedResolve =
+        plugin.wrapResolve && plugin.wrapResolve(nextResolve || defaultFieldResolver, field);
+      if (wrappedResolve) nextResolve = wrappedResolve;
+      if (field.operation === 'subscription' && plugin.wrapSubscribe) {
+        const wrappedSubscribe = plugin.wrapSubscribe(nextSubscribe || defaultFieldResolver, field);
+        if (wrappedSubscribe) nextSubscribe = wrappedSubscribe;
+      }
+    }
+    return { resolve: nextResolve, subscribe: nextSubscribe };
+  };
 
   const directiveDefinitions = new Map<string, Ref>();
   (config.directives || []).forEach((directive, index) => {
@@ -316,8 +393,10 @@ export function buildSchema(config: BuildConfig, fieldBuilder: unknown): GraphQL
     return output;
   };
 
-  const createFields = (typeName: string, configs: readonly any[]) => () => {
+  const createFields = (typeName: string, configs: readonly any[], kind: string) => () => {
     const output: GraphQLFieldConfigMap<unknown, unknown> = {};
+    const isObject = kind === 'OBJECT';
+    const typeOptions = isObject ? pickOptions(configs, pluginTypeOptions, typeName) : {};
     for (const config of configs) {
       if (!config.fields) continue;
       const fields = config.fields(fieldBuilder);
@@ -331,6 +410,29 @@ export function buildSchema(config: BuildConfig, fieldBuilder: unknown): GraphQL
           throw new TypeError(
             `Field "${coordinate}" sets "subscribe", which is only allowed on the subscription root type.`
           );
+        assertKnownOptions(field, coreFieldOptions, isObject ? pluginFieldOptions : [], coordinate);
+        const pluginField: PluginField = {
+          typeName,
+          fieldName,
+          operation: operationOf(typeName),
+          options: field,
+          typeOptions,
+        };
+        const resolvers = isObject
+          ? wrapField(pluginField, field.resolve, field.subscribe)
+          : { resolve: field.resolve, subscribe: field.subscribe };
+        let extensions = applyDirectives(
+          'FIELD_DEFINITION',
+          coordinate,
+          field.directives || [],
+          field.extensions
+        );
+        if (isObject)
+          for (const plugin of plugins)
+            if (plugin.onField) {
+              const added = plugin.onField(pluginField);
+              extensions = mergeInto(extensions, added && added.extensions);
+            }
         output[fieldName] = {
           type: getType(field.type, coordinate) as any,
           args: createInputValues(
@@ -340,14 +442,9 @@ export function buildSchema(config: BuildConfig, fieldBuilder: unknown): GraphQL
           ),
           description: field.description,
           deprecationReason: field.deprecationReason,
-          resolve: field.resolve,
-          subscribe: field.subscribe,
-          extensions: applyDirectives(
-            'FIELD_DEFINITION',
-            coordinate,
-            field.directives || [],
-            field.extensions
-          ),
+          resolve: resolvers.resolve,
+          subscribe: resolvers.subscribe,
+          extensions,
         };
       }
     }
@@ -366,14 +463,40 @@ export function buildSchema(config: BuildConfig, fieldBuilder: unknown): GraphQL
       return output;
     };
 
+  const pickOptions = (configs: readonly any[], keys: readonly string[], typeName: string) => {
+    const output: { [key: string]: unknown } = {};
+    for (const key of keys) {
+      const value = pickOne(configs, key, typeName);
+      if (value !== undefined) output[key] = value;
+    }
+    return output;
+  };
+
   const createNamedType = (name: string, kind: string, configs: readonly any[]) => {
     const description = pickOne(configs, 'description', name);
-    const extensions = applyDirectives(
+    if (kind === 'OBJECT' || kind === 'INTERFACE')
+      for (const config of configs)
+        assertKnownOptions(
+          config,
+          coreTypeOptions,
+          kind === 'OBJECT' ? pluginTypeOptions : [],
+          name
+        );
+    let extensions = applyDirectives(
       kind,
       name,
       concatAll<Applied>(configs, 'directives', name),
       mergeExtensions(configs)
     );
+    if (kind === 'OBJECT')
+      for (const plugin of plugins)
+        if (plugin.onType) {
+          const added = plugin.onType({
+            name,
+            options: pickOptions(configs, pluginTypeOptions, name),
+          });
+          extensions = mergeInto(extensions, added && added.extensions);
+        }
     switch (kind) {
       case 'OBJECT':
         return new GraphQLObjectType({
@@ -382,7 +505,7 @@ export function buildSchema(config: BuildConfig, fieldBuilder: unknown): GraphQL
           extensions,
           isTypeOf: pickOne(configs, 'isTypeOf', name),
           interfaces: uniqueTypes(name, configs, 'interfaces', 'implements'),
-          fields: createFields(name, configs),
+          fields: createFields(name, configs, kind),
         });
       case 'INTERFACE':
         return new GraphQLInterfaceType({
@@ -391,7 +514,7 @@ export function buildSchema(config: BuildConfig, fieldBuilder: unknown): GraphQL
           extensions,
           resolveType: pickOne(configs, 'resolveType', name),
           interfaces: uniqueTypes(name, configs, 'interfaces', 'implements'),
-          fields: createFields(name, configs),
+          fields: createFields(name, configs, kind),
         });
       case 'UNION':
         return new GraphQLUnionType({
@@ -501,6 +624,23 @@ export function buildSchema(config: BuildConfig, fieldBuilder: unknown): GraphQL
     );
   }
 
+  let schemaExtensions = applyDirectives(
+    'SCHEMA',
+    'schema',
+    config.schemaDirectives || [],
+    config.extensions
+  );
+  for (const plugin of plugins) {
+    const added = plugin.onSchema && plugin.onSchema();
+    if (!added) continue;
+    for (const directive of added.directives || []) {
+      if (directives.some((other) => other.name === directive.name))
+        throw new TypeError(`Directive "@${directive.name}" is defined more than once.`);
+      directives.push(directive);
+    }
+    schemaExtensions = mergeInto(schemaExtensions, added.extensions);
+  }
+
   const schema = new GraphQLSchema({
     description: config.description,
     query: getNamedType(config.query, 'schema query') as GraphQLObjectType,
@@ -512,12 +652,7 @@ export function buildSchema(config: BuildConfig, fieldBuilder: unknown): GraphQL
     types: [...definitions.keys()].map((name) => getNamedType(definitions.get(name)![0], name)),
     directives: [...specifiedDirectives, ...directives],
     assumeValid: config.assumeValid,
-    extensions: applyDirectives(
-      'SCHEMA',
-      'schema',
-      config.schemaDirectives || [],
-      config.extensions
-    ),
+    extensions: schemaExtensions,
   });
 
   assertNoSelfReferences(directives);

@@ -5,6 +5,7 @@ against the server's schema, without introspection or code generation.
 
 - `src/schema/refs.ts`: references to the schema's types, which every other schema module uses
 - `src/schema/*.ts`: the schema's types, split into modules that add fields to `Query`, `Mutation`, and `User`
+- `src/schema/plugins.ts`: error masking, authorization, and a custom plugin with its own field option
 - `src/server.ts`: serves the schema over HTTP with [`graphql-http`](https://github.com/graphql/graphql-http)
 - `src/client/graphql.ts`: sets up `graphql()` with `IntrospectionOf<typeof schema>`
 - `src/client/index.ts`: typed queries, fragments, and mutations using `@urql/core`
@@ -33,6 +34,20 @@ writes it, validates all documents, and then type checks the server and client.
 References (`t.objectRef()`, etc.) are declared in `src/schema/refs.ts`, which doesn't import
 any other schema module. Schema modules may then use each other's types without running into
 circular imports.
+
+## Plugins and authorization
+
+`src/schema/builder.ts` passes plugins to `initSchemaBuilder()`:
+
+- `maskErrorsPlugin()` replaces unexpected errors with a generic `Unexpected error.`
+- `authPlugin()` checks `authorize` rules. Mutations require a signed-in user, and only a todo's
+  author may toggle it. The server reads the user from an `x-user-id` header, as a stand-in for
+  real authentication.
+- `tracePlugin` logs how long fields with `trace: true` take. It adds the `trace` option with
+  `declare module 'gql.tada/server'`.
+
+Plugins don't change the schema, so `schema.graphql` and the client's types are the same with
+or without them.
 
 ## Running
 

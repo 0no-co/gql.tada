@@ -1,5 +1,7 @@
+import { and } from 'gql.tada/server';
 import type { TodoModel } from '../db.ts';
 import { t } from './builder.ts';
+import { signedIn } from './plugins.ts';
 import { Query, Mutation, Node, User, Todo } from './refs.ts';
 import { DateTime, usersById } from './common.ts';
 
@@ -90,6 +92,7 @@ export const TodoQueries = t.object(Query, {
     search: f.field({
       type: t.nonNull(t.list(t.nonNull(SearchResult))),
       args: { term: t.nonNull(t.String) },
+      trace: true,
       resolve: (_, { term }, ctx) => [
         ...ctx.db.users.filter((user) => user.name.includes(term)),
         ...ctx.db.todos.filter((todo) => todo.text.includes(term)),
@@ -99,6 +102,8 @@ export const TodoQueries = t.object(Query, {
 });
 
 export const TodoMutations = t.object(Mutation, {
+  // Applies to all fields of `Mutation` without their own rule, in any module
+  authorize: signedIn,
   fields: (f) => ({
     createTodo: f.field({
       type: t.nonNull(Todo),
@@ -108,7 +113,7 @@ export const TodoMutations = t.object(Mutation, {
           id: `t${ctx.db.todos.length + 1}`,
           text: input.text,
           status: input.status,
-          authorId: ctx.viewerId,
+          authorId: ctx.viewerId!,
           createdAt: new Date(),
         };
         ctx.db.todos.push(todo);
@@ -118,6 +123,11 @@ export const TodoMutations = t.object(Mutation, {
     toggleTodo: f.field({
       type: Todo,
       args: { id: t.nonNull(t.ID) },
+      // A field's rule replaces its type's rule
+      authorize: and(signedIn, (_, { id }, ctx) => {
+        const todo = ctx.db.todos.find((todo) => todo.id === id);
+        return !todo || todo.authorId === ctx.viewerId;
+      }),
       resolve(_, { id }, ctx) {
         const todo = ctx.db.todos.find((todo) => todo.id === id);
         if (todo) todo.status = todo.status === 'open' ? 'done' : 'open';

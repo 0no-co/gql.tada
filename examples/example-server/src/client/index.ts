@@ -6,6 +6,13 @@ import type { FragmentOf } from './graphql.ts';
 const client = new Client({
   url: 'http://localhost:4000/graphql',
   exchanges: [fetchExchange],
+  // Signs in as `u1`, see `src/server.ts`
+  fetchOptions: { headers: { 'x-user-id': 'u1' } },
+});
+
+const anonymousClient = new Client({
+  url: 'http://localhost:4000/graphql',
+  exchanges: [fetchExchange],
 });
 
 const TodoFields = graphql(`
@@ -120,3 +127,9 @@ for (const result of search.data!.search) {
   const label = result.__typename === 'User' ? result.name : result.text;
   console.log(`  ${result.__typename}: ${label}`);
 }
+
+// Mutations require signing in, and only a todo's author may toggle it
+const anonymous = await anonymousClient.mutation(CreateTodo, { input: { text: 'Sneak in' } });
+console.log(`Anonymous createTodo: ${anonymous.error!.graphQLErrors[0].message}`);
+const notAuthor = await client.mutation(ToggleTodo, { id: 't2' });
+console.log(`Toggling another user's todo: ${notAuthor.error!.graphQLErrors[0].message}`);

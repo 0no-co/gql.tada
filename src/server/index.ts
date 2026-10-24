@@ -25,6 +25,7 @@ export type {
   InputConfig,
   DirectiveConfig,
   SchemaConfig,
+  SchemaBuilderOptions,
 } from './builder';
 
 export type {
@@ -63,3 +64,16 @@ export type {
   TadaSchemaCarrier,
   IntrospectionOf,
 } from '../contract';
+
+export { authPlugin, and, or, not } from './auth';
+export type { AuthRule, AuthPluginOptions } from './auth';
+export { maskErrorsPlugin } from './maskErrors';
+export type { MaskErrorsPluginOptions } from './maskErrors';
+export type {
+  SchemaPlugin,
+  PluginField,
+  PluginType,
+  FieldResolver,
+  FieldPluginOptions,
+  TypePluginOptions,
+} from './plugin';

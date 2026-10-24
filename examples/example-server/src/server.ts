@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { createServer } from 'node:http';
 import { createHandler } from 'graphql-http/lib/use/http';
-import { createDatabase } from './db.ts';
+import { createDatabase, type Context } from './db.ts';
 import { schema } from './schema/index.ts';
 import { writeSchemaFile } from './schema-file.ts';
 
@@ -12,7 +12,11 @@ const db = createDatabase();
 
 const handler = createHandler({
   schema,
-  context: () => ({ db, viewerId: 'u1' }),
+  // A stand-in for real authentication, e.g. a session cookie or a bearer token
+  context: (req) => {
+    const userId = req.raw.headers['x-user-id'];
+    return { db, viewerId: typeof userId === 'string' ? userId : null } satisfies Context;
+  },
 });
 
 const server = createServer((req, res) => {

@@ -1,6 +1,7 @@
 import { t } from './builder.ts';
 import { Query, Node, User } from './refs.ts';
 import { usersById } from './common.ts';
+import { signedIn } from './plugins.ts';
 
 export const UserType = t.object(User, {
   interfaces: [Node],
@@ -15,7 +16,8 @@ export const UserQueries = t.object(Query, {
   fields: (f) => ({
     viewer: f.field({
       type: t.nonNull(User),
-      resolve: (_, _args, ctx) => usersById(ctx).get(ctx.viewerId)!,
+      authorize: signedIn,
+      resolve: (_, _args, ctx) => usersById(ctx).get(ctx.viewerId!)!,
     }),
     user: f.field({
       type: User,

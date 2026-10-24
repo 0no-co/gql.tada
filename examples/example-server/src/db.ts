@@ -41,5 +41,6 @@ export const createDatabase = (): Database => ({
 
 export interface Context {
   db: Database;
-  viewerId: string;
+  /** The signed-in user's ID, or `null` for anonymous requests */
+  viewerId: string | null;
 }
