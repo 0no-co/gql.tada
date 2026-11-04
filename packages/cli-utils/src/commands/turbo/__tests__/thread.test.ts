@@ -1,3 +1,5 @@
+import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import ts from 'typescript';
 import { describe, it, expect, vi } from 'vitest';
@@ -8,7 +10,7 @@ vi.mock('../../../ts/transformers', () => ({
 }));
 
 import { hasGraphQLDocumentCandidate, shouldScanTurboFile } from '../scan';
-import { collectImportsFromSourceFile } from '../thread';
+import { collectImportsFromSourceFile, computeSchemaFingerprints } from '../thread';
 
 describe('shouldScanTurboFile', () => {
   it('excludes generated cache, declarations, and node_modules files', () => {
@@ -123,6 +125,38 @@ describe('collectImportsFromSourceFile', () => {
         importClause: "import type { UserScalar } from './types';",
       },
     ]);
+  });
+});
+
+describe('computeSchemaFingerprints', () => {
+  const fingerprintOf = (contents: string) => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gql-tada-fingerprint-'));
+    try {
+      fs.writeFileSync(path.join(dir, 'graphql-env.d.ts'), contents);
+      return computeSchemaFingerprints({
+        rootPath: dir,
+        configPath: path.join(dir, 'tsconfig.json'),
+        pluginConfig: { schema: './schema.graphql', tadaOutputLocation: './graphql-env.d.ts' },
+        turboOutputPath: path.join(dir, 'cache.d.ts'),
+      }).get(null);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  };
+
+  it('ignores line endings of the output file', () => {
+    const lf = 'export type A = 1;\nexport type B = 2;\n';
+    expect(fingerprintOf(lf.replace(/\n/g, '\r\n'))).toBe(fingerprintOf(lf));
+  });
+
+  it('keeps fingerprints of LF output files unchanged', () => {
+    expect(fingerprintOf('export type A = 1;\nexport type B = 2;\n')).toBe(
+      'sha256:ac53626a8ca323822ee4bddff8e0543e'
+    );
+  });
+
+  it('still changes when the output file changes', () => {
+    expect(fingerprintOf('export type A = 1;\n')).not.toBe(fingerprintOf('export type A = 2;\n'));
   });
 });
 
