@@ -64,6 +64,9 @@ interface AbstractConfig {
  *
  * @param introspection - Introspection of your schema matching {@link IntrospectionQuery}.
  * @param scalars - An object type with scalar names as keys and the corresponding scalar types as values.
+ * @param __parsedCache - An optional generated map from exact document strings to their parsed
+ * syntax types. Entries must match `parseDocument` exactly. Unmatched or invalid entries are
+ * parsed normally; schema, scalars, and fragment types are always inferred from current inputs.
  *
  * @example
  * ```
@@ -89,6 +92,16 @@ interface AbstractSetupCache {
 }
 
 interface setupCache extends AbstractSetupCache {}
+
+// A syntax cache avoids re-parsing unchanged documents without caching inferred types.
+type ParsedDocumentCache = setupSchema extends { readonly __parsedCache: infer Cache } ? Cache : {};
+type parseDocumentCached<In extends string> = In extends keyof ParsedDocumentCache
+  ? [ParsedDocumentCache[In]] extends [never]
+    ? parseDocument<In>
+    : ParsedDocumentCache[In] extends DocumentNodeLike
+      ? ParsedDocumentCache[In]
+      : parseDocument<In>
+  : parseDocument<In>;
 
 interface GraphQLTadaAPI<Schema extends SchemaLike, Config extends AbstractConfig> {
   /** In "multi-schema" mode this identifies the schema.
@@ -146,7 +159,7 @@ interface GraphQLTadaAPI<Schema extends SchemaLike, Config extends AbstractConfi
     input: In,
     fragments?: Fragments
   ): getDocumentNode<
-    parseDocument<In>,
+    parseDocumentCached<In>,
     Schema,
     getFragmentsOfDocuments<Fragments>,
     Config['isMaskingDisabled']
