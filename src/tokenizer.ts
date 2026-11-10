@@ -69,9 +69,17 @@ type skipBlockString<In> = In extends `${infer Hd}${'"""'}${infer In}`
     ? skipBlockString<In>
     : In
   : In;
+// A quote is only escaped if it's preceded by an odd number of backslashes
+type isEscapedQuote<Hd> = Hd extends `${infer Hd}${'\\\\'}`
+  ? isEscapedQuote<Hd>
+  : Hd extends `${string}${'\\'}`
+    ? true
+    : false;
 type skipString<In> = In extends `${infer Hd}${'"'}${infer In}`
   ? Hd extends `${string}${'\\'}`
-    ? skipString<In>
+    ? isEscapedQuote<Hd> extends true
+      ? skipString<In>
+      : In
     : In
   : In;
 

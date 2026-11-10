@@ -43,6 +43,17 @@ describe('tokenize', () => {
     expectTypeOf<actual>().toEqualTypeOf<expected>();
   });
 
+  it('tokenizes strings ending in an escaped backslash', () => {
+    type actual = tokenize<'"\\\\" x "a\\\\\\"b\\\\\\\\" y'>;
+    type expected = [
+      Token.String,
+      { kind: Token.Name; name: 'x' },
+      Token.String,
+      { kind: Token.Name; name: 'y' },
+    ];
+    expectTypeOf<actual>().toEqualTypeOf<expected>();
+  });
+
   it('tokenizes block strings', () => {
     type actual = tokenize<'"""x""" """\\""""""'>;
     type expected = [Token.BlockString, Token.BlockString];
