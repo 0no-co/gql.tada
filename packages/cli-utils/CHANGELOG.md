@@ -1,5 +1,22 @@
 # @gql.tada/cli-utils
 
+## 1.9.5
+
+### Patch Changes
+
+- Ignore CRLF line endings in the `tadaOutputLocation` file when fingerprinting the schema for `turbo` document hashes, so that Windows and Unix checkouts of the same output file no longer invalidate each other's cached document types
+  Submitted by [@aliassar](https://github.com/aliassar) (See [#620](https://github.com/0no-co/gql.tada/pull/620))
+- Parse `tsconfig.json` files without relying on the TypeScript compiler API so schema output generation works with the TypeScript 7 package
+  Submitted by [@byrnehollander](https://github.com/byrnehollander) (See [#573](https://github.com/0no-co/gql.tada/pull/573))
+- Scale turbo's soft heap limit with V8's configured heap budget so that larger
+  TypeScript programs can use an explicitly increased Node heap without rebuilding
+  the checker before every file
+  Submitted by [@solon](https://github.com/solon) (See [#603](https://github.com/0no-co/gql.tada/pull/603))
+- Include the `initGraphQLTada` setup in `turbo` document hashes, so changing a scalar mapping (including what an imported scalar type resolves to) or `disableMasking` invalidates the affected cached document types instead of reusing stale ones
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#605](https://github.com/0no-co/gql.tada/pull/605))
+- Updated dependencies (See [#610](https://github.com/0no-co/gql.tada/pull/610) and [#573](https://github.com/0no-co/gql.tada/pull/573))
+  - @gql.tada/internal@1.3.0
+
 ## 1.9.4
 
 ### Patch Changes

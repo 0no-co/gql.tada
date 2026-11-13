@@ -1,5 +1,17 @@
 # gql.tada
 
+## 1.11.5
+
+### Patch Changes
+
+- ⚠️ Fix the type-level tokenizer treating a string's closing quote as escaped when it follows an escaped backslash (e.g. `"C:\\"`), which made the whole document's result type `never`
+  Submitted by [@aliassar](https://github.com/aliassar) (See [#623](https://github.com/0no-co/gql.tada/pull/623))
+- Parse `tsconfig.json` files without relying on the TypeScript compiler API so schema output generation works with the TypeScript 7 package
+  Submitted by [@byrnehollander](https://github.com/byrnehollander) (See [#573](https://github.com/0no-co/gql.tada/pull/573))
+- Updated dependencies (See [#620](https://github.com/0no-co/gql.tada/pull/620), [#610](https://github.com/0no-co/gql.tada/pull/610), [#573](https://github.com/0no-co/gql.tada/pull/573), [#603](https://github.com/0no-co/gql.tada/pull/603), and [#605](https://github.com/0no-co/gql.tada/pull/605))
+  - @gql.tada/cli-utils@1.9.5
+  - @gql.tada/internal@1.3.0
+
 ## 1.11.4
 
 ### Patch Changes

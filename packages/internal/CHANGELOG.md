@@ -1,5 +1,17 @@
 # @gql.tada/internal
 
+## 1.3.0
+
+### Minor Changes
+
+- Add a `@gql.tada/internal/introspection` entrypoint for generating introspection output without importing `typescript`, with `introspectSchema` and `parseIntrospectionJSON` helpers that `loadFromSDL` uses for SDL and JSON schemas
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#610](https://github.com/0no-co/gql.tada/pull/610))
+
+### Patch Changes
+
+- Parse `tsconfig.json` files without relying on the TypeScript compiler API so schema output generation works with the TypeScript 7 package
+  Submitted by [@byrnehollander](https://github.com/byrnehollander) (See [#573](https://github.com/0no-co/gql.tada/pull/573))
+
 ## 1.2.2
 
 ### Patch Changes
