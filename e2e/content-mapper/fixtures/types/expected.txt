@@ -1,0 +1,2 @@
+src/missingImport.graphql(1,10): error TS2305: Module '"./PokemonItem.graphql"' has no exported member 'NotAFragment'.
+src/usage.ts(6,48): error TS2339: Property 'name' does not exist on type '{ [$tada.fragmentRefs]: { PokemonItem: "Pokemon"; }; types: string[] | null; }'.
