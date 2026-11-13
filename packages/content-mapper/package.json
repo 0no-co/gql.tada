@@ -1,0 +1,70 @@
+{
+  "name": "@gql.tada/content-mapper",
+  "version": "0.0.0",
+  "public": true,
+  "description": "TypeScript 7.1+ content mapper that types .graphql files with gql.tada.",
+  "author": "0no.co <hi@0no.co>",
+  "sideEffects": false,
+  "source": "./src/index.ts",
+  "main": "./dist/gql-tada-content-mapper",
+  "module": "./dist/gql-tada-content-mapper.mjs",
+  "types": "./dist/gql-tada-content-mapper.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/gql-tada-content-mapper.d.ts",
+      "import": "./dist/gql-tada-content-mapper.mjs",
+      "require": "./dist/gql-tada-content-mapper.js",
+      "source": "./src/index.ts"
+    },
+    "./server": {
+      "types": "./dist/gql-tada-content-mapper-server.d.ts",
+      "import": "./dist/gql-tada-content-mapper-server.mjs",
+      "require": "./dist/gql-tada-content-mapper-server.js",
+      "source": "./src/server.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "typescript": {
+    "contentMapper": {
+      "exec": [
+        "node",
+        "./dist/gql-tada-content-mapper-server.mjs"
+      ],
+      "compilerOptions": []
+    }
+  },
+  "files": [
+    "CHANGELOG.md",
+    "LICENSE.md",
+    "README.md",
+    "dist/",
+    "server/"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/0no-co/gql.tada.git",
+    "directory": "packages/content-mapper"
+  },
+  "bugs": {
+    "url": "https://github.com/0no-co/gql.tada/issues"
+  },
+  "homepage": "https://gql-tada.0no.co/",
+  "license": "MIT",
+  "scripts": {
+    "test": "vitest test",
+    "build": "rollup -c ../../scripts/rollup.config.mjs",
+    "clean": "rimraf dist node_modules/.cache",
+    "prepublishOnly": "run-s clean build"
+  },
+  "dependencies": {
+    "@0no-co/graphql.web": "^1.3.2",
+    "vscode-jsonrpc": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

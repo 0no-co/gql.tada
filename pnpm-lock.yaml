@@ -276,6 +276,19 @@ importers:
         specifier: ^6.3.4
         version: 6.3.4
 
+  packages/content-mapper:
+    dependencies:
+      '@0no-co/graphql.web':
+        specifier: ^1.3.2
+        version: 1.3.2(graphql@16.14.2)
+      vscode-jsonrpc:
+        specifier: ^9.0.0
+        version: 9.0.3
+    devDependencies:
+      '@types/node':
+        specifier: ^20.11.0
+        version: 20.16.0
+
   packages/internal:
     dependencies:
       '@0no-co/graphql.web':
@@ -3841,6 +3854,10 @@ packages:
         optional: true
       jsdom:
         optional: true
+
+  vscode-jsonrpc@9.0.3:
+    resolution: {integrity: sha512-qETYf9PCl1lVfwR+oBmMfc4vP2nqLNA35ABxorw3j06+xlKRgDVxbLgKm4Y/xPL0YWdeDjLoI4ImICIT3nB0zQ==}
+    engines: {node: '>=14.0.0'}
 
   vscode-languageserver-textdocument@1.0.12:
     resolution: {integrity: sha512-cxWNPesCnQCcMPeenjKKsOCKQZ/L6Tv19DTRIGuLWe32lyzWhihGVJ/rcckZXJxfdKCFvRLS3fpBIsV/ZGX4zA==}
@@ -7960,6 +7977,8 @@ snapshots:
       - sugarss
       - supports-color
       - terser
+
+  vscode-jsonrpc@9.0.3: {}
 
   vscode-languageserver-textdocument@1.0.12: {}
 
