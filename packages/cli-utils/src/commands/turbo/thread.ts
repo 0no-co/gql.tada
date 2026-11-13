@@ -447,7 +447,7 @@ export async function* _runTurbo(params: TurboParams): AsyncIterableIterator<Tur
   }
 }
 
-function computeSchemaFingerprints(params: TurboParams): Map<string | null, string> {
+export function computeSchemaFingerprints(params: TurboParams): Map<string | null, string> {
   const fingerprints = new Map<string | null, string>();
   const configDir = path.dirname(params.configPath);
   for (const schemaName of getSchemaNamesFromConfig(params.pluginConfig)) {
@@ -462,7 +462,9 @@ function computeSchemaFingerprints(params: TurboParams): Map<string | null, stri
       continue;
     }
 
-    const hash = crypto.createHash('sha256').update(contents).digest('hex');
+    // NOTE: CRLF checkouts (e.g. with `core.autocrlf` on Windows) must keep the same fingerprint
+    const normalizedContents = contents.replace(/\r\n/g, '\n');
+    const hash = crypto.createHash('sha256').update(normalizedContents).digest('hex');
     fingerprints.set(schemaName, `sha256:${hash.slice(0, 32)}`);
   }
   return fingerprints;
