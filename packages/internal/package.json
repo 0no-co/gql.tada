@@ -16,13 +16,20 @@
       "require": "./dist/gql-tada-internal.js",
       "source": "./src/index.ts"
     },
+    "./introspection": {
+      "types": "./dist/gql-tada-internal-introspection.d.ts",
+      "import": "./dist/gql-tada-internal-introspection.mjs",
+      "require": "./dist/gql-tada-internal-introspection.js",
+      "source": "./src/introspection/index.ts"
+    },
     "./package.json": "./package.json"
   },
   "files": [
     "CHANGELOG.md",
     "LICENSE.md",
     "README.md",
-    "dist/"
+    "dist/",
+    "introspection/"
   ],
   "repository": {
     "type": "git",

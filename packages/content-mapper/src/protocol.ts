@@ -31,6 +31,10 @@ export interface OptionDiagnostic {
 }
 
 export interface OpenProjectResult {
+  /** Fingerprint of configuration read outside of `options`. Required with `dynamicConfig`. */
+  configIdentity?: string;
+  /** Absolute files whose changes may alter `configIdentity` or transform output. */
+  watchedFiles?: string[];
   optionDiagnostics?: OptionDiagnostic[];
 }
 

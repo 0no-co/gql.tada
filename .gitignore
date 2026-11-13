@@ -18,3 +18,4 @@ package-lock.json
 /ts-plugin
 /testing
 /packages/content-mapper/server
+/packages/internal/introspection
