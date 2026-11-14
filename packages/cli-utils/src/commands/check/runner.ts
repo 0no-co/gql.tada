@@ -2,7 +2,10 @@ import * as logger from './logger';
 import type { TTY, ComposeInput } from '../../term';
 import type { ProjectContext } from '../shared';
 import { loadProjects } from '../shared';
-import type { Severity, SeveritySummary } from './types';
+import { readTSConfigFile } from '@gql.tada/internal';
+import type { DiagnosticSignal, Severity, SeveritySummary } from './types';
+import type { CompilerName } from './ts7';
+import { detectCompiler, runTS7Diagnostics } from './ts7';
 
 const isMinSeverity = (severity: Severity, minSeverity: Severity) => {
   switch (severity) {
@@ -13,6 +16,18 @@ const isMinSeverity = (severity: Severity, minSeverity: Severity) => {
     case 'error':
       return true;
   }
+};
+
+/** Whether the project's `tsconfig.json`, or the one defining its plugin config, configures content mappers. */
+const hasContentMappers = async (project: ProjectContext): Promise<boolean> => {
+  const { tsconfigPath, configPath } = project.configResult;
+  for (const configFile of new Set([tsconfigPath, configPath])) {
+    try {
+      const tsconfig = (await readTSConfigFile(configFile)) as { contentMappers?: unknown };
+      if (Array.isArray(tsconfig.contentMappers) && tsconfig.contentMappers.length) return true;
+    } catch {}
+  }
+  return false;
 };
 
 export interface FormattedDisplayableDiagnostic {
@@ -27,11 +42,11 @@ export interface Options {
   failOnWarn: boolean | undefined;
   minSeverity: Severity;
   tsconfig: string | undefined;
+  compiler: CompilerName | undefined;
+  runExternalCode: boolean | undefined;
 }
 
 export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput> {
-  const { runDiagnostics } = await import('./thread');
-
   let projects: ProjectContext[];
   try {
     projects = await loadProjects(opts.tsconfig);
@@ -46,12 +61,40 @@ export async function* run(tty: TTY, opts: Options): AsyncIterable<ComposeInput>
   for (const project of projects) {
     if (projects.length > 1) yield logger.projectHeader(project.label);
 
-    const generator = runDiagnostics({
+    const compiler = detectCompiler({
       rootPath: project.configResult.rootPath,
       tsconfigPath: project.configResult.tsconfigPath,
-      configPath: project.configResult.configPath,
-      pluginConfig: project.pluginConfig,
+      compiler: opts.compiler,
     });
+
+    let generator: AsyncIterable<DiagnosticSignal>;
+    if (compiler) {
+      if (compiler === 'tsrs' && (await hasContentMappers(project))) {
+        yield logger.hint(
+          `This project configures ${logger.code('"contentMappers"')}, which tsrs doesn't run through its API yet.\n` +
+            'Documents imported from content-mapped files (e.g. .graphql) are not resolved.'
+        ) + '\n';
+      } else if (!opts.runExternalCode && (await hasContentMappers(project))) {
+        yield logger.hint(
+          `This project configures ${logger.code('"contentMappers"')}, which only run with ${logger.code('--runExternalCode')}.\n` +
+            'Without it, documents imported from content-mapped files (e.g. .graphql) are not resolved.'
+        ) + '\n';
+      }
+      generator = runTS7Diagnostics({
+        tsconfigPath: project.configResult.tsconfigPath,
+        compiler,
+        runExternalCode: opts.runExternalCode,
+      });
+    } else {
+      // NOTE: The thread loads the TypeScript compiler API, so it's only imported when it's used
+      const { runDiagnostics } = await import('./thread');
+      generator = runDiagnostics({
+        rootPath: project.configResult.rootPath,
+        tsconfigPath: project.configResult.tsconfigPath,
+        configPath: project.configResult.configPath,
+        pluginConfig: project.pluginConfig,
+      });
+    }
 
     let totalFileCount = 0;
     let fileCount = 0;

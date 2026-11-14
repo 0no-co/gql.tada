@@ -2,7 +2,7 @@ import * as path from 'node:path';
 
 import type { TTY, ComposeInput } from '../../term';
 import type { ProjectContext, WriteTarget } from '../shared';
-import { loadProjects, writeOutput } from '../shared';
+import { loadProjects, writeOutput, assertCompilerAPI } from '../shared';
 import type { PersistedDocument } from './types';
 import * as logger from './logger';
 
@@ -70,6 +70,8 @@ async function* runProject(
   project: ProjectContext,
   deferWarnings: boolean
 ): AsyncGenerator<ComposeInput, ProjectResult> {
+  // NOTE: The thread loads the TypeScript compiler API, which TypeScript 7 doesn't expose
+  assertCompilerAPI(project, 'generate persisted');
   const { runPersisted } = await import('./thread');
 
   const { pluginConfig, projectPath } = project;
