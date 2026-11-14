@@ -264,6 +264,17 @@ export function createCacheContents(
 
   let imports = "import type { TadaDocumentNode, $tada } from 'gql.tada';\n";
 
+  const inputTypes = new Map<string, string>();
+  for (const document of documents) {
+    for (const [name, type] of Object.entries(document.inputTypes || {})) {
+      inputTypes.set(name, type);
+    }
+  }
+  const inputs = [...inputTypes]
+    .sort(([a], [b]) => compareUtf16(a, b))
+    .map(([name, type]) => `type ${name} = ${type};\n`)
+    .join('');
+
   const isFilePath =
     typeof turboDestination === 'string' ||
     (turboDestination &&
@@ -299,6 +310,8 @@ export function createCacheContents(
     preamble +
     imports +
     '\n' +
+    inputs +
+    (inputs ? '\n' : '') +
     "declare module 'gql.tada' {\n" +
     ' interface setupCache {\n' +
     output +
