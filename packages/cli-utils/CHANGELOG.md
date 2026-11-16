@@ -1,5 +1,12 @@
 # @gql.tada/cli-utils
 
+## 1.9.6
+
+### Patch Changes
+
+- Preserve recursive input types in Turbo caches using shared named input aliases instead of emitting `any` at circular references. The cache file will change once for every document with input object variables, since these now reference the shared aliases
+  Submitted by [@JoviDeCroock](https://github.com/JoviDeCroock) (See [#608](https://github.com/0no-co/gql.tada/pull/608))
+
 ## 1.9.5
 
 ### Patch Changes
