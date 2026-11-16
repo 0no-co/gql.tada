@@ -1,11 +1,13 @@
 import ts from 'typescript';
 import * as fs from 'node:fs';
+import { INPUT_ALIAS_PREFIX } from './types';
 
 const HASH_COMMENT = /@gql\.tada\/hash\s+([^\s*]+)/;
 
 export interface CachedTurboDocument {
   documentHash: string;
   documentType: string;
+  inputTypes?: Record<string, string> | undefined;
 }
 
 export type CachedTurboDocuments = Map<string, CachedTurboDocument>;
@@ -31,6 +33,32 @@ export function readCachedTurboDocuments(cachePath: string | undefined): CachedT
     ts.ScriptKind.TS
   );
 
+  const aliases = new Map<string, ts.TypeNode>();
+  for (const statement of sourceFile.statements) {
+    if (
+      ts.isTypeAliasDeclaration(statement) &&
+      statement.name.text.startsWith(INPUT_ALIAS_PREFIX)
+    ) {
+      aliases.set(statement.name.text, statement.type);
+    }
+  }
+  const collectInputs = (type: ts.TypeNode): Record<string, string> | undefined => {
+    const inputs: Record<string, string> = {};
+    const visit = (node: ts.Node): void => {
+      if (ts.isTypeReferenceNode(node) && ts.isIdentifier(node.typeName)) {
+        const name = node.typeName.text;
+        const alias = aliases.get(name);
+        if (alias && !(name in inputs)) {
+          inputs[name] = alias.getText(sourceFile);
+          visit(alias);
+        }
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(type);
+    return Object.keys(inputs).length ? inputs : undefined;
+  };
+
   const visit = (node: ts.Node) => {
     if (ts.isInterfaceDeclaration(node) && node.name.text === 'setupCache') {
       for (const member of node.members) {
@@ -43,6 +71,7 @@ export function readCachedTurboDocuments(cachePath: string | undefined): CachedT
         documents.set(JSON.stringify(member.name.text), {
           documentHash,
           documentType: member.type.getText(sourceFile),
+          ...(aliases.size ? { inputTypes: collectInputs(member.type) } : {}),
         });
       }
     }
