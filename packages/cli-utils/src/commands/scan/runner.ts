@@ -4,7 +4,7 @@ import { loadRef } from '@gql.tada/internal';
 
 import type { TTY, ComposeInput } from '../../term';
 import type { ProjectContext, WriteTarget } from '../shared';
-import { loadProjects, writeOutput } from '../shared';
+import { loadProjects, writeOutput, assertCompilerAPI } from '../shared';
 
 import type { SchemaName, RawScanDocument, ScanWarning } from './types';
 import { analyze } from './analyze';
@@ -78,6 +78,8 @@ async function* runProject(
   opts: ScanOptions,
   project: ProjectContext
 ): AsyncGenerator<ComposeInput, number> {
+  // NOTE: The thread loads the TypeScript compiler API, which TypeScript 7 doesn't expose
+  assertCompilerAPI(project, 'scan');
   const { runScan } = await import('./thread');
 
   // `--graph` implies machine output (the pure relationship graph).
