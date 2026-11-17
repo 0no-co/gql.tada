@@ -102,8 +102,8 @@ export type simpleSchema =
         kind: 'INPUT_OBJECT';
         name: 'DefaultPayload';
         isOneOf: false;
-        inputFields: [
-          {
+        inputFields: {
+          value: {
             name: 'value';
             type: {
               kind: 'NON_NULL';
@@ -115,8 +115,8 @@ export type simpleSchema =
               };
             };
             defaultValue: 'DEFAULT';
-          },
-        ];
+          };
+        };
       };
       ID: unknown;
       ITodo: {
@@ -221,8 +221,8 @@ export type simpleSchema =
         kind: 'INPUT_OBJECT';
         name: 'OneOfPayload';
         isOneOf: true;
-        inputFields: [
-          {
+        inputFields: {
+          value_1: {
             name: 'value_1';
             type: {
               kind: 'NON_NULL';
@@ -234,8 +234,8 @@ export type simpleSchema =
               };
             };
             defaultValue: null;
-          },
-          {
+          };
+          value_2: {
             name: 'value_2';
             type: {
               kind: 'SCALAR';
@@ -243,8 +243,8 @@ export type simpleSchema =
               ofType: null;
             };
             defaultValue: null;
-          },
-        ];
+          };
+        };
       };
       Query: {
         kind: 'OBJECT';
@@ -431,8 +431,8 @@ export type simpleSchema =
         kind: 'INPUT_OBJECT';
         name: 'TodoPayload';
         isOneOf: false;
-        inputFields: [
-          {
+        inputFields: {
+          title: {
             name: 'title';
             type: {
               kind: 'NON_NULL';
@@ -444,8 +444,8 @@ export type simpleSchema =
               };
             };
             defaultValue: null;
-          },
-          {
+          };
+          description: {
             name: 'description';
             type: {
               kind: 'NON_NULL';
@@ -457,8 +457,8 @@ export type simpleSchema =
               };
             };
             defaultValue: null;
-          },
-          {
+          };
+          complete: {
             name: 'complete';
             type: {
               kind: 'SCALAR';
@@ -466,8 +466,8 @@ export type simpleSchema =
               ofType: null;
             };
             defaultValue: null;
-          },
-        ];
+          };
+        };
       };
       test: {
         name: 'test';

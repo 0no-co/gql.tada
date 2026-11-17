@@ -25,13 +25,12 @@ const printTypeRef = (typeRef: IntrospectionTypeRef) => {
 const printInputFields = (inputFields: readonly IntrospectionInputValue[]) => {
   let output = '';
   for (const inputField of inputFields) {
-    if (output) output += ', ';
     const name = printName(inputField.name);
     const type = printTypeRef(inputField.type);
     const defaultValue = inputField.defaultValue ? JSON.stringify(inputField.defaultValue) : 'null';
-    output += `{ name: ${name}; type: ${type}; defaultValue: ${defaultValue} }`;
+    output += `${name}: { name: ${name}; type: ${type}; defaultValue: ${defaultValue} }; `;
   }
-  return `[${output}]`;
+  return `{ ${output}}`;
 };
 
 const printNamedTypes = (

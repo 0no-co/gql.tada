@@ -130,7 +130,13 @@ export type mapInputObject<T extends IntrospectionInputObjectType> = {
   kind: 'INPUT_OBJECT';
   name: T['name'];
   isOneOf: T['isOneOf'] extends boolean ? T['isOneOf'] : false;
-  inputFields: [...T['inputFields']];
+  inputFields: obj<{
+    [P in T['inputFields'][number]['name']]: T['inputFields'][number] extends infer InputField
+      ? InputField extends { readonly name: P }
+        ? InputField
+        : never
+      : never;
+  }>;
 };
 
 type mapInterface<T extends IntrospectionInterfaceType> = {
